@@ -1,5 +1,3 @@
-![logo](https://cormoran.arcos.inf.uc3m.es/rephrase/generic-pattern-interface-with-ff/raw/master/logo.svg)
-
 **Generic Pattern Interface - GrPPI**
 
 ## Introduction ##
@@ -43,8 +41,6 @@ The parallel patterns implemented are:
   * [BOOST](http://www.boost.org/)
 
 ## Additional Libraries ##
-  * [FastFlow](http://calvados.di.unipi.it/)
-  
   * [CUDA](https://developer.nvidia.com/cuda-downloads)
 
   * [TBB](https://www.threadingbuildingblocks.org/)
