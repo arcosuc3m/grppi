@@ -1,0 +1,27 @@
+/** @addtogroup BasicPattern
+ *  @{
+ */
+/** @defgroup BStreamPattern
+ *
+ *	@brief Patterns that take as input an stream of data
+ *
+ *  This pattern are designed in order to parallelize data streams.
+ *	Stream of data are characterized for being a continuous data flow in
+ *	which we cannot know the last element of the stream until we reach that
+ *  element.
+ */
+/** @} */
+
+/** @addtogroup HighLevelPattern
+ *  @{
+ */
+/** @defgroup HStreamPattern
+ *
+ *	@brief Patterns that take as input an stream of data
+ *
+ *  This pattern are designed in order to parallelize data streams.
+ *	Stream of data are characterized for being a continuous data flow in
+ *	which we cannot know the last element of the stream until we reach that
+ *  element.
+ */
+/** @} */
