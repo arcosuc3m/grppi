@@ -21,17 +21,16 @@
 #ifndef PPI_STREAMFILTER
 #define PPI_STREAMFILTER
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/stream_filter_seq.hpp"
+#include "ppi_thr/stream_filter_thr.hpp"
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
 	#include "ppi_omp/stream_filter_omp.hpp"
 #endif
 
-#include "ppi_thr/stream_filter_thr.hpp"
-
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/stream_filter_tbb.hpp"
 #endif 
 

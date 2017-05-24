@@ -21,11 +21,14 @@
 #ifndef PPI_MAPREDUCE 
 #define PPI_MAPREDUCE
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/mapreduce_seq.hpp"
 #include "ppi_thr/mapreduce_thr.hpp"
-#include "ppi_thrust/mapreduce_thrust.hpp"
+
+#ifdef GRPPI_THRUST
+  #include "ppi_thrust/mapreduce_thrust.hpp"
+#endif
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

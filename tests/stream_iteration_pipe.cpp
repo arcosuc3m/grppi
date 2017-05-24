@@ -62,7 +62,7 @@ void iteration_example1() {
         },
 
         // Farm kernel as lambda
-        Pipeline(
+        Pipeline(p,
              []( int l ) { 
                 l += 2*l;
                 return l;

@@ -21,17 +21,20 @@
 #ifndef PPI_REDUCE 
 #define PPI_REDUCE
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/reduce_seq.hpp"
 #include "ppi_thr/reduce_thr.hpp"
-#include "ppi_thrust/reduce_thrust.hpp"
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_THRUST
+  #include "ppi_thrust/reduce_thrust.hpp"
+#endif
+
+#ifdef GRPPI_OMP
 	#include "ppi_omp/reduce_omp.hpp"
 #endif
 
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/reduce_tbb.hpp"
 #endif
 

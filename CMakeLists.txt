@@ -118,8 +118,8 @@ endif()
 
 
 # Create header file with the XX_ENABLE flags
-set (HEADER_FILE "ppi/enable_flags.hpp")
-file (WRITE ${HEADER_FILE} "//Enable Flags")
+#set (HEADER_FILE "ppi/enable_flags.hpp")
+#file (WRITE ${HEADER_FILE} "//Enable Flags")
 
 # TBB Library 
 option( TBB_ENABLE "Require TBB library" ON )
@@ -127,7 +127,8 @@ message( STATUS "TBB: " ${TBB_ENABLE} )
 if( TBB_ENABLE )
     include_directories(${TBB_INCLUDE_DIRS} )
     find_package(TBB REQUIRED)
-    file ( APPEND ${HEADER_FILE} "\n#define TBB_ENABLE ON")
+    add_definitions( -DGRPPI_TBB )
+#    file ( APPEND ${HEADER_FILE} "\n#define TBB_ENABLE ON")
 endif( TBB_ENABLE )
 
 # Threads Library
@@ -138,7 +139,8 @@ option( OMP_ENABLE "Require OpenMP library" ON )
 message( STATUS "OpenMP: " ${OMP_ENABLE})
 if( OMP_ENABLE )
     find_package(OpenMP REQUIRED)
-    file ( APPEND ${HEADER_FILE} "\n#define OMP_ENABLE ON")
+    add_definitions( -DGRPPI_OMP )
+#    file ( APPEND ${HEADER_FILE} "\n#define OMP_ENABLE ON")
 endif( OMP_ENABLE )
 
 # CUDA library

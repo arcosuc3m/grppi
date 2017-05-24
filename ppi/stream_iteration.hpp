@@ -21,7 +21,7 @@
 #ifndef PPI_STREAM_ITERATION
 #define PPI_STREAM_ITERATION
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/stream_iteration_seq.hpp"
 #include "ppi_thr/stream_iteration_thr.hpp"

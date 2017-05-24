@@ -25,17 +25,17 @@ using namespace std;
 namespace grppi {
 
 template <typename InType, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), InType>::type composedPipeline(sequential_execution s, InType in, PipelineObj<Stages...> const & pipe)
+inline typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), InType>::type composedPipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
 {
      return (*std::get<currentStage>(pipe.stages))(in);
 }
 
 
 template <typename InType, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), InType>::type composedPipeline(sequential_execution s, InType in, PipelineObj<Stages...> const & pipe)
+inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), InType>::type composedPipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
 {
      auto val = (*std::get<currentStage>(pipe.stages))(in);
-     return composedPipeline<InType, currentStage+1, Stages...>(s,val,pipe);
+     return composedPipeline<InType, currentStage+1, Stages...>(val,pipe);
 }
 
 
@@ -70,8 +70,8 @@ void stages(sequential_execution s, Stream st, Stage se, Stages ... sgs ) {
 }
 
 //First stage
-template <typename FuncIn, typename ... Arguments>
-void Pipeline(sequential_execution s, FuncIn in, Arguments ... sts ) {
+template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type, typename ...Stages>
+void Pipeline(sequential_execution s, FuncIn in, Stages... sts ) {
     while( 1 ) {
         auto k = in();
         if( !k )

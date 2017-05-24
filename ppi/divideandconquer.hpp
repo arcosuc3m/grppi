@@ -20,16 +20,16 @@
 #ifndef PPI_DIVIDEANDCONQUER
 #define PPI_DIVIDEANDCONQUER
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/divideandconquer_seq.hpp"
 #include "ppi_thr/divideandconquer_thr.hpp"
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
 	#include "ppi_omp/divideandconquer_omp.hpp"
 #endif
 
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/divideandconquer_tbb.hpp"
 #endif
 

@@ -27,23 +27,23 @@ using namespace std;
 namespace grppi{
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composedPipeline(parallel_execution_thr &p, InStream& qin, PipelineObj<Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
+inline typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composedPipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
 {
-      composedPipeline(p, qin, std::get<currentStage>(pipe.stages), qout, tasks);
+      composedPipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), qout, tasks);
 }
 
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::type composedPipeline(parallel_execution_thr &p, InStream& qin, PipelineObj<Stages...> const & pipe, OutStream & qout,std::vector<std::thread> & tasks)
+inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::type composedPipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream & qout,std::vector<std::thread> & tasks)
 {
       typedef typename std::tuple_element<currentStage, decltype(pipe.stages)>::type lambdaPointerType;
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static Queue<optional<queueType>> queueOut(DEFAULT_SIZE,p.lockfree); 
+      static Queue<optional<queueType>> queueOut(DEFAULT_SIZE,(pipe.exectype)->lockfree); 
 
-      composedPipeline(p, qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
-      composedPipeline<Queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(p,queueOut,pipe,qout,tasks);
+      composedPipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
+      composedPipeline<Queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
        
 }
 
@@ -348,8 +348,9 @@ inline void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stage
 }
 
 //First stage
-template <typename FuncIn,typename... Arguments>
-inline void Pipeline( parallel_execution_thr& p, FuncIn const & in, Arguments ... sts ) {
+//template <typename FuncIn,typename... Arguments>
+template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type, typename ...Stages>
+inline void Pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
 
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
@@ -376,12 +377,11 @@ inline void Pipeline( parallel_execution_thr& p, FuncIn const & in, Arguments ..
     task.join();
 }
 
-template <typename Stage, typename = typename std::enable_if<!std::is_convertible<Stage,execution_model>::value>::type, typename ...Stages>
-PipelineObj<Stage,Stages...> Pipeline(Stage && s, Stages && ...sts)
+//template <typename Stage, typename = typename std::enable_if<!std::is_convertible<Stage,execution_model>::value>::type, typename ...Stages>
+template <typename Execution_model, typename Stage, typename ...Stages>
+PipelineObj<Execution_model,Stage,Stages...> Pipeline(Execution_model &p, Stage && s, Stages && ...sts)
 {
-    return PipelineObj<Stage, Stages ...> (s,sts...);
-
-
+    return PipelineObj<Execution_model,Stage, Stages ...> (p, s, sts...);
 }
 }
 #endif

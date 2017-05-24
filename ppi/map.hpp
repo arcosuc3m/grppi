@@ -21,18 +21,20 @@
 #ifndef PPI_MAP
 #define PPI_MAP
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/map_seq.hpp"
 #include "ppi_thr/map_thr.hpp"
-#include "ppi_thrust/map_thrust.hpp"
 
+#if GRPPI_THRUST
+  #include "ppi_thrust/map_thrust.hpp"
+#endif
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
 	#include "ppi_omp/map_omp.hpp" 
 #endif
 
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/map_tbb.hpp"
 #endif
 

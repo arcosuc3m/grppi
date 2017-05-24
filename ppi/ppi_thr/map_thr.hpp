@@ -20,22 +20,17 @@
 
 #ifndef PPI_MAP_THR
 #define PPI_MAP_THR
-
-#include <boost/lockfree/spsc_queue.hpp>
-#include <thread>
-
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>
 inline void Map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & taskf){
    std::vector<std::thread> tasks;
    //Create a queue per thread
-   std::vector< 
-        boost::lockfree::spsc_queue<
-            typename std::result_of<GenFunc()>::type
-            , boost::lockfree::capacity<BOOST_QUEUE_SIZE>
-        >
-   > queues(p.num_threads-1);
+  std::vector<unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
+  for(int i =0; i<p.num_threads-1; i++) queues.push_back( unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
+
+
+
   
    //Create threads
    for(int i=1;i<p.num_threads;i++){
@@ -45,10 +40,11 @@ inline void Map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & t
             p.register_thread();
 
             typename std::result_of<GenFunc()>::type item;
-            while(!queues[tid].pop(item));
+            item = (*queues[tid]).pop();
+            while(item);
             while( item ){
               taskf(item.value());
-              while(!queues[tid].pop(item));
+              item = (*queues[tid]).pop();
             }
           
             // Deregister the thread in the execution model
@@ -62,11 +58,11 @@ inline void Map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & t
        auto k = in();
        if(!k){
            for(int i=0;i<p.num_threads-1;i++){
-               while(!queues[i].push(k));
+               (*queues[i]).push(k);
            }
            break;
        }
-       while(!queues[rr].push(k));
+       (*queues[rr]).push(k);
        rr++;
        rr = (rr < p.num_threads-1) ? rr : 0; 
    }

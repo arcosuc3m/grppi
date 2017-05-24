@@ -21,19 +21,21 @@
 #ifndef PPI_STREAMREDUCE
 #define PPI_STREAMREDUCE
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/stream_reduce_seq.hpp"
+#include "ppi_thr/stream_reduce_thr.hpp"
 
-#ifdef OMP_ENABLE
-	#include "ppi_omp/stream_reduce_omp.hpp"
+#ifdef GRPPI_OMP
+   #include "ppi_omp/stream_reduce_omp.hpp"
 #endif
 
-#include "ppi_thr/stream_reduce_thr.hpp"
-#include "ppi_thrust/stream_reduce_thrust.hpp"
+#ifdef GRPPI_THRUST
+   #include "ppi_thrust/stream_reduce_thrust.hpp"
+#endif
 
-#ifdef TBB_ENABLE
-	#include "ppi_tbb/stream_reduce_tbb.hpp"
+#ifdef GRPPI_TBB
+   #include "ppi_tbb/stream_reduce_tbb.hpp"
 #endif
 
 #if 0 /* START DOCUMENTATION */

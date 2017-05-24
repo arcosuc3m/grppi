@@ -21,17 +21,20 @@
 #ifndef PPI_FARM
 #define PPI_FARM
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/farm_seq.hpp"
 #include "ppi_thr/farm_thr.hpp"
-#include "ppi_thrust/farm_thrust.hpp"
 
-#ifdef OMP_ENABLE
+#if GRPPI_THRUST
+  #include "ppi_thrust/farm_thrust.hpp"
+#endif
+
+#ifdef GRPPI_OMP
 	#include "ppi_omp/farm_omp.hpp"
 #endif
 
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/farm_tbb.hpp"
 #endif
 

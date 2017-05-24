@@ -21,16 +21,16 @@
 #ifndef PPI_STENCIL 
 #define PPI_STENCIL
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/stencil_seq.hpp"
 #include "ppi_thr/stencil_thr.hpp"
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
 	#include "ppi_omp/stencil_omp.hpp"
 #endif
 
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/stencil_tbb.hpp"
 #endif
 

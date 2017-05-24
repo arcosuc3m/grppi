@@ -21,44 +21,52 @@
 #ifndef PPI_COMMON
 #define PPI_COMMON
 
+#include <thread>
 #include <atomic>
 
 #include "is_iterator.hpp"
-#include <omp.h>
+#include "mpmc_queue.hpp"
+
+#ifdef GRPPI_THRUST
+        #include <thrust/execution_policy.h>
+        #include <thrust/system/omp/execution_policy.h>
+
+        #ifdef GRPPI_TBB
+                #include <thrust/system/tbb/execution_policy.h>
+        #endif
+#endif
+
+#ifdef GRPPI_OMP
+  #include <omp.h>
+#endif
+
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include "pool.hpp"
 
 namespace grppi{
-/** @brief Indicate the type of execution and the implementation frameworks */
-struct execution_model {
-  bool ordering = true;
-  int num_threads;
-  execution_model() : num_threads{} {
-    num_threads = std::thread::hardware_concurrency();
-  };
-  execution_model(int _threads) : num_threads{_threads} {};
-  public:
-     bool lockfree = false;
-  //virtual ~execution_model() = 0;
-};
-//execution_model::~execution_model() {};
 
 /** @brief Set the execution mode to sequencial */
-struct sequential_execution : execution_model {
+struct sequential_execution {
+  bool ordering = true;
+  int num_threads=1;
+  bool lockfree = false;
   /** @brief set num_threads to 1 in order to sequential execution */
-  sequential_execution() : execution_model{} {};
+  sequential_execution(){};
 };
 
 //extern bool initialised;
 //extern thread_pool pool;
 /** @brief Set the execution mode to parallel with posix thread implementation 
  */
-struct parallel_execution_thr : execution_model {
+struct parallel_execution_thr{
   public: 
   thread_pool pool;
-  
+  bool ordering = true;
+  int num_threads;
+  bool lockfree = false;
+
   int get_threadID(){
       while (lock.test_and_set(std::memory_order_acquire));
       auto it = std::find(thid_table.begin(), thid_table.end(), std::this_thread::get_id());
@@ -81,20 +89,20 @@ struct parallel_execution_thr : execution_model {
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */
-  parallel_execution_thr() : execution_model{} { /*if(!initialised)*/ pool.initialise(this->num_threads); };
+  parallel_execution_thr(){ /*if(!initialised)*/ pool.initialise(this->num_threads); };
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
    *  @param _threads number of threads used in the parallel mode
    */
-  parallel_execution_thr(int _threads) : execution_model{_threads} { /*if(!initialised)*/ pool.initialise (_threads);};
+  parallel_execution_thr(int _threads){ /*if(!initialised)*/ pool.initialise (_threads);};
 
   /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
    *
    *  @param _threads number of threads used in the parallel mode
    *  @param _order enable or disable the ordered execution
    */
-  parallel_execution_thr(int _threads, bool order) : execution_model{_threads} { ordering = order; /*if(!initialised)*/ pool.initialise (_threads);};
+  parallel_execution_thr(int _threads, bool order){ ordering = order; /*if(!initialised)*/ pool.initialise (_threads);};
   private: 
      std::atomic_flag lock = ATOMIC_FLAG_INIT;
      std::vector<std::thread::id> thid_table;
@@ -102,56 +110,71 @@ struct parallel_execution_thr : execution_model {
 };
 
 
+#ifdef GRPPI_OMP
 /** @brief Set the execution mode to parallel with ompenmp framework 
  *    implementation 
  */
-struct parallel_execution_omp : execution_model {
+struct parallel_execution_omp{
+  bool ordering = true;
+  bool lockfree = false;
+  int num_threads;
   int get_threadID(){
      return omp_get_thread_num();
   }
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */
-  parallel_execution_omp() : execution_model{} {};
+  parallel_execution_omp(){};
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
    *  @param _threads number of threads used in the parallel mode
    */
-  parallel_execution_omp(int _threads) : execution_model{_threads} {};
+  parallel_execution_omp(int _threads){};
 
   /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
    *
    *  @param _threads number of threads used in the parallel mode
    *  @param _order enable or disable the ordered execution
    */
-  parallel_execution_omp(int _threads, bool order) : execution_model{_threads} { ordering = order;};
+  parallel_execution_omp(int _threads, bool order){ ordering = order;};
 
 };
 
+#endif
+
+
+#ifdef GRPPI_TBB
 /** @brief Set the execution mode to parallel with threading building blocks
  *    (TBB) framework implementation
  */
-struct parallel_execution_tbb : execution_model {
+struct parallel_execution_tbb{
+  bool ordering = true;
+  bool lockfree = false;
+  int num_threads;
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */
-  parallel_execution_tbb() : execution_model{} {};
+  parallel_execution_tbb(){};
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
    *  @param _threads number of threads used in the parallel mode
    */
-  parallel_execution_tbb(int _threads) : execution_model{_threads} {};
+  parallel_execution_tbb(int _threads){};
 };
 
+#endif
 
-#ifdef __CUDACC__
+#ifdef GRPPI_THRUST
 
 
 template< typename Policy >
 class parallel_execution_thrust_internal {
+  bool ordering = true;
+  int num_threads;
 public:
+   bool lockfree = false;
    int num_gpus = 1;
    Policy policy;
    parallel_execution_thrust_internal(int _gpus, Policy _policy) : num_gpus{_gpus}, policy{_policy} {};
@@ -225,12 +248,12 @@ void NextInputs(InputIt &in, MoreIn ... inputs){
 }
 
 
-template <typename Stage, typename ... Stages>
+template <typename E,typename Stage, typename ... Stages>
 class PipelineObj{
    public:
+      E * exectype;
       std::tuple<Stage *, Stages *...> stages;
-      
-      PipelineObj(Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) {}
+      PipelineObj(E &p, Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) { exectype = &p;}
 };
 
 template <typename E,class TaskFunc, class RedFunc>

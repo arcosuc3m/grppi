@@ -46,13 +46,13 @@ inline void StreamIteration(sequential_execution, GenFunc const & in, FarmObj<se
 }
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
-inline void StreamIteration(sequential_execution s, GenFunc const & in, PipelineObj<Stages...> const & f, Predicate const & condition, OutFunc const & out){
+inline void StreamIteration(sequential_execution s, GenFunc const & in, PipelineObj<sequential_execution, Stages...> const & f, Predicate const & condition, OutFunc const & out){
    while(1){
        auto k = in();
        if(!k) break; 
        auto val = k.value();
        do{
-             val = composedPipeline<typename std::result_of<GenFunc()>::type::value_type,0,Stages...>(s,val,f);
+             val = composedPipeline<typename std::result_of<GenFunc()>::type::value_type,0,Stages...>(val,f);
        }while(condition(val));
        out(val);
    }

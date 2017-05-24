@@ -21,20 +21,20 @@
 #ifndef PPI_PIPELINE
 #define PPI_PIPELINE
 
-#include "config.hpp"
+#include "common/common.hpp"
 
 #include "ppi_seq/pipeline_seq.hpp"
+#include "ppi_thr/pipeline_thr.hpp"
 
-//#include <boost/lockfree/spsc_queue.hpp> EN todos los pipelines --> ASK DAVID
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
 	#include "ppi_omp/pipeline_omp.hpp"
 #endif
 
-#include "ppi_thr/pipeline_thr.hpp"
-#include "ppi_thrust/pipeline_thrust.hpp"
+#ifdef GRPPI_THRUST
+  #include "ppi_thrust/pipeline_thrust.hpp"
+#endif 
 
-
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
 	#include "ppi_tbb/pipeline_tbb.hpp"
 #endif 
 

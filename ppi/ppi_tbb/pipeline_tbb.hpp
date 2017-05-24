@@ -50,8 +50,8 @@ stages(parallel_execution_tbb p, Stream st, Stage se, Stages ... sgs ) {
 }
 
 //First stage
-template <typename FuncIn, typename ... Arguments>
-inline void Pipeline(parallel_execution_tbb p, FuncIn in, Arguments ... sts ) {
+template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type, typename ...Stages>
+inline void Pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
     typedef typename std::result_of<FuncIn()>::type::value_type outputType;
     outputType k;
     const auto stage = tbb::make_filter<void, outputType>(
@@ -64,7 +64,7 @@ inline void Pipeline(parallel_execution_tbb p, FuncIn in, Arguments ... sts ) {
         }
     );
     tbb::task_group_context context;
-    tbb::parallel_pipeline(TBB_NTOKENS, stage & stages(p, k, sts ... ) );
+    tbb::parallel_pipeline(p.num_threads, stage & stages(p, k, sts ... ) );
 }
 }
 #endif

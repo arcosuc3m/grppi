@@ -21,21 +21,15 @@
 #ifndef PPI_MAP_OMP
 #define PPI_MAP_OMP
 
-#include <boost/lockfree/spsc_queue.hpp>
-#include <thread>
-
 using namespace std;
 namespace grppi{
 
 template <typename GenFunc, typename TaskFunc>
 inline void Map(parallel_execution_omp p, GenFunc const &in, TaskFunc const & taskf){
    //Create a queue per thread
-   std::vector< 
-        boost::lockfree::spsc_queue<
-            typename std::result_of<GenFunc()>::type
-            , boost::lockfree::capacity<BOOST_QUEUE_SIZE>
-        >
-   > queues(p.num_threads-1);
+  std::vector<unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
+  for(int i =0; i<p.num_threads-1; i++) queues.push_back( unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
+
    #pragma omp parallel
    {
      #pragma omp single nowait
@@ -46,10 +40,11 @@ inline void Map(parallel_execution_omp p, GenFunc const &in, TaskFunc const & ta
         {
              int tid = i;
              typename std::result_of<GenFunc()>::type item;
-             while(!queues[tid].pop(item));
+             item = (*queues[tid]).pop();
+             while(item);
              while( item ){
                 taskf(item.value());
-                while(!queues[tid].pop(item));
+                item = (*queues[tid]).pop();
              }
         }
      }	
@@ -59,11 +54,11 @@ inline void Map(parallel_execution_omp p, GenFunc const &in, TaskFunc const & ta
        auto k = in();
        if(k.end){
            for(int i=0;i<p.num_threads-1;i++){
-               while(!queues[i].push(k));
+               (*queues[i]).push(k);
            }
            break;
        }
-       while(!queues[rr].push(k));
+       (*queues[rr]).push(k);
        rr++;
        rr = (rr < p.num_threads -1) ? rr : 0; 
      }
