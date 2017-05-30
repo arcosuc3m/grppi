@@ -21,10 +21,10 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
-#include <ppi/stream_filter.hpp>
+#include <include/pipeline.h>
+#include <include/stream_filter.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -39,7 +39,7 @@ int pipeline_filter_example(auto &p, auto &f) {
     int a = 10;
 p.ordering=true;
 
-    Pipeline( p,
+    pipeline( p,
         // Pipeline stage 0
         [&]() { 
             a--; 
@@ -51,7 +51,7 @@ p.ordering=true;
         },
 
         // Pipeline stage 1
-        StreamFilter(f, [&]( int k ) {
+        stream_filter(f, [&]( int k ) {
               if (k%2==0) {
                   //std::cout << "Discard " << k << "\n";
                   return false;

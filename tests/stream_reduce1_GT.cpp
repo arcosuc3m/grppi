@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stream_reduce.hpp>
+#include <include/stream_reduce.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -38,7 +38,7 @@ int stream_reduce_example1(auto& p){
     std::vector<int> stream( 10000, 1 );
     int index = 0;
 
-    StreamReduce( p,
+    stream_reduce( p,
         // Reduce generator as lambda
         [&]() { 
             int n = ( stream.size() - index ) < 100 ? (stream.size() - index) : 100;

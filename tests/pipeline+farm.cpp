@@ -21,8 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
-#include <ppi/farm.hpp>
+#include <include/pipeline.h>
+#include <include/farm.h>
 #include <algorithm>
 
 using namespace std;
@@ -50,22 +50,20 @@ void pipeline_farm_example() {
     std::vector<string> output;
     p.ordering=true;
 
-    Pipeline(p,
+    pipeline(p,
              // Pipeline stage 0
-             [&]() {
+        [&]() {
 //        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-       
-        //std::cout << "Stadio0\n";
-        std::vector<int> v(5);
-        for ( int i = 0; i < 5; i++ )
-            v[ i ] = i + n;
+          std::vector<int> v(5);
+          for ( int i = 0; i < 5; i++ )
+             v[ i ] = i + n;
 
-        if ( n < 0 )
-            return optional< std::vector<int> >();
-        n--;
-        return optional<std::vector<int>>(v);
+          if ( n < 0 )
+               return optional< std::vector<int> >();
+           n--;
+           return optional<std::vector<int>>(v);
     },
-    Farm(f,
+    farm(f,
          [&](std::vector<int> v) {
   //      std::cout<<"FARM THREAD ID : "<<f.get_threadID()<<std::endl;
         //std::cout << "Worker del farm\n";

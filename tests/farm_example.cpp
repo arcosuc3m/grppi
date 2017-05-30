@@ -25,7 +25,7 @@
 #include <algorithm>
 
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <include/farm.h>
 
 using namespace std;
 using namespace grppi;
@@ -73,15 +73,15 @@ void farm_example1() {
     std::ifstream is{"txt/filelist.txt"};
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
 
-    Farm(p,
-        // Farm generator as lambda
+    farm(p,
+        // farm generator as lambda
         [&]() {
             auto f = read_line(is);
             
             return ( f.empty() ) ? optional<std::string>( ) : optional<std::string>( f );
         },
 
-        // Farm kernel as lambda
+        // farm kernel as lambda
         [&]( std::string fname ) {
             std::fstream file (fname);
             auto v = read_list(file);

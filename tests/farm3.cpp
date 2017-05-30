@@ -22,7 +22,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <include/farm.h>
 
 using namespace std;
 using namespace grppi;
@@ -49,8 +49,8 @@ void farm_example1() {
     std::atomic<int> output;
     output = 0;
 
-    Farm(p,
-        // Farm generator as lambda
+    farm(p,
+        // farm generator as lambda
         [&]() {
             a--; 
             if ( a == 0 ) 
@@ -59,7 +59,7 @@ void farm_example1() {
                 return optional<int>( a );
         },
 
-        // Farm kernel as lambda
+        // farm kernel as lambda
         [&]( int l ) {
             output += l*10;
         }

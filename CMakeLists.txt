@@ -118,7 +118,7 @@ endif()
 
 
 # Create header file with the XX_ENABLE flags
-#set (HEADER_FILE "ppi/enable_flags.hpp")
+#set (HEADER_FILE "include/enable_flags.hpp")
 #file (WRITE ${HEADER_FILE} "//Enable Flags")
 
 # TBB Library 
@@ -127,7 +127,7 @@ message( STATUS "TBB: " ${TBB_ENABLE} )
 if( TBB_ENABLE )
     include_directories(${TBB_INCLUDE_DIRS} )
     find_package(TBB REQUIRED)
-    add_definitions( -DGRPPI_TBB )
+    add_definitions( "-DGRPPI_TBB" )
 #    file ( APPEND ${HEADER_FILE} "\n#define TBB_ENABLE ON")
 endif( TBB_ENABLE )
 
@@ -139,7 +139,7 @@ option( OMP_ENABLE "Require OpenMP library" ON )
 message( STATUS "OpenMP: " ${OMP_ENABLE})
 if( OMP_ENABLE )
     find_package(OpenMP REQUIRED)
-    add_definitions( -DGRPPI_OMP )
+    add_definitions( "-DGRPPI_OMP" )
 #    file ( APPEND ${HEADER_FILE} "\n#define OMP_ENABLE ON")
 endif( OMP_ENABLE )
 
@@ -179,7 +179,7 @@ endif( CUDA_ENABLE )
 
 
 # # PPI
-# set( PPI ${PROJECT_SOURCE_DIR}/ppi )
+# set( PPI ${PROJECT_SOURCE_DIR}/include )
 
 # set( PPIHEADERS_CPU
 # #SEQ
@@ -230,12 +230,12 @@ endif( CUDA_ENABLE )
 # g++ farm1.cpp -I /tmp/GrPPI -std=c++14 -lboost_system -lboost_thread
 
 # Installation -- make install
-install ( DIRECTORY  ${PROJECT_SOURCE_DIR}/ppi DESTINATION  "${CMAKE_PROJECT_NAME}" )
+install ( DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION  "${CMAKE_PROJECT_NAME}" )
 # Installation of fastflow
 install ( DIRECTORY ${PROJECT_SOURCE_DIR}/fastflow DESTINATION "${CMAKE_PROJECT_NAME}" )
 
-#install( FILES ${PPIHEADERS_CPU} DESTINATION /include/ppi/ )
-#install( FILES ${PPIHEADERS_GPU} DESTINATION /include/ppi/ )
+#install( FILES ${PPIHEADERS_CPU} DESTINATION /include/include/ )
+#install( FILES ${PPIHEADERS_GPU} DESTINATION /include/include/ )
 
 # Test creation. Related with CMakeLists.txt on tests folder.
 option( BUILD_TESTS "Build tests" ON )

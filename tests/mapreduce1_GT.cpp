@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/mapreduce.hpp>
+#include <include/mapreduce.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -48,7 +48,7 @@ int mapreduce_example1(auto &p) {
     }
     std::vector<int> out(10000);
     int aux;
-    MapReduce(p, mat.begin(), mat.end(), out.begin(), 
+    map_reduce(p, mat.begin(), mat.end(), out.begin(),
            [&](auto & in, auto & v){ 
                   std::vector<int> mult(in.size()); 
                   for(auto col = 0; col!= in.size(); col++){

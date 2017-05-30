@@ -25,9 +25,9 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
-#include <ppi/stream_filter.hpp>
+#include <include/stream_filter.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 #include <atomic>
 
 using namespace std;
@@ -60,7 +60,7 @@ int filter_example(auto &p) {
     if (!is.good()) { cerr << "TXT file not found!" << endl; return 0; }
     std::ofstream os{"txt/out.txt"};
 
-    StreamFilter(p,
+    stream_filter(p,
         [&]() {
             auto v = read_list(is);
             return (v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v); 

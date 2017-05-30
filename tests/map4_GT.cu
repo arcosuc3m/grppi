@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/map.hpp>
+#include <ppi/map.h>
 #include <gtest/gtest.h>
 
 using namespace std;
@@ -38,7 +38,7 @@ int map_example1() {
     auto p = parallel_execution_thrust(1, thrust::cuda::par);
     cudaGetDeviceCount(&(p.num_gpus));
 
-    Map(p, in.begin(), in.end(), out.begin(), [] __device__ (int i)->int { return i; });
+    grppi::map(p, in.begin(), in.end(), out.begin(), [] __device__ (int i)->int { return i; });
 
     for(int i=0;i<in.size();i++){
       output += out[i];  

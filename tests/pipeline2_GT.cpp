@@ -21,10 +21,10 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <include/pipeline.h>
 #include <algorithm>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -42,7 +42,7 @@ int pipeline_example2(auto &p) {
     if (!fe.good()) return 0;
     int numchar = 0;
 
-    Pipeline( p, 
+    pipeline( p,
         // Pipeline stage 0
         [&]() {
             char r; 
