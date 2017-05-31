@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/reduce.hpp>
+#include <ppi/reduce.h>
 
 using namespace std;
 using namespace grppi;
@@ -34,7 +34,7 @@ void map_example1() {
     auto p = parallel_execution_thrust(1, thrust::cuda::par);
     cudaGetDeviceCount(&(p.num_gpus));
 
-    Reduce(p, in.begin(), in.end(), out, [] __device__ (int & in, int & out){ return in + out; });
+    reduce(p, in.begin(), in.end(), out, [] __device__ (int & in, int & out){ return in + out; });
     std::cout<<"REDUCE : "<< out <<std::endl;
 }
 

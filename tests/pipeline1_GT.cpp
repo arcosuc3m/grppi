@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <include/pipeline.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -38,7 +38,7 @@ int pipeline_example1(auto &p) {
     int a = 10;
     std::vector<string> output;
     p.ordering=true;
-    Pipeline( p,
+    pipeline( p,
         // Pipeline stage 0
         [&]() { 
             a--; 

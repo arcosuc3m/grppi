@@ -25,10 +25,10 @@
 #include <algorithm>
 
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <include/farm.h>
 
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 #include <atomic>
 
 using namespace std;
@@ -71,7 +71,7 @@ int farm_example1(auto &p) {
     std::ifstream is{"txt/filelist.txt"};
     if (!is.good()) { cerr << "TXT file not found!" << endl; return 0; } // 0 if error
 
-    Farm(p,
+    farm(p,
         // Farm generator as lambda
         [&]() {
             auto f = read_line(is);

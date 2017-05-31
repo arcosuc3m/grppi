@@ -21,11 +21,11 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/reduce.hpp>
+#include <include/reduce.h>
 #include <functional>
 #include <limits>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -39,8 +39,7 @@ double reduce_example1(auto &p) {
     std::vector<double> in(10);
     for(int i=0;i<in.size();i++) in[i] = (i+1);
     double out=1;
-//    Reduce(p, in.begin(), in.end(), out, Sum(out));
-    Reduce(p, in.begin(), in.end(), out, std::divides<double>());
+    reduce(p, in.begin(), in.end(), out, std::divides<double>());
     return out;
 }
 

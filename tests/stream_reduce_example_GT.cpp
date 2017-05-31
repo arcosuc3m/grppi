@@ -21,11 +21,11 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stream_reduce.hpp>
+#include <include/stream_reduce.h>
 #include <string>
 #include <sstream>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 using namespace grppi;
 
 std::vector<int> read_list(std::istream & is){
@@ -54,7 +54,7 @@ int stream_reduce_example(auto &p) {
 
     int reduce_var = 0;
     
-    StreamReduce( p, 
+    stream_reduce( p,
         // GenFunc: stream consumer
         [&]() {
             auto r = read_list(is);

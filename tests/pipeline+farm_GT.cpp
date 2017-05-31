@@ -21,10 +21,10 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
-#include <ppi/farm.hpp>
+#include <include/pipeline.h>
+#include <include/farm.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -41,7 +41,7 @@ int pipeline_farm_example(auto& p, auto& f) {
     std::vector<string> output;
 p.ordering=true;
 
-    Pipeline(p,
+    pipeline(p,
              // Pipeline stage 0
              [&]() {
         std::vector<int> v(5);
@@ -53,7 +53,7 @@ p.ordering=true;
         n--;
         return optional<std::vector<int>>(v);
     },
-    Farm(f,
+    farm(f,
          [&](std::vector<int> v) {
         std::vector<long> acumm( v.size() );
         for(unsigned i = 0; i < acumm.size(); i++ ){

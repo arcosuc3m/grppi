@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stencil.hpp>
+#include <include/stencil.h>
 
 using namespace std;
 using namespace grppi;
@@ -53,7 +53,7 @@ void map_example1() {
    auto r = in.begin()+15;
    std::cout << (r-in.begin()) << " " << (in.end()-rowsize-in.begin()) << " " <<((r-in.begin()) % rowsize)<<"\n";
 
-   Stencil(p, in.begin(), in.end(), out.begin(),
+   stencil(p, in.begin(), in.end(), out.begin(),
      [&](auto it, std::vector<int> &ng){
 
       if( (it-in.begin()) > rowsize 

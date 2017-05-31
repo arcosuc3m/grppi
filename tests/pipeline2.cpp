@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <include/pipeline.h>
 #include <algorithm>
 
 using namespace std;
@@ -51,7 +51,7 @@ void pipeline_example2() {
     if (!fe.good()) return;
     int numchar = 0;
 
-    Pipeline( p, 
+    pipeline( p,
         // Pipeline stage 0
         [&]() {
             char r; 

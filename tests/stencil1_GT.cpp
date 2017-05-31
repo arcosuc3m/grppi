@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stencil.hpp>
+#include <include/stencil.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -44,7 +44,7 @@ int stencil_example1(auto &p) {
    int rowsize = 10;
    auto r = in.begin()+15;
 
-   Stencil(p, in.begin(), in.end(), out.begin(),
+   stencil(p, in.begin(), in.end(), out.begin(),
      [&](auto it, std::vector<int> &ng){
 
       if( (it-in.begin()) > rowsize 

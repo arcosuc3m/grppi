@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include "ppi/divideandconquer.hpp"
+#include "include/divideandconquer.h"
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -39,7 +39,7 @@ int output; // Output value
     for(int v=0;v<40;v++){
       int find = 1;
       int out = 0;
-      DivideAndConquer(p, v, out,
+      divide_and_conquer(p, v, out,
           [&](auto & v){
              std::vector< int > subproblem;
       	   if(v<2) subproblem.push_back(v);

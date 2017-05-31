@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/mapreduce.hpp>
+#include <ppi/mapreduce.h>
 #include <gtest/gtest.h>
 
 using namespace std;
@@ -47,7 +47,7 @@ int mapreduce_example1() {
     int result = 0;
     int val = 3;
 
-    MapReduce(p, v.begin(), v.end(), 
+    map_reduce(p, v.begin(), v.end(),
            [=] __device__  (int in){ 
                   return val * in;  
            },

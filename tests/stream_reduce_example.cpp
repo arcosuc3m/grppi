@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stream_reduce.hpp>
+#include <include/stream_reduce.h>
 #include <string>
 #include <sstream>
 using namespace grppi;
@@ -64,7 +64,7 @@ void stream_reduce_example() {
 
     int reduce_var = 0;
     
-    StreamReduce( p, 
+    stream_reduce( p,
         // GenFunc: stream consumer
         [&]() {
             auto r = read_list(is);

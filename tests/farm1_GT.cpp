@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <include/farm.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -40,7 +40,7 @@ int farm_example1(auto &p) {
     std::atomic<int> output;
     output = 0;
 
-    Farm(p,
+    farm(p,
         // Farm generator as lambda
         [&]() {
             a--; 

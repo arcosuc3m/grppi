@@ -24,9 +24,9 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <include/pipeline.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 #include <atomic>
 
 using namespace std;
@@ -59,7 +59,7 @@ int pipeline_example(auto &p) {
     int numchar = 0;
     p.ordering=true;
 
-    Pipeline( p, 
+    pipeline( p,
         // Pipeline stage 0
         [&]() {
              auto v = read_list(is);

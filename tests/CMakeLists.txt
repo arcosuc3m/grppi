@@ -93,7 +93,10 @@ foreach( m ${EXE_LIB} )
 
       # Test creation
 #       add_test(NAME "${t}_${m}" COMMAND "${t}_${m}" WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/")
-      
+      if(${t} STREQUAL stream_iteration1)
+
+      else()
+
       if(${m} STREQUAL SEQ)
           add_test( ${t}_${m}
                  ${CMAKE_COMMAND} -D TEST_PROGRAM=${CMAKE_BINARY_DIR}/tests/${t}_${m}${CMAKE_EXECUTABLE_SUFFIX}
@@ -104,6 +107,7 @@ foreach( m ${EXE_LIB} )
                 ${CMAKE_COMMAND} -D TEST_PROGRAM=${CMAKE_BINARY_DIR}/tests/${t}_${m}${CMAKE_EXECUTABLE_SUFFIX}
                            -D TEST_OUTPUT=output/output_${t}_${m}.txt -D TEST_REFERENCE=references/reference_${t}_SEQ.txt
                            -P ${CMAKE_SOURCE_DIR}/runTest.cmake )
+      endif()
       endif()
       # Create reference files
 

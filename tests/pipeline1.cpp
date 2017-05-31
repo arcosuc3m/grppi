@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <include/pipeline.h>
 
 using namespace std;
 using namespace grppi;
@@ -43,15 +43,14 @@ void pipeline_example1() {
 #else
     sequential_execution p{};
 #endif
-
     int a = 10;
     std::vector<string> output;
     p.ordering=true;
-    Pipeline( p,
+    pipeline( p,
         // Pipeline stage 0
         [&]() { 
             a--; 
-            //std::cout << "Stage 0\n";
+    //        std::cout << "Stage 0\n";
             if (a == 0) 
                 return optional<int>(); 
             else 
@@ -60,7 +59,7 @@ void pipeline_example1() {
 
         // Pipeline stage 1
         [&]( int k ) {
-            //std::cout << "Stage 1\n";
+     //       std::cout << "Stage 1\n";
             std::string ss; 
             ss = "t " + std::to_string( k );
             return std::string( ss );
@@ -68,8 +67,8 @@ void pipeline_example1() {
 
         // Pipeline stage 2
         [&]( std::string l ) {
-            //std::cout << "Stage 2 ";
-            //std::cout << l << std::endl;
+      //      std::cout << "Stage 2 ";
+            std::cout << l << std::endl;
             output.push_back("Stage 2 " + l);
         }
     );
@@ -80,7 +79,6 @@ void pipeline_example1() {
 }
  
 int main() {
-
     //$ auto start = std::chrono::high_resolution_clock::now();
     pipeline_example1();
     //$ auto elapsed = std::chrono::high_resolution_clock::now() - start;

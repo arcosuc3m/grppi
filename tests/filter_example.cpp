@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
-#include <ppi/stream_filter.hpp>
+#include <include/stream_filter.h>
 
 using namespace std;
 using namespace grppi;
@@ -66,7 +66,7 @@ void filter_example() {
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
     std::ofstream os{"txt/out.txt"};
 
-    StreamFilter(p,
+    stream_filter(p,
         [&]() {
             auto v = read_list(is);
             return (v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v); 

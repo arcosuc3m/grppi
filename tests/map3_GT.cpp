@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/map.hpp>
+#include <include/map.h>
 #include <gtest/gtest.h>
-#include "../ppi/enable_flags.hpp"
+#include "../include/enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;
@@ -40,7 +40,7 @@ int map_example3(auto &p) {
     for(int i=0;i<in.size();i++){ in[i] =i ;in2[i] = i;}
     std::vector<int> out(1000);
 
-    Map(p, in.begin(), in.end(), out.begin(), [&](int in, int in2){ return in + in2; }, in2.begin());
+    grppi::map(p, in.begin(), in.end(), out.begin(), [&](int in, int in2){ return in + in2; }, in2.begin());
     for(int i=0;i<out.size();i++){
        output = out[i];
     }
