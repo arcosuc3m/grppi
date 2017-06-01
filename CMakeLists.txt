@@ -177,6 +177,9 @@ if( CUDA_ENABLE )
 endif( CUDA_ENABLE )
 
 
+# Doxygen Documentation
+add_subdirectory(docs)
+
 
 # # PPI
 # set( PPI ${PROJECT_SOURCE_DIR}/include )
