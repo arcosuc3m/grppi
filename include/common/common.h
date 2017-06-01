@@ -36,6 +36,8 @@
 #include "tbb_policy.h"
 #endif
 
+#include "optional.h"
+
 #include "is_iterator.h"
 #include "mpmc_queue.h"
 
@@ -48,29 +50,6 @@ class _has_arguments
  template <typename C> static long test( ... );
  public:
     static bool const value = !( sizeof( test<T>(0) ) == sizeof(char) );
-};
-
-template <typename T>
-class optional {
-    public:
-        typedef T type;
-        typedef T value_type;
-        T elem;
-        bool end;
-        optional(): end(true) { }
-        optional(const T& i): elem(i), end(false) { }
-
-        optional& operator=(const optional& o) {
-                 elem = o.elem;
-                 end = o.end;
-                 return *this;
-        }
-
-        T& value(){ return elem; }
-
-        constexpr explicit operator bool() const {
-            return !end;
-        }
 };
 
 
