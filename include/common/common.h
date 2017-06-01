@@ -39,11 +39,6 @@
 #include "is_iterator.h"
 #include "mpmc_queue.h"
 
-#include <boost/asio/io_service.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread/thread.hpp>
-#include "pool.h"
-
 namespace grppi{
 
 template <typename T>
