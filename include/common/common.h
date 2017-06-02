@@ -18,21 +18,9 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_COMMON
-#define PPI_COMMON
+#ifndef GRPPI_COMMON_H
+#define GRPPI_COMMON_H
 
-#include <thread>
-#include <atomic>
-
-
-#ifdef GRPPI_THRUST
-        #include <thrust/execution_policy.h>
-        #include <thrust/system/omp/execution_policy.h>
-
-        #ifdef GRPPI_TBB
-                #include <thrust/system/tbb/execution_policy.h>
-        #endif
-#endif
 #include "seq_policy.h"
 #include "thread_policy.h"
 
