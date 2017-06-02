@@ -34,15 +34,16 @@
                 #include <thrust/system/tbb/execution_policy.h>
         #endif
 #endif
+#include "seq_policy.h"
+#include "thread_policy.h"
 
 #ifdef GRPPI_OMP
-  #include <omp.h>
+#include "omp_policy.h"
 #endif
 
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
-#include "../ppi_thr/pool.h"
 
 namespace grppi{
 
@@ -140,65 +141,22 @@ struct parallel_execution_omp{
 
 };
 
+=======
+#ifdef GRPPI_THRUST
+#include "thrust_policy.h"
+>>>>>>> fc0566fc3248a14aa97736debcdc013d365f2ee6
 #endif
-
 
 #ifdef GRPPI_TBB
-/** @brief Set the execution mode to parallel with threading building blocks
- *    (TBB) framework implementation
- */
-struct parallel_execution_tbb{
-  bool ordering = true;
-  bool lockfree = false;
-  int num_threads = 4;
-  int num_tokens = 100;
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_tbb(){};
-
-  /** @brief Set num_threads to _threads in order to run in parallel
-   *
-   *  @param _threads number of threads used in the parallel mode
-   */
-  parallel_execution_tbb(int _threads){ num_threads= _threads; };
-};
-
+#include "tbb_policy.h"
 #endif
 
-#ifdef GRPPI_THRUST
+#include "optional.h"
 
+#include "is_iterator.h"
+#include "mpmc_queue.h"
 
-template< typename Policy >
-class parallel_execution_thrust_internal {
-  bool ordering = true;
-  int num_threads;
-public:
-   bool lockfree = false;
-   int num_gpus = 1;
-   Policy policy;
-   parallel_execution_thrust_internal(int _gpus, Policy _policy) : num_gpus{_gpus}, policy{_policy} {};
-};
-
-template<typename Policy>
-parallel_execution_thrust_internal <Policy> parallel_execution_thrust ( int _gpus, Policy policy){
-   return parallel_execution_thrust_internal<Policy>(_gpus, policy);
-}
-
-parallel_execution_thrust_internal<thrust::system::cuda::detail::par_t > parallel_execution_thrust(){
-   return parallel_execution_thrust_internal<thrust::system::cuda::detail::par_t>(1, thrust::cuda::par);
-}
-
-parallel_execution_thrust_internal<thrust::system::cuda::detail::par_t > parallel_execution_thrust(int _gpus){
-   return parallel_execution_thrust_internal<thrust::system::cuda::detail::par_t>(_gpus, thrust::cuda::par);
-}
-/*
-auto parallel_execution_thrust() -> decltype(parallel_execution_thrust_internal(1, thrust::cuda::par))
-{
-    return parallel_execution_thrust_internal(1, thrust::cuda::par);
-} 
-*/
-#endif
+namespace grppi{
 
 template <typename T>
 class _has_arguments
@@ -207,29 +165,6 @@ class _has_arguments
  template <typename C> static long test( ... );
  public:
     static bool const value = !( sizeof( test<T>(0) ) == sizeof(char) );
-};
-
-template <typename T>
-class optional {
-    public:
-        typedef T type;
-        typedef T value_type;
-        T elem;
-        bool end;
-        optional(): end(true) { }
-        optional(const T& i): elem(i), end(false) { }
-
-        optional& operator=(const optional& o) {
-                 elem = o.elem;
-                 end = o.end;
-                 return *this;
-        }
-
-        T& value(){ return elem; }
-
-        constexpr explicit operator bool() const {
-            return !end;
-        }
 };
 
 

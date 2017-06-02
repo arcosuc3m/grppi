@@ -13,7 +13,7 @@ The parallel patterns implemented are:
 
   * Divide-and-conquer
 
-  * farm
+  * Farm
 
   * Map
 
