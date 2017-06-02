@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STENCIL_TBB
-#define PPI_STENCIL_TBB
+#ifndef GRPPI_STENCIL_TBB_H
+#define GRPPI_STENCIL_TBB_H
 
 #include <tbb/tbb.h>
 using namespace std;

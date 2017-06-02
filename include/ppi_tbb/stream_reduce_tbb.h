@@ -18,9 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMREDUCE_TBB
-#define PPI_STREAMREDUCE_TBB
-#include "reduce_tbb.h"
+#ifndef GRPPI_STREAM_REDUCE_TBB_H
+#define GRPPI_STREAM_REDUCE_TBB_H
+
+#include "../reduce.h"
 #include <tbb/tbb.h>
 
 using namespace std;

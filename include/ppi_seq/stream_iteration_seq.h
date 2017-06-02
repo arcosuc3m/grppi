@@ -17,6 +17,9 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
+#ifndef GRPPI_STREAM_ITERATION_SEQ_H
+#define GRPPI_STREAM_ITERATION_SEQ_H
+
 namespace grppi{
 
 template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
@@ -59,3 +62,5 @@ inline void stream_iteration(sequential_execution s, GenFunc const & in, Pipelin
   
 }
 }
+
+#endif

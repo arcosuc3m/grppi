@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
-#include <include/stream_filter.h>
+#include <stream_filter.h>
 
 using namespace std;
 using namespace grppi;

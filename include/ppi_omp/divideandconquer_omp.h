@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_DIVIDEANDCONQUER_OMP
-#define PPI_DIVIDEANDCONQUER_OMP
+#ifndef GRPPI_DIVIDEANDCONQUER_OMP_H
+#define GRPPI_DIVIDEANDCONQUER_OMP_H
 
 #include <thread>
 namespace grppi

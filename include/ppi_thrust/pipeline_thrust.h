@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_PIPELINE_THRUST
-#define PPI_PIPELINE_THRUST
+#ifndef GRPPI_PIPELINE_THRUST_H
+#define GRPPI_PIPELINE_THRUST_H
 
 #ifdef __CUDACC__
 

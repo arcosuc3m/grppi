@@ -18,10 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAPREDUCE_SEQ
-#define PPI_MAPREDUCE_SEQ
+#ifndef GRPPI_MAPREDUCE_SEQ_H
+#define GRPPI_MAPREDUCE_SEQ_H
 
-#include "reduce_seq.h"
+#include "../reduce.h"
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP_THR
-#define PPI_MAP_THR
+#ifndef GRPPI_MAP_THR_H
+#define GRPPI_MAP_THR_H
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>
@@ -138,10 +138,10 @@ inline void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt
             // Register the thread in the execution model
             p.register_thread();
 
-            GetStart(nelem, tid, inputs ...);
+            advance_iterators(nelem*tid, inputs ...);
             while(begin!=end){
                *out = taskf(*begin, *inputs ...);
-               NextInputs(inputs ...);
+               advance_iterators(inputs ...);
                begin++;
                out++;
             }
@@ -157,7 +157,7 @@ inline void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt
    auto end = first + elemperthr;
    while(first!=end){
          *firstOut = taskf(*first, *inputs ...);
-         NextInputs(inputs ...);
+         advance_iterators(inputs ...);
          first++;
          firstOut++;
    }

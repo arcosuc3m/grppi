@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_DIVIDEANDCONQUER_SEQ
-#define PPI_DIVIDEANDCONQUER_SEQ
+#ifndef GRPPI_DIVIDEANDCONQUER_SEQ_H
+#define GRPPI_DIVIDEANDCONQUER_SEQ_H
 namespace grppi{
 using namespace std;
 

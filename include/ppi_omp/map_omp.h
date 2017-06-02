@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP_OMP
-#define PPI_MAP_OMP
+#ifndef GRPPI_MAP_OMP_H
+#define GRPPI_MAP_OMP_H
 
 using namespace std;
 namespace grppi{
@@ -118,10 +118,10 @@ inline void internal_map(parallel_execution_omp p, InputIt first, InputIt last, 
         auto end = first + (elemperthr * (i+1));
         if( i == p.num_threads-1) end = last;
         auto out = firstOut + (elemperthr * i);
-        GetStart(elemperthr, i, inputs ...);
+        advance_iterators(elemperthr*i, inputs ...);
         while(begin!=end){
            *out = taskf(*begin, *inputs ...);
-           NextInputs(inputs ...);
+           advance_iterators(inputs ...);
            begin++;
            out++;
         }

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_DIVIDEANDCONQUER_THR
-#define PPI_DIVIDEANDCONQUER_THR
+#ifndef GRPPI_DIVIDEANDCONQUER_THR_H
+#define GRPPI_DIVIDEANDCONQUER_THR_H
 
 #include <thread>
 #include <atomic>

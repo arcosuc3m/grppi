@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_REDUCE_SEQ
-#define PPI_REDUCE_SEQ
+#ifndef GRPPI_REDUCE_SEQ_H
+#define GRPPI_REDUCE_SEQ_H
 
 using namespace std;
 namespace grppi{

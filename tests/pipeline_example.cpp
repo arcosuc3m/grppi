@@ -24,7 +24,7 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
-#include <include/pipeline.h>
+#include <pipeline.h>
 
 using namespace std;
 using namespace grppi;

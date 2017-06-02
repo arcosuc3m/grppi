@@ -18,6 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
+#ifndef GRPPI_STREAM_ITERATION_THR_H
+#define GRPPI_STREAM_ITERATION_THR_H
 
 #include <thread>
 #include <utility>
@@ -168,3 +170,4 @@ inline void StreamIteration(sequential_execution, GenFunc const & in, TaskFunc c
    }
 }
 */
+#endif

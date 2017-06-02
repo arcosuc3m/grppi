@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMFILTER_SEQ
-#define PPI_STREAMFILTER_SEQ
+#ifndef GRPPI_STREAM_FILTER_SEQ_H
+#define GRPPI_STREAM_FILTER_SEQ_H
 
 using namespace std;
 namespace grppi{
