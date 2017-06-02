@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP_TBB
-#define PPI_MAP_TBB
+#ifndef GRPPI_MAP_TBB_H
+#define GRPPI_MAP_TBB_H
 
 #include <tbb/tbb.h>
 namespace grppi{

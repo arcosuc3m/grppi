@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STENCIL_THR
-#define PPI_STENCIL_THR
+#ifndef GRPPI_STENCIL_THR_H
+#define GRPPI_STENCIL_THR_H
 
 using namespace std;
 namespace grppi{

@@ -18,10 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAPREDUCE_THR
-#define PPI_MAPREDUCE_THR
+#ifndef GRPPI_MAPREDUCE_THR_H
+#define GRPPI_MAPREDUCE_THR_H
 
-#include "reduce_thr.h"
+#include "../reduce.h"
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator,typename ... MoreIn >

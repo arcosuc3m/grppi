@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/farm.h>
+#include <farm.h>
 
 using namespace std;
 using namespace grppi;

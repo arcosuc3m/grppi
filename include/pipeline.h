@@ -18,16 +18,16 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_PIPELINE
-#define PPI_PIPELINE
+#ifndef GRPPI_PIPELINE_H
+#define GRPPI_PIPELINE_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/pipeline_seq.h"
-#include "include/ppi_thr/pipeline_thr.h"
+#include "ppi_seq/pipeline_seq.h"
+#include "ppi_thr/pipeline_thr.h"
 
 #ifdef GRPPI_OMP
-	#include "include/ppi_omp/pipeline_omp.h"
+	#include "ppi_omp/pipeline_omp.h"
 #endif
 
 #ifdef GRPPI_THRUST
@@ -35,7 +35,7 @@
 #endif 
 
 #ifdef GRPPI_TBB
-	#include "include/ppi_tbb/pipeline_tbb.h"
+	#include "ppi_tbb/pipeline_tbb.h"
 #endif 
 
 #if 0 /* START DOCUMENTATION */

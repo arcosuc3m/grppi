@@ -18,13 +18,13 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAPREDUCE 
-#define PPI_MAPREDUCE
+#ifndef GRPPI_MAPREDUCE_H 
+#define GRPPI_MAPREDUCE_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/mapreduce_seq.h"
-#include "include/ppi_thr/mapreduce_thr.h"
+#include "ppi_seq/mapreduce_seq.h"
+#include "ppi_thr/mapreduce_thr.h"
 
 #ifdef GRPPI_THRUST
   #include "ppi_thrust/mapreduce_thrust.hpp"

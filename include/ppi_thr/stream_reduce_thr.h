@@ -18,11 +18,13 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMREDUCE_THR
-#define PPI_STREAMREDUCE_THR
+#ifndef GRPPI_STREAM_REDUCE_THR_H
+#define GRPPI_STREAM_REDUCE_THR_H
+
+#include "../reduce.h"
 
 #include <thread>
-#include "reduce_thr.h"
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>

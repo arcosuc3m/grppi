@@ -17,20 +17,20 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
-#ifndef PPI_DIVIDEANDCONQUER
-#define PPI_DIVIDEANDCONQUER
+#ifndef GRPPI_DIVIDEANDCONQUER_H
+#define GRPPI_DIVIDEANDCONQUER_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/divideandconquer_seq.h"
-#include "include/ppi_thr/divideandconquer_thr.h"
+#include "ppi_seq/divideandconquer_seq.h"
+#include "ppi_thr/divideandconquer_thr.h"
 
 #ifdef GRPPI_OMP
-	#include "include/ppi_omp/divideandconquer_omp.h"
+	#include "ppi_omp/divideandconquer_omp.h"
 #endif
 
 #ifdef GRPPI_TBB
-	#include "include/ppi_tbb/divideandconquer_tbb.h"
+	#include "ppi_tbb/divideandconquer_tbb.h"
 #endif
 
 

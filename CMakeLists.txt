@@ -176,7 +176,6 @@ if( CUDA_ENABLE )
     endif( APPLE )
 endif( CUDA_ENABLE )
 
-
 # Doxygen Documentation
 add_subdirectory(docs)
 
@@ -239,6 +238,8 @@ install ( DIRECTORY ${PROJECT_SOURCE_DIR}/fastflow DESTINATION "${CMAKE_PROJECT_
 
 #install( FILES ${PPIHEADERS_CPU} DESTINATION /include/include/ )
 #install( FILES ${PPIHEADERS_GPU} DESTINATION /include/include/ )
+
+include_directories("${CMAKE_SOURCE_DIR}/include")
 
 # Test creation. Related with CMakeLists.txt on tests folder.
 option( BUILD_TESTS "Build tests" ON )

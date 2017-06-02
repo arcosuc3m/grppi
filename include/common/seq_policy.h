@@ -18,38 +18,20 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FARM_SEQ_H
-#define GRPPI_FARM_SEQ_H
+#ifndef GRPPI_SEQ_POLICY_H
+#define GRPPI_SEQ_POLICY_H
 
-using namespace std;
 namespace grppi{
-template <typename GenFunc, typename TaskFunc>
-void farm(sequential_execution , GenFunc const &in, TaskFunc const & taskf ) {
 
-    while( 1 ) {
-        auto k = in();
-        if( !k ) 
-            break;
-        taskf( k.value() );
-    }
-}
+/** @brief Set the execution mode to sequencial */
+struct sequential_execution {
+  bool ordering = true;
+  int num_threads=1;
+  bool lockfree = false;
+  /** @brief set num_threads to 1 in order to sequential execution */
+  sequential_execution(){};
+};
 
-template <typename GenFunc, typename TaskFunc, typename SinkFunc>
-void farm(sequential_execution , GenFunc const &in, TaskFunc const & taskf, SinkFunc const &sink ) {
+} // end namespace grppi
 
-    while( 1 ) {
-        auto k = in();
-        if( !k ) 
-            break;
-        auto r = taskf( k.value() );
-        sink(r);
-    }
-}
-
-
-template <typename TaskFunc>
-FarmObj<sequential_execution,TaskFunc> farm(sequential_execution s, TaskFunc && taskf){
-   return FarmObj<sequential_execution, TaskFunc>(s ,taskf);
-}
-}
 #endif

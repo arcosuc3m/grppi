@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP_THR
-#define PPI_MAP_THR
+#ifndef GRPPI_MAP_THR_H
+#define GRPPI_MAP_THR_H
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>

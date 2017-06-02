@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_REDUCE_TBB
-#define PPI_REDUCE_TBB
+#ifndef GRPPI_REDUCE_TBB_H
+#define GRPPI_REDUCE_TBB_H
 
 #include <tbb/tbb.h>
 

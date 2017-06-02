@@ -21,8 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/pipeline.h>
-#include <include/stream_filter.h>
+#include <pipeline.h>
+#include <stream_filter.h>
 #include <gtest/gtest.h>
 
 using namespace std;

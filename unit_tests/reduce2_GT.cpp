@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/reduce.h>
+#include <reduce.h>
 #include <gtest/gtest.h>
 
 using namespace std;

@@ -24,29 +24,37 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
+
 namespace grppi{
 
-struct thread_pool
+class thread_pool
 {
-  boost::thread_group threadpool;
-  boost::asio::io_service ioService;
-  std::vector<boost::asio::io_service::work> works;//(ioService);
-  int busy_threads= 0;
-  thread_pool (){
-  };
-  void initialise (int num_threads) {
-     works.push_back( std::move(boost::asio::io_service::work(ioService)));
-     for(unsigned int nthr= 0; nthr < num_threads; nthr++){
-       threadpool.create_thread(
-          boost::bind(&boost::asio::io_service::run, &ioService)
-       );
-     }
-  };
+  private: 
+    boost::thread_group threadpool;
+    boost::asio::io_service ioService;
+    std::vector<boost::asio::io_service::work> works;//(ioService);
+    int busy_threads= 0;
+
+  public:
+    thread_pool (){
+    };
+    
+    template <typename T> 
+    inline void create_task(T task ) { ioService.post(task); }
+
+    void initialise (int num_threads) {
+       works.push_back( std::move(boost::asio::io_service::work(ioService)));
+       for(unsigned int nthr= 0; nthr < num_threads; nthr++){
+         threadpool.create_thread(
+            boost::bind(&boost::asio::io_service::run, &ioService)
+         );
+       }
+    };
   
-  ~thread_pool(){
-      ioService.stop();
-      threadpool.join_all();
-   };
+    ~thread_pool(){
+        ioService.stop();
+        threadpool.join_all();
+     };
 
 };
 

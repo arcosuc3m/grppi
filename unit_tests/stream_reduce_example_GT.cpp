@@ -21,11 +21,10 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/stream_reduce.h>
+#include <stream_reduce.h>
 #include <string>
 #include <sstream>
 #include <gtest/gtest.h>
-
 using namespace grppi;
 
 std::vector<int> read_list(std::istream & is){

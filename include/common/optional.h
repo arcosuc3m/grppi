@@ -18,18 +18,34 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_IS_ITERATOR
-#define PPI_IS_ITERATOR
+#ifndef GRPPI_OPTIONAL_H
+#define GRPPI_OPTIONAL_H
 
-template<typename T, typename = void>
-struct is_iterator
-{
-   static constexpr bool value = false;
+namespace grppi{
+
+template <typename T>
+class optional {
+    public:
+        typedef T type;
+        typedef T value_type;
+        T elem;
+        bool end;
+        optional(): end(true) { }
+        optional(const T& i): elem(i), end(false) { }
+
+        optional& operator=(const optional& o) {
+                 elem = o.elem;
+                 end = o.end;
+                 return *this;
+        }
+
+        T& value(){ return elem; }
+
+        constexpr explicit operator bool() const {
+            return !end;
+        }
 };
 
-template<typename T>
-struct is_iterator<T, typename std::enable_if<!std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
-{
-   static constexpr bool value = true;
-};
+} // end namespace grppi
+
 #endif

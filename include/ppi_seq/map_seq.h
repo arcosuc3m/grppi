@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP_SEQ
-#define PPI_MAP_SEQ
+#ifndef GRPPI_MAP_SEQ_H
+#define GRPPI_MAP_SEQ_H
 
 using namespace std;
 namespace grppi{

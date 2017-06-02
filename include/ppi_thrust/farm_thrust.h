@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_FARM_THRUST
-#define PPI_FARM_THRUST
+#ifndef GRPPI_FARM_THRUST_H
+#define GRPPI_FARM_THRUST_H
 
 #ifdef __CUDACC__
 

@@ -24,9 +24,8 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
-#include <include/pipeline.h>
+#include <pipeline.h>
 #include <gtest/gtest.h>
-
 #include <atomic>
 
 using namespace std;

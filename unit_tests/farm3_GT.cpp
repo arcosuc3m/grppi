@@ -22,7 +22,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/farm.h>
+#include <farm.h>
 #include <gtest/gtest.h>
 
 using namespace std;

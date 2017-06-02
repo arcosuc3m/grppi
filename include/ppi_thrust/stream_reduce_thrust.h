@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMREDUCE_THRUST
-#define PPI_STREAMREDUCE_THRUST
+#ifndef GRPPI_STREAM_REDUCE_THRUST_H
+#define GRPPI_STREAM_REDUCE_THRUST_H
 
 #ifdef __CUDACC__
 

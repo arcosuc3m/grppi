@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/farm.h>
-#include <include/pipeline.h>
-#include <include/stream_iteration.h>
+#include <farm.h>
+#include <pipeline.h>
+#include <stream_iteration.h>
 
 using namespace std;
 using namespace grppi;

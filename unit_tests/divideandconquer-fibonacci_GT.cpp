@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include "include/divideandconquer.h"
+#include "divideandconquer.h"
 #include <gtest/gtest.h>
 
 using namespace std;

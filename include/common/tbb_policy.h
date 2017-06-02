@@ -17,40 +17,32 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <chrono>
-#include <ppi/map.h>
-#include <gtest/gtest.h>
 
-using namespace std;
-using namespace grppi;
+#ifndef GRPPI_TBB_POLICY_H
+#define GRPPI_TBB_POLICY_H
 
-int map_example1() {
+namespace grppi{
 
-    int output = 0;
+/** @brief Set the execution mode to parallel with threading building blocks
+ *    (TBB) framework implementation
+ */
+struct parallel_execution_tbb{
+  bool ordering = true;
+  bool lockfree = false;
+  int num_threads = 4;
+  int num_tokens = 100;
+  /** @brief Set num_threads to the maximum number of thread available by the
+   *    hardware
+   */
+  parallel_execution_tbb(){};
 
-    std::vector<int> in(1000);
-    for(int i=0;i<in.size();i++) in[i] = i;
-    std::vector<int> out(1000);
+  /** @brief Set num_threads to _threads in order to run in parallel
+   *
+   *  @param _threads number of threads used in the parallel mode
+   */
+  parallel_execution_tbb(int _threads){ num_threads= _threads; };
+};
 
-    auto p = parallel_execution_thrust(1, thrust::cuda::par);
-    cudaGetDeviceCount(&(p.num_gpus));
+} // end namespace grppi
 
-    grppi::map(p, in.begin(), in.end(), out.begin(), [] __device__ (int i)->int { return i; });
-
-    for(int i=0;i<in.size();i++){
-      output += out[i];  
-    } 
-    return output;
-}
-
-TEST(GrPPI, map_gpu ){
-    EXPECT_EQ(499500, map_example1() );
-}
-
-int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+#endif

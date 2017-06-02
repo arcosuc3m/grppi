@@ -19,7 +19,7 @@
 */
 #include <iostream>
 #include <cassert>
-#include "include/common/operator.h"
+#include "common/operator.h"
 
 using namespace std;
 using namespace grppi;

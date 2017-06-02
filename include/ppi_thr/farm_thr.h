@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_FARM_THR
-#define PPI_FARM_THR
+#ifndef GRPPI_FARM_THR_H
+#define GRPPI_FARM_THR_H
 
 
 #include <thread>

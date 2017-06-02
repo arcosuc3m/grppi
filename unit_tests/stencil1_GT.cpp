@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/stencil.h>
+#include <stencil.h>
 #include <gtest/gtest.h>
 
 using namespace std;

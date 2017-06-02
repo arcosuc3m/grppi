@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_FARM_OMP
-#define PPI_FARM_OMP
+#ifndef GRPPI_FARM_OMP_H
+#define GRPPI_FARM_OMP_H
 
 namespace grppi
 {

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_DIVIDEANDCONQUER_TBB
-#define PPI_DIVIDEANDCONQUER_TBB
+#ifndef GRPPI_DIVIDEANDCONQUER_TBB_H
+#define GRPPI_DIVIDEANDCONQUER_TBB_H
 
 #include <tbb/tbb.h>
 namespace grppi{
