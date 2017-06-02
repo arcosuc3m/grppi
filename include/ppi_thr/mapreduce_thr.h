@@ -21,7 +21,7 @@
 #ifndef PPI_MAPREDUCE_THR
 #define PPI_MAPREDUCE_THR
 
-#include "reduce_thr.h"
+#include "../reduce.h"
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator,typename ... MoreIn >

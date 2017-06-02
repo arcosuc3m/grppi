@@ -42,7 +42,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
-#include "pool.h"
+#include "../ppi_thr/pool.h"
 
 namespace grppi{
 

@@ -20,7 +20,7 @@
 
 #ifndef PPI_STREAMREDUCE_TBB
 #define PPI_STREAMREDUCE_TBB
-#include "reduce_tbb.h"
+#include "../reduce.h"
 #include <tbb/tbb.h>
 
 using namespace std;

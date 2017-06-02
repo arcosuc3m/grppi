@@ -21,8 +21,9 @@
 #ifndef PPI_STREAMREDUCE_THR
 #define PPI_STREAMREDUCE_THR
 
+#include "../reduce.h"
 #include <thread>
-#include "reduce_thr.h"
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>

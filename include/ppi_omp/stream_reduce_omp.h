@@ -20,7 +20,9 @@
 
 #ifndef PPI_STREAMREDUCE_OMP
 #define PPI_STREAMREDUCE_OMP
-#include "reduce_omp.h"
+
+#include "../reduce.h"
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>

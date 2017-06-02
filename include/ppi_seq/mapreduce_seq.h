@@ -21,7 +21,7 @@
 #ifndef PPI_MAPREDUCE_SEQ
 #define PPI_MAPREDUCE_SEQ
 
-#include "reduce_seq.h"
+#include "../reduce.h"
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >

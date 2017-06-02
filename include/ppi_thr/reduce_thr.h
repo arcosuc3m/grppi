@@ -47,7 +47,7 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
       auto end = first + (elemperthr * (i+1));
       if(i == p.num_threads -1) end = last;
 
-      p.pool.ioService.post(boost::bind<void>(
+      p.pool.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
 //               begin++;
@@ -184,7 +184,7 @@ reduce(parallel_execution_thr &p, InputIt first, InputIt last, ReduceOperator op
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
       if(i == p.num_threads -1) end = last;
-      p.pool.ioService.post(boost::bind<void>(
+      p.pool.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
     //           begin++;

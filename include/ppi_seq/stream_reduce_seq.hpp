@@ -21,8 +21,9 @@
 #ifndef PPI_STREAMREDUCE_SEQ
 #define PPI_STREAMREDUCE_SEQ
 
-#include "reduce_seq.h"
+#include "../reduce.h"
 #include <vector>
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
