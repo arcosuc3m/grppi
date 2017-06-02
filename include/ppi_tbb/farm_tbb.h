@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_FARM_TBB
-#define PPI_FARM_TBB
+#ifndef GRPPI_FARM_TBB_H
+#define GRPPI_FARM_TBB_H
 
 #include <tbb/tbb.h>
 namespace grppi{

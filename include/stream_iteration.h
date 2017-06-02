@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAM_ITERATION
-#define PPI_STREAM_ITERATION
+#ifndef GRPPI_STREAM_ITERATION_H
+#define GRPPI_STREAM_ITERATION_H
 
 #include "include/common/common.h"
 

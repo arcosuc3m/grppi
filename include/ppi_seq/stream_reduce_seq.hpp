@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMREDUCE_SEQ
-#define PPI_STREAMREDUCE_SEQ
+#ifndef GRPPI_STREAM_REDUCE_SEQ_H
+#define GRPPI_STREAM_REDUCE_SEQ_H
 
 #include "reduce_seq.h"
 #include <vector>

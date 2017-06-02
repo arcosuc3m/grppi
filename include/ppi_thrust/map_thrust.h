@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP_THRUST
-#define PPI_MAP_THRUST
+#ifndef GRPPI_MAP_THRUST_H
+#define GRPPI_MAP_THRUST_H
 
 #ifdef __CUDACC__
 

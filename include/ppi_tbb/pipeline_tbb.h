@@ -18,11 +18,11 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_PIPELINE_TBB
-#define PPI_PIPELINE_TBB
+#ifndef GRPPI_PIPELINE_TBB_H
+#define GRPPI_PIPELINE_TBB_H
 
-#include <tbb/tbb.h>
 #include <tbb/pipeline.h>
+#include <tbb/tbb.h>
 
 using namespace std;
 namespace grppi{

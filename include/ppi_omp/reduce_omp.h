@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_REDUCE_OMP
-#define PPI_REDUCE_OMP
+#ifndef GRPPI_REDUCE_OMP_H
+#define GRPPI_REDUCE_OMP_H
 
 #include <thread>
 

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_PIPELINE_THR
-#define PPI_PIPELINE_THR
+#ifndef GRPPI_PIPELINE_THR_H
+#define GRPPI_PIPELINE_THR_H
 
 #include <thread>
 

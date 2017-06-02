@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STENCIL 
-#define PPI_STENCIL
+#ifndef GRPPI_STENCIL_H 
+#define GRPPI_STENCIL_H
 
 #include "include/common/common.h"
 

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMREDUCE
-#define PPI_STREAMREDUCE
+#ifndef GRPPI_STREAMREDUCE_H
+#define GRPPI_STREAMREDUCE_H
 
 #include "include/common/common.h"
 

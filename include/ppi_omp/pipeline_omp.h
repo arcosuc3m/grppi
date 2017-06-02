@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_PIPELINE_OMP
-#define PPI_PIPELINE_OMP
+#ifndef GRPPI_PIPELINE_OMP_H
+#define GRPPI_PIPELINE_OMP_H
 
 #include <boost/lockfree/spsc_queue.hpp>
 

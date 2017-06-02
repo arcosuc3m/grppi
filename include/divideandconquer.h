@@ -17,8 +17,8 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
-#ifndef PPI_DIVIDEANDCONQUER
-#define PPI_DIVIDEANDCONQUER
+#ifndef GRPPI_DIVIDEANDCONQUER_H
+#define GRPPI_DIVIDEANDCONQUER_H
 
 #include "include/common/common.h"
 

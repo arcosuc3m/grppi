@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMFILTER_TBB
-#define PPI_STREAMFILTER_TBB
+#ifndef GRPPI_STREAM_FILTER_TBB_H
+#define GRPPI_STREAM_FILTER_TBB_H
 
 #include <tbb/tbb.h>
 using namespace std;

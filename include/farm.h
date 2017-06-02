@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_FARM
-#define PPI_FARM
+#ifndef GRPPI_FARM_H
+#define GRPPI_FARM_H
 
 #include "include/common/common.h"
 

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_STREAMFILTER
-#define PPI_STREAMFILTER
+#ifndef GRPPI_STREAMFILTER_H
+#define GRPPI_STREAMFILTER_H
 
 #include "include/common/common.h"
 

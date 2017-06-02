@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_REDUCE 
-#define PPI_REDUCE
+#ifndef GRPPI_REDUCE_H 
+#define GRPPI_REDUCE_H
 
 #include "include/common/common.h"
 

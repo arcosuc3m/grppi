@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_FARM_SEQ
-#define PPI_FARM_SEQ
+#ifndef GRPPI_FARM_SEQ_H
+#define GRPPI_FARM_SEQ_H
 
 using namespace std;
 namespace grppi{

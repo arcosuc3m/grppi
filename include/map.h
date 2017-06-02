@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_MAP
-#define PPI_MAP
+#ifndef GRPPI_MAP_H
+#define GRPPI_MAP_H
 
 #include "include/common/common.h"
 

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_REDUCE_THR
-#define PPI_REDUCE_THR
+#ifndef GRPPI_REDUCE_THR_H
+#define GRPPI_REDUCE_THR_H
 
 #include <thread>
 #include <functional>
