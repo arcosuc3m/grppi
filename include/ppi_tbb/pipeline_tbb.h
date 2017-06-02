@@ -50,8 +50,10 @@ stages(parallel_execution_tbb p, Stream st, Stage se, Stages ... sgs ) {
 }
 
 //First stage
-template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type, typename ...Stages>
-inline typename std::enable_if<!_has_arguments<FuncIn>::value, void>::type pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
+template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
+          typename ...Stages,
+          requires_no_arguments<FuncIn> = 0>
+void pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
     typedef typename std::result_of<FuncIn()>::type::value_type outputType;
     outputType k;
     const auto stage = tbb::make_filter<void, outputType>(

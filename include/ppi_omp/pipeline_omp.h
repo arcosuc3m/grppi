@@ -239,8 +239,10 @@ void stages(parallel_execution_omp p, Stream& st, Stage const& se, Stages ... sg
 }
 
 //First stage
-template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type, typename ...Stages>
-inline typename std::enable_if<!_has_arguments<FuncIn>::value, void>::type  pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
+template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
+          typename ...Stages,
+          requires_no_arguments<FuncIn> = 0>
+void pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
 
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE);

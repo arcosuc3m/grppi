@@ -40,42 +40,9 @@
 #include "optional.h"
 #include "mpmc_queue.h"
 #include "callable_traits.h"
+#include "iterator.h"
 
 namespace grppi{
-
-template <typename T>
-class _has_arguments
-{
- template <typename C> static char test( typename  std::result_of<C()>::type*  );
- template <typename C> static long test( ... );
- public:
-    static bool const value = !( sizeof( test<T>(0) ) == sizeof(char) );
-};
-
-
-template <typename InputIt>
-void GetStart(int n, int tid, InputIt& in){
-    in = in + (n*tid);
-}
-
-template <typename InputIt, typename ... MoreIn>
-void GetStart(int n, int tid, InputIt& in, MoreIn ... inputs){
-    in = in + (n*tid);
-    GetStart(n,tid,inputs...);
-}
-
-//Update iterators
-template <typename InputIt>
-void NextInputs(InputIt &in){
-   in++;
-}
-
-template <typename InputIt, typename ... MoreIn>
-void NextInputs(InputIt &in, MoreIn ... inputs){
-   in++;
-   NextInputs(inputs...);
-}
-
 
 template <typename E,typename Stage, typename ... Stages>
 class PipelineObj{

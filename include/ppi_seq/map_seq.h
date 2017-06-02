@@ -47,7 +47,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 inline void map(sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
-        NextInputs( inputs... );
+        advance_iterators( inputs... );
         first++;
         firstOut++;
     }
