@@ -21,7 +21,7 @@
 #ifndef GRPPI_MAPREDUCE_SEQ_H
 #define GRPPI_MAPREDUCE_SEQ_H
 
-#include "reduce_seq.h"
+#include "../reduce.h"
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >

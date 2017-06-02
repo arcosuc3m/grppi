@@ -21,8 +21,9 @@
 #ifndef GRPPI_STREAM_REDUCE_SEQ_H
 #define GRPPI_STREAM_REDUCE_SEQ_H
 
-#include "reduce_seq.h"
+#include "../reduce.h"
 #include <vector>
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>

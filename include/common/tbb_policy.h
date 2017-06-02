@@ -18,38 +18,31 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_POOL
-#define PPI_POOL
+#ifndef GRPPI_TBB_POLICY_H
+#define GRPPI_TBB_POLICY_H
 
-#include <boost/asio/io_service.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread/thread.hpp>
 namespace grppi{
 
-struct thread_pool
-{
-  boost::thread_group threadpool;
-  boost::asio::io_service ioService;
-  std::vector<boost::asio::io_service::work> works;//(ioService);
-  int busy_threads= 0;
-  thread_pool (){
-  };
-  void initialise (int num_threads) {
-     works.push_back( std::move(boost::asio::io_service::work(ioService)));
-     for(unsigned int nthr= 0; nthr < num_threads; nthr++){
-       threadpool.create_thread(
-          boost::bind(&boost::asio::io_service::run, &ioService)
-       );
-     }
-  };
-  
-  ~thread_pool(){
-      ioService.stop();
-      threadpool.join_all();
-   };
+/** @brief Set the execution mode to parallel with threading building blocks
+ *    (TBB) framework implementation
+ */
+struct parallel_execution_tbb{
+  bool ordering = true;
+  bool lockfree = false;
+  int num_threads = 4;
+  int num_tokens = 100;
+  /** @brief Set num_threads to the maximum number of thread available by the
+   *    hardware
+   */
+  parallel_execution_tbb(){};
 
+  /** @brief Set num_threads to _threads in order to run in parallel
+   *
+   *  @param _threads number of threads used in the parallel mode
+   */
+  parallel_execution_tbb(int _threads){ num_threads= _threads; };
 };
 
-}
+} // end namespace grppi
 
 #endif

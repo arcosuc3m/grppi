@@ -20,7 +20,8 @@
 
 #ifndef GRPPI_STREAM_REDUCE_TBB_H
 #define GRPPI_STREAM_REDUCE_TBB_H
-#include "reduce_tbb.h"
+
+#include "../reduce.h"
 #include <tbb/tbb.h>
 
 using namespace std;

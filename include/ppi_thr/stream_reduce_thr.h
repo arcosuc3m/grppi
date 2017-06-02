@@ -21,7 +21,8 @@
 #ifndef GRPPI_STREAM_REDUCE_THR_H
 #define GRPPI_STREAM_REDUCE_THR_H
 
-#include "reduce_thr.h"
+#include "../reduce.h"
+
 #include <thread>
 
 using namespace std;
