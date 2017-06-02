@@ -140,7 +140,7 @@ if(CUDA_FOUND)
 endif(CUDA_FOUND)
 
 
-# GOOGLE TEST----------------------------------------------------------------------------
+#[[# GOOGLE TEST----------------------------------------------------------------------------
 
 option( GTest_ENABLE "Activate Google Test" OFF)
 
@@ -215,3 +215,4 @@ if(GTest_ENABLE)
   endforeach( t )
 
 endif(GTest_ENABLE)
+]]
