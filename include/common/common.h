@@ -24,7 +24,6 @@
 #include <thread>
 #include <atomic>
 
-#include "is_iterator.h"
 #include "mpmc_queue.h"
 
 #ifdef GRPPI_THRUST
