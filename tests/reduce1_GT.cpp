@@ -21,11 +21,11 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/reduce.h>
+#include <reduce.h>
 #include <functional>
 #include <limits>
 #include <gtest/gtest.h>
-#include "../include/enable_flags.hpp"
+#include "enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;

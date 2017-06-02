@@ -25,10 +25,10 @@
 #include <algorithm>
 
 #include <chrono>
-#include <include/farm.h>
+#include <farm.h>
 
 #include <gtest/gtest.h>
-#include "../include/enable_flags.hpp"
+#include "enable_flags.hpp"
 #include <atomic>
 
 using namespace std;

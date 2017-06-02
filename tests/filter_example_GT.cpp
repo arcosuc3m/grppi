@@ -25,9 +25,9 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
-#include <include/stream_filter.h>
+#include <stream_filter.h>
 #include <gtest/gtest.h>
-#include "../include/enable_flags.hpp"
+#include "enable_flags.hpp"
 #include <atomic>
 
 using namespace std;

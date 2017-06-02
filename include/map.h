@@ -21,22 +21,22 @@
 #ifndef GRPPI_MAP_H
 #define GRPPI_MAP_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/map_seq.h"
-#include "include/ppi_thr/map_thr.h"
+#include "ppi_seq/map_seq.h"
+#include "ppi_thr/map_thr.h"
 
 #if GRPPI_THRUST
   #include "ppi_thrust/map_thrust.hpp"
 #endif
 
 #ifdef GRPPI_OMP
-	#include "include/ppi_omp/map_omp.h"
+	#include "ppi_omp/map_omp.h"
 
 #endif
 
 #ifdef GRPPI_TBB
-	#include "include/ppi_tbb/map_tbb.h"
+	#include "ppi_tbb/map_tbb.h"
 #endif
 
 #if 0 /* START DOCUMENTATION */

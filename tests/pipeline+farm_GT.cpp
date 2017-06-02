@@ -21,10 +21,10 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/pipeline.h>
-#include <include/farm.h>
+#include <pipeline.h>
+#include <farm.h>
 #include <gtest/gtest.h>
-#include "../include/enable_flags.hpp"
+#include "enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;

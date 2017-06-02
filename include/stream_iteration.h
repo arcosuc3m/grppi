@@ -21,10 +21,10 @@
 #ifndef GRPPI_STREAM_ITERATION_H
 #define GRPPI_STREAM_ITERATION_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/stream_iteration_seq.h"
-#include "include/ppi_thr/stream_iteration_thr.h"
+#include "ppi_seq/stream_iteration_seq.h"
+#include "ppi_thr/stream_iteration_thr.h"
 //#include "ppi_thrust/farm_thrust.hpp"
 
 #ifdef OMP_ENABLE

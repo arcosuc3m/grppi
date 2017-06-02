@@ -21,8 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/pipeline.h>
-#include <include/farm.h>
+#include <pipeline.h>
+#include <farm.h>
 #include <algorithm>
 
 using namespace std;

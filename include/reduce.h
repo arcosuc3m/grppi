@@ -21,7 +21,7 @@
 #ifndef GRPPI_REDUCE_H 
 #define GRPPI_REDUCE_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
 namespace grppi{
   template<typename T, typename = void>
@@ -37,19 +37,19 @@ namespace grppi{
   };
 }
 
-#include "include/ppi_seq/reduce_seq.h"
-#include "include/ppi_thr/reduce_thr.h"
+#include "ppi_seq/reduce_seq.h"
+#include "ppi_thr/reduce_thr.h"
 
 #ifdef GRPPI_THRUST
   #include "ppi_thrust/reduce_thrust.hpp"
 #endif
 
 #ifdef GRPPI_OMP
-	#include "include/ppi_omp/reduce_omp.h"
+	#include "ppi_omp/reduce_omp.h"
 #endif
 
 #ifdef GRPPI_TBB
-	#include "include/ppi_tbb/reduce_tbb.h"
+	#include "ppi_tbb/reduce_tbb.h"
 #endif
 
 #if 0 /* START DOCUMENTATION */

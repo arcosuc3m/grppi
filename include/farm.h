@@ -21,21 +21,21 @@
 #ifndef GRPPI_FARM_H
 #define GRPPI_FARM_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/farm_seq.h"
-#include "include/ppi_thr/farm_thr.h"
+#include "ppi_seq/farm_seq.h"
+#include "ppi_thr/farm_thr.h"
 
 #if GRPPI_THRUST
   #include "ppi_thrust/farm_thrust.hpp"
 #endif
 
 #ifdef GRPPI_OMP
-	#include "include/ppi_omp/farm_omp.h"
+	#include "ppi_omp/farm_omp.h"
 #endif
 
 #ifdef GRPPI_TBB
-	#include "include/ppi_tbb/farm_tbb.h"
+	#include "ppi_tbb/farm_tbb.h"
 #endif
 
 #if 0 /* START DOCUMENTATION */

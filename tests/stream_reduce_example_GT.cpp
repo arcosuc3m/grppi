@@ -21,11 +21,11 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/stream_reduce.h>
+#include <stream_reduce.h>
 #include <string>
 #include <sstream>
 #include <gtest/gtest.h>
-#include "../include/enable_flags.hpp"
+#include "enable_flags.hpp"
 using namespace grppi;
 
 std::vector<int> read_list(std::istream & is){

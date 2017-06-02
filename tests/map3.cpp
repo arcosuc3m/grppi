@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/map.h>
+#include <map.h>
 
 using namespace std;
 using namespace grppi;

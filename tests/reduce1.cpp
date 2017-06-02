@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/reduce.h>
+#include <reduce.h>
 #include <functional>
 using namespace std;
 using namespace grppi;

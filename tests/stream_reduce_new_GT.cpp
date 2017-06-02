@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <include/stream_reduce.h>
+#include <stream_reduce.h>
 #include <gtest/gtest.h>
-#include "../include/enable_flags.hpp"
+#include "enable_flags.hpp"
 
 using namespace std;
 using namespace grppi;

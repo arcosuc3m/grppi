@@ -21,17 +21,17 @@
 #ifndef GRPPI_STENCIL_H 
 #define GRPPI_STENCIL_H
 
-#include "include/common/common.h"
+#include "common/common.h"
 
-#include "include/ppi_seq/stencil_seq.h"
-#include "include/ppi_thr/stencil_thr.h"
+#include "ppi_seq/stencil_seq.h"
+#include "ppi_thr/stencil_thr.h"
 
 #ifdef GRPPI_OMP
-	#include "include/ppi_omp/stencil_omp.h"
+	#include "ppi_omp/stencil_omp.h"
 #endif
 
 #ifdef GRPPI_TBB
-	#include "include/ppi_tbb/stencil_tbb.h"
+	#include "ppi_tbb/stencil_tbb.h"
 #endif
 
 #if 0 /* START DOCUMENTATION */
