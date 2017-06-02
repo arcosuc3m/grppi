@@ -28,10 +28,6 @@
 #include "omp_policy.h"
 #endif
 
-#include <boost/asio/io_service.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread/thread.hpp>
-
 #ifdef GRPPI_THRUST
 #include "thrust_policy.h"
 #endif
@@ -40,9 +36,10 @@
 #include "tbb_policy.h"
 #endif
 
+// Includes with GRPPI internals
 #include "optional.h"
-
 #include "mpmc_queue.h"
+#include "callable_traits.h"
 
 namespace grppi{
 
