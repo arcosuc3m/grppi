@@ -78,19 +78,20 @@ constexpr bool has_arguments() {
   return typename callable<F>::arity() != 0;
 }
 
+} // end namespace internal
+
 // Concept emulation requiring a callable with no arguments
 template <typename F>
 using requires_no_arguments =
-  typename std::enable_if_t<!has_arguments<F>(), int>;
+  typename std::enable_if_t<!internal::has_arguments<F>(), int>;
 
 // Concept emulation requiring a callable with one or more arguments
 template <typename F>
 using requires_arguments =
-  typename std::enable_if_t<has_arguments<F>(), int>;
+  typename std::enable_if_t<internal::has_arguments<F>(), int>;
 
 
 
-} // end namespace internal
 
 } // end namespace grppi
 

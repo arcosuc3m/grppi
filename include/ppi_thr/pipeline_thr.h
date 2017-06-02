@@ -349,8 +349,9 @@ inline void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stage
 
 //First stage
 //template <typename FuncIn,typename... Arguments>
-template <typename FuncIn, typename ...Stages>
-inline typename std::enable_if<!_has_arguments<FuncIn>::value, void>::type pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
+template <typename FuncIn, typename ...Stages,
+          requires_no_arguments<FuncIn> = 0>
+void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
     //Create stream generator stage
@@ -380,8 +381,11 @@ inline typename std::enable_if<!_has_arguments<FuncIn>::value, void>::type pipel
 
 //template <typename Stage, typename = typename std::enable_if<!std::is_convertible<Stage,execution_model>::value>::type, typename ...Stages>
 //PipelineObj<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage && s, Stages && ...sts)
-template <typename Execution_model, typename Stage,  /*typename std::enable_if<_has_arguments<Stage>::value>::type,*/  typename ...Stages>
-typename std::enable_if<_has_arguments<Stage>::value, PipelineObj< Execution_model,Stage,Stages...> >::type pipeline(Execution_model &p, Stage && s, Stages && ...sts)
+template <typename Execution_model, typename Stage,  
+          /*typename std::enable_if<_has_arguments<Stage>::value>::type,*/  
+          typename ...Stages,
+          requires_arguments<Stage> = 0>
+PipelineObj< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage && s, Stages && ...sts)
 {
     return PipelineObj<Execution_model,Stage, Stages ...> (p, s, sts...);
 }
