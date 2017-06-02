@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/reduce.hpp>
+#include <reduce.h>
 
 using namespace std;
 using namespace grppi;
@@ -61,12 +61,12 @@ void reduce_example1() {
 //     },  [&](auto & in, auto & out){ out += in; } );
 //
 
-     Reduce(p, in.begin(), in.end(), out.begin(), [&](auto & in, auto & out){
-             Reduce(p, in.begin(), in.end(), out,  std::plus<int>() );
+     reduce(p, in.begin(), in.end(), out.begin(), [&](auto & in, auto & out){
+             reduce(p, in.begin(), in.end(), out,  std::plus<int>() );
          } 
      );
 
-    Reduce(p, out.begin(), out.end(), out2,  std::plus<int>() );
+    reduce(p, out.begin(), out.end(), out2,  std::plus<int>() );
  
 
     std::cout<<out2<<std::endl;

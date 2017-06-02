@@ -24,7 +24,7 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
@@ -64,7 +64,7 @@ void pipeline_example() {
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
     int numchar = 0;
     p.ordering=true;
-    Pipeline( p, 
+    pipeline( p,
         // Pipeline stage 0
         [&]() {
              auto v = read_list(is);
