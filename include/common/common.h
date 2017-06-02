@@ -24,7 +24,6 @@
 #include <thread>
 #include <atomic>
 
-#include "mpmc_queue.h"
 
 #ifdef GRPPI_THRUST
         #include <thrust/execution_policy.h>
@@ -45,106 +44,8 @@
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 
-namespace grppi{
-
-/** @brief Set the execution mode to sequencial */
-struct sequential_execution {
-  bool ordering = true;
-  int num_threads=1;
-  bool lockfree = false;
-  /** @brief set num_threads to 1 in order to sequential execution */
-  sequential_execution(){};
-};
-
-//extern bool initialised;
-//extern thread_pool pool;
-/** @brief Set the execution mode to parallel with posix thread implementation 
- */
-struct parallel_execution_thr{
-  public: 
-  thread_pool pool;
-  bool ordering = true;
-  int num_threads = 4;
-  bool lockfree = false;
-
-  int get_threadID(){
-      while (lock.test_and_set(std::memory_order_acquire));
-      auto it = std::find(thid_table.begin(), thid_table.end(), std::this_thread::get_id());
-      auto id = std::distance(thid_table.begin(), it);
-      lock.clear(std::memory_order_release);  
-      return id; 
-  }
-  
-  void register_thread(){
-      while (lock.test_and_set(std::memory_order_acquire));
-      thid_table.push_back(std::this_thread::get_id());    
-      lock.clear(std::memory_order_release);  
-  }
-  
-  void deregister_thread(){
-      while (lock.test_and_set(std::memory_order_acquire));
-      thid_table.erase(std::remove(thid_table.begin(), thid_table.end(),std::this_thread::get_id()), thid_table.end());
-      lock.clear(std::memory_order_release);  
-  }
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_thr(){ /*if(!initialised)*/ pool.initialise(this->num_threads); };
-
-  /** @brief Set num_threads to _threads in order to run in parallel
-   *
-   *  @param _threads number of threads used in the parallel mode
-   */
-  parallel_execution_thr(int _threads){ num_threads=_threads;  pool.initialise (_threads);};
-
-  /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
-   *
-   *  @param _threads number of threads used in the parallel mode
-   *  @param _order enable or disable the ordered execution
-   */
-  parallel_execution_thr(int _threads, bool order){ num_threads=_threads; ordering = order; pool.initialise (_threads);};
-  private: 
-     std::atomic_flag lock = ATOMIC_FLAG_INIT;
-     std::vector<std::thread::id> thid_table;
-
-};
-
-
-#ifdef GRPPI_OMP
-/** @brief Set the execution mode to parallel with ompenmp framework 
- *    implementation 
- */
-struct parallel_execution_omp{
-  bool ordering = true;
-  bool lockfree = false;
-  int num_threads = 4;
-  int get_threadID(){
-     return omp_get_thread_num();
-  }
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_omp(){};
-
-  /** @brief Set num_threads to _threads in order to run in parallel
-   *
-   *  @param _threads number of threads used in the parallel mode
-   */
-  parallel_execution_omp(int _threads){num_threads=_threads; };
-
-  /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
-   *
-   *  @param _threads number of threads used in the parallel mode
-   *  @param _order enable or disable the ordered execution
-   */
-  parallel_execution_omp(int _threads, bool order){ num_threads=_threads; ordering = order;};
-
-};
-
-=======
 #ifdef GRPPI_THRUST
 #include "thrust_policy.h"
->>>>>>> fc0566fc3248a14aa97736debcdc013d365f2ee6
 #endif
 
 #ifdef GRPPI_TBB
@@ -153,7 +54,6 @@ struct parallel_execution_omp{
 
 #include "optional.h"
 
-#include "is_iterator.h"
 #include "mpmc_queue.h"
 
 namespace grppi{
