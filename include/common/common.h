@@ -21,6 +21,7 @@
 #ifndef GRPPI_COMMON_H
 #define GRPPI_COMMON_H
 
+// Includes for execution policies
 #include "seq_policy.h"
 #include "thread_policy.h"
 
@@ -41,49 +42,6 @@
 #include "mpmc_queue.h"
 #include "callable_traits.h"
 #include "iterator.h"
-
-namespace grppi{
-
-template <typename E,typename Stage, typename ... Stages>
-class PipelineObj{
-   public:
-      E * exectype;
-      std::tuple<Stage *, Stages *...> stages;
-      PipelineObj(E &p, Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) { exectype = &p;}
-};
-
-template <typename E,class TaskFunc, class RedFunc>
-class ReduceObj
-{
-   public:
-      TaskFunc * task;
-      RedFunc * red;
-      E exectype;
-      ReduceObj(E s, TaskFunc farm, RedFunc r){exectype=s; task = &farm; red= &r;}
-};
-
-template <typename E,class TaskFunc>
-class FarmObj
-{
-   public:
-      TaskFunc * task;
-      E * exectype;
-      int farmtype;
-      FarmObj(E &s,TaskFunc f){exectype=&s; task = &f;};
-
-
-};
-
-template <typename E,class TaskFunc>
-class FilterObj
-{
-   public:
-      TaskFunc * task;
-      E *exectype;
-      int filtertype;
-      FilterObj(E& s,TaskFunc f){exectype=&s; task = &f;};
-};
-
-}
+#include "patterns.h"
 
 #endif
