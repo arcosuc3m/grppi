@@ -1,15 +1,10 @@
-**Generic Pattern Interface - GrPPI**
+# Generic Reusable Parallel Pattern Interface - GrPPI
 
 ## Introduction ##
-Generic Pattern Interface (GrPPI) is a tool that works as an intermediate layer between the existing parallel pattern frameworks and developers, providing an interface that simplifies the development of parallel applications by the homogenization of the different libraries syntaxes in a common one. 
 
-The main advantages of this framework are:
+**GrPPI** is an open source *generic and reusable parallel pattern programming interface* developed at Univ. Carlos III of Madrid. Basically, **GrPPI** accommodates a layer between developers and existing parallel programming frameworks targeted to multi-core processors, such as ISO C++ Threads, OpenMP and Intel TBB, and accelerators. It also support GPU programming by means of CUDA Thrust. To achieve this goal, the interface leverages modern C++ features, metaprogramming concepts, and template-based programming to act as switch between these frameworks. Furthermore, its compact design facilitates the development of parallel applications, hiding away the complexity behind the use of concurrency mechanisms. The parallel patterns supported by GrPPI are targeted for both stream processing and data-intensive applications and can be composed among them to match more complex constructions. In a nutshell, **GrPPI** advocates for a usable, simple, generic, and high-level parallel pattern interface, allowing users to implement parallel applications without having a deep understanding of today's parallel programming frameworks and third-party interfaces.
 
-  * Help programmers to take advantage of the parallel hardware resources
-
-  * Provide a simple way of porting applications between different parallel programming models and platforms
-
-The parallel patterns implemented are:
+Currently, **GrPPI** supports the following patterns:
 
   * Divide-and-conquer
 
