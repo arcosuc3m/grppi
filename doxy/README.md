@@ -10,4 +10,4 @@ Doxyfile has the configuration of the documentation generator and CMakeLists.txt
 3. Execute cmake ..
 4. Execute make doc_doxygen
 
-The doc directory will be created and the doxygen documentation shall be located inside in two formats, HTMl and Latex.
+The doc directory will be created and the doxygen documentation shall be located inside in two formats, HTML and Latex.
