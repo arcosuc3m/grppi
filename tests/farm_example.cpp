@@ -89,6 +89,7 @@ void farm_example1() {
             for(int j = 0; j< v.size() ; j++) {
                 acumm += v[j];
             }
+						file << acumm;
         }
     );
 }
