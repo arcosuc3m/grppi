@@ -20,7 +20,7 @@
 
  
 cmake_minimum_required (VERSION 2.8.11)
-project( GrPPI )
+project( grppi )
 
 
 # Define a path for modules before accesing default. Needed to find TBB
@@ -223,7 +223,7 @@ add_subdirectory(docs)
 
 # DESTINATION gets the previous path and appends the argument --> /opt/local/GrPPI
 
-# cmake -DCMAKE_INSTALL_PREFIX=path/to/folder
+# cmake .. -DCMAKE_INSTALL_PREFIX=path/to/folder
 
 #llvm --> cmake -DCMAKE_INSTALL_PREFIX=/tmp/llvm 
 
@@ -231,9 +231,9 @@ add_subdirectory(docs)
 # g++ farm1.cpp -I /tmp/GrPPI -std=c++14 -lboost_system -lboost_thread
 
 # Installation -- make install
-install ( DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION  "${CMAKE_PROJECT_NAME}" )
+install ( DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION  "include/${CMAKE_PROJECT_NAME}" )
 # Installation of fastflow
-install ( DIRECTORY ${PROJECT_SOURCE_DIR}/fastflow DESTINATION "${CMAKE_PROJECT_NAME}" )
+# install ( DIRECTORY ${PROJECT_SOURCE_DIR}/fastflow DESTINATION "${CMAKE_PROJECT_NAME}" )
 
 #install( FILES ${PPIHEADERS_CPU} DESTINATION /include/include/ )
 #install( FILES ${PPIHEADERS_GPU} DESTINATION /include/include/ )
