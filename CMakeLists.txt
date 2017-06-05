@@ -177,7 +177,7 @@ if( CUDA_ENABLE )
 endif( CUDA_ENABLE )
 
 # Doxygen Documentation
-add_subdirectory(docs)
+add_subdirectory(doxy)
 
 
 # # PPI
