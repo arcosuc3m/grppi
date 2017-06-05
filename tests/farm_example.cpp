@@ -27,8 +27,6 @@
 #include <chrono>
 #include <farm.h>
 
-#include <atomic>
-
 using namespace std;
 using namespace grppi;
 
@@ -60,9 +58,6 @@ void farm_example1() {
 #define NTHREADS 6
 #endif
 
-std::atomic<int>output;
-output = 0;
-
 #ifdef SEQ
     sequential_execution p{};
 #elif OMP
@@ -88,23 +83,14 @@ output = 0;
 
         // farm kernel as lambda
         [&]( std::string fname ) {
-            fname.insert(0, "txt/");
             std::fstream file (fname);
             auto v = read_list(file);
             int acumm = 0;
             for(int j = 0; j< v.size() ; j++) {
                 acumm += v[j];
             }
-            /*std::fstream fileOut (fname);
-            fileOut << acumm;
-            
-            fileOut.close();*/
-            file.close();
-            output += acumm;
         }
     );
-
-    std::cout << output << std::endl;
 }
 
 int main() {
