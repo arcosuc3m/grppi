@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include "ppi/divideandconquer.hpp"
+#include "divideandconquer.h"
 #include <random>
 
 using namespace std;
@@ -55,7 +55,7 @@ void dividec_example1() {
     }
     std::vector<int> out;
     
-    DivideAndConquer(p,v, out,
+    divide_and_conquer(p,v, out,
                      [&](vector<int> & v){
         std::vector<std::vector<int>> subproblem;
         if(v.size() == 1){ subproblem.push_back(v);return subproblem; }

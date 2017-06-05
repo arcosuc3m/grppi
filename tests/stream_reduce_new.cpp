@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stream_reduce.hpp>
+#include <stream_reduce.h>
 
 using namespace std;
 using namespace grppi;
@@ -48,7 +48,7 @@ void reduce_example1(){
     std::vector<int> stream( 10000, 1 );
     int index = 0;
     int n=0;
-    StreamReduce( p,
+    stream_reduce( p,
         // Reduce generator as lambda
         [&]() { 
             n++;

@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/map.hpp>
+#include <map.h>
 
 using namespace std;
 using namespace grppi;
@@ -49,8 +49,9 @@ void map_example1() {
     std::vector<int> out(100);
     int i = 0;
 
-    Map( p,
+    grppi::map( p,
         [&](){
+            
              if( i < in.size()) {
                   optional<int> element(i);
                   i++;
@@ -60,6 +61,7 @@ void map_example1() {
             }
         },
         [&](int index){
+             std::cout<<"COMPUTE"<<std::endl;
              out[index] = in[index];
         }
     );

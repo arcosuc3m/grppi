@@ -21,9 +21,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/farm.hpp>
-#include <ppi/pipeline.hpp>
-#include <ppi/stream_iteration.hpp>
+#include <farm.h>
+#include <pipeline.h>
+#include <stream_iteration.h>
 
 using namespace std;
 using namespace grppi;
@@ -51,8 +51,8 @@ void iteration_example1() {
     std::atomic<int> output;
     output = 0;
 
-    StreamIteration(p,
-        // Farm generator as lambda
+    stream_iteration(p,
+        // farm generator as lambda
         [&]() {
             a--; 
             if ( a == 0 ) 
@@ -61,8 +61,8 @@ void iteration_example1() {
                 return optional<int>( a );
         },
 
-        // Farm kernel as lambda
-        Pipeline(
+        // farm kernel as lambda
+        pipeline(p,
              []( int l ) { 
                 l += 2*l;
                 return l;

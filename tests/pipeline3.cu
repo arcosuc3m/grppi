@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <ppi/pipeline.h>
 
 using namespace std;
 using namespace grppi;
@@ -32,7 +32,7 @@ void pipeline_example1() {
     parallel_execution_thrust p{};
     cudaGetDeviceCount(&(p.num_gpus));    
 
-    Pipeline( p,
+    pipeline( p,
         // Pipeline stage 0
         [&]() { 
             a--; 

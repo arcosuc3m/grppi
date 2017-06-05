@@ -25,7 +25,9 @@
 #include <algorithm>
 
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <farm.h>
+
+#include <atomic>
 
 using namespace std;
 using namespace grppi;
@@ -58,6 +60,9 @@ void farm_example1() {
 #define NTHREADS 6
 #endif
 
+std::atomic<int>output;
+output = 0;
+
 #ifdef SEQ
     sequential_execution p{};
 #elif OMP
@@ -73,25 +78,33 @@ void farm_example1() {
     std::ifstream is{"txt/filelist.txt"};
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
 
-    Farm(p,
-        // Farm generator as lambda
+    farm(p,
+        // farm generator as lambda
         [&]() {
             auto f = read_line(is);
             
             return ( f.empty() ) ? optional<std::string>( ) : optional<std::string>( f );
         },
 
-        // Farm kernel as lambda
+        // farm kernel as lambda
         [&]( std::string fname ) {
+            fname.insert(0, "txt/");
             std::fstream file (fname);
             auto v = read_list(file);
             int acumm = 0;
             for(int j = 0; j< v.size() ; j++) {
                 acumm += v[j];
             }
-            file << acumm;
+            /*std::fstream fileOut (fname);
+            fileOut << acumm;
+            
+            fileOut.close();*/
+            file.close();
+            output += acumm;
         }
     );
+
+    std::cout << output << std::endl;
 }
 
 int main() {

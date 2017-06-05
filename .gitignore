@@ -1,1 +1,6 @@
 build/*
+.project
+cmake-build-debug/*
+.cproject
+.idea
+.settings

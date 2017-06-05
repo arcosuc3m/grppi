@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <farm.h>
 
 using namespace std;
 using namespace grppi;
@@ -53,8 +53,8 @@ void farm_example2() {
 
     int idx = 0;
 
-    Farm(p,
-        // Farm generator as lambda
+    farm(p,
+        // farm generator as lambda
         [&]() { 
              if ( idx < v.size() ) {
                  idx++;
@@ -63,7 +63,7 @@ void farm_example2() {
                  return optional<int>();
         },
 
-        // Farm kernel as lambda
+        // farm kernel as lambda
         [&]( int index ) {
              for ( int j = 0; j < v.size(); j++ ) {
                  acumm[index] += v[j];
