@@ -1,4 +1,5 @@
 **Map**
+
 This example shows the functionality of the Map patter with one step or phase.
 
 Two vectors are created with the size given by the user.
