@@ -89,13 +89,13 @@ TEST(GrPPI, divideandconquer1_thr ){
     EXPECT_EQ(190, dividec_example1(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, divideandconquer1_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(190, dividec_example1(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, divideandconquer1_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(190, dividec_example1(p) );

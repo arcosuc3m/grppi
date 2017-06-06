@@ -4,6 +4,11 @@ option( GTest_ENABLE "Activate Google Test" OFF)
 
 file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/txt DESTINATION "${CMAKE_BINARY_DIR}/unit_tests/")
 
+# OMP
+if(${OMP_ENABLE})
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+endif()
+
 
 if(GTest_ENABLE)
 

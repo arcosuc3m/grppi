@@ -69,13 +69,13 @@ TEST(GrPPI, farm1_thr ){
     EXPECT_EQ(199990000, farm_example1(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, farm1_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(199990000, farm_example1(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, farm1_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(199990000, farm_example1(p) );
