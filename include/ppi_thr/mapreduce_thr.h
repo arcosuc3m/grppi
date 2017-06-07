@@ -42,15 +42,15 @@ inline void map_reduce (parallel_execution_thr & p, InputIt first, InputIt last,
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
 inline T map_reduce ( parallel_execution_thr& p, InputIt first, InputIt last, MapFunc const &  map, T init, ReduceOperator op){
     T out = init;
-    std::vector<T> partialOuts(p.num_threads);
+    std::vector<T> partialOuts(p.get_num_threads());
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
 
-    for(int i=1;i<p.num_threads;i++){    
+    for(int i=1;i<p.get_num_threads();i++){    
        auto begin = first + (elemperthr * i);
        auto end = first + (elemperthr * (i+1));
-       if(i == p.num_threads -1 ) end= last;
+       if(i == p.get_num_threads() -1 ) end= last;
        tasks.push_back(
         std::thread( 
          [&](InputIt begin, InputIt end, T out){

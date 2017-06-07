@@ -45,7 +45,7 @@ void pipeline_example1() {
 #endif
 
     int a = 10;
-p.ordering=true;
+p.set_ordered(true);
 
     pipeline( p,
         // Pipeline stage 0

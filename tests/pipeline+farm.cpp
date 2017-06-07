@@ -48,7 +48,7 @@ void pipeline_farm_example() {
 
     int n=10;
     std::vector<string> output;
-    p.ordering=true;
+    p.set_ordered(true);
 
     pipeline(p,
              // Pipeline stage 0

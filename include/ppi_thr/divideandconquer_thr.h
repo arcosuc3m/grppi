@@ -30,14 +30,14 @@ namespace grppi{
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
 inline void internal_divide_and_conquer(parallel_execution_thr &p, Input &problem, Output &output,
                                         DivFunc const &divide, TaskFunc const &task, MergeFunc const &merge,
-                                        std::atomic<int> &num_threads) {
+                                        std::atomic<int>& num_threads) {
 
    if(num_threads.load()>0){
       auto subproblems = divide(problem);
 
       if(subproblems.size()>1){
         std::vector<Output> partials(subproblems.size());
-//        num_threads -= subproblems.size();
+//        get_num_threads() -= subproblems.size();
         int division = 1;
         std::vector<std::thread> tasks;
         auto i = subproblems.begin();
@@ -93,7 +93,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 inline void divide_and_conquer(parallel_execution_thr& p, Input & problem, Output & output,
             DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge) {
 
-    std::atomic<int> num_threads (p.num_threads);
+    std::atomic<int> num_threads ( p.get_num_threads() );
     
     if(num_threads.load()>0){
       auto subproblems = divide(problem);
@@ -116,10 +116,9 @@ inline void divide_and_conquer(parallel_execution_thr& p, Input & problem, Outpu
                     // Deregister the thread in the execution model
                     p.deregister_thread();
                   },
-                   i, division
-		       )
+                   i, division )
 	        );
-            num_threads --;
+            num_threads--;
             //END TRHEAD
         }
         for(i; i != subproblems.end(); i++){

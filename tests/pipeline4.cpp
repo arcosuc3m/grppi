@@ -45,7 +45,7 @@ void pipeline_example1() {
 #endif
 
     int a = 10;
-    p.ordering=true;
+    p.set_ordered(true);
     /* Test exit inmediately in the first stage */
     pipeline( p,
         // Pipeline stage 0

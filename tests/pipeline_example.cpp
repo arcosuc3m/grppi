@@ -63,7 +63,7 @@ void pipeline_example() {
     ifstream is("txt/file.txt");
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
     int numchar = 0;
-    p.ordering=true;
+    p.set_ordered(true);
     pipeline( p,
         // Pipeline stage 0
         [&]() {

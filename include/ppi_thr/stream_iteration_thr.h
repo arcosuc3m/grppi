@@ -31,8 +31,8 @@ namespace grppi{
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
 inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, PipelineObj<parallel_execution_thr , Stages...> const & se, Predicate const & condition, OutFunc const & out){
-   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
+   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.is_lockfree());
+   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.is_lockfree());
    std::atomic<int> nend (0);
    std::atomic<int> nelem (0);
    std::atomic<bool> sendFinish( false );
@@ -82,8 +82,8 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Pipe
 template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
 inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, FarmObj<parallel_execution_thr,TaskFunc> const & se, Predicate const & condition, OutFunc const & out){
    std::vector<std::thread> tasks;
-   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
+   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.is_lockfree());
+   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.is_lockfree());
    std::atomic<int> nend (0);
    //Stream generator
    std::thread gen([&](){
@@ -106,7 +106,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
          item = queue.pop();
       }
       nend++;
-      if(nend == se.exectype->num_threads)
+      if(nend == se.exectype->get_num_threads())
          queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
       else queue.push(item);
 
@@ -115,7 +115,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
 
    });
    //Farm workers
-   for(int th = 1; th < se.exectype->num_threads; th++) {
+   for(int th = 1; th < se.exectype->get_num_threads(); th++) {
       tasks.push_back(
           std::thread([&](){
               // Register the thread in the execution model
@@ -131,7 +131,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
                   item = queue.pop();
               }
               nend++;
-              if(nend == se.exectype->num_threads)
+              if(nend == se.exectype->get_num_threads())
                   queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
               else queue.push(item);
 

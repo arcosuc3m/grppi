@@ -75,7 +75,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 inline void divide_and_conquer(parallel_execution_tbb p, Input & problem, Output & output,
             DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge) {
 
-    std::atomic<int> num_threads( p.num_threads );
+    std::atomic<int> num_threads( p.get_num_threads() );
 
     if(num_threads.load()>0){
        auto subproblems = divide(problem);

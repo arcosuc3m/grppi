@@ -27,18 +27,18 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
 inline void stencil(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor ) {
 
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
     #pragma omp parallel
     {
     #pragma omp single nowait
     { 
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.get_num_threads();i++){
        #pragma omp task firstprivate(i)
        {
          auto begin = first + (elemperthr * i);
          auto end = first + (elemperthr * (i+1));
       
-         if( i == p.num_threads-1) end = last;
+         if( i == p.get_num_threads()-1) end = last;
 
          auto out = firstOut + (elemperthr * i);
 
@@ -69,19 +69,19 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 inline void stencil(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor, MoreIn ... inputs ) {
 
      int numElements = last - first;
-     int elemperthr = numElements/p.num_threads;
+     int elemperthr = numElements/p.get_num_threads();
      #pragma omp parallel 
      {
      #pragma omp single nowait
      {
 
-     for(int i=1;i<p.num_threads;i++){
+     for(int i=1;i<p.get_num_threads();i++){
         #pragma omp task firstprivate(i)// firstprivate(inputs...)
         {
            auto begin = first + (elemperthr * i);
            auto end = first + (elemperthr * (i+1));
 
-	       if(i==p.num_threads-1) end = last;
+	       if(i==p.get_num_threads()-1) end = last;
 
            auto out = firstOut + (elemperthr * i);
         

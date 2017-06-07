@@ -28,14 +28,14 @@ template <typename GenFunc, typename TaskFunc>
 inline void map(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf){
    //Create a queue per thread
   std::vector<unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
-  for(int i =0; i<p.num_threads-1; i++) queues.push_back( unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
+  for(int i =0; i<p.get_num_threads()-1; i++) queues.push_back( unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.is_lockfree()) ) );
 
    #pragma omp parallel
    {
      #pragma omp single nowait
      {
    //Create threads
-     for(int i=0;i<p.num_threads-1;i++){
+     for(int i=0;i<p.get_num_threads()-1;i++){
         #pragma omp task firstprivate(i)
         {
              int tid = i;
@@ -52,14 +52,14 @@ inline void map(parallel_execution_omp p, GenFunc const &in, TaskFunc const &tas
        int rr = 0;
        auto k = in();
        if(k.end){
-           for(int i=0;i<p.num_threads-1;i++){
+           for(int i=0;i<p.get_num_threads()-1;i++){
                (*queues[i]).push(k);
            }
            break;
        }
        (*queues[rr]).push(k);
        rr++;
-       rr = (rr < p.num_threads -1) ? rr : 0; 
+       rr = (rr < p.get_num_threads() -1) ? rr : 0; 
      }
      //Join threads
      #pragma omp taskwait
@@ -72,13 +72,13 @@ inline void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt 
    
   int numElements = last - first;
 
-  int elemperthr = numElements/p.num_threads;
+  int elemperthr = numElements/p.get_num_threads();
 
   #pragma omp parallel
   {
    #pragma omp single nowait
    {
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.get_num_threads();i++){
       
 
 
@@ -86,7 +86,7 @@ inline void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt 
       {
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
-        if(i == p.num_threads -1 ) end = last;
+        if(i == p.get_num_threads() -1 ) end = last;
         auto out = firstOut + (elemperthr * i);
         while(begin!=end){
           *out = taskf(*begin);
@@ -116,7 +116,7 @@ inline void internal_map(parallel_execution_omp p, InputIt first, InputIt last, 
         //Calculate local input and output iterator 
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
-        if( i == p.num_threads-1) end = last;
+        if( i == p.get_num_threads()-1) end = last;
         auto out = firstOut + (elemperthr * i);
         advance_iterators(elemperthr*i, inputs ...);
         while(begin!=end){
@@ -132,14 +132,14 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 inline void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
    //Calculate number of elements per thread
    int numElements = last - first;
-   int elemperthr = numElements/p.num_threads;
+   int elemperthr = numElements/p.get_num_threads();
 
    //Create tasks
    #pragma omp parallel
    {
    #pragma omp single nowait
    {
-     for(int i=1;i<p.num_threads;i++){
+     for(int i=1;i<p.get_num_threads();i++){
 
        #pragma omp task firstprivate(i)
        {

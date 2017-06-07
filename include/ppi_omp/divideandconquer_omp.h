@@ -74,7 +74,7 @@ inline void internal_divide_and_conquer(parallel_execution_omp p, Input & proble
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
 inline void divide_and_conquer(parallel_execution_omp p, Input & problem, Output & output,
             DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge) {
-    std::atomic<int> num_threads( p.num_threads );
+    std::atomic<int> num_threads( p.get_num_threads() );
 
     if(num_threads.load()>0){
        auto subproblems = divide(problem);

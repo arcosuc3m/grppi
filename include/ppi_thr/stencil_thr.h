@@ -28,13 +28,13 @@ inline void stencil(parallel_execution_thr &p, InputIt first, InputIt last, Outp
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
  
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.get_num_threads();i++){
        auto begin = first + (elemperthr * i);
        auto end = first + (elemperthr * (i+1));
       
-       if( i == p.num_threads-1) end = last;
+       if( i == p.get_num_threads()-1) end = last;
 
        auto out = firstOut + (elemperthr * i);
 
@@ -66,7 +66,7 @@ inline void stencil(parallel_execution_thr &p, InputIt first, InputIt last, Outp
    }
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
    }
  
@@ -77,14 +77,14 @@ inline void stencil(parallel_execution_thr &p, InputIt first, InputIt last, Outp
 
      std::vector<std::thread> tasks;
      int numElements = last - first;
-     int elemperthr = numElements/p.num_threads;
+     int elemperthr = numElements/p.get_num_threads();
 
-     for(int i=1;i<p.num_threads;i++){
+     for(int i=1;i<p.get_num_threads();i++){
 
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
 
-	if(i==p.num_threads-1) end = last;
+	if(i==p.get_num_threads()-1) end = last;
 
         auto out = firstOut + (elemperthr * i);
         
@@ -122,7 +122,7 @@ inline void stencil(parallel_execution_thr &p, InputIt first, InputIt last, Outp
 
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
    }
 

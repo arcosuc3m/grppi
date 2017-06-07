@@ -27,20 +27,40 @@ namespace grppi{
  *    (TBB) framework implementation
  */
 struct parallel_execution_tbb{
-  bool ordering = true;
-  bool lockfree = false;
-  int num_threads = 4;
-  int num_tokens = 100;
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_tbb(){};
+  private:
+    bool ordering = true;
+    bool lockfree = false;
+    int num_threads = 4;
+  public:
+    int num_tokens = 100;
+    void set_lockfree(bool value){ lockfree = value;}
+    void set_ordered(bool value){ ordering = value;}
 
-  /** @brief Set num_threads to _threads in order to run in parallel
+    bool is_lockfree(){ return lockfree;}
+    bool is_ordered(){ return ordering;}
+    
+     /** @brief Set num_threads to _threads to a new value
    *
-   *  @param _threads number of threads used in the parallel mode
+   *  @param _threads number of threads 
    */
-  parallel_execution_tbb(int _threads){ num_threads= _threads; };
+   void set_num_threads(int _nthreads){
+     num_threads = _nthreads;
+   };
+   /** @brief returns the number of threads
+    */
+   int get_num_threads() const{
+     return num_threads;
+   };
+   /** @brief Set num_threads to the maximum number of thread available by the
+    *    hardware
+    */
+   parallel_execution_tbb(){};
+ 
+   /** @brief Set num_threads to _threads in order to run in parallel
+    *
+    *  @param _threads number of threads used in the parallel mode
+    */
+   parallel_execution_tbb(int _threads){ num_threads= _threads; };
 };
 
 } // end namespace grppi

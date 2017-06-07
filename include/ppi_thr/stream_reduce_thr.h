@@ -30,12 +30,12 @@ namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
 inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc const &taskf, ReduceFunc const &red, OutputType &reduce_value ){
 
-    Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE,p.lockfree);
-    Queue<optional<OutputType>> end_queue(DEFAULT_SIZE,p.lockfree);
+    Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE,p.is_lockfree());
+    Queue<optional<OutputType>> end_queue(DEFAULT_SIZE,p.is_lockfree());
     std::atomic<int> nend (0);
     std::vector<std::thread> tasks;
     //Create threads
-    for( int i = 0; i < p.num_threads; i++ ) {
+    for( int i = 0; i < p.get_num_threads(); i++ ) {
         tasks.push_back(
             std::thread(
                 [&]() {
@@ -50,7 +50,7 @@ inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc
                         item = queue.pop();
                     }
                     nend++;
-                    if(nend == p.num_threads)
+                    if(nend == p.get_num_threads())
                         end_queue.push(optional<OutputType>()); 
                     
                     // Deregister the thread in the execution model
@@ -69,7 +69,7 @@ inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc
         auto k = in();
         queue.push( k ) ;
         if( k.end ) {
-            for( int i = 0; i < p.num_threads; i++ )
+            for( int i = 0; i < p.get_num_threads(); i++ )
                 queue.push( k ) ;
             break;
         }
@@ -77,7 +77,7 @@ inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc
 
 
     //Join threads
-    for( int i = 0; i < p.num_threads; i++ ) {
+    for( int i = 0; i < p.get_num_threads(); i++ ) {
         tasks[ i ].join();
     }
     merge.join();

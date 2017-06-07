@@ -25,11 +25,22 @@ namespace grppi{
 
 /** @brief Set the execution mode to sequencial */
 struct sequential_execution {
-  bool ordering = true;
-  int num_threads=1;
-  bool lockfree = false;
-  /** @brief set num_threads to 1 in order to sequential execution */
-  sequential_execution(){};
+  private:
+    bool ordering = true;
+    int num_threads=1;
+    bool lockfree = false;
+  public:
+    /** @brief set num_threads to 1 in order to sequential execution */
+    sequential_execution(){};
+
+    //Empty functions. Only for potability among framewoks 
+    inline bool is_lockfree(){ return false;}
+    inline bool is_ordered(){ return true;}
+    inline void set_lockfree(bool value){ }
+    inline void set_ordered(bool value){ }
+    inline void set_num_threads(int _nthreads){ }
+    inline int get_num_threads() const{ return 1;}
+
 };
 
 } // end namespace grppi

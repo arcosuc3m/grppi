@@ -27,11 +27,11 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
 inline void farm(parallel_execution_tbb p, GenFunc const &in, TaskFunc const & taskf , SinkFunc const &sink) {
 
     tbb::task_group g;
-    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-    Queue< optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE,p.lockfree);
+    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.is_lockfree());
+    Queue< optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE,p.is_lockfree());
     //Create threads
     std::atomic<int>nend(0);
-    for( int i = 0; i < p.num_threads; i++ ) {
+    for( int i = 0; i < p.get_num_threads(); i++ ) {
        g.run(
           [&](){
              typename std::result_of<GenFunc()>::type item;
@@ -42,7 +42,7 @@ inline void farm(parallel_execution_tbb p, GenFunc const &in, TaskFunc const & t
                item = queue.pop(  );
              }
              nend++;
-             if(nend == p.num_threads)
+             if(nend == p.get_num_threads())
                  queueout.push( optional< typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type >() );
 
          }
@@ -67,7 +67,7 @@ inline void farm(parallel_execution_tbb p, GenFunc const &in, TaskFunc const & t
         auto k = in();
         queue.push( k ) ;
         if( !k ) {
-            for( int i = 1; i < p.num_threads; i++ ) {
+            for( int i = 1; i < p.get_num_threads(); i++ ) {
                 queue.push( k ) ;
             }
             break;
@@ -86,9 +86,9 @@ template <typename GenFunc, typename TaskFunc>
 inline void farm(parallel_execution_tbb p, GenFunc const &in, TaskFunc const & taskf ) {
 
     tbb::task_group g;
-    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
+    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.is_lockfree());
     //Create threads
-    for( int i = 0; i < p.num_threads; i++ ) {
+    for( int i = 0; i < p.get_num_threads(); i++ ) {
        g.run(
           [&](){
               typename std::result_of<GenFunc()>::type item;
@@ -106,7 +106,7 @@ inline void farm(parallel_execution_tbb p, GenFunc const &in, TaskFunc const & t
         auto k = in();
         queue.push( k );
         if( !k ) {
-            for( int i = 1; i < p.num_threads; i++ ) {
+            for( int i = 1; i < p.get_num_threads(); i++ ) {
                queue.push( k );
             }
             break;

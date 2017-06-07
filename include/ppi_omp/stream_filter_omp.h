@@ -26,15 +26,15 @@ namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
 inline void stream_filter(parallel_execution_omp p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
 
-    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
-    Queue< typename std::result_of<GenFunc()>::type > outqueue(DEFAULT_SIZE, p.lockfree);
+    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.is_lockfree());
+    Queue< typename std::result_of<GenFunc()>::type > outqueue(DEFAULT_SIZE, p.is_lockfree());
     #pragma omp parallel
     {
     #pragma omp single nowait 
     {
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
-    for(int i=0; i< p.num_threads - 1; i++){
+    for(int i=0; i< p.get_num_threads() - 1; i++){
 
         #pragma omp task shared(queue, outqueue)
         {
@@ -55,10 +55,10 @@ inline void stream_filter(parallel_execution_omp p, GenFunc const & in, FilterFu
          int nend = 0;
          typename std::result_of<GenFunc()>::type item;
          item = outqueue.pop();
-         while(nend != p.num_threads - 1){
+         while(nend != p.get_num_threads() - 1){
             if(!item){
                 nend++;
-                if(nend == p.num_threads - 1) break;
+                if(nend == p.get_num_threads() - 1) break;
             }
             else {
                 out(item.value());
@@ -72,7 +72,7 @@ inline void stream_filter(parallel_execution_omp p, GenFunc const & in, FilterFu
         auto k = in();
         queue.push(k);
         if( k.end ){
-           for(int i = 0; i< p.num_threads-1; i++){
+           for(int i = 0; i< p.get_num_threads()-1; i++){
               queue.push(k);
            }
            break;
