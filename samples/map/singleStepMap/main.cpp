@@ -33,23 +33,24 @@ void map_example1(int n, auto &p) {
     std::iota(in.begin(), in.end(), 0);
     std::vector<int> out(n);
     
-    grppi::map(p, in.begin(), in.end(), out.begin(), [&](int i){ return i*2; });
+    grppi::map(p, in.begin(), in.end(), out.begin(),
+         [](int i) { return i*2; } );
 
-    for(int i=0;i<in.size();i++)
-        std::cout << out[i] << " ";
-    std::cout << "\n";
+		std::copy(begin(out), end(out), ostream_iterator<int>(cout, " "));
+		std::cout << std::endl;
+
 }
 
 int main(int argc, char **argv) {
 
     if(argc < 3){
-        printf("Invalid number of arguments. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>\n");
+        std::cout << "Invalid number of arguments. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>" << std::endl;
         return -1;
 	  }
 
-    int n = stoi(argv[1], nullptr, 10);
+    int n = stoi(argv[1]);
     if(n <= 0){
-        printf("Invalid problem size. Use a positive integer number.\n");
+       std::cout << "Invalid problem size. Use a positive integer number." << std::endl;
         return -1;
     }
 
@@ -66,10 +67,9 @@ int main(int argc, char **argv) {
         grppi::parallel_execution_omp p{};
         map_example1(n,p);
     }else{
-        printf("Invalid policy. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>\n");
+        std::cout << "Invalid policy. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>" << std::endl;
         return -1;
     }
-
 
     return 0;
 }
