@@ -21,14 +21,10 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <map.h>
 #include <string>
+#include "map.h"
 
 using namespace grppi;
-
-#ifndef NTHREADS
-#define NTHREADS 6
-#endif
 
 void map_example1(int n, auto &p) {
 
@@ -60,7 +56,7 @@ int main(int argc, char **argv) {
     	sequential_execution p{};
 		map_example1(n,p);
 	}else if (!strcmp("THR", argv[2])){
-        parallel_execution_thr p{NTHREADS};
+        parallel_execution_thr p{};
         map_example1(n,p);
     }else if (!strcmp("TBB", argv[2])){
         parallel_execution_tbb p{};
