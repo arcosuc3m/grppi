@@ -1,7 +1,7 @@
 /**
-* @version		GrPPI v0.1
-* @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
+* @version    GrPPI v0.1
+* @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+* @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -27,8 +27,8 @@
 
 void map_example1(int n, auto &p) {
 
-		using namespace std;
-		
+    using namespace std;
+    
     std::vector<int> in(n);
     std::iota(in.begin(), in.end(), 0);
     std::vector<int> out(n);
@@ -36,21 +36,23 @@ void map_example1(int n, auto &p) {
     grppi::map(p, in.begin(), in.end(), out.begin(),
          [](int i) { return i*2; } );
 
-		std::copy(begin(out), end(out), ostream_iterator<int>(cout, " "));
-		std::cout << std::endl;
+    std::copy(begin(out), end(out), ostream_iterator<int>(cout, " "));
+    std::cout << std::endl;
 
 }
 
 int main(int argc, char **argv) {
+    
+    using namespace std;
 
     if(argc < 3){
-        std::cout << "Invalid number of arguments. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>" << std::endl;
+        std::cerr << "Invalid number of arguments. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>" << std::endl;
         return -1;
-	  }
+    }
 
     int n = stoi(argv[1]);
     if(n <= 0){
-       std::cout << "Invalid problem size. Use a positive integer number." << std::endl;
+       std::cerr << "Invalid problem size. Use a positive integer number." << std::endl;
         return -1;
     }
 
@@ -67,7 +69,7 @@ int main(int argc, char **argv) {
         grppi::parallel_execution_omp p{};
         map_example1(n,p);
     }else{
-        std::cout << "Invalid policy. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>" << std::endl;
+        std::cerr << "Invalid policy. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>" << std::endl;
         return -1;
     }
 
