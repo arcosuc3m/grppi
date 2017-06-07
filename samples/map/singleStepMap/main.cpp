@@ -24,12 +24,11 @@
 #include <string>
 #include "map.h"
 
-using namespace grppi;
 
 void map_example1(int n, auto &p) {
-
+		
     std::vector<int> in(n);
-    for(int i=0;i<in.size();i++) in[i] = i;
+		std::iota(in.begin(), in.end(), 0);
     std::vector<int> out(n);
     
     grppi::map(p, in.begin(), in.end(), out.begin(), [&](int i){ return i*2; });
@@ -46,23 +45,23 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	int n = atoi(argv[1]);
+	int n = stoi(argv[1], nullptr, 10);
 	if(n <= 0){
 		printf("Invalid problem size. Use a positive integer number.\n");
 		return -1;
 	}
 
     if(!strcmp("SEQ", argv[2])){
-    	sequential_execution p{};
-		map_example1(n,p);
-	}else if (!strcmp("THR", argv[2])){
-        parallel_execution_thr p{};
+    		grppi::sequential_execution p{};
+				map_example1(n,p);
+		}else if (!strcmp("THR", argv[2])){
+        grppi::parallel_execution_thr p{};
         map_example1(n,p);
     }else if (!strcmp("TBB", argv[2])){
-        parallel_execution_tbb p{};
+        grppi::parallel_execution_tbb p{};
         map_example1(n,p);
     }else if (!strcmp("OMP", argv[2])){
-        parallel_execution_omp p{};
+        grppi::parallel_execution_omp p{};
         map_example1(n,p);
     }else{
         printf("Invalid policy. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>\n");
