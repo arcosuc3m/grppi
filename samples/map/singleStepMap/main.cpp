@@ -26,6 +26,8 @@
 
 
 void map_example1(int n, auto &p) {
+
+		using namespace std;
 		
     std::vector<int> in(n);
     std::iota(in.begin(), in.end(), 0);
