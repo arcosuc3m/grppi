@@ -52,13 +52,13 @@ TEST(GrPPI, reduce_example1_thr ){
     EXPECT_NEAR(3628799.9999999995, reduce_example1(p), 0.001 );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, reduce_example1_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_NEAR(3628799.9999999995, reduce_example1(p), 0.001 );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, reduce_example1_tbb ){
         double inf = std::numeric_limits<double>::infinity();
         parallel_execution_tbb p{NTHREADS};

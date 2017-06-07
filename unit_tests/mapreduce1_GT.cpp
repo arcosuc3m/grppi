@@ -76,14 +76,14 @@ TEST(GrPPI, mapreduce_example1_thr ){
     EXPECT_EQ(200000000, mapreduce_example1(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     /* Not yet implemented */
     /*TEST(GrPPI, mapreduce_example1_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(200000000, mapreduce_example1(p) );
     }*/
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     /* Not yet implemented */
     /*TEST(GrPPI, mapreduce_example1_tbb ){
         parallel_execution_tbb p{NTHREADS};

@@ -92,13 +92,13 @@ TEST(GrPPI, pipeline_example_thr ){
     EXPECT_EQ(99402, pipeline_example(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, pipeline_example_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(99402, pipeline_example(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, pipeline_example_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(99402, pipeline_example(p) );

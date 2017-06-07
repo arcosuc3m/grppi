@@ -70,13 +70,13 @@ TEST(GrPPI, reduce_example3_thr ){
     EXPECT_EQ(999999999, reduce_example3(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, reduce_example3_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(999999999, reduce_example3(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, reduce_example3_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(999999999, reduce_example3(p) );
