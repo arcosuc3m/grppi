@@ -28,7 +28,7 @@
 void map_example1(int n, auto &p) {
 		
     std::vector<int> in(n);
-		std::iota(in.begin(), in.end(), 0);
+    std::iota(in.begin(), in.end(), 0);
     std::vector<int> out(n);
     
     grppi::map(p, in.begin(), in.end(), out.begin(), [&](int i){ return i*2; });
@@ -40,21 +40,21 @@ void map_example1(int n, auto &p) {
 
 int main(int argc, char **argv) {
 
-	if(argc < 3){
-		printf("Invalid number of arguments. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>\n");
-		return -1;
-	}
+    if(argc < 3){
+        printf("Invalid number of arguments. Usage: ./binary <problem_size> <SEQ|THR|TBB|OMP>\n");
+        return -1;
+	  }
 
-	int n = stoi(argv[1], nullptr, 10);
-	if(n <= 0){
-		printf("Invalid problem size. Use a positive integer number.\n");
-		return -1;
-	}
+    int n = stoi(argv[1], nullptr, 10);
+    if(n <= 0){
+        printf("Invalid problem size. Use a positive integer number.\n");
+        return -1;
+    }
 
     if(!strcmp("SEQ", argv[2])){
-    		grppi::sequential_execution p{};
-				map_example1(n,p);
-		}else if (!strcmp("THR", argv[2])){
+        grppi::sequential_execution p{};
+        map_example1(n,p);
+    }else if (!strcmp("THR", argv[2])){
         grppi::parallel_execution_thr p{};
         map_example1(n,p);
     }else if (!strcmp("TBB", argv[2])){
