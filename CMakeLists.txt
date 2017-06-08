@@ -120,8 +120,7 @@ find_package(HWLOC)
 if(HWLOC_FOUND)
     add_definitions( "-DGRPPI_HWLOC" )
 else()
-
-     message( FATAL_ERROR "Boost library is not installed in your system" )    
+     message( WARNING "hwloc library is not installed in your system" )    
 endif()
 # Create header file with the XX_ENABLE flags
 #set (HEADER_FILE "include/enable_flags.hpp")
