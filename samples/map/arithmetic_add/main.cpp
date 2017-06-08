@@ -22,6 +22,8 @@
 #include <fstream>
 #include <chrono>
 #include <string>
+#include <numeric>
+
 #include "map.h"
 
 
