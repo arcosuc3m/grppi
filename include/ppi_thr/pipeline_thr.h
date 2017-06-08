@@ -40,7 +40,7 @@ inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::ty
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static Queue<optional<queueType>> queueOut(DEFAULT_SIZE,(pipe.exectype)->lockfree); 
+      static Queue<optional<queueType>> queueOut(DEFAULT_SIZE,(pipe.exectype)->is_lockfree()); 
 
       composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
       composed_pipeline<Queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
@@ -84,7 +84,7 @@ inline void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
    typename Stream::value_type item;
    std::vector<typename Stream::value_type> elements;
    long current = 0;
-   if(p.ordering){
+   if(p.is_ordered()){
      item = st.pop( );
      while( item.first ) {
         if(current == item.second){
@@ -129,9 +129,9 @@ inline void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
 template <typename Task, typename Red, typename Stream>
 inline void stages( parallel_execution_thr &p, Stream& st, ReduceObj<parallel_execution_thr, Task, Red>& se) {
     std::vector<std::thread> tasks;
-    Queue<typename std::result_of< Task(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.lockfree);
+    Queue<typename std::result_of< Task(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.is_lockfree());
 
-    for( int th = 0; th < se.exectype.num_threads; th++){
+    for( int th = 0; th < se.exectype.get_num_threads(); th++){
         tasks.push_back(
            std::thread([&](){
               typename Stream::value_type item;
@@ -154,11 +154,11 @@ template <typename Task, typename Stream, typename... Stages>
 inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
     
     std::vector<std::thread> tasks;
-    if(p.ordering){
-       Queue< typename Stream::value_type > q(DEFAULT_SIZE,p.lockfree);
+    if(p.is_ordered()){
+       Queue< typename Stream::value_type > q(DEFAULT_SIZE,p.is_lockfree());
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype->get_num_threads(); th++){
           tasks.push_back(
               std::thread([&](){
                  //Register the thread in the execution model
@@ -175,7 +175,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_ex
                      item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype->get_num_threads()){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -186,7 +186,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_ex
 
           }));
        } 
-       Queue< typename Stream::value_type > qOut(DEFAULT_SIZE,p.lockfree);
+       Queue< typename Stream::value_type > qOut(DEFAULT_SIZE,p.is_lockfree());
        auto orderingthr = std::thread([&](){
           p.register_thread();
           typename Stream::value_type item;
@@ -239,10 +239,10 @@ inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_ex
        stages(p, qOut, sgs ... );
        orderingthr.join();
     }else{
-       Queue< typename Stream::value_type > q(DEFAULT_SIZE, p.lockfree);
+       Queue< typename Stream::value_type > q(DEFAULT_SIZE, p.is_lockfree());
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype->get_num_threads(); th++){
           tasks.push_back(
               std::thread([&](){
                   //Register the thread in the execution model
@@ -258,7 +258,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_ex
                       item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype->get_num_threads()){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -280,9 +280,9 @@ template <typename Task, typename Stream, typename... Stages>
 inline void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
     std::vector<std::thread> tasks;
     //Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
-    Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
+    Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.is_lockfree());
     std::atomic<int> nend ( 0 );
-    for( int th = 0; th < se.exectype->num_threads; th++){
+    for( int th = 0; th < se.exectype->get_num_threads(); th++){
           tasks.push_back(
               std::thread([&](){
                   //Register the thread in the execution model
@@ -298,7 +298,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_exec
                  }
                  st.push(item);
                  nend++;
-                 if(nend == se.exectype->num_threads) 
+                 if(nend == se.exectype->get_num_threads()) 
                       q.push(make_pair(optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >(), -1));
                 
                  //Deregister the thread in the execution model
@@ -318,7 +318,7 @@ inline void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stage
 
     //Create new queue
 
-    Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(DEFAULT_SIZE,p.lockfree);
+    Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(DEFAULT_SIZE,p.is_lockfree());
 
     //Start task
     std::thread task( 
@@ -353,7 +353,7 @@ template <typename FuncIn, typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
 void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
     //Create first queue
-    Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
+    Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.is_lockfree());
     //Create stream generator stage
     std::thread task(
         [&](){

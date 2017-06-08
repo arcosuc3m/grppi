@@ -80,10 +80,13 @@ foreach( m ${EXE_LIB} )
    foreach( t ${TESTS_CPU_${m}} )
 
       add_executable( ${t}_${m} ${t}.cpp )
-      
+       
       set_target_properties(${t}_${m} PROPERTIES COMPILE_FLAGS "-D${m}" )
       if ( ${m} STREQUAL THR )
          target_link_libraries( ${t}_${m} pthread )
+         if(HWLOC_FOUND)
+             target_link_libraries( ${t}_${m} hwloc)
+         endif()
       elseif ( ${m} STREQUAL TBB )
          target_link_libraries( ${t}_${m} tbb )
       endif()

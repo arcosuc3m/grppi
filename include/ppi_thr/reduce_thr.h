@@ -31,24 +31,26 @@ template < typename InputIt, typename Output, typename ReduceOperator>
 inline typename std::enable_if<!is_iterator<Output>::value, void>::type 
 reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
 
+    p.register_thread();
     typename ReduceOperator::result_type identityVal = !op(false,true);
 
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
     std::atomic<int> finishedTask(1); 
     //local output
-    std::vector<Output> out(p.num_threads);
+    std::vector<Output> out(p.get_num_threads());
     //Create threads
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.get_num_threads();i++){
       
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
+      if(i == p.get_num_threads() -1) end = last;
 
-      p.pool.create_task(boost::bind<void>(
+      p.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
+               p.register_thread();
                out[tid] = identityVal;
 //               begin++;
                
@@ -57,6 +59,7 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
                    //begin++;
                }
                finishedTask++;
+               p.deregister_thread();
             },
             std::move(begin), std::move(end), i
       ));
@@ -85,10 +88,10 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
          out[0] = op( out[0], *first);
          first++;
     }
-    while(finishedTask.load()!=p.num_threads);//{std::cout<<finishedTask.load()<<" "<<p.num_threads<<std::endl; }
+    while(finishedTask.load()!=p.get_num_threads());//{std::cout<<finishedTask.load()<<" "<<p.get_num_threads()<<std::endl; }
 
     //Join threads
-   /* for(int i=0;i<p.num_threads-1;i++){
+   /* for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
     }*/
   
@@ -97,6 +100,7 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
        firstOut = op( firstOut, *it);
        it++;
     }
+    p.deregister_thread();
 }
 
 /*
@@ -106,17 +110,17 @@ Reduce(parallel_execution_thr p, InputIt first, InputIt last, Output & firstOut,
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
 
     //local output
-    std::vector<Output> out(p.num_threads);
+    std::vector<Output> out(p.get_num_threads());
     int i;
     //Create threads
-    for(i=1;i<p.num_threads;i++){
+    for(i=1;i<p.get_num_threads();i++){
 
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
+      if(i == p.get_num_threads() -1) end = last;
 
       tasks.push_back(
          std::thread( [&](InputIt begin, InputIt end, int tid){
@@ -140,7 +144,7 @@ Reduce(parallel_execution_thr p, InputIt first, InputIt last, Output & firstOut,
     }
 
     //Join threads
-    for(int i=0;i<p.num_threads-1;i++){
+    for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
     }
 
@@ -174,17 +178,17 @@ reduce(parallel_execution_thr &p, InputIt first, InputIt last, ReduceOperator op
 
 //    std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
     std::atomic<int> finishedTask(1);
     //local output
-    std::vector<typename ReduceOperator::result_type> out(p.num_threads);
+    std::vector<typename ReduceOperator::result_type> out(p.get_num_threads());
     //Create threads
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.get_num_threads();i++){
 
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
-      p.pool.create_task(boost::bind<void>(
+      if(i == p.get_num_threads() -1) end = last;
+      p.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
     //           begin++;
@@ -220,10 +224,10 @@ reduce(parallel_execution_thr &p, InputIt first, InputIt last, ReduceOperator op
     }
 
     //Join threads
-  //  for(int i=0;i<p.num_threads-1;i++){
+  //  for(int i=0;i<p.get_num_threads()-1;i++){
   //    tasks[i].join();
   //  }
-    while(finishedTask.load()!=p.num_threads);//{std::cout<<finishedTask.load()<<" "<<p.num_threads<<std::endl; }
+    while(finishedTask.load()!=p.get_num_threads());//{std::cout<<finishedTask.load()<<" "<<p.get_num_threads()<<std::endl; }
     
     typename ReduceOperator::result_type outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){

@@ -21,70 +21,66 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <pipeline.h>
+#include <farm.h>
 
 using namespace std;
 using namespace grppi;
 
-void pipeline_example1() {
+void farm_example1() {
 
 #ifndef NTHREADS
-#define NTHREADS 6
+#define NTHREADS 4
 #endif
 
-#ifdef SEQ
-    sequential_execution p{};
-#elif OMP
-    parallel_execution_omp p{NTHREADS};
-#elif TBB
-    parallel_execution_tbb p{NTHREADS};
-#elif THR
+#if THR
     parallel_execution_thr p{NTHREADS};
 #else
-    sequential_execution p{};
+   #error Affinity is only supported for C++ thread implementation in the current version
 #endif
-    int a = 10;
-    std::vector<string> output;
-    p.set_ordered(true);
-    pipeline( p,
-        // Pipeline stage 0
-        [&]() { 
+
+    
+    int a = 200000;
+    //Thread binding
+    for ( int i =0;i<NTHREADS; i++){
+       //Bind each thread to the CPU core with the same number as the Thread ID.
+       p.set_thread_affinity(i, {i});
+    }
+    //Numa binding
+    for(int i = 0; i< NTHREADS; i++){
+       //Bind thread alternatively to the numa nodes 1 and 2. If there only one numa node, this has no effects.
+       p.set_numa_affinity(i, {i%2});
+    }
+    
+    farm(p,
+        // farm generator as lambda
+        [&]() {
+            //Thread 0 - Core 0 - NUMA 0
             a--; 
-    //        std::cout << "Stage 0\n";
-            if (a == 0) 
+            if ( a == 0 ) 
                 return optional<int>(); 
-            else 
-                return optional<int>(a); 
+            else
+                return optional<int>( a );
         },
 
-        // Pipeline stage 1
-        [&]( int k ) {
-     //       std::cout << "Stage 1\n";
-            std::string ss; 
-            ss = "t " + std::to_string( k );
-            return std::string( ss );
-        },
-
-        // Pipeline stage 2
-        [&]( std::string l ) {
-      //      std::cout << "Stage 2 ";
-            std::cout << l << std::endl;
-            output.push_back("Stage 2 " + l);
+        // farm kernel as lambda
+        [&]( int l ) {
+            //Thread 1 - Core 1 - NUMA 1
+            //Thread 2 - Core 2 - NUMA 0
+            //Thread 3 - Core 3 - NUMA 1
+           //The memory allocation is done in both numa nodes and only cores 0-4 are active.
+           std::vector<double> memtest(l,1);
+           for(int i=0;i<memtest.size();i++) { memtest[i] += 1; }
         }
     );
-    // Print results
-    for (int i = 0; i < output.size(); i++){
-        std::cout << output[i] << std::endl;
-    }
 }
- 
+
 int main() {
+
     //$ auto start = std::chrono::high_resolution_clock::now();
-    pipeline_example1();
+    farm_example1();
     //$ auto elapsed = std::chrono::high_resolution_clock::now() - start;
 
     //$ long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>( elapsed ).count();
     //$ std::cout << "Execution time : " << microseconds << " us" << std::endl;
-
     return 0;
 }

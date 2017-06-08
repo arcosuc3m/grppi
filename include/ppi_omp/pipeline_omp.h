@@ -32,7 +32,7 @@ void stages( parallel_execution_omp p, Stream& st, Stage const& s ){
     typename Stream::value_type item;
     std::vector<typename Stream::value_type> elements;
     long current = 0;
-    if(p.ordering){
+    if(p.is_ordered()){
       item = st.pop( );
       while( item.first ) {
         if(current == item.second){
@@ -73,11 +73,11 @@ void stages( parallel_execution_omp p, Stream& st, Stage const& s ){
 
 template <typename Task, typename Stream,typename... Stages>
 inline void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_execution_omp, Task>& se, Stages ... sgs ) {
-    if(p.ordering){
+    if(p.is_ordered()){
        Queue< typename Stream::value_type > q(DEFAULT_SIZE);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype->get_num_threads(); th++){
            #pragma omp task shared(q,se,st,nend)
            {
                  typename Stream::value_type item;
@@ -91,7 +91,7 @@ inline void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_exe
                      item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype->get_num_threads()){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -153,7 +153,7 @@ inline void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_exe
        Queue< typename Stream::value_type > q(DEFAULT_SIZE);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype->get_num_threads(); th++){
              #pragma omp task shared(q,se,st,nend)
              {
                  typename Stream::value_type item;
@@ -167,7 +167,7 @@ inline void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_exe
                       item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype->get_num_threads()){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -189,7 +189,7 @@ inline void stages( parallel_execution_omp p, Stream& st, FarmObj<parallel_execu
    
     Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE);
     std::atomic<int> nend ( 0 );
-    for( int th = 0; th < se.exectype->num_threads; th++){
+    for( int th = 0; th < se.exectype->get_num_threads(); th++){
       #pragma omp task shared(nend,q,se,st)
       {
          auto item = st.pop();
@@ -201,7 +201,7 @@ inline void stages( parallel_execution_omp p, Stream& st, FarmObj<parallel_execu
         }
         st.push(item);
         nend++;
-        if(nend == se.exectype->num_threads)
+        if(nend == se.exectype->get_num_threads())
           q.push(make_pair(optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }

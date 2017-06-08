@@ -26,13 +26,14 @@ namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
 inline void stream_filter(parallel_execution_thr &p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
 
+    p.register_thread();
     std::vector<std::thread> tasks;
 
-    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(DEFAULT_SIZE,p.lockfree);
-    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(DEFAULT_SIZE,p.lockfree);
+    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(DEFAULT_SIZE,p.is_lockfree());
+    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(DEFAULT_SIZE,p.is_lockfree());
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
-    for(int i=0; i< p.num_threads - 1; i++){
+    for(int i=0; i< p.get_num_threads() - 1; i++){
       tasks.push_back(
           std::thread(
             [&](){
@@ -77,11 +78,11 @@ inline void stream_filter(parallel_execution_thr &p, GenFunc const & in, FilterF
            long order = 0;
            //Dequeue an element
            item = outqueue.pop();
-           while(nend != p.num_threads - 1){
+           while(nend != p.get_num_threads() - 1){
               //If is an end of stream element
               if(!item.first&&item.second==0){
                   nend++;
-                  if(nend == p.num_threads -1 ) break;
+                  if(nend == p.get_num_threads() -1 ) break;
               }
               //If there is not an end element
               else {
@@ -130,14 +131,15 @@ inline void stream_filter(parallel_execution_thr &p, GenFunc const & in, FilterF
         queue.push(make_pair(k,order));
         order++;
         if( k.end ){
-           for(int i = 0; i< p.num_threads -1; i++){
+           for(int i = 0; i< p.get_num_threads() -1; i++){
               queue.push(make_pair(k,0));
            }
            break;
         }
     }
+    p.deregister_thread();
 
-    for(int i = 0; i< p.num_threads; i++) tasks[i].join();
+    for(int i = 0; i< p.get_num_threads(); i++) tasks[i].join();
 
 }
 

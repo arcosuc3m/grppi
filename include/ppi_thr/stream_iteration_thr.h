@@ -31,8 +31,8 @@ namespace grppi{
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
 inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, PipelineObj<parallel_execution_thr , Stages...> const & se, Predicate const & condition, OutFunc const & out){
-   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
+   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.is_lockfree());
+   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.is_lockfree());
    std::atomic<int> nend (0);
    std::atomic<int> nelem (0);
    std::atomic<bool> sendFinish( false );
@@ -56,6 +56,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Pipe
    composed_pipeline< Queue< typename std::result_of<GenFunc()>::type >, Queue< typename std::result_of<GenFunc()>::type >, 0, Stages ...>
       (queue, se, queueOut, pipeThreads); 
  
+   p.register_thread();
    while(1){
       //If every element has been processed
       if(sendFinish&&nelem==0){
@@ -72,6 +73,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Pipe
       }else queue.push( k );
 
    }
+   p.deregister_thread();
    auto first = pipeThreads.begin();
    auto end = pipeThreads.end();
    gen.join();
@@ -82,8 +84,8 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Pipe
 template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
 inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, FarmObj<parallel_execution_thr,TaskFunc> const & se, Predicate const & condition, OutFunc const & out){
    std::vector<std::thread> tasks;
-   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
+   Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.is_lockfree());
+   Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.is_lockfree());
    std::atomic<int> nend (0);
    //Stream generator
    std::thread gen([&](){
@@ -106,7 +108,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
          item = queue.pop();
       }
       nend++;
-      if(nend == se.exectype->num_threads)
+      if(nend == se.exectype->get_num_threads())
          queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
       else queue.push(item);
 
@@ -115,7 +117,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
 
    });
    //Farm workers
-   for(int th = 1; th < se.exectype->num_threads; th++) {
+   for(int th = 1; th < se.exectype->get_num_threads(); th++) {
       tasks.push_back(
           std::thread([&](){
               // Register the thread in the execution model
@@ -131,7 +133,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
                   item = queue.pop();
               }
               nend++;
-              if(nend == se.exectype->num_threads)
+              if(nend == se.exectype->get_num_threads())
                   queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
               else queue.push(item);
 
@@ -140,6 +142,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
           }
       ));
    }
+   se.exectype->register_thread();
    //Output function
    std::thread outth([&](){
       while(1){
@@ -148,6 +151,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
          out(k.value());
       }
    });
+   se.exectype->deregister_thread();
    //Join threads
    auto first = tasks.begin();
    auto end = tasks.end();

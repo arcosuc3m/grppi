@@ -29,11 +29,11 @@ inline void stream_filter(parallel_execution_tbb p, GenFunc const & in, FilterFu
 
     tbb::task_group g;
 
-    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(DEFAULT_SIZE,p.lockfree);
-    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(DEFAULT_SIZE, p.lockfree);
+    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(DEFAULT_SIZE,p.is_lockfree());
+    Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(DEFAULT_SIZE, p.is_lockfree());
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
-    for(int i=1; i< p.num_threads - 1; i++){
+    for(int i=1; i< p.get_num_threads() - 1; i++){
           g.run(
             [&](){
                std::pair< typename std::result_of<GenFunc()>::type,long > item;
@@ -64,11 +64,11 @@ inline void stream_filter(parallel_execution_tbb p, GenFunc const & in, FilterFu
            long order = 0;
            //Dequeue an element
            item = outqueue.pop();
-           while(nend != p.num_threads - 1){
+           while(nend != p.get_num_threads() - 1){
               //If is an end of stream element
               if(!item.first&&item.second==0){
                   nend++;
-                  if(nend == p.num_threads -2 ) break;
+                  if(nend == p.get_num_threads() -2 ) break;
               }
               //If there is not an end element
               else {
@@ -114,7 +114,7 @@ inline void stream_filter(parallel_execution_tbb p, GenFunc const & in, FilterFu
         queue.push(make_pair(k,order));
         order++;
         if( k.end ){
-           for(int i = 0; i< p.num_threads -2; i++){
+           for(int i = 0; i< p.get_num_threads() -2; i++){
               queue.push(make_pair(k,0));
            }
            break;

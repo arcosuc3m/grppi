@@ -24,13 +24,14 @@ using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>
 inline void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & taskf){
+   p.register_thread();
    std::vector<std::thread> tasks;
    //Create a queue per thread
   std::vector<shared_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
-  for(int i =0; i<p.num_threads-1; i++) queues.push_back( shared_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
+  for(int i =0; i<p.get_num_threads()-1; i++) queues.push_back( shared_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.is_lockfree()) ) );
 
    //Create threads
-   for(int i=1;i<p.num_threads;i++){
+   for(int i=1;i<p.get_num_threads();i++){
       tasks.push_back(
          std::thread( [&](int tid){
             // Register the thread in the execution model
@@ -52,7 +53,7 @@ inline void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & t
        int rr = 0;
        auto k = in();
        if(!k){
-           for(int i=0;i<p.num_threads-1;i++){
+           for(int i=0;i<p.get_num_threads()-1;i++){
                (*queues[i]).push(k);
            }
            break;
@@ -60,10 +61,11 @@ inline void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & t
       
        (*queues[rr]).push(k);
        rr++;
-       rr = (rr < p.num_threads-1) ? rr : 0; 
+       rr = (rr < p.get_num_threads()-1) ? rr : 0; 
    }
+   p.deregister_thread();
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
    }
 }
@@ -71,15 +73,17 @@ inline void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & t
 template <typename InputIt, typename OutputIt, typename TaskFunc>
 inline void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
    
+   p.register_thread();
+
    std::vector<std::thread> tasks;
    int numElements = last - first; 
-   int elemperthr = numElements/p.num_threads; 
+   int elemperthr = numElements/p.get_num_threads(); 
 
-   for(int i=1;i<p.num_threads;i++){
+   for(int i=1;i<p.get_num_threads();i++){
       auto begin = first + (elemperthr * i); 
       auto end = first + (elemperthr * (i+1)); 
 
-      if(i == p.num_threads -1 ) end= last;
+      if(i == p.get_num_threads() -1 ) end= last;
 
       auto out = firstOut + (elemperthr * i);
       tasks.push_back(
@@ -106,9 +110,10 @@ inline void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt 
          first++;
          firstOut++;
    }
+   p.deregister_thread();
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
    }
 
@@ -123,13 +128,13 @@ inline void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
    int numElements = last - first;
-   int elemperthr = numElements/p.num_threads;
+   int elemperthr = numElements/p.get_num_threads();
    //Create tasks
-   for(int i=1;i<p.num_threads;i++){
+   for(int i=1;i<p.get_num_threads();i++){
       //Calculate local input and output iterator 
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if( i == p.num_threads-1) end = last;
+      if( i == p.get_num_threads()-1) end = last;
       auto out = firstOut + (elemperthr * i);
       //Begin task
       tasks.push_back(
@@ -164,7 +169,7 @@ inline void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt
 
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.get_num_threads()-1;i++){
       tasks[i].join();
    }
 }

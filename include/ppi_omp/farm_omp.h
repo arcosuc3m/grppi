@@ -28,13 +28,13 @@ using namespace std;
 template <typename GenFunc, typename TaskFunc>
 void farm(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf) {
 	
-    Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
+    Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.is_lockfree());
     #pragma omp parallel
     {
 	#pragma omp single nowait
 	{
             //Create threads
-            for( int i = 0; i < p.num_threads; i++ ) {
+            for( int i = 0; i < p.get_num_threads(); i++ ) {
                 #pragma omp task shared(queue)
 		{
                     typename std::result_of<GenFunc()>::type item;
@@ -51,7 +51,7 @@ void farm(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf) {
                 auto k = in();
                 queue.push( k ) ;
                 if( !k ) {
-                    for( int i = 1; i < p.num_threads; i++ )
+                    for( int i = 1; i < p.get_num_threads(); i++ )
                         queue.push(k);
                     break;
                 }

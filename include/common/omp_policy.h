@@ -29,29 +29,51 @@ namespace grppi{
  *    implementation 
  */
 struct parallel_execution_omp{
-  bool ordering = true;
-  bool lockfree = false;
-  int num_threads = 4;
-  int get_threadID(){
+  private:
+   bool ordering = true;
+   bool lockfree = false;
+   int num_threads = 4;
+  public:
+   void set_lockfree(bool value){ lockfree = value;}
+   void set_ordered(bool value){ ordering = value;}
+
+   bool is_lockfree(){ return lockfree;}
+   bool is_ordered(){ return ordering;}
+
+   /** @brief Set num_threads to _threads to a new value
+   *
+   *  @param _threads number of threads 
+   */
+   void set_num_threads(int _nthreads){
+     num_threads = _nthreads;
+   };
+   /** @brief returns the number of threads
+    */
+   int get_num_threads() const{
+     return num_threads;
+   };
+
+
+   int get_threadID(){
      return omp_get_thread_num();
-  }
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_omp(){};
-
-  /** @brief Set num_threads to _threads in order to run in parallel
-   *
-   *  @param _threads number of threads used in the parallel mode
-   */
-  parallel_execution_omp(int _threads){num_threads=_threads; };
-
-  /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
-   *
-   *  @param _threads number of threads used in the parallel mode
-   *  @param _order enable or disable the ordered execution
-   */
-  parallel_execution_omp(int _threads, bool order){ num_threads=_threads; ordering = order;};
+   }
+   /** @brief Set num_threads to the maximum number of thread available by the
+    *    hardware
+    */
+   parallel_execution_omp(){};
+ 
+   /** @brief Set num_threads to _threads in order to run in parallel
+    *
+    *  @param _threads number of threads used in the parallel mode
+    */
+   parallel_execution_omp(int _threads){num_threads=_threads; };
+  
+   /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
+    *
+    *  @param _threads number of threads used in the parallel mode
+    *  @param _order enable or disable the ordered execution
+    */
+   parallel_execution_omp(int _threads, bool order){ num_threads=_threads; ordering = order;};
 
 };
 
