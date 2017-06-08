@@ -51,7 +51,6 @@ set( TESTS_CPU_THR
      divideandconquer-fibonacci stream_reduce_new
      stream_iteration1
      stream_iteration_pipe
-     affinity_test
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example
      stream_reduce_example  pipeline+filter_test_ppi_example

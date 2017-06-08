@@ -142,7 +142,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
           }
       ));
    }
-   se->register_thread();
+   se.exectype->register_thread();
    //Output function
    std::thread outth([&](){
       while(1){
@@ -151,7 +151,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
          out(k.value());
       }
    });
-   se->deregister_thread();
+   se.exectype->deregister_thread();
    //Join threads
    auto first = tasks.begin();
    auto end = tasks.end();
