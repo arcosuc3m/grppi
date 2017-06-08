@@ -30,6 +30,7 @@ namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
 inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc const &taskf, ReduceFunc const &red, OutputType &reduce_value ){
 
+    p.register_thread();
     Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE,p.is_lockfree());
     Queue<optional<OutputType>> end_queue(DEFAULT_SIZE,p.is_lockfree());
     std::atomic<int> nend (0);
@@ -60,9 +61,11 @@ inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc
         );
     }
     std::thread merge([&](){	
+        p.register_thread();
         optional<OutputType> item;
         while( (item = end_queue.pop( )) )
             red( item.value(), reduce_value  );
+        p.deregister_thread();
     });
     //Generate elements
     while( 1 ) {
@@ -76,6 +79,7 @@ inline void stream_reduce(parallel_execution_thr &p, GenFunc const &in, TaskFunc
     }
 
 
+    p.deregister_thread();
     //Join threads
     for( int i = 0; i < p.get_num_threads(); i++ ) {
         tasks[ i ].join();

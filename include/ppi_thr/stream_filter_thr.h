@@ -26,6 +26,7 @@ namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
 inline void stream_filter(parallel_execution_thr &p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
 
+    p.register_thread();
     std::vector<std::thread> tasks;
 
     Queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(DEFAULT_SIZE,p.is_lockfree());
@@ -136,6 +137,7 @@ inline void stream_filter(parallel_execution_thr &p, GenFunc const & in, FilterF
            break;
         }
     }
+    p.deregister_thread();
 
     for(int i = 0; i< p.get_num_threads(); i++) tasks[i].join();
 

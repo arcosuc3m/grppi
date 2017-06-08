@@ -31,6 +31,7 @@ template < typename InputIt, typename Output, typename ReduceOperator>
 inline typename std::enable_if<!is_iterator<Output>::value, void>::type 
 reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
 
+    p.register_thread();
     typename ReduceOperator::result_type identityVal = !op(false,true);
 
 
@@ -49,6 +50,7 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
 
       p.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
+               p.register_thread();
                out[tid] = identityVal;
 //               begin++;
                
@@ -57,6 +59,7 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
                    //begin++;
                }
                finishedTask++;
+               p.deregister_thread();
             },
             std::move(begin), std::move(end), i
       ));
@@ -97,6 +100,7 @@ reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut
        firstOut = op( firstOut, *it);
        it++;
     }
+    p.deregister_thread();
 }
 
 /*

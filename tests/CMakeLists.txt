@@ -51,6 +51,7 @@ set( TESTS_CPU_THR
      divideandconquer-fibonacci stream_reduce_new
      stream_iteration1
      stream_iteration_pipe
+     affinity_test
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example
      stream_reduce_example  pipeline+filter_test_ppi_example
@@ -80,10 +81,13 @@ foreach( m ${EXE_LIB} )
    foreach( t ${TESTS_CPU_${m}} )
 
       add_executable( ${t}_${m} ${t}.cpp )
-      
+       
       set_target_properties(${t}_${m} PROPERTIES COMPILE_FLAGS "-D${m}" )
       if ( ${m} STREQUAL THR )
          target_link_libraries( ${t}_${m} pthread )
+         if(HWLOC_FOUND)
+             target_link_libraries( ${t}_${m} hwloc)
+         endif()
       elseif ( ${m} STREQUAL TBB )
          target_link_libraries( ${t}_${m} tbb )
       endif()

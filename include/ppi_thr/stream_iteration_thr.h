@@ -56,6 +56,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Pipe
    composed_pipeline< Queue< typename std::result_of<GenFunc()>::type >, Queue< typename std::result_of<GenFunc()>::type >, 0, Stages ...>
       (queue, se, queueOut, pipeThreads); 
  
+   p.register_thread();
    while(1){
       //If every element has been processed
       if(sendFinish&&nelem==0){
@@ -72,6 +73,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Pipe
       }else queue.push( k );
 
    }
+   p.deregister_thread();
    auto first = pipeThreads.begin();
    auto end = pipeThreads.end();
    gen.join();
@@ -140,6 +142,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
           }
       ));
    }
+   se->register_thread();
    //Output function
    std::thread outth([&](){
       while(1){
@@ -148,6 +151,7 @@ inline void stream_iteration(parallel_execution_thr &p, GenFunc const & in, Farm
          out(k.value());
       }
    });
+   se->deregister_thread();
    //Join threads
    auto first = tasks.begin();
    auto end = tasks.end();

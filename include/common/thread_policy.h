@@ -106,7 +106,7 @@ struct parallel_execution_thr {
    }
 
    //Deregister a thread
-    void deregister_thread(){
+   void deregister_thread(){
      while (lock.test_and_set(std::memory_order_acquire));
      active_threads--;
      if(active_threads == 0) thid_table.clear();
@@ -167,7 +167,7 @@ struct parallel_execution_thr {
     *
     *  @param _threads number of threads 
     */
-   inline void set_num_threads(int _nthreads){
+   void set_num_threads(int _nthreads){
    #ifdef GRPPI_HWLOC
      for(auto i = _nthreads; i< num_threads;i++){
        auto cit = cpu_bind.find(i);
@@ -182,7 +182,7 @@ struct parallel_execution_thr {
    };
    /** @brief returns the number of threads
     */
-   inline int get_num_threads() const{
+   int get_num_threads() const{
      return num_threads;
    };
    /** @brief Set the memory affinity of a given thread to a set of NUMA nodes
@@ -190,7 +190,7 @@ struct parallel_execution_thr {
     *  @param tid ID of the thread that should be pinned
     *  @param nodeset vector of NUMA nodes IDs 
     */
-   inline void set_numa_affinity(int tid, std::vector<int> nodeset){
+   void set_numa_affinity(int tid, std::vector<int> nodeset){
    #ifdef GRPPI_HWLOC
      unsigned int length = nodeset.size();
      hwloc_bitmap_t numa_set = hwloc_bitmap_alloc();
@@ -205,7 +205,7 @@ struct parallel_execution_thr {
     *  @param tid ID of the thread that should be pinned
     *  @param cpuset vector of CPU IDs 
     */
-   inline void set_thread_affinity(int tid, std::vector<int> cpuset){
+   void set_thread_affinity(int tid, std::vector<int> cpuset){
    #ifdef GRPPI_HWLOC
      unsigned int length = cpuset.size();
      hwloc_bitmap_t cpu_set = hwloc_bitmap_alloc();

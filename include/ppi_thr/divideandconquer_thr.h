@@ -93,6 +93,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 inline void divide_and_conquer(parallel_execution_thr& p, Input & problem, Output & output,
             DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge) {
 
+    p.register_thread();
     std::atomic<int> num_threads ( p.get_num_threads() );
     
     if(num_threads.load()>0){
@@ -138,6 +139,7 @@ inline void divide_and_conquer(parallel_execution_thr& p, Input & problem, Outpu
 
         for(int i = 0; i<partials.size();i++){ // MarcoA - this is moved to the user code
            merge(partials[i], output);
+           p.deregister_thread();
         }
        }else{
         task(problem, output);
@@ -145,6 +147,7 @@ inline void divide_and_conquer(parallel_execution_thr& p, Input & problem, Outpu
     }else{
         divide_and_conquer(sequential_execution {}, problem, output, divide, task, merge);
     }
+
 }
 
 

@@ -41,6 +41,9 @@ inline void map_reduce (parallel_execution_thr & p, InputIt first, InputIt last,
 
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
 inline T map_reduce ( parallel_execution_thr& p, InputIt first, InputIt last, MapFunc const &  map, T init, ReduceOperator op){
+
+    p.register_thread();
+
     T out = init;
     std::vector<T> partialOuts(p.get_num_threads());
     std::vector<std::thread> tasks;
@@ -70,6 +73,8 @@ inline T map_reduce ( parallel_execution_thr& p, InputIt first, InputIt last, Ma
        (*task).join();
     }
     Reduce(sequential_execution{}, partialOuts.begin(), partialOuts.end(), out, op);
+
+    p.deregister_thread();
 
     return out;
 }

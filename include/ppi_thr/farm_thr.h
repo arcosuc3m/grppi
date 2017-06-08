@@ -31,6 +31,7 @@ namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename SinkFunc>
 inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & taskf , SinkFunc const &sink) {
 
+    p.register_thread();
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
 //    Queue< optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE);
@@ -100,6 +101,7 @@ inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & 
         }
     }
 
+    p.deregister_thread();
     //Join threads
     for( int i = 0; i < tasks.size(); i++ )
        tasks[ i ].join();
@@ -110,6 +112,8 @@ inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & 
 
 template <typename GenFunc, typename TaskFunc>
 inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & taskf ) {
+
+    p.register_thread();
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
@@ -151,6 +155,8 @@ inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & 
     //Join threads
     for( int i = 0; i < p.get_num_threads(); i++ )
        tasks[ i ].join();
+
+    p.deregister_thread();
 }
 
 
