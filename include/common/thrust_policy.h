@@ -21,9 +21,14 @@
 #ifndef GRPPI_THRUST_POLICY_H
 #define GRPPI_THRUST_POLICY_H
 
+// Only if compiled with Thrust enabled
+#ifdef GRPPI_THRUST
+
 #include <thrust/execution_policy.h>
 #include <thrust/system/omp/execution_policy.h>
 
+// Only if additionally TBB is enabled
+// Note: This allows TBB/Thrust integration.
 #ifdef GRPPI_TBB
 #include <thrust/system/tbb/execution_policy.h>
 #endif
@@ -60,5 +65,7 @@ auto parallel_execution_thrust() -> decltype(parallel_execution_thrust_internal(
     return parallel_execution_thrust_internal(1, thrust::cuda::par);
 } 
 */
+
+#endif // GRPPI_THRUST
 
 #endif

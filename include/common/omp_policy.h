@@ -21,6 +21,9 @@
 #ifndef GRPPI_OMP_POLICY_H
 #define GRPPI_OMP_POLICY_H
 
+// Only if compiled with OpenMP enabled
+#ifdef GRPPI_OMP
+
 #include <omp.h>
 
 namespace grppi{
@@ -56,5 +59,7 @@ struct parallel_execution_omp{
 };
 
 } // end namespace grppi
+
+#endif // GRPPI_OMP
 
 #endif

@@ -24,18 +24,9 @@
 // Includes for execution policies
 #include "seq_policy.h"
 #include "thread_policy.h"
-
-#ifdef GRPPI_OMP
 #include "omp_policy.h"
-#endif
-
-#ifdef GRPPI_THRUST
-#include "thrust_policy.h"
-#endif
-
-#ifdef GRPPI_TBB
 #include "tbb_policy.h"
-#endif
+#include "thrust_policy.h"
 
 // Includes with GRPPI internals
 #include "optional.h"

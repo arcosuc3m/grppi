@@ -21,6 +21,9 @@
 #ifndef GRPPI_TBB_POLICY_H
 #define GRPPI_TBB_POLICY_H
 
+// Only if compiled with TBB enabled
+#ifdef GRPPI_TBB
+
 namespace grppi{
 
 /** @brief Set the execution mode to parallel with threading building blocks
@@ -44,5 +47,7 @@ struct parallel_execution_tbb{
 };
 
 } // end namespace grppi
+
+#endif // GRPPI_TBB
 
 #endif
