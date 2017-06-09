@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
@@ -47,7 +47,7 @@ void pipeline_example1() {
     int a = 10;
     p.ordering=true;
     /* Test exit inmediately in the first stage */
-    Pipeline( p,
+    pipeline( p,
         // Pipeline stage 0
         [&]() { 
             return optional<int>(); 

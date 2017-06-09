@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/stream_reduce.hpp>
+#include <ppi/stream_reduce.h>
 
 using namespace std;
 using namespace grppi;
@@ -34,7 +34,7 @@ void reduce_example1(){
 
     auto p = parallel_execution_thrust(1, thrust::cuda::par);
 
-    StreamReduce( p,
+    stream_reduce( p,
         // Reduce generator as lambda
         [&]() { 
             int n = ( stream.size() - index ) < 100 ? (stream.size() - index) : 100;

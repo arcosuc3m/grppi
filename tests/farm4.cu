@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <ppi/farm.h>
 
 
 
@@ -35,7 +35,7 @@ void farm_example1() {
     auto p = parallel_execution_thrust(1, thrust::cuda::par);
     cudaGetDeviceCount(&(p.num_gpus));
 
-    Farm(p,
+    farm(p,
         // Farm generator as lambda
         [&]() {
             a--; 

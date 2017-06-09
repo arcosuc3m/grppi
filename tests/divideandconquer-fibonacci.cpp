@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include "ppi/divideandconquer.hpp"
+#include "divideandconquer.h"
 
 using namespace std;
 using namespace grppi;
@@ -55,7 +55,7 @@ void fibonacci_example() {
     for(int v=0;v<40;v++){
     int find = 1;
     int out = 0;
-    DivideAndConquer(p, v, out,
+    divide_and_conquer(p, v, out,
         [&](auto & v){
            std::vector< int > subproblem;
     	   if(v<2) subproblem.push_back(v);
@@ -80,7 +80,7 @@ void fibonacci_example() {
         [&](auto & partial, auto & out){
            out += partial;
         }
-    );    
+    );
 
     std::cout << v<< ":" << out << std::endl;
    }

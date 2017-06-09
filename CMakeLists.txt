@@ -20,7 +20,7 @@
 
  
 cmake_minimum_required (VERSION 2.8.11)
-project( GrPPI )
+project( grppi )
 
 
 # Define a path for modules before accesing default. Needed to find TBB
@@ -118,8 +118,8 @@ endif()
 
 
 # Create header file with the XX_ENABLE flags
-set (HEADER_FILE "ppi/enable_flags.hpp")
-file (WRITE ${HEADER_FILE} "//Enable Flags")
+#set (HEADER_FILE "include/enable_flags.hpp")
+#file (WRITE ${HEADER_FILE} "//Enable Flags")
 
 # TBB Library 
 option( TBB_ENABLE "Require TBB library" ON )
@@ -127,7 +127,8 @@ message( STATUS "TBB: " ${TBB_ENABLE} )
 if( TBB_ENABLE )
     include_directories(${TBB_INCLUDE_DIRS} )
     find_package(TBB REQUIRED)
-    file ( APPEND ${HEADER_FILE} "\n#define TBB_ENABLE ON")
+    add_definitions( "-DGRPPI_TBB" )
+#    file ( APPEND ${HEADER_FILE} "\n#define TBB_ENABLE ON")
 endif( TBB_ENABLE )
 
 # Threads Library
@@ -138,7 +139,8 @@ option( OMP_ENABLE "Require OpenMP library" ON )
 message( STATUS "OpenMP: " ${OMP_ENABLE})
 if( OMP_ENABLE )
     find_package(OpenMP REQUIRED)
-    file ( APPEND ${HEADER_FILE} "\n#define OMP_ENABLE ON")
+    add_definitions( "-DGRPPI_OMP" )
+#    file ( APPEND ${HEADER_FILE} "\n#define OMP_ENABLE ON")
 endif( OMP_ENABLE )
 
 # CUDA library
@@ -174,66 +176,15 @@ if( CUDA_ENABLE )
     endif( APPLE )
 endif( CUDA_ENABLE )
 
+# Doxygen Documentation
+add_subdirectory(doxy)
 
 
-# # PPI
-# set( PPI ${PROJECT_SOURCE_DIR}/ppi )
+# Installation
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
+        FILES_MATCHING PATTERN "*.h")
 
-# set( PPIHEADERS_CPU
-# #SEQ
-#      ${PPI}/ppi_seq/divideandconquer_seq.hpp
-#      ${PPI}/ppi_seq/farm_seq.hpp
-#      ${PPI}/ppi_seq/mapreduce_seq.hpp
-#      ${PPI}/ppi_seq/map_seq.hpp
-#      ${PPI}/ppi_seq/pipeline_seq.hpp
-#      ${PPI}/ppi_seq/reduce_seq.hpp
-#      ${PPI}/ppi_seq/stencil_seq.hpp
-#      ${PPI}/ppi_seq/stream_filter_seq.hpp
-#      ${PPI}/ppi_seq/stream_reduce_seq.hpp
-# #OMP
-#      ${PPI}/ppi_omp/farm_omp.hpp
-#      ${PPI}/ppi_omp/pipeline_omp.hpp
-#      ${PPI}/ppi_omp/stream_filter_omp.hpp
-#      ${PPI}/ppi_omp/stream_reduce_omp.hpp
-# #THR
-#      ${PPI}/ppi_thr/divideandconquer_thr.hpp
-#      ${PPI}/ppi_thr/farm_thr.hpp
-#      ${PPI}/ppi_thr/mapreduce_thr.hpp
-#      ${PPI}/ppi_thr/map_thr.hpp
-#      ${PPI}/ppi_thr/pipeline_thr.hpp
-#      ${PPI}/ppi_thr/reduce_thr.hpp
-#      ${PPI}/ppi_thr/stencil_thr.hpp
-#      ${PPI}/ppi_thr/stream_filter_thr.hpp
-#      ${PPI}/ppi_thr/stream_reduce_thr.hpp
-# #TBB
-#      ${PPI}/ppi_tbb/farm_tbb.hpp
-#      ${PPI}/ppi_tbb/pipeline_tbb.hpp
-# )
-
-
-# If BUILD_TESTS is ON, the test will be created before the installation is performed.
-
-# Default installation path
-#set (CMAKE_INSTALL_PREFIX "/opt/")
-# DESTDIR takes a value and appends to it the CMAKE_INSTALL_PREFIX
-# make install DESTDIR=/local --> /local/opt
-
-# DESTINATION gets the previous path and appends the argument --> /opt/local/GrPPI
-
-# cmake -DCMAKE_INSTALL_PREFIX=path/to/folder
-
-#llvm --> cmake -DCMAKE_INSTALL_PREFIX=/tmp/llvm 
-
-# To compile once installed
-# g++ farm1.cpp -I /tmp/GrPPI -std=c++14 -lboost_system -lboost_thread
-
-# Installation -- make install
-install ( DIRECTORY  ${PROJECT_SOURCE_DIR}/ppi DESTINATION  "${CMAKE_PROJECT_NAME}" )
-# Installation of fastflow
-install ( DIRECTORY ${PROJECT_SOURCE_DIR}/fastflow DESTINATION "${CMAKE_PROJECT_NAME}" )
-
-#install( FILES ${PPIHEADERS_CPU} DESTINATION /include/ppi/ )
-#install( FILES ${PPIHEADERS_GPU} DESTINATION /include/ppi/ )
+include_directories("${CMAKE_SOURCE_DIR}/include")
 
 # Test creation. Related with CMakeLists.txt on tests folder.
 option( BUILD_TESTS "Build tests" ON )
@@ -241,4 +192,5 @@ message( STATUS "Configuring >>tests<< directory" )
 if( BUILD_TESTS )
     enable_testing()
     add_subdirectory(tests)
+    add_subdirectory(unit_tests)
 endif( BUILD_TESTS )
