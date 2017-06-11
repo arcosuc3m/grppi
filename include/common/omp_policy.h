@@ -24,6 +24,8 @@
 // Only if compiled with OpenMP enabled
 #ifdef GRPPI_OMP
 
+#include <type_traits>
+
 #include <omp.h>
 
 namespace grppi{
@@ -58,7 +60,30 @@ struct parallel_execution_omp{
 
 };
 
+/// Determine if a type is an OMP execution policy.
+template <typename E>
+constexpr bool is_parallel_execution_omp() {
+  return std::is_same<E, parallel_execution_omp>::value;
+}
+
 } // end namespace grppi
+
+#else // GRPPI_OMP undefined
+
+namespace grppi {
+
+/// Parallel execution policy.
+/// Empty type if GRPPI_OMP disabled.
+class parallel_execution_omp {};
+
+/// Determine if a type is an OMP execution policy.
+/// False if GRPPI_OMP disabled.
+template <typename E>
+constexpr bool is_parallel_execution_omp() {
+  return false;
+}
+
+}
 
 #endif // GRPPI_OMP
 
