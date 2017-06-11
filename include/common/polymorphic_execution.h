@@ -34,17 +34,22 @@ namespace grppi{
 /// Meta-function to determine if a type is an execution policy
 template <typename E>
 constexpr bool is_execution_policy() {
-  return std::is_same<E, grppi::sequential_execution>::value 
-      || std::is_same<E, grppi::parallel_execution_thr>::value
-      || std::is_same<E, grppi::parallel_execution_tbb>::value
-      || std::is_same<E, grppi::parallel_execution_omp>::value
+  return is_sequential_execution<E>() 
+      || is_parallel_execution_thr<E>()
+      || is_parallel_execution_tbb<E>()
+      || is_parallel_execution_omp<E>()
   ;
 }
 
-/// Simulate concept requirement for an execution policy
+/// Simulate concept requirement for being an execution policy
 template <typename E>
 using requires_execution_policy =
   std::enable_if_t<is_execution_policy<E>(), int>;
+
+/// Simulate concept requirement for not being an execution policy
+template <typename E>
+using requires_not_execution_policy =
+  std::enable_if_t<!is_execution_policy<E>(), int>;
 
 // Forward declare polymorphic execution
 class polymorphic_execution;
@@ -74,9 +79,17 @@ public:
   }
 
   /// Get the execution pointer for a given type.
-  template <typename E>
+  template <typename E, 
+            requires_execution_policy<E> = 0>
   E * execution_ptr() {
     return (*execution_type_ != typeid(E))?nullptr:static_cast<E*>(execution_.get());
+  }
+
+  /// Get the execution pointer for a given type.
+  template <typename E, 
+            requires_not_execution_policy<E> = 0>
+  E * execution_ptr() {
+    return nullptr;
   }
 
 private:
