@@ -89,13 +89,13 @@ TEST(GrPPI, filter_example_thr ){
     EXPECT_EQ(1000, filter_example(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, filter_example_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(1000, filter_example(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, filter_example_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(1000, filter_example(p) );

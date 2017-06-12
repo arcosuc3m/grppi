@@ -92,6 +92,7 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
     message( WARNING "Compliance check not fully implemented yet" )
 endif()
 
+include_directories("${CMAKE_SOURCE_DIR}/include")
 
 # BOOST library
 set(Boost_USE_STATIC_LIBS OFF) 
@@ -183,8 +184,6 @@ add_subdirectory(doxy)
 # Installation
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
         FILES_MATCHING PATTERN "*.h")
-
-include_directories("${CMAKE_SOURCE_DIR}/include")
 
 # Test creation. Related with CMakeLists.txt on tests folder.
 option( BUILD_TESTS "Build tests" ON )

@@ -83,13 +83,13 @@ TEST(GrPPI, divideandconquer_fibonacci_GT_thr ){
     EXPECT_EQ(63245986, fibonacci_example(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, divideandconquer_fibonacci_GT_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(63245986, fibonacci_example(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, divideandconquer_fibonacci_GT_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(63245986, fibonacci_example(p) );

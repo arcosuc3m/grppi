@@ -86,13 +86,13 @@ TEST(GrPPI, stream_reduce_example_thr ){
     EXPECT_EQ(5060408, stream_reduce_example(p) );
 }
 
-#ifdef OMP_ENABLE
+#ifdef GRPPI_OMP
     TEST(GrPPI, stream_reduce_example_omp ){
         parallel_execution_omp p{NTHREADS};
         EXPECT_EQ(5060408, stream_reduce_example(p) );
     }
 #endif
-#ifdef TBB_ENABLE
+#ifdef GRPPI_TBB
     TEST(GrPPI, stream_reduce_example_tbb ){
         parallel_execution_tbb p{NTHREADS};
         EXPECT_EQ(5060408, stream_reduce_example(p) );

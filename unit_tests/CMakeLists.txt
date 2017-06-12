@@ -4,6 +4,11 @@ option( GTest_ENABLE "Activate Google Test" OFF)
 
 file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/txt DESTINATION "${CMAKE_BINARY_DIR}/unit_tests/")
 
+# OMP
+if(${OMP_ENABLE})
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+endif()
+
 
 if(GTest_ENABLE)
 
@@ -32,6 +37,12 @@ if(GTest_ENABLE)
       target_link_libraries(${t}_GT ${Boost_LIBRARIES} )
       GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/unit_tests/${t}_GT.cpp)
   endforeach( t )
+
+  add_executable(utest ${CMAKE_SOURCE_DIR}/unit_tests/polymorphic_execution.cpp)
+  target_link_libraries(utest ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
+  target_link_libraries(utest ${Boost_LIBRARIES} )
+  GTEST_ADD_TESTS(utest "" ${CMAKE_SOURCE_DIR}/unit_tests/polymorphic_execution.cpp)
+  
 
 
   set(NEW_TESTS_GPU
