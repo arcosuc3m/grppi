@@ -1,5 +1,5 @@
 
--------------------- GrPPI v0.1 Credits ---------------------
+-------------------- GrPPI v0.2 Credits ---------------------
 
 Code contributers:
 ------------------
@@ -17,7 +17,7 @@ Manuel F. DOLZ
 Adrian GALLEGO
 
 
-GrPPI v0.1 includes or is derivative of works distributed under the licenses listed below.
+GrPPI v0.2 includes or is derivative of works distributed under the licenses listed below.
 The full text for most of the licenses listed below can be found in the LICENSES.txt file.
 The original copyright notices have been preserved within the respective files and or
 packages. Please refer to the specific files and/or packages for more detailed information
