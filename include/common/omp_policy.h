@@ -66,6 +66,14 @@ constexpr bool is_parallel_execution_omp() {
   return std::is_same<E, parallel_execution_omp>::value;
 }
 
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+costexpr bool is_supported<parallel_execution_omp>() {
+  return true;
+}
+
 } // end namespace grppi
 
 #else // GRPPI_OMP undefined
@@ -80,6 +88,14 @@ class parallel_execution_omp {};
 /// False if GRPPI_OMP disabled.
 template <typename E>
 constexpr bool is_parallel_execution_omp() {
+  return false;
+}
+
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<parallel_execution_omp>() {
   return false;
 }
 

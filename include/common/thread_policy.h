@@ -90,6 +90,15 @@ constexpr bool is_parallel_execution_thr() {
   return std::is_same<E, parallel_execution_thr>::value;
 }
 
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<parallel_execution_thr>() {
+  return true;
+}
+
+
 } // end namespace grppi
 
 

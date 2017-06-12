@@ -53,6 +53,15 @@ constexpr bool is_parallel_execution_tbb() {
   return is_same<E, parallel_execution_tbb, E>::value;
 }
 
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<parallel_execution_tbb>() {
+  return true;
+}
+
+
 } // end namespace grppi
 
 #else // GRPPI_TBB not defined
@@ -70,6 +79,13 @@ constexpr bool is_parallel_execution_tbb() {
   return false;
 }
 
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<parallel_execution_tbb>() {
+  return false;
+}
 
 }
 

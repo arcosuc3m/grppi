@@ -40,6 +40,14 @@ constexpr bool is_sequential_execution() {
   return std::is_same<E, sequential_execution>::value;
 }
 
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<sequential_execution>() {
+  return true;
+}
+
 
 
 } // end namespace grppi
