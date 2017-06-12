@@ -25,78 +25,22 @@
 #include <numeric>
 #include <stdexcept>
 
-// Experimental C++
-#include <experimental/any>
-
+#include "common/polymorphic_execution.h"
 #include "map.h"
 
-template <typename E>
-constexpr bool is_execution_policy() {
-  return std::is_same<E, grppi::sequential_execution>::value 
-      || std::is_same<E, grppi::parallel_execution_thr>::value
-      || std::is_same<E, grppi::parallel_execution_tbb>::value
-      || std::is_same<E, grppi::parallel_execution_omp>::value
-  ;
-}
-
-template <typename E>
-using requires_execution_policy =
-  std::enable_if_t<is_execution_policy<E>(), int>;
-
-class dynamic_execution;
-
-template <typename E>
-dynamic_execution make_dynamic_execution();
-
-class dynamic_execution {
-public:
-
-  /// Create empty dynamic execution.
-  dynamic_execution() :
-    policy_{},
-    policy_type_{nullptr}
-  {}
-
-  /// Determine if there is a policy.
-  bool has_execution() const { return policy_.get() != nullptr; }
-
-  const type_info & type() const noexcept { 
-    assert(has_execution());
-    return *policy_type_; 
-  }
-
-  template <typename E>
-  E * execution_ptr() {
-    assert(has_execution());
-    return (*policy_type_ != typeid(E))?nullptr:static_cast<E*>(policy_.get());
-  }
-
-private:
-  /// Pointer to dynamically allocated execution policy.
-  std::shared_ptr<void> policy_;
-
-  /// Type id of the current execution policy;
-  const type_info * policy_type_;
-
-private:
-
-  /// Create from other static policy with no arguments.
-  template <typename E>
-  friend dynamic_execution make_dynamic_execution() {
-    dynamic_execution e;
-    e.policy_ = make_shared<E>();
-    e.policy_type_ = &typeid(E);
-    return e;
-  }
-
-};
-
 template <typename I1, typename I2, typename F>
-void mymap_helper(dynamic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
+void mymap_helper(grppi::polymorphic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
 }
 
-template <typename E, typename ... O, typename I1, typename I2, typename F>
-void mymap_helper(dynamic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
+template <typename E, typename ... O, typename I1, typename I2, typename F,
+          std::enable_if_t<!grppi::is_supported<E>(),int> = 0>
+void mymap_helper(grppi::polymorphic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
+  mymap_helper<O...>(e, i1, f1, i2, f);
+}
+
+template <typename E, typename ... O, typename I1, typename I2, typename F,
+          std::enable_if_t<grppi::is_supported<E>(),int> = 0>
+void mymap_helper(grppi::polymorphic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
   if (typeid(E) == e.type()) {
     grppi::map(*e.execution_ptr<E>(), i1, f1, i2, f);
   }
@@ -105,7 +49,7 @@ void mymap_helper(dynamic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
 }
 
 template <typename I1, typename I2, typename F>
-void mymap(dynamic_execution & e, I1 i1, I1 f1, I2 i2, F && f) {
+void mymap(grppi::polymorphic_execution & e, I1 i1, I1 f1, I2 i2, F && f) {
   mymap_helper<
     grppi::sequential_execution,
     grppi::parallel_execution_thr,
@@ -117,16 +61,17 @@ void mymap(dynamic_execution & e, I1 i1, I1 f1, I2 i2, F && f) {
 
 // EXAMPLE STARTS HERE
 
-dynamic_execution execution_mode(const std::string & opt) {
+grppi::polymorphic_execution execution_mode(const std::string & opt) {
+  using namespace grppi;
   if ("seq" == opt) 
-    return make_dynamic_execution<grppi::sequential_execution>();
+    return make_polymorphic_execution<grppi::sequential_execution>();
   if ("thr" == opt) 
-    return make_dynamic_execution<grppi::parallel_execution_thr>();
+    return make_polymorphic_execution<grppi::parallel_execution_thr>();
   if ("omp" == opt) 
-    return make_dynamic_execution<grppi::parallel_execution_omp>();
+    return make_polymorphic_execution<grppi::parallel_execution_omp>();
   if ("tbb" == opt) 
-    return make_dynamic_execution<grppi::parallel_execution_tbb>();
-  return dynamic_execution{};
+    return make_polymorphic_execution<grppi::parallel_execution_tbb>();
+  return polymorphic_execution{};
 }
 
 template <typename F, typename ...Args>
@@ -140,7 +85,7 @@ bool run_test(const string & mode, F && f, Args && ... args) {
 }
 
 
-void test_map(dynamic_execution & e, int n) {
+void test_map(grppi::polymorphic_execution & e, int n) {
   using namespace std;
 
   vector<int> in(n);
