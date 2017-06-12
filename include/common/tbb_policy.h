@@ -21,6 +21,11 @@
 #ifndef GRPPI_TBB_POLICY_H
 #define GRPPI_TBB_POLICY_H
 
+// Only if compiled with TBB enabled
+#ifdef GRPPI_TBB
+
+#include <type_traits>
+
 namespace grppi{
 
 /** @brief Set the execution mode to parallel with threading building blocks
@@ -43,6 +48,31 @@ struct parallel_execution_tbb{
   parallel_execution_tbb(int _threads){ num_threads= _threads; };
 };
 
+template <typename E>
+constexpr bool is_parallel_execution_tbb() {
+  return is_same<E, parallel_execution_tbb, E>::value;
+}
+
 } // end namespace grppi
+
+#else // GRPPI_TBB not defined
+
+namespace grppi {
+
+/// Parallel execution policy.
+/// Empty type if GRPPI_TBB disabled.
+class parallel_execution_tbb {};
+
+/// Determine if a type is a TBB execution policy.
+/// False if GRPPI_TBB disabled.
+template <typename E>
+constexpr bool is_parallel_execution_tbb() {
+  return false;
+}
+
+
+}
+
+#endif // GRPPI_TBB
 
 #endif

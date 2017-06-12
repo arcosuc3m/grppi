@@ -21,11 +21,13 @@
 #ifndef GRPPI_THREAD_POLICY_H
 #define GRPPI_THREAD_POLICY_H
 
-#include "../ppi_thr/pool.h"
 #include <thread>
 #include <atomic>
 #include <algorithm>
 #include <vector>
+#include <type_traits>
+
+#include "ppi_thr/pool.h"
 
 namespace grppi {
 
@@ -81,6 +83,13 @@ struct parallel_execution_thr {
      std::vector<std::thread::id> thid_table;
 
 };
+
+/// Determine if a type is a threading execution policy.
+template <typename E>
+constexpr bool is_parallel_execution_thr() {
+  return std::is_same<E, parallel_execution_thr>::value;
+}
+
 } // end namespace grppi
 
 

@@ -21,6 +21,8 @@
 #ifndef GRPPI_SEQ_POLICY_H
 #define GRPPI_SEQ_POLICY_H
 
+#include <type_traits>
+
 namespace grppi{
 
 /** @brief Set the execution mode to sequencial */
@@ -31,6 +33,14 @@ struct sequential_execution {
   /** @brief set num_threads to 1 in order to sequential execution */
   sequential_execution(){};
 };
+
+/// Determine if a type is a sequential execution policy.
+template <typename E>
+constexpr bool is_sequential_execution() {
+  return std::is_same<E, sequential_execution>::value;
+}
+
+
 
 } // end namespace grppi
 

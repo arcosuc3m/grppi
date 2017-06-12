@@ -38,6 +38,12 @@ if(GTest_ENABLE)
       GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/unit_tests/${t}_GT.cpp)
   endforeach( t )
 
+  add_executable(utest ${CMAKE_SOURCE_DIR}/unit_tests/polymorphic_execution.cpp)
+  target_link_libraries(utest ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
+  target_link_libraries(utest ${Boost_LIBRARIES} )
+  GTEST_ADD_TESTS(utest "" ${CMAKE_SOURCE_DIR}/unit_tests/polymorphic_execution.cpp)
+  
+
 
   set(NEW_TESTS_GPU
       bench_farm  farm4  map4  mapreduce2  stream_reduce2
