@@ -2,4 +2,4 @@
 
 This directory offers the following examples:
 
-  arithmetic_add: Examples for the map pattern.
+  double_sequence: calculate the double of a sequence of numbers.

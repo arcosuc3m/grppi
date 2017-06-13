@@ -1,1 +1,1 @@
-add_subdirectory(arithmetic_add)
+add_subdirectory(double_sequence)
