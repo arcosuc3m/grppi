@@ -1,7 +1,7 @@
 
 -------------------- GrPPI v0.2 Credits ---------------------
 
-Code contributers:
+Code contributors:
 ------------------
 J. Daniel GARCIA
 David DEL RIO
@@ -10,10 +10,13 @@ Javier FERNANDEZ
 Javier GARCIA-BLAS
 Andres SANCHEZ
 
-Documentation Contributers:
+Documentation contributors:
 ---------------------------
 David DEL RIO
 Manuel F. DOLZ
+
+Past contributors:
+------------------
 Adrian GALLEGO
 
 
