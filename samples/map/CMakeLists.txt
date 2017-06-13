@@ -1,7 +1,1 @@
-set(samples
-  arithmetic_add
-)
-
-foreach( sample ${samples} )
-  add_subdirectory(${sample})     
-endforeach( sample )
+add_subdirectory(arithmetic_add)
