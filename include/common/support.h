@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -18,22 +18,25 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_H
-#define GRPPI_COMMON_H
+#ifndef GRPPI_COMMON_SUPPORT_H
+#define GRPPI_COMMON_SUPPORT_H
 
-// Includes for execution policies
-#include "seq_policy.h"
-#include "thread_policy.h"
-#include "omp_policy.h"
-#include "tbb_policy.h"
-#include "thrust_policy.h"
+#include <type_traits>
 
-// Includes with GRPPI internals
-#include "optional.h"
-#include "mpmc_queue.h"
-#include "callable_traits.h"
-#include "iterator.h"
-#include "patterns.h"
-#include "common/support.h"
+namespace grppi {
+
+namespace internal {
+
+template <typename E>
+using requires_execution_supported =
+  std::enable_if_t<is_supported<E>(), int>;
+
+template <typename E>
+using requires_execution_not_supported =
+  std::enable_if_t<!is_supported<E>(), int>;
+
+} // namespace internal
+
+} // namespace grppi
 
 #endif

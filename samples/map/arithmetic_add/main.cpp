@@ -27,39 +27,7 @@
 
 #include "common/polymorphic_execution.h"
 #include "map.h"
-
-template <typename I1, typename I2, typename F>
-void mymap_helper(grppi::polymorphic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
-}
-
-template <typename E, typename ... O, typename I1, typename I2, typename F,
-          std::enable_if_t<!grppi::is_supported<E>(),int> = 0>
-void mymap_helper(grppi::polymorphic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
-  mymap_helper<O...>(e, i1, f1, i2, f);
-}
-
-template <typename E, typename ... O, typename I1, typename I2, typename F,
-          std::enable_if_t<grppi::is_supported<E>(),int> = 0>
-void mymap_helper(grppi::polymorphic_execution & e , I1 i1, I1 f1, I2 i2, F && f) {
-  if (typeid(E) == e.type()) {
-    grppi::map(*e.execution_ptr<E>(), i1, f1, i2, f);
-  }
-  else
-    mymap_helper<O...>(e, i1, f1, i2, f);
-}
-
-template <typename I1, typename I2, typename F>
-void mymap(grppi::polymorphic_execution & e, I1 i1, I1 f1, I2 i2, F && f) {
-  mymap_helper<
-    grppi::sequential_execution,
-    grppi::parallel_execution_thr,
-    grppi::parallel_execution_omp,
-    grppi::parallel_execution_tbb
-  >(e, i1, f1, i2, f);
-}
-
-
-// EXAMPLE STARTS HERE
+#include "poly/map.h"
 
 grppi::polymorphic_execution execution_mode(const std::string & opt) {
   using namespace grppi;
@@ -93,7 +61,7 @@ void test_map(grppi::polymorphic_execution & e, int n) {
 
   vector<int> out(n);
 
-  mymap(e, begin(in), end(in), begin(out),
+  grppi::map(e, begin(in), end(in), begin(out),
     [](int i) { return i*2; });
 
   copy(begin(out), end(out), ostream_iterator<int>(cout, " "));
@@ -133,5 +101,5 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-    return 0;
+  return 0;
 }
