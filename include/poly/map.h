@@ -26,52 +26,52 @@
 
 namespace grppi{
 
-namespace internal {
-
 template <typename GF, typename TF>
-void map_helper(polymorphic_execution & e, GF && generator, TF && task)
+void map_multi_impl(polymorphic_execution & e, GF && generator, TF && task)
 {
 }
 
 template <typename InputIt, typename OutputIt, typename Operation>
-void map_helper(polymorphic_execution & e, InputIt first, InputIt last, 
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op) 
 {
 }
 
+
 template <typename E, typename ... O, typename GF, typename TF,
           internal::requires_execution_not_supported<E> = 0>
-void map_helper(polymorphic_execution & e, GF && generator, TF && task)
+void map_multi_impl(polymorphic_execution & e, GF && generator, TF && task)
 {
-  map_helper<O...>(e, std::forward<GF>(generator), std::forward<TF>(task));
+  map_multi_impl<O...>(e, std::forward<GF>(generator), std::forward<TF>(task));
 }
 
 template <typename E, typename ... O,
           typename InputIt, typename OutputIt, typename Operation,
           internal::requires_execution_not_supported<E> = 0>
-void map_helper(polymorphic_execution & e, InputIt first, InputIt last, 
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op) 
 {
-  map_helper<O...>(e, first, last, first_out, std::forward<Operation>(op));
+  map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
 }
 
 template <typename E, typename ... O, typename GF, typename TF,
           internal::requires_execution_supported<E> = 0>
-void map_helper(polymorphic_execution & e, GF && generator, TF && task)
+void map_multi_impl(polymorphic_execution & e, GF && generator, TF && task)
 {
   if (typeid(E) == e.type()) {
     map(*e.execution_ptr<E>(), 
         std::forward<GF>(generator), std::forward<TF>(task));
   }
   else {
-    map_helper<O...>(std::forward<GF>(generator), std::forward<TF>(task));
+    map_multi_impl<O...>(e, std::forward<GF>(generator), std::forward<TF>(task));
   }
 }
+
 
 template <typename E, typename ... O,
           typename InputIt, typename OutputIt, typename Operation,
           internal::requires_execution_supported<E> = 0>
-void map_helper(polymorphic_execution & e, InputIt first, InputIt last, 
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op) 
 {
   if (typeid(E) == e.type()) {
@@ -79,11 +79,9 @@ void map_helper(polymorphic_execution & e, InputIt first, InputIt last,
         first, last, first_out, std::forward<Operation>(op));
   }
   else {
-    map_helper<O...>(e, first, last, first_out, std::forward<Operation>(op));
+    map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
   }
 }
-
-} // end namespace grppi::internal
 
 /// Runs a map pattern with a generator function and a task function.
 /// GF: Generator functor type
@@ -91,13 +89,14 @@ void map_helper(polymorphic_execution & e, InputIt first, InputIt last,
 template <typename Generator, typename Operation>
 void map(polymorphic_execution & e, Generator && gen, Operation && op)
 {
-  internal::map_helper<
+  map_multi_impl<
     sequential_execution,
     parallel_execution_thr,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, std::forward<Generator>(gen), std::forward<Operation>(op));
 }
+
 
 /// Runs a map pattern with an input sequence, an output sequence and a task
 /// function.
@@ -108,26 +107,29 @@ template <typename InputIt, typename OutputIt, typename Operation>
 void map(polymorphic_execution & e, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op) 
 {
-  internal::map_helper<
+  map_multi_impl<
     sequential_execution,
     parallel_execution_thr,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, first, last, first_out, std::forward<Operation>(op));
+
 }
+
 
 template <typename InputIt, typename OutputIt, typename ... OtherInputIts,
           typename Operation>
 void map(polymorphic_execution & e, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op, OtherInputIts ... other_its) 
 {
-  internal::map_helper<
+  map_multi_impl<
     sequential_execution,
     parallel_execution_thr,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, first, last, first_out, std::forward<Operation>(op), other_its...);
 }
+
 
 } // end namespace grppi
 
