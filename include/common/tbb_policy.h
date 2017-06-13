@@ -50,7 +50,7 @@ struct parallel_execution_tbb{
 
 template <typename E>
 constexpr bool is_parallel_execution_tbb() {
-  return is_same<E, parallel_execution_tbb, E>::value;
+  return std::is_same<E, parallel_execution_tbb>::value;
 }
 
 template <typename E>
@@ -70,7 +70,7 @@ namespace grppi {
 
 /// Parallel execution policy.
 /// Empty type if GRPPI_TBB disabled.
-class parallel_execution_tbb {};
+struct parallel_execution_tbb {};
 
 /// Determine if a type is a TBB execution policy.
 /// False if GRPPI_TBB disabled.

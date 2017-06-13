@@ -70,7 +70,7 @@ template <typename E>
 constexpr bool is_supported();
 
 template <>
-costexpr bool is_supported<parallel_execution_omp>() {
+constexpr bool is_supported<parallel_execution_omp>() {
   return true;
 }
 
@@ -82,7 +82,7 @@ namespace grppi {
 
 /// Parallel execution policy.
 /// Empty type if GRPPI_OMP disabled.
-class parallel_execution_omp {};
+struct parallel_execution_omp {};
 
 /// Determine if a type is an OMP execution policy.
 /// False if GRPPI_OMP disabled.
