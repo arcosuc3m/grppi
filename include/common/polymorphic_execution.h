@@ -102,9 +102,12 @@ private:
 private:
 
   /// Create from other static policy with no arguments.
+  /// @return A polymorphic execution containing an E object if E is supported
+  /// @return An empty polymorphic execution otherwise.
   template <typename E>
   friend polymorphic_execution make_polymorphic_execution() {
     polymorphic_execution e;
+    if (!is_supported<E>()) return e;
     e.execution_ = std::make_shared<E>();
     e.execution_type_ = &typeid(E);
     return e;

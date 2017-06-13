@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -34,5 +34,6 @@
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"
+#include "common/support.h"
 
 #endif

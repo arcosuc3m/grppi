@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -66,6 +66,14 @@ constexpr bool is_parallel_execution_omp() {
   return std::is_same<E, parallel_execution_omp>::value;
 }
 
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<parallel_execution_omp>() {
+  return true;
+}
+
 } // end namespace grppi
 
 #else // GRPPI_OMP undefined
@@ -74,12 +82,20 @@ namespace grppi {
 
 /// Parallel execution policy.
 /// Empty type if GRPPI_OMP disabled.
-class parallel_execution_omp {};
+struct parallel_execution_omp {};
 
 /// Determine if a type is an OMP execution policy.
 /// False if GRPPI_OMP disabled.
 template <typename E>
 constexpr bool is_parallel_execution_omp() {
+  return false;
+}
+
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<parallel_execution_omp>() {
   return false;
 }
 

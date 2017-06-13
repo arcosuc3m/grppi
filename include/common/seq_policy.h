@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -38,6 +38,14 @@ struct sequential_execution {
 template <typename E>
 constexpr bool is_sequential_execution() {
   return std::is_same<E, sequential_execution>::value;
+}
+
+template <typename E>
+constexpr bool is_supported();
+
+template <>
+constexpr bool is_supported<sequential_execution>() {
+  return true;
 }
 
 
