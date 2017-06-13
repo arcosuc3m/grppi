@@ -2,4 +2,4 @@
 
 This directory offers the following examples:
 
-  double_sequence: calculate the double of a sequence of numbers.
+  double_sequence: Given a sequence of numbers, compute a sequence with doubles of those numbers.
