@@ -1,7 +1,7 @@
 **double_sequence**
 
-This example implements the computation of an output sequence whose values are the double of the input sequence.
+This example generates a sequence with the doubles of the first *n* natural numbers.
 
-The program first creates two vectors with a size given by the user. One of the vectors is filled with sequentially increasing values.
+This program first creates a sequences with the first *n* natural numbers and then computes the doubles of those elements to generate a new sequence that is finally printed.
 
-Then the map pattern is used to fill in parallel the second vector with the values of the first vector multiplied by two.
+
