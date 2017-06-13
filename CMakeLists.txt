@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8.11)
 set(PROJECT_NAME_STR grppi)
 project(${PROJECT_NAME_STR})
 
-# Define a path for TBB modules.
+# Define path for TBB modules.
 set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake.modules ${PROJECT_SOURCE_DIR} )
 
 # Print processor and compiler 
