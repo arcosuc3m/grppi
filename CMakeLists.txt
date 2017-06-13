@@ -20,7 +20,8 @@
 
  
 cmake_minimum_required (VERSION 2.8.11)
-project( grppi )
+set(PROJECT_NAME_STR grppi)
+project(${PROJECT_NAME_STR})
 
 
 # Define a path for modules before accesing default. Needed to find TBB
@@ -188,9 +189,10 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PR
 # Test creation. Related with CMakeLists.txt on tests folder.
 option( BUILD_TESTS "Build tests" ON )
 message( STATUS "Configuring >>tests<< directory" )
+enable_testing()
 if( BUILD_TESTS )
-    enable_testing()
     add_subdirectory(tests)
-    add_subdirectory(unit_tests)
+    add_subdirectory(legacy_utest)
     add_subdirectory(samples)
 endif( BUILD_TESTS )
+add_subdirectory(unit_tests)
