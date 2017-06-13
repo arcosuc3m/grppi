@@ -32,30 +32,7 @@
 #include "poly/map.h"
 
 // Samples shared utilities
-
-grppi::polymorphic_execution execution_mode(const std::string & opt) {
-  using namespace grppi;
-  if ("seq" == opt) 
-    return make_polymorphic_execution<grppi::sequential_execution>();
-  if ("thr" == opt) 
-    return make_polymorphic_execution<grppi::parallel_execution_thr>();
-  if ("omp" == opt) 
-    return make_polymorphic_execution<grppi::parallel_execution_omp>();
-  if ("tbb" == opt) 
-    return make_polymorphic_execution<grppi::parallel_execution_tbb>();
-  return polymorphic_execution{};
-}
-
-template <typename F, typename ...Args>
-bool run_test(const string & mode, F && f, Args && ... args) {
-  auto e = execution_mode(mode);
-  if (e.has_execution()) {
-    f(e, args...);
-    return true;
-  }
-  return false;
-}
-
+#include "../../util/util.h"
 
 void test_map(grppi::polymorphic_execution & e, int n) {
   using namespace std;
@@ -74,28 +51,12 @@ void test_map(grppi::polymorphic_execution & e, int n) {
 
 void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
-  using namespace grppi;
 
   cerr << msg << endl;
   cerr << "Usage: " << prog << " size mode" << endl;
   cerr << "  size: Integer value with problem size" << endl;
   cerr << "  mode:" << endl;
-
-  if (is_supported<sequential_execution>()) {
-    cerr << "    seq -> Sequential execution" << endl;
-  }
-
-  if (is_supported<parallel_execution_thr>()) {
-    cerr << "    thr -> ISO Threads backend" << endl;
-  }
-
-  if (is_supported<parallel_execution_tbb>()) {
-    cerr << "    tbb -> Intel TBB backend" << endl;
-  }
-
-  if (is_supported<parallel_execution_omp>()) {
-    cerr << "    omp -> OpenMP backend" << endl;
-  }
+  print_available_modes(cerr);
 }
 
 
