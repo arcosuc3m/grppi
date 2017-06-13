@@ -18,38 +18,25 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_SEQ_POLICY_H
-#define GRPPI_SEQ_POLICY_H
+#ifndef GRPPI_COMMON_SUPPORT_H
+#define GRPPI_COMMON_SUPPORT_H
 
 #include <type_traits>
 
-namespace grppi{
+namespace grppi {
 
-/** @brief Set the execution mode to sequencial */
-struct sequential_execution {
-  bool ordering = true;
-  int num_threads=1;
-  bool lockfree = false;
-  /** @brief set num_threads to 1 in order to sequential execution */
-  sequential_execution(){};
-};
-
-/// Determine if a type is a sequential execution policy.
-template <typename E>
-constexpr bool is_sequential_execution() {
-  return std::is_same<E, sequential_execution>::value;
-}
+namespace internal {
 
 template <typename E>
-constexpr bool is_supported();
+using requires_execution_supported =
+  std::enable_if_t<is_supported<E>(), int>;
 
-template <>
-constexpr bool is_supported<sequential_execution>() {
-  return true;
-}
+template <typename E>
+using requires_execution_not_supported =
+  std::enable_if_t<!is_supported<E>(), int>;
 
+} // namespace internal
 
-
-} // end namespace grppi
+} // namespace grppi
 
 #endif

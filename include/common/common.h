@@ -34,5 +34,6 @@
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"
+#include "common/support.h"
 
 #endif
