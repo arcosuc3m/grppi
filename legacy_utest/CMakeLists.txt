@@ -1,8 +1,9 @@
 # GOOGLE TEST----------------------------------------------------------------------------
 include_directories( ${PROJECT_SOURCE_DIR} )
-option( GTest_ENABLE "Activate Google Test" OFF)
 
-#file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/txt DESTINATION "${CMAKE_BINARY_DIR}/unit_tests/")
+option( LEGACY_UTEST_ENABLE "Generate Legacy Unit Tests" OFF )
+
+file(COPY ${CMAKE_SOURCE_DIR}/legacy_utest/txt DESTINATION "${CMAKE_BINARY_DIR}/legacy_utest/")
 
 # OMP
 if(${OMP_ENABLE})
@@ -10,7 +11,7 @@ if(${OMP_ENABLE})
 endif()
 
 
-if(GTest_ENABLE)
+if(LEGACY_UTEST_ENABLE)
 
   find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
@@ -31,18 +32,11 @@ if(GTest_ENABLE)
 
 
   foreach( t ${NEW_TESTS_CPU} )
-      add_executable(${t}_GT ${CMAKE_SOURCE_DIR}/unit_tests/${t}_GT.cpp)
-      # The COMPILE_FLAGS are defined in the test refering to the enable_flag.hpp file
+      add_executable(${t}_GT EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
       target_link_libraries(${t}_GT ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
       target_link_libraries(${t}_GT ${Boost_LIBRARIES} )
-      GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/unit_tests/${t}_GT.cpp)
+      GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
   endforeach( t )
-
-  add_executable(utest ${CMAKE_SOURCE_DIR}/unit_tests/polymorphic_execution.cpp)
-  target_link_libraries(utest ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
-  target_link_libraries(utest ${Boost_LIBRARIES} )
-  GTEST_ADD_TESTS(utest "" ${CMAKE_SOURCE_DIR}/unit_tests/polymorphic_execution.cpp)
-  
 
 
   set(NEW_TESTS_GPU
@@ -52,10 +46,10 @@ if(GTest_ENABLE)
   # CUDA tests
   if(CUDA_FOUND)
     foreach( t ${NEW_TESTS_GPU} )
-        CUDA_ADD_EXECUTABLE(${t}_GT ${CMAKE_SOURCE_DIR}/unit_tests/${t}_GT.cu)
+        CUDA_ADD_EXECUTABLE(${t}_GT ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cu)
         target_link_libraries(${t}_GT ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
         target_link_libraries(${t}_GT ${Boost_LIBRARIES} )
-        GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/unit_tests/${t}_GT.cu)
+        GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cu)
     endforeach( t )
   endif(CUDA_FOUND)
 
@@ -86,4 +80,4 @@ if(GTest_ENABLE)
     )
   endforeach( t )
 
-endif(GTest_ENABLE)
+endif(LEGACY_UTEST_ENABLE)
