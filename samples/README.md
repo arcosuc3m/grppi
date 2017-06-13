@@ -1,2 +1,8 @@
 **Samples**
-This folder contains a directory for each parallel pattern that includes the examples related to them.
+
+This directory contains a set of sample programs for GrPPI.
+
+Currently you will find:
+
+  map: arithmetic_add
+
