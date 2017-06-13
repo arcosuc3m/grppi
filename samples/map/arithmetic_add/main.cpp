@@ -17,6 +17,7 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
+// Standard library
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -25,9 +26,12 @@
 #include <numeric>
 #include <stdexcept>
 
+// grppi
 #include "common/polymorphic_execution.h"
 #include "map.h"
 #include "poly/map.h"
+
+// Samples shared utilities
 
 grppi::polymorphic_execution execution_mode(const std::string & opt) {
   using namespace grppi;
@@ -70,14 +74,28 @@ void test_map(grppi::polymorphic_execution & e, int n) {
 
 void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
+  using namespace grppi;
+
   cerr << msg << endl;
   cerr << "Usage: " << prog << " size mode" << endl;
   cerr << "  size: Integer value with problem size" << endl;
   cerr << "  mode:" << endl;
-  cerr << "    seq -> Sequential execution" << endl;
-  cerr << "    thr -> ISO Threads backend" << endl;
-  cerr << "    tbb -> Intel TBB backend" << endl;
-  cerr << "    omp -> OpenMP backend" << endl;
+
+  if (is_supported<sequential_execution>()) {
+    cerr << "    seq -> Sequential execution" << endl;
+  }
+
+  if (is_supported<parallel_execution_thr>()) {
+    cerr << "    thr -> ISO Threads backend" << endl;
+  }
+
+  if (is_supported<parallel_execution_tbb>()) {
+    cerr << "    tbb -> Intel TBB backend" << endl;
+  }
+
+  if (is_supported<parallel_execution_omp>()) {
+    cerr << "    omp -> OpenMP backend" << endl;
+  }
 }
 
 
