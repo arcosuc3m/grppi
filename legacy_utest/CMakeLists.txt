@@ -3,7 +3,6 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 file(COPY ${CMAKE_SOURCE_DIR}/legacy_utest/txt DESTINATION "${CMAKE_BINARY_DIR}/legacy_utest/")
 
-find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 # Add coverage options

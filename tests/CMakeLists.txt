@@ -145,7 +145,6 @@ option( GTest_ENABLE "Activate Google Test" OFF)
 
 if(GTest_ENABLE)
 
-  find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   # Add coverage options

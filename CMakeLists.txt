@@ -5,6 +5,8 @@ project(${PROJECT_NAME_STR})
 # Path for additional CMake modules
 set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake.modules)
 
+include(${CMAKE_MODULE_PATH}/build-external.cmake)
+
 # Print processor and compiler 
 message( STATUS "Detected processor is " ${CMAKE_SYSTEM_PROCESSOR} )
 message( STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER} )
@@ -27,7 +29,7 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
         message( FATAL_ERROR "g++ version outdated. Upgrade to 6.0 or above.")
     else()
         message( STATUS "C++ Compiler is GNU")
-        add_definitions( -std=c++14 -O3 -g )   
+        add_definitions( -std=c++14 -fno-delete-null-pointer-checks )
     endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
@@ -45,9 +47,9 @@ endif()
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
 # BOOST library
-set(Boost_USE_STATIC_LIBS OFF) 
+set(Boost_USE_STATIC_LIBS ON) 
 set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
+set(Boost_USE_STATIC_RUNTIME ON) 
 
 set(Boost_LIBRARIES system thread)
 find_package(Boost 1.5 REQUIRED ${Boost_LIBRARIES})
