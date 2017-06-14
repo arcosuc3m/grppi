@@ -64,8 +64,4 @@ foreach(t ${NEW_TESTS_CPU})
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Computing coverage and generating report"
   )
-  # Open firefox with the result
-  ADD_CUSTOM_COMMAND(TARGET coverage_${t}_GT POST_BUILD
-      COMMAND firefox ./mycov/index.html &
-  )
 endforeach( t )
