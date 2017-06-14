@@ -84,7 +84,7 @@ foreach( m ${EXE_LIB} )
       if ( ${m} STREQUAL THR )
          target_link_libraries( ${t}_${m} ${CMAKE_THREAD_LIBS_INIT} )
       elseif ( ${m} STREQUAL TBB )
-         target_link_libraries( ${t}_${m} tbb )
+         target_link_libraries( ${t}_${m} ${TBB_LIBRARIES} )
       endif()
       target_link_libraries( ${t}_${m} ${Boost_LIBRARIES} )
       

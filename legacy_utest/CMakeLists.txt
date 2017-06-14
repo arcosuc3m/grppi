@@ -23,8 +23,12 @@ set(NEW_TESTS_CPU
 
 foreach( t ${NEW_TESTS_CPU} )
     add_executable(${t}_GT EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
-    target_link_libraries(${t}_GT ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} gcov tbb)
-    target_link_libraries(${t}_GT ${Boost_LIBRARIES} )
+    target_link_libraries(${t}_GT 
+      ${GTEST_BOTH_LIBRARIES} 
+      ${CMAKE_THREAD_LIBS_INIT} 
+      ${TBB_LIBRARIES}
+      ${Boost_LIBRARIES} 
+      gcov)
     GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
 endforeach( t )
 
@@ -42,26 +46,3 @@ if(CUDA_FOUND)
       GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cu)
   endforeach( t )
 endif(CUDA_FOUND)
-
-
-# To run coverage
-# 1. make
-# 2. make coverage_test_name_GT
-
-# # Coverage options
-find_program(LCOV_CMD lcov)
-find_program(GENHTML_CMD genhtml)
-
-foreach(t ${NEW_TESTS_CPU})
-  ADD_CUSTOM_TARGET(coverage_${t}_GT
-      ${LCOV_CMD} --directory . --zerocounters
-      COMMAND ${t}_GT
-      COMMAND ${LCOV_CMD} --directory . --capture --output-file mycov.info
-      COMMAND ${LCOV_CMD} --remove mycov.info '/usr/*' 'utest/*' 
-          --output-file mycov.info.cleaned
-      COMMAND ${GENHTML_CMD} -o mycov mycov.info.cleaned --legend -s 
-      COMMAND ${CMAKE_COMMAND} -E remove mycov.info mycov.info.cleaned
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Computing coverage and generating report"
-  )
-endforeach( t )

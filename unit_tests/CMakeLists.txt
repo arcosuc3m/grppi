@@ -19,7 +19,8 @@ if(GRPPI_UNIT_TEST_ENABLE)
   add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
   target_link_libraries(${PROJECT_TEST_NAME} 
       ${GTEST_BOTH_LIBRARIES} 
-      gcov tbb
+      gcov
+      ${TBB_LIBRARIES}
       ${CMAKE_THREAD_LIBS_INIT}
       ${Boost_LIBRARIES})
   GTEST_ADD_TESTS(${PROJECT_TEST_NAME} "" ${TEST_SRC_FILES})

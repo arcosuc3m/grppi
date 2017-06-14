@@ -88,7 +88,8 @@ option( GRPPI_CUDA_ENABLE "Require CUDA library" OFF )
 message( STATUS "CUDA: " ${CUDA_ENABLE})
 if( GRPPI_CUDA_ENABLE )
     
-    if ( APPLE )
+    if ( APPLE  )
+
         message(WARNING "Apple NVCC no longer supported with gcc")
     else() 
         find_package(CUDA)
@@ -114,10 +115,10 @@ if( GRPPI_TESTS_ENABLE )
 endif( GRPPI_TESTS_ENABLE )
 
 # Sample Tests
-option( GRPPI_SAMPLES_ENABLE "Sample tests" OFF )
-if( GRPPI_SAMPLES_ENABLE )
+option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" OFF )
+if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
     add_subdirectory(samples)
-endif( GRPPI_SAMPLES_ENABLE )
+endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 
 # Unit Tests
 option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
