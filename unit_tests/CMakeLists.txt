@@ -16,11 +16,11 @@ if(GRPPI_UNIT_TEST_ENABLE)
   file(GLOB TEST_SRC_FILES
        ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
 
-  include_directories(${CMAKE_SOURCE_DIR}/include})
   add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
   target_link_libraries(${PROJECT_TEST_NAME} 
       ${GTEST_BOTH_LIBRARIES} 
-      gcov pthread tbb
+      gcov tbb
+      ${CMAKE_THREAD_LIBS_INIT}
       ${Boost_LIBRARIES})
   GTEST_ADD_TESTS(${PROJECT_TEST_NAME} "" ${TEST_SRC_FILES})
 

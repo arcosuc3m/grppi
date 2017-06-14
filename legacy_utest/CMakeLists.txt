@@ -23,7 +23,7 @@ set(NEW_TESTS_CPU
 
 foreach( t ${NEW_TESTS_CPU} )
     add_executable(${t}_GT EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
-    target_link_libraries(${t}_GT ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
+    target_link_libraries(${t}_GT ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} gcov tbb)
     target_link_libraries(${t}_GT ${Boost_LIBRARIES} )
     GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
 endforeach( t )

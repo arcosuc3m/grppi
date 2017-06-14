@@ -82,7 +82,7 @@ foreach( m ${EXE_LIB} )
       
       set_target_properties(${t}_${m} PROPERTIES COMPILE_FLAGS "-D${m}" )
       if ( ${m} STREQUAL THR )
-         target_link_libraries( ${t}_${m} pthread )
+         target_link_libraries( ${t}_${m} ${CMAKE_THREAD_LIBS_INIT} )
       elseif ( ${m} STREQUAL TBB )
          target_link_libraries( ${t}_${m} tbb )
       endif()
