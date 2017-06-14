@@ -60,14 +60,13 @@ set( TESTS_CPU_THR
 set ( EXE_LIB SEQ THR )
 
 # TBB
-if(${TBB_ENABLE})
+if(${GRPPI_TBB_ENABLE})
     set(EXE_LIB ${EXE_LIB} TBB)
 endif()
 
 # OMP
-if(${OMP_ENABLE})
+if(${GRPPI_OMP_ENABLE})
     set(EXE_LIB ${EXE_LIB} OMP)
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
 endif()
 
 

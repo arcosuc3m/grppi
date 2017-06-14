@@ -1,11 +1,6 @@
 # GOOGLE TEST----------------------------------------------------------------------------
 option(GRPPI_UNIT_TEST_ENABLE "Activate unit tests" OFF)
 
-# OMP
-if(${OMP_ENABLE})
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
-endif()
-
 if(GRPPI_UNIT_TEST_ENABLE)
 
   find_package(GTest REQUIRED)

@@ -33,6 +33,7 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
     message( WARNING "Compliance check not fully implemented yet" )
 endif()
 
+# GrPPI library
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
 # BOOST library
@@ -76,6 +77,7 @@ message( STATUS "OpenMP: " ${GRPPI_OMP_ENABLE})
 if( GRPPI_OMP_ENABLE )
     find_package(OpenMP REQUIRED)
     add_definitions( "-DGRPPI_OMP" )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
 endif( GRPPI_OMP_ENABLE )
 
 # CUDA library
@@ -102,8 +104,8 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PR
         FILES_MATCHING PATTERN "*.h")
 
 # Tests
-option( GRPPI_TESTS_ENABLE "Regular tests" OFF )
 enable_testing()
+option( GRPPI_TESTS_ENABLE "Regular tests" OFF )
 if( GRPPI_TESTS_ENABLE )
     add_subdirectory(tests)
 endif( GRPPI_TESTS_ENABLE )
