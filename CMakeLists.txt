@@ -13,27 +13,32 @@ message( STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
-    execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version OUTPUT_VARIABLE clang_full_version_string )
-    string (REGEX REPLACE ".*clang version ([0-9]+\\.[0-9]+).*" "\\1" CLANG_VERSION_STRING ${clang_full_version_string})
-    if(NOT(CLANG_VERSION_STRING VERSION_GREATER 3.4.0))
+
+    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.4.0))
         message( FATAL_ERROR "Clang version outdated. Upgrade to 3.4 or above.")
-    else(NOT(CLANG_VERSION_STRING VERSION_GREATER 3.4.0))
+    else()
         message( STATUS "C++ Compiler is Clang" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 " )
-    endif(NOT(CLANG_VERSION_STRING VERSION_GREATER 3.4.0))
+    endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-    message( STATUS "C++ Compiler is GNU")
-    execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GXX_VERSION )
-    if(NOT(GXX_VERSION VERSION_GREATER 6.0))
+
+    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 6.0))
         message( FATAL_ERROR "g++ version outdated. Upgrade to 6.0 or above.")
-    else(NOT(GXX_VERSION VERSION_GREATER 6.0))
+    else()
+        message( STATUS "C++ Compiler is GNU")
         add_definitions( -std=c++14 -O3 -g )   
-    endif(NOT(GXX_VERSION VERSION_GREATER 6.0))
+    endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
-    message( STATUS "C++ Compiler is Intel" )
-    message( WARNING "Compliance check not fully implemented yet" )
+    
+    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
+        message( FATAL_ERROR "Intel version outdated. Upgrade to 16.0 or above.")
+    else()
+        message( STATUS "C++ Compiler is Intel" )
+        message( WARNING "Compliance check not fully implemented yet" )
+    endif()
+    
 endif()
 
 # GrPPI library
