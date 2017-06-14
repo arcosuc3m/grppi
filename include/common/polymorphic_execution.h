@@ -78,6 +78,7 @@ public:
     return *execution_type_; 
   }
 
+  // Check if the current execution is of type E
   template <typename E>
   bool is_execution() const {
     if (!has_execution()) return false;
