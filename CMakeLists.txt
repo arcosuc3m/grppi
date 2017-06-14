@@ -2,8 +2,8 @@ cmake_minimum_required (VERSION 3.2.0)
 set(PROJECT_NAME_STR grppi)
 project(${PROJECT_NAME_STR})
 
-# Define path for TBB modules.
-set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake.modules ${PROJECT_SOURCE_DIR} )
+# Path for additional CMake modules
+set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake.modules)
 
 # Print processor and compiler 
 message( STATUS "Detected processor is " ${CMAKE_SYSTEM_PROCESSOR} )
