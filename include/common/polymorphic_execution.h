@@ -78,11 +78,19 @@ public:
     return *execution_type_; 
   }
 
+  template <typename E>
+  bool is_execution() const {
+    if (!has_execution()) return false;
+    return typeid(E) == *execution_type_;
+  }
+
   /// Get the execution pointer for a given type.
   template <typename E, 
             requires_execution_policy<E> = 0>
   E * execution_ptr() {
-    return (*execution_type_ != typeid(E))?nullptr:static_cast<E*>(execution_.get());
+    if (!has_execution()) return nullptr;
+    if (*execution_type_ != typeid(E)) return nullptr;
+    return static_cast<E*>(execution_.get());
   }
 
   /// Get the execution pointer for a given type.

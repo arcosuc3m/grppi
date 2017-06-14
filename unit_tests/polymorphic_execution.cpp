@@ -53,6 +53,7 @@ TEST(poly_exec, sequential)
   EXPECT_NE(typeid(parallel_execution_tbb), e.type());
 }
 
+
 TEST(poly_exec, parallel_thr)
 {
   auto e = make_polymorphic_execution<parallel_execution_thr>();
@@ -75,35 +76,58 @@ TEST(poly_exec, parallel_omp)
 {
   auto e = make_polymorphic_execution<parallel_execution_omp>();
 
-  EXPECT_TRUE(e.has_execution());
+  if (is_supported<parallel_execution_omp>()) {
+    EXPECT_TRUE(e.has_execution());
+  }
+  else {
+    EXPECT_FALSE(e.has_execution());
+  }
 
   EXPECT_EQ(nullptr, e.execution_ptr<sequential_execution>());
-  EXPECT_NE(typeid(sequential_execution), e.type());
+  EXPECT_FALSE(e.is_execution<sequential_execution>());
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_thr>());
-  EXPECT_NE(typeid(parallel_execution_thr), e.type());
+  EXPECT_FALSE(e.is_execution<parallel_execution_thr>());
 
-  EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_omp>());
-  EXPECT_EQ(typeid(parallel_execution_omp), e.type());
+  if (is_supported<parallel_execution_omp>()) {
+    EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_omp>());
+    EXPECT_TRUE(e.is_execution<parallel_execution_omp>());
+  }
+  else {
+    EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_omp>());
+    EXPECT_FALSE(e.is_execution<parallel_execution_omp>());
+  }
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_tbb>());
-  EXPECT_NE(typeid(parallel_execution_tbb), e.type());
+  EXPECT_FALSE(e.is_execution<parallel_execution_tbb>());
 }
 
 TEST(poly_exec, parallel_tbb)
 {
   auto e = make_polymorphic_execution<parallel_execution_tbb>();
-  EXPECT_TRUE(e.has_execution());
+
+  if (is_supported<parallel_execution_tbb>()) {
+    EXPECT_TRUE(e.has_execution());
+  }
+  else {
+    EXPECT_FALSE(e.has_execution());
+  }
 
   EXPECT_EQ(nullptr, e.execution_ptr<sequential_execution>());
-  EXPECT_NE(typeid(sequential_execution), e.type());
+  EXPECT_FALSE(e.is_execution<sequential_execution>());;
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_thr>());
-  EXPECT_NE(typeid(parallel_execution_thr), e.type());
+  EXPECT_FALSE(e.is_execution<parallel_execution_thr>());
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_omp>());
-  EXPECT_NE(typeid(parallel_execution_omp), e.type());
+  EXPECT_FALSE(e.is_execution<parallel_execution_omp>());
 
-  EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_tbb>());
-  EXPECT_EQ(typeid(parallel_execution_tbb), e.type());
+  if (is_supported<parallel_execution_tbb>()) {
+    EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_tbb>());
+    EXPECT_TRUE(e.is_execution<parallel_execution_tbb>());
+  }
+  else {
+    EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_tbb>());
+    EXPECT_FALSE(e.is_execution<parallel_execution_tbb>());
+  }
 }
