@@ -15,7 +15,7 @@ message( STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 
     if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.4.0))
-        message( FATAL_ERROR "Clang version outdated. Upgrade to 3.4 or above.")
+        message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.4 or above.")
     else()
         message( STATUS "C++ Compiler is Clang" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 " )
@@ -24,21 +24,25 @@ if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
 
     if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 6.0))
-        message( FATAL_ERROR "g++ version outdated. Upgrade to 6.0 or above.")
+        message( FATAL_ERROR "g++ version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 6.0 or above.")
     else()
         message( STATUS "C++ Compiler is GNU")
-        add_definitions( -std=c++14 -O3 -g )   
+        add_definitions( -std=c++14 -O3 -g)   
     endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
     
     if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
-        message( FATAL_ERROR "Intel version outdated. Upgrade to 16.0 or above.")
+        message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 16.0 or above.")
     else()
         message( STATUS "C++ Compiler is Intel" )
-        message( WARNING "Compliance check not fully implemented yet" )
+        message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
     endif()
-    
+
+else()
+
+    message( FATAL_ERROR "Unsupported compiler: " ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION})
+
 endif()
 
 # GrPPI library
@@ -95,7 +99,8 @@ if( GRPPI_CUDA_ENABLE )
     
     if ( APPLE  )
 
-        message(WARNING "Apple NVCC no longer supported with gcc")
+        message(FATAL_ERROR "CUDA is currently not supported for Mac OS X.")
+
     else() 
         find_package(CUDA)
         if (CUDA_VERSION VERSION_GREATER "7.4")
@@ -119,7 +124,7 @@ if( GRPPI_TESTS_ENABLE )
     add_subdirectory(tests)
 endif( GRPPI_TESTS_ENABLE )
 
-# Sample Tests
+# Example applications
 option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" OFF )
 if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
     add_subdirectory(samples)
