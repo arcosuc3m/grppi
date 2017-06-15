@@ -1,14 +1,8 @@
 # GOOGLE TEST----------------------------------------------------------------------------
 option(GRPPI_UNIT_TEST_ENABLE "Activate unit tests" OFF)
 
-# OMP
-if(${OMP_ENABLE})
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
-endif()
-
 if(GRPPI_UNIT_TEST_ENABLE)
 
-  find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   # Unit testing should be made in debug mode
@@ -21,12 +15,15 @@ if(GRPPI_UNIT_TEST_ENABLE)
   file(GLOB TEST_SRC_FILES
        ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
 
-  include_directories(${CMAKE_SOURCE_DIR}/include})
+  find_package(GTest REQUIRED) 
   add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
   target_link_libraries(${PROJECT_TEST_NAME} 
       ${GTEST_BOTH_LIBRARIES} 
-      gcov pthread tbb
-      ${Boost_LIBRARIES})
+      gcov
+      ${TBB_LIBRARIES}
+      ${CMAKE_THREAD_LIBS_INIT}
+      ${Boost_LIBRARIES}
+  )
   GTEST_ADD_TESTS(${PROJECT_TEST_NAME} "" ${TEST_SRC_FILES})
 
   # # Coverage options

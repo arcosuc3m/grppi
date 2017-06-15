@@ -60,14 +60,13 @@ set( TESTS_CPU_THR
 set ( EXE_LIB SEQ THR )
 
 # TBB
-if(${TBB_ENABLE})
+if(${GRPPI_TBB_ENABLE})
     set(EXE_LIB ${EXE_LIB} TBB)
 endif()
 
 # OMP
-if(${OMP_ENABLE})
+if(${GRPPI_OMP_ENABLE})
     set(EXE_LIB ${EXE_LIB} OMP)
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
 endif()
 
 
@@ -83,9 +82,9 @@ foreach( m ${EXE_LIB} )
       
       set_target_properties(${t}_${m} PROPERTIES COMPILE_FLAGS "-D${m}" )
       if ( ${m} STREQUAL THR )
-         target_link_libraries( ${t}_${m} pthread )
+         target_link_libraries( ${t}_${m} ${CMAKE_THREAD_LIBS_INIT} )
       elseif ( ${m} STREQUAL TBB )
-         target_link_libraries( ${t}_${m} tbb )
+         target_link_libraries( ${t}_${m} ${TBB_LIBRARIES} )
       endif()
       target_link_libraries( ${t}_${m} ${Boost_LIBRARIES} )
       
@@ -146,7 +145,6 @@ option( GTest_ENABLE "Activate Google Test" OFF)
 
 if(GTest_ENABLE)
 
-  find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   # Add coverage options
