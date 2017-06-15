@@ -11,8 +11,10 @@ endif()
 find_package(GTest REQUIRED) 
 include_directories(${GTEST_INCLUDE_DIRS})
 
-# Add coverage options
-add_compile_options(--coverage)
+if ( NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") )
+  # Add coverage options
+  add_compile_options(--coverage)
+endif()
 
 set(NEW_TESTS_CPU 
     divideandconquer1     divideandconquer-fibonacci    farm1 
