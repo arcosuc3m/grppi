@@ -100,12 +100,12 @@ foreach( m ${EXE_LIB} )
           add_test( ${t}_${m}
                  ${CMAKE_COMMAND} -D TEST_PROGRAM=${CMAKE_BINARY_DIR}/tests/${t}_${m}${CMAKE_EXECUTABLE_SUFFIX}
                                   -D TEST_OUTPUT=references/reference_${t}_${m}.txt
-                                  -P ${CMAKE_SOURCE_DIR}/runTestReference.cmake )
+                                  -P ${CMAKE_SOURCE_DIR}/tests/runTestReference.cmake )
       else() 
             add_test( ${t}_${m}
                 ${CMAKE_COMMAND} -D TEST_PROGRAM=${CMAKE_BINARY_DIR}/tests/${t}_${m}${CMAKE_EXECUTABLE_SUFFIX}
                            -D TEST_OUTPUT=output/output_${t}_${m}.txt -D TEST_REFERENCE=references/reference_${t}_SEQ.txt
-                           -P ${CMAKE_SOURCE_DIR}/runTest.cmake )
+                           -P ${CMAKE_SOURCE_DIR}/tests/runTest.cmake )
       endif()
       endif()
       # Create reference files
@@ -114,7 +114,7 @@ foreach( m ${EXE_LIB} )
       #add_test( ${t}_${m}
       # ${CMAKE_COMMAND} -D TEST_PROGRAM=${CMAKE_BINARY_DIR}/tests/${t}_${m}${CMAKE_EXECUTABLE_SUFFIX}
       #            -D TEST_OUTPUT=output_${t}_${m}.txt -D TEST_REFERENCE=${CMAKE_SOURCE_DIR}/tests/tests_references/reference_${t}_${m}.txt
-      #            -P ${CMAKE_SOURCE_DIR}/runTest.cmake )
+      #            -P ${CMAKE_SOURCE_DIR}/tests/runTest.cmake )
 
       # Compare outputs with Sequential references
 
