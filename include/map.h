@@ -67,7 +67,7 @@
  *    This section of code will be parallelize.
  */
 template <typename InputIt, typename OutputIt, typename TaskFunc>
-inline void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf );
+ void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf );
 
 
 /**  @param exec     Execution_model flag to indicates the type of execution
@@ -85,7 +85,7 @@ inline void Map(execution_model exec, InputIt first, InputIt last, OutputIt firs
  *  
  */
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

@@ -33,14 +33,14 @@
 using namespace std;
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename RedFunc, typename Policy, typename ... MoreIn >
-inline void map_reduce (parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, RedFunc const & reduce, MoreIn ... inputs) {
+ void map_reduce (parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, RedFunc const & reduce, MoreIn ... inputs) {
        
        thrust::device_vector< typename InputIt::value_type > d_vec_in(first, last);  
        *firstOut = thrust::transform_reduce(thrust::cuda::par, d_vec_in.begin(), d_vec_in.end(), map, 0, reduce);       
 }
 
 template < typename InputIt, typename Output, typename MapFunc, typename RedFunc, typename Policy >
-inline void map_reduce (parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last,  MapFunc const & map, RedFunc const & reduce, Output & out) {
+ void map_reduce (parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last,  MapFunc const & map, RedFunc const & reduce, Output & out) {
        thrust::device_vector< typename InputIt::value_type > d_vec_in(first, last);
        out = thrust::transform_reduce(thrust::cuda::par, d_vec_in.begin(), d_vec_in.end(), map, 0, reduce);
 }

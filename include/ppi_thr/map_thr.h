@@ -23,7 +23,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>
-inline void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & taskf){
+ void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & taskf){
    std::vector<std::thread> tasks;
    //Create a queue per thread
   std::vector<shared_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
@@ -69,7 +69,7 @@ inline void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & t
 }
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
-inline void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
+ void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
    
    std::vector<std::thread> tasks;
    int numElements = last - first; 
@@ -119,7 +119,7 @@ inline void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt 
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+ void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
    int numElements = last - first;

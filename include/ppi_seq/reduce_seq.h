@@ -26,7 +26,7 @@ namespace grppi{
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 
 template < typename InputIt, typename Output, typename ReduceOperator>
-inline typename std::enable_if<!is_iterator<Output>::value, void>::type 
+ typename std::enable_if<!is_iterator<Output>::value, void>::type 
 reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
     typename ReduceOperator::result_type identityVal = !op(false,true);
     while( first != last ) {
@@ -37,7 +37,7 @@ reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, R
 }
 
 template < typename InputIt, typename ReduceOperator>
-inline typename ReduceOperator::result_type reduce(sequential_execution s, InputIt first, InputIt last, ReduceOperator op) {
+ typename ReduceOperator::result_type reduce(sequential_execution s, InputIt first, InputIt last, ReduceOperator op) {
     typename ReduceOperator::result_type identityVal = !op(false,true);
     auto firstOut = identityVal;
 //  first++;
@@ -50,7 +50,7 @@ inline typename ReduceOperator::result_type reduce(sequential_execution s, Input
 
 
 template < typename InputIt, typename OutputIt, typename RedFunc>
-inline typename  std::enable_if<is_iterator<OutputIt>::value, void>::type 
+ typename  std::enable_if<is_iterator<OutputIt>::value, void>::type 
 reduce (sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, RedFunc const & reduce) {
     while( first != last ) {
        reduce(*first, *firstOut);
@@ -61,7 +61,7 @@ reduce (sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, 
 
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
-inline typename std::enable_if<!is_iterator<Output>::value, void>::type
+ typename std::enable_if<!is_iterator<Output>::value, void>::type
 Reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
     while( first != last ) {
        reduce(*first, firstOut);
@@ -74,7 +74,7 @@ Reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, R
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

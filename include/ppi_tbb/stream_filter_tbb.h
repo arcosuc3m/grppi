@@ -25,7 +25,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-inline void stream_filter(parallel_execution_tbb p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
+ void stream_filter(parallel_execution_tbb p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
 
     tbb::task_group g;
 

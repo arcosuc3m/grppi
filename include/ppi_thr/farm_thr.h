@@ -29,7 +29,7 @@ using namespace std;
 namespace grppi{
 
 template <typename GenFunc, typename TaskFunc, typename SinkFunc>
-inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & taskf , SinkFunc const &sink) {
+ void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & taskf , SinkFunc const &sink) {
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
@@ -109,7 +109,7 @@ inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & 
 }
 
 template <typename GenFunc, typename TaskFunc>
-inline void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & taskf ) {
+ void farm(parallel_execution_thr &p, GenFunc const &in, TaskFunc const & taskf ) {
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);

@@ -36,7 +36,7 @@ namespace grppi{
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 
 template < typename InputIt, typename Output, typename RedFunc, typename Policy, typename ReduceOperator>
-inline typename std::enable_if<!is_iterator<Output>::value, void>::type 
+ typename std::enable_if<!is_iterator<Output>::value, void>::type 
 reduce(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, ReduceOperator op) {
     std::vector<std::thread> tasks;
     int numElements = last - first;
@@ -80,7 +80,7 @@ reduce(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt las
 
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce, typename Policy>
-inline typename std::enable_if<!is_iterator<Output>::value, void>::type
+ typename std::enable_if<!is_iterator<Output>::value, void>::type
 Reduce(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
 
     std::vector<std::thread> tasks;
@@ -129,7 +129,7 @@ Reduce(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt las
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

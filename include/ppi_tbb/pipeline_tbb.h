@@ -28,13 +28,13 @@ using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
-inline const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb p, Stream st, Stage s ) {
+ const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb p, Stream st, Stage s ) {
     return tbb::make_filter<Stream, void>( tbb::filter::serial_in_order, s );
 }
 
 //Intermediate stages
 template <typename Task, template<typename, typename> class Stage, typename Stream, typename ... Stages>
-inline const tbb::interface6::filter_t<Stream, void> 
+ const tbb::interface6::filter_t<Stream, void> 
 stages(parallel_execution_tbb p, Stream st, Stage<parallel_execution_tbb, Task> se, Stages ... sgs ) {
     typedef typename std::result_of<Task(Stream)>::type outputType;
     outputType k;
@@ -42,7 +42,7 @@ stages(parallel_execution_tbb p, Stream st, Stage<parallel_execution_tbb, Task> 
 }
 
 template <typename Stage, typename Stream, typename ... Stages>
-inline const tbb::interface6::filter_t<Stream, void> 
+ const tbb::interface6::filter_t<Stream, void> 
 stages(parallel_execution_tbb p, Stream st, Stage se, Stages ... sgs ) {
     typedef typename std::result_of<Stage(Stream)>::type outputType;
     outputType k;

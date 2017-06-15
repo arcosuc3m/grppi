@@ -25,7 +25,7 @@ using namespace std;
 namespace grppi{
 
 template <typename GenFunc, typename TaskFunc>
-inline void map(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf){
+ void map(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf){
    //Create a queue per thread
   std::vector<unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
   for(int i =0; i<p.num_threads-1; i++) queues.push_back( unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
@@ -68,7 +68,7 @@ inline void map(parallel_execution_omp p, GenFunc const &in, TaskFunc const &tas
 }
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
-inline void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const &taskf){
+ void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const &taskf){
    
   int numElements = last - first;
 
@@ -111,7 +111,7 @@ inline void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt 
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void internal_map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut,
+ void internal_map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut,
                          TaskFunc const &taskf, int i, int elemperthr, MoreIn ... inputs){
         //Calculate local input and output iterator 
         auto begin = first + (elemperthr * i);
@@ -129,7 +129,7 @@ inline void internal_map(parallel_execution_omp p, InputIt first, InputIt last, 
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+ void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
    //Calculate number of elements per thread
    int numElements = last - first;
    int elemperthr = numElements/p.num_threads;

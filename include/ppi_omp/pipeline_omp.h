@@ -72,7 +72,7 @@ void stages( parallel_execution_omp p, Stream& st, Stage const& s ){
 }
 
 template <typename Task, typename Stream,typename... Stages>
-inline void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_execution_omp, Task>& se, Stages ... sgs ) {
+ void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_execution_omp, Task>& se, Stages ... sgs ) {
     if(p.ordering){
        Queue< typename Stream::value_type > q(DEFAULT_SIZE);
 
@@ -185,7 +185,7 @@ inline void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_exe
 }
 
 template <typename Task, typename Stream,typename... Stages>
-inline void stages( parallel_execution_omp p, Stream& st, FarmObj<parallel_execution_omp, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_omp p, Stream& st, FarmObj<parallel_execution_omp, Task> se, Stages ... sgs ) {
    
     Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE);
     std::atomic<int> nend ( 0 );

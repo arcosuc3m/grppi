@@ -66,7 +66,7 @@
  *    to 'taskf'.
  */
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
-inline void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor );
+ void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor );
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

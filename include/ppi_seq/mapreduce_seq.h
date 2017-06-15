@@ -36,7 +36,7 @@ void map_reduce (sequential_execution s, InputIt first, InputIt last, OutputIt f
 
 //Parallel STL like function
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
-inline T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc const &  map, T init, ReduceOperator op){
+ T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc const &  map, T init, ReduceOperator op){
     T out = init;
 
     while(first != last){
@@ -49,7 +49,7 @@ inline T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc
 }
 
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
-inline T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc const &  map, ReduceOperator op){
+ T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc const &  map, ReduceOperator op){
     T out;  
     bool firstElement = true;
     while(first != last){
@@ -67,7 +67,7 @@ inline T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

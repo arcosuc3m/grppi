@@ -28,7 +28,7 @@ namespace grppi{
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 
 template < typename InputIt, typename Output, typename ReduceOperator>
-inline typename std::enable_if<!is_iterator<Output>::value, void>::type 
+ typename std::enable_if<!is_iterator<Output>::value, void>::type 
 reduce(parallel_execution_omp p, InputIt first, InputIt last, Output &firstOut, ReduceOperator op) {
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
@@ -78,7 +78,7 @@ reduce(parallel_execution_omp p, InputIt first, InputIt last, Output &firstOut, 
 }
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
-inline typename std::enable_if<!is_iterator<Output>::value, void>::type
+ typename std::enable_if<!is_iterator<Output>::value, void>::type
 Reduce(parallel_execution_omp p, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
 
     int numElements = last - first;
@@ -121,7 +121,7 @@ Reduce(parallel_execution_omp p, InputIt first, InputIt last, Output & firstOut,
 }
 */
 template < typename InputIt, typename OutputIt, typename RedFunc>
-inline typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
+ typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
 reduce(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, RedFunc const &reduce) {
     while( first != last ) {
        reduce(*first, *firstOut);
@@ -134,7 +134,7 @@ reduce(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut,
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );
@@ -145,7 +145,7 @@ inline void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc con
 */
 
 template < typename InputIt, typename ReduceOperator>
-inline typename ReduceOperator::result_type
+ typename ReduceOperator::result_type
 reduce(parallel_execution_omp p, InputIt first, InputIt last, ReduceOperator op) {
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;

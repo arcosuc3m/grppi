@@ -40,7 +40,7 @@ class thread_pool
     };
     
     template <typename T> 
-    inline void create_task(T task ) { ioService.post(task); }
+     void create_task(T task ) { ioService.post(task); }
 
     void initialise (int num_threads) {
        works.push_back( std::move(boost::asio::io_service::work(ioService)));

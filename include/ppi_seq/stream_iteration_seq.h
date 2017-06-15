@@ -23,7 +23,7 @@
 namespace grppi{
 
 template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
-inline void stream_iteration(sequential_execution, GenFunc const & in, TaskFunc const & f, Predicate const & condition, OutFunc const & out){
+ void stream_iteration(sequential_execution, GenFunc const & in, TaskFunc const & f, Predicate const & condition, OutFunc const & out){
    while(1){
        auto k = in();
        if(!k) break;
@@ -36,7 +36,7 @@ inline void stream_iteration(sequential_execution, GenFunc const & in, TaskFunc 
 }
 
 template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
-inline void stream_iteration(sequential_execution, GenFunc const & in, FarmObj<sequential_execution, TaskFunc> const & f, Predicate const & condition, OutFunc const & out){
+ void stream_iteration(sequential_execution, GenFunc const & in, FarmObj<sequential_execution, TaskFunc> const & f, Predicate const & condition, OutFunc const & out){
    while(1){
        auto k = in();       
        if(!k) break;
@@ -49,7 +49,7 @@ inline void stream_iteration(sequential_execution, GenFunc const & in, FarmObj<s
 }
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
-inline void stream_iteration(sequential_execution s, GenFunc const & in, PipelineObj<sequential_execution, Stages...> const & f, Predicate const & condition, OutFunc const & out){
+ void stream_iteration(sequential_execution s, GenFunc const & in, PipelineObj<sequential_execution, Stages...> const & f, Predicate const & condition, OutFunc const & out){
    while(1){
        auto k = in();
        if(!k) break; 

@@ -25,14 +25,14 @@ using namespace std;
 namespace grppi {
 
 template <typename InType, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
+ typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
 {
      return (*std::get<currentStage>(pipe.stages))(in);
 }
 
 
 template <typename InType, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
+ typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
 {
      auto val = (*std::get<currentStage>(pipe.stages))(in);
      return composed_pipeline<InType, currentStage+1, Stages...>(val,pipe);
