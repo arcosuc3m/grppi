@@ -35,7 +35,7 @@ using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
-inline void stages( parallel_execution_thrust p,Stream& st, Stage const& s ) {
+ void stages( parallel_execution_thrust p,Stream& st, Stage const& s ) {
 
     //Start task
 //    std::thread task( 
@@ -55,7 +55,7 @@ inline void stages( parallel_execution_thrust p,Stream& st, Stage const& s ) {
 //    task.join();
 }
 template <typename Task, typename Red, typename Stream>
-inline void stages( parallel_execution_thrust p, Stream& st, ReduceObj<parallel_execution_thr, Task, Red>& se) {
+ void stages( parallel_execution_thrust p, Stream& st, ReduceObj<parallel_execution_thr, Task, Red>& se) {
      Queue<typename Stream::value_type>  queueOut(DEAFULT_SIZE,p.lockfree);
    
     for( int th = 0; th < se.exectype.num_gpus; th++){
@@ -85,7 +85,7 @@ inline void stages( parallel_execution_thrust p, Stream& st, ReduceObj<parallel_
 
 
 template <typename Task, typename Stream, typename... Stages>
-inline void stages( parallel_execution_thrust p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_thrust p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
 
     std::vector<std::thread> tasks;
     Queue<std::pair<typename Stream::value_type, long> > queueOuti(DEAFULT_SIZE,p.lockfree);
@@ -116,7 +116,7 @@ inline void stages( parallel_execution_thrust p, Stream& st, FilterObj<parallel_
 
 
 template <typename Task, typename Stream, typename... Stages>
-inline void stages( parallel_execution_thrust p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_thrust p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
 
     std::vector<std::thread> tasks;
     Queue<std::pair<typename std::result_of< Task(typename Stream::value_type) >::type, long> > queueOut(DEFAULT_SIZE,p.lockfree);
@@ -145,7 +145,7 @@ inline void stages( parallel_execution_thrust p, Stream& st, FarmObj<parallel_ex
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename... Stages>
-inline void stages( parallel_execution_thrust p,Stream& st, Stage const& se, Stages ... sgs ) {
+ void stages( parallel_execution_thrust p,Stream& st, Stage const& se, Stages ... sgs ) {
 
     //Create new queue
     Queue< typename std::result_of<Stage(typename Stream::value_type)>::type> q(DEFAULT_SIZE,p.lockfree);
@@ -172,7 +172,7 @@ inline void stages( parallel_execution_thrust p,Stream& st, Stage const& se, Sta
 
 //First stage
 template <typename FuncIn,typename... Arguments>
-inline void pipeline( parallel_execution_thrust p, FuncIn const & in, Arguments ... sts ) {
+ void pipeline( parallel_execution_thrust p, FuncIn const & in, Arguments ... sts ) {
 
     //Create first queue
     Queue< typename std::result_of<FuncIn()>::type > q(DEAFULT_SIZE,p.lockfree);

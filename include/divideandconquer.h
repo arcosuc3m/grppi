@@ -62,7 +62,7 @@
  *    function
  */
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
-inline void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge);
+ void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

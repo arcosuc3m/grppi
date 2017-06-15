@@ -33,7 +33,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename Policy>
-inline void map(parallel_execution_thrust_internal<Policy> p, GenFunc const &in, TaskFunc const & taskf){
+ void map(parallel_execution_thrust_internal<Policy> p, GenFunc const &in, TaskFunc const & taskf){
    typedef typename std::result_of<GenFunc()>::type inputtype;
    std::vector<std::thread> tasks;
    //Create a queue per thread
@@ -84,7 +84,7 @@ inline void map(parallel_execution_thrust_internal<Policy> p, GenFunc const &in,
 }
 
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename Policy>
-inline void map(parallel_execution_thrust_internal<Policy>  p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
+ void map(parallel_execution_thrust_internal<Policy>  p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
    
    std::vector<std::thread> tasks;
 
@@ -127,7 +127,7 @@ inline void map(parallel_execution_thrust_internal<Policy>  p, InputIt first,Inp
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc, typename Policy>
-inline void map(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+ void map(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
    int numElements = last - first;

@@ -27,14 +27,14 @@ using namespace std;
 namespace grppi{
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
+ typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
 {
       composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), qout, tasks);
 }
 
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
-inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream & qout,std::vector<std::thread> & tasks)
+ typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream & qout,std::vector<std::thread> & tasks)
 {
       typedef typename std::tuple_element<currentStage, decltype(pipe.stages)>::type lambdaPointerType;
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
@@ -48,7 +48,7 @@ inline typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::ty
 }
 
 template <typename InStream, typename Stage, typename OutStream>
-inline void composed_pipeline(parallel_execution_thr &p, InStream &qin, Stage const & s, OutStream &qout, std::vector<std::thread> & tasks){
+ void composed_pipeline(parallel_execution_thr &p, InStream &qin, Stage const & s, OutStream &qout, std::vector<std::thread> & tasks){
     tasks.push_back(
       std::thread([&](){
         typedef typename std::remove_reference<decltype(*Stage())>::type  lambdaType;
@@ -77,7 +77,7 @@ inline void composed_pipeline(parallel_execution_thr &p, InStream &qin, Stage co
 
 //Last stage
 template <typename Stream, typename Stage>
-inline void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
+ void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
 
    p.register_thread();
 
@@ -127,7 +127,7 @@ inline void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
 
 //Stream reduce stage
 template <typename Task, typename Red, typename Stream>
-inline void stages( parallel_execution_thr &p, Stream& st, ReduceObj<parallel_execution_thr, Task, Red>& se) {
+ void stages( parallel_execution_thr &p, Stream& st, ReduceObj<parallel_execution_thr, Task, Red>& se) {
     std::vector<std::thread> tasks;
     Queue<typename std::result_of< Task(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.lockfree);
 
@@ -151,7 +151,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, ReduceObj<parallel_ex
 
 //Filtering stage
 template <typename Task, typename Stream, typename... Stages>
-inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
     
     std::vector<std::thread> tasks;
     if(p.ordering){
@@ -277,7 +277,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_ex
 
 //Farm stage
 template <typename Task, typename Stream, typename... Stages>
-inline void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
     std::vector<std::thread> tasks;
     //Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
     Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
@@ -314,7 +314,7 @@ inline void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_exec
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename... Stages>
-inline void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stages ... sgs ) {
 
     //Create new queue
 
