@@ -46,10 +46,3 @@ Boost.Thread
 Author:		Anthony Williams, Vicente J. Botet
 Copyright:	Copyright (C) 2007-2008 Anthony Williams, Vicente J. Botet. All rights reserved
 License:	Boost Software License, Version 1.0.
-
-Thrust
-Author:		NVIDIA Corporation
-Copyright:	Copyright (C) 2008-2013 NVIDIA Corporation. All rights reserved
-License:	Apache License, Version 2.0
-
-

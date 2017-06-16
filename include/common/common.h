@@ -26,7 +26,6 @@
 #include "thread_policy.h"
 #include "omp_policy.h"
 #include "tbb_policy.h"
-#include "thrust_policy.h"
 
 // Includes with GRPPI internals
 #include "optional.h"

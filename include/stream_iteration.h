@@ -25,7 +25,6 @@
 
 #include "ppi_seq/stream_iteration_seq.h"
 #include "ppi_thr/stream_iteration_thr.h"
-//#include "ppi_thrust/farm_thrust.hpp"
 
 #ifdef OMP_ENABLE
 //	#include "ppi_omp/farm_omp.hpp"
