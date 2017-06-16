@@ -26,24 +26,12 @@
 
 namespace grppi{
 
-template <typename GF, typename TF>
-void map_multi_impl(polymorphic_execution & e, GF && generator, TF && task)
-{
-}
-
 template <typename InputIt, typename OutputIt, typename Operation>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op) 
 {
 }
 
-
-template <typename E, typename ... O, typename GF, typename TF,
-          internal::requires_execution_not_supported<E> = 0>
-void map_multi_impl(polymorphic_execution & e, GF && generator, TF && task)
-{
-  map_multi_impl<O...>(e, std::forward<GF>(generator), std::forward<TF>(task));
-}
 
 template <typename E, typename ... O,
           typename InputIt, typename OutputIt, typename Operation,
@@ -52,19 +40,6 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
          OutputIt first_out, Operation && op) 
 {
   map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
-}
-
-template <typename E, typename ... O, typename GF, typename TF,
-          internal::requires_execution_supported<E> = 0>
-void map_multi_impl(polymorphic_execution & e, GF && generator, TF && task)
-{
-  if (typeid(E) == e.type()) {
-    map(*e.execution_ptr<E>(), 
-        std::forward<GF>(generator), std::forward<TF>(task));
-  }
-  else {
-    map_multi_impl<O...>(e, std::forward<GF>(generator), std::forward<TF>(task));
-  }
 }
 
 
@@ -82,21 +57,6 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
     map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
   }
 }
-
-/// Runs a map pattern with a generator function and a task function.
-/// GF: Generator functor type
-/// TF: Task functor type
-template <typename Generator, typename Operation>
-void map(polymorphic_execution & e, Generator && gen, Operation && op)
-{
-  map_multi_impl<
-    sequential_execution,
-    parallel_execution_thr,
-    parallel_execution_omp,
-    parallel_execution_tbb
-  >(e, std::forward<Generator>(gen), std::forward<Operation>(op));
-}
-
 
 /// Runs a map pattern with an input sequence, an output sequence and a task
 /// function.
