@@ -3,6 +3,7 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 file(COPY ${CMAKE_SOURCE_DIR}/legacy_utest/txt DESTINATION "${CMAKE_BINARY_DIR}/legacy_utest/")
 
+find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 # Add coverage options
@@ -11,7 +12,7 @@ add_compile_options(--coverage)
 set(NEW_TESTS_CPU 
     divideandconquer1     divideandconquer-fibonacci    farm1 
     farm2                 farm3                         farm_example 
-    filter_example        map1                          map2 
+    filter_example        map1                          #map2 
     map3                  mapreduce1                    pipeline1 
     pipeline2             pipeline_example              pipeline+farm 
     pipeline+filter_test_ppi_example                     

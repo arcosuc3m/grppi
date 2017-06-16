@@ -22,51 +22,6 @@
 #define GRPPI_MAP_THR_H
 using namespace std;
 namespace grppi{
-template <typename GenFunc, typename TaskFunc>
- void map(parallel_execution_thr& p, GenFunc const &in, TaskFunc const & taskf){
-   std::vector<std::thread> tasks;
-   //Create a queue per thread
-  std::vector<shared_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
-  for(int i =0; i<p.num_threads-1; i++) queues.push_back( shared_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
-
-   //Create threads
-   for(int i=1;i<p.num_threads;i++){
-      tasks.push_back(
-         std::thread( [&](int tid){
-            // Register the thread in the execution model
-            p.register_thread();
-            typename std::result_of<GenFunc()>::type item;
-            item = (*queues[tid]).pop();
-            while( item ){
-              taskf(item.value());
-              item = (*queues[tid]).pop();
-            }
-          
-            // Deregister the thread in the execution model
-            p.deregister_thread();
-        }
-        , (i-1)));
-   }  
-   //Generate elements
-   while(1){
-       int rr = 0;
-       auto k = in();
-       if(!k){
-           for(int i=0;i<p.num_threads-1;i++){
-               (*queues[i]).push(k);
-           }
-           break;
-       }
-      
-       (*queues[rr]).push(k);
-       rr++;
-       rr = (rr < p.num_threads-1) ? rr : 0; 
-   }
-   //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
-      tasks[i].join();
-   }
-}
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
  void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
@@ -113,9 +68,6 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
    }
 
 }
-
-
-
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
