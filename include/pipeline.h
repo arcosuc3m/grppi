@@ -29,6 +29,8 @@
 
 #include "ppi_omp/pipeline_omp.h"
 
+#include "ppi_thrust/pipeline_thrust.h"
+
 #include "ppi_tbb/pipeline_tbb.h"
 
 

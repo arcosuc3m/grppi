@@ -27,6 +27,8 @@
 
 #include "ppi_thr/farm_thr.h"
 
+#include "ppi_thrust/farm_thrust.h"
+
 #include "ppi_omp/farm_omp.h"
 
 #include "ppi_tbb/farm_tbb.h"

@@ -41,6 +41,8 @@ namespace grppi{
 
 #include "ppi_thr/reduce_thr.h"
 
+#include "ppi_thrust/reduce_thrust.h"
+
 #include "ppi_omp/reduce_omp.h"
 
 #include "ppi_tbb/reduce_tbb.h"

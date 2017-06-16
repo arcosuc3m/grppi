@@ -27,6 +27,8 @@
 
 #include "ppi_thr/mapreduce_thr.h"
 
+#include "ppi_thrust/mapreduce_thrust.h"
+
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
  *  @{
