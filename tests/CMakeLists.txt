@@ -5,7 +5,7 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 set( TESTS_CPU_SEQ
      pipeline1              pipeline2              farm1
      farm2                  farm3                  stream_reduce1
-     pipeline+farm          map1                   map2
+     pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
      stencil1               mapreduce1             divideandconquer1
      divideandconquer-fibonacci stream_reduce_new
@@ -20,7 +20,7 @@ set( TESTS_CPU_SEQ
 set( TESTS_CPU_OMP
      pipeline1              pipeline2              farm1
      farm2                  farm3                  stream_reduce1
-     pipeline+farm          map1                   map2
+     pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
      stencil1               divideandconquer1      stream_reduce_new
  
@@ -45,7 +45,7 @@ set( TESTS_CPU_TBB
 set( TESTS_CPU_THR                           
      pipeline1              pipeline2              farm1
      farm2                  farm3                  stream_reduce1
-     pipeline+farm          map1                   map2
+     pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
      stencil1               divideandconquer1      mapreduce1
      divideandconquer-fibonacci stream_reduce_new

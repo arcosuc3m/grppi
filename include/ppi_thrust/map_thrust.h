@@ -32,56 +32,6 @@
 
 using namespace std;
 namespace grppi{
-template <typename GenFunc, typename TaskFunc, typename Policy>
- void map(parallel_execution_thrust_internal<Policy> p, GenFunc const &in, TaskFunc const & taskf){
-   typedef typename std::result_of<GenFunc()>::type inputtype;
-   std::vector<std::thread> tasks;
-   //Create a queue per thread
-   std::vector< 
-        boost::lockfree::spsc_queue<
-            inputtype
-            , boost::lockfree::capacity<BOOST_QUEUE_SIZE>
-        >
-   > queues(p.num_gpus);
- 
-	
-   //Create gpus
-   for(int i=0;i<p.num_gpus;i++){
-      tasks.push_back(
-         std::thread( [&](int tid){
-             typename std::result_of<GenFunc()>::type item;
-             
-             cudaSetDevice(i);
-             while(!queues[tid].pop(item));
-             while(item){
-                thrust::device_vector< inputtype > d_vec_in(item.elem.begin(), item.elem.end());
-                thrust::device_vector< inputtype  > d_vec_out(item.elem.size());
-                thrust::transform(p.policy, d_vec_in.begin(), d_vec_in.end(), d_vec_out.begin(), taskf);
-                thrust::copy(d_vec_out.begin(), d_vec_out.end(), item.elem.begin());
-                while(!queues[tid].pop(item));
-             }
-        }
-        , i));
-   }	
-   //Generate elements
-   while(1){
-       int rr = 0;
-       auto k = in();
-       if( !k ){
-           for(int i=0;i<p.num_gpus;i++){
-               while(!queues[i].push(k));
-           }
-           break;
-       }
-       while(!queues[rr].push(k));
-       rr++;
-       rr = (rr >= p.num_gpus) ? 0 : rr; 
-   }
-   //Join gpus
-   for(int i=0;i<p.num_gpus;i++){
-      tasks[i].join();
-   }
-}
 
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename Policy>
  void map(parallel_execution_thrust_internal<Policy>  p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){

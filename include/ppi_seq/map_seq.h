@@ -23,16 +23,6 @@
 
 using namespace std;
 namespace grppi{
-template <typename GenFunc, typename TaskFunc>
- void map(sequential_execution s, GenFunc const &in, TaskFunc const & taskf){
-    while(1){
-        auto k = in();
-        if( k.end ) {
-            break;
-        }
-        taskf(k.elem);
-   }
-}
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
  void map(sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf ) {

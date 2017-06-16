@@ -11,6 +11,7 @@ if(POLICY CMP0057)
 endif()
 
 find_package(GTest REQUIRED) 
+
 include_directories(${GTEST_INCLUDE_DIRS})
 
 if ( NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") )
@@ -21,7 +22,7 @@ endif()
 set(NEW_TESTS_CPU 
     divideandconquer1     divideandconquer-fibonacci    farm1 
     farm2                 farm3                         farm_example 
-    filter_example        map1                          map2 
+    filter_example        map1                          #map2 
     map3                  mapreduce1                    pipeline1 
     pipeline2             pipeline_example              pipeline+farm 
     pipeline+filter_test_ppi_example                     

@@ -24,49 +24,6 @@
 using namespace std;
 namespace grppi{
 
-template <typename GenFunc, typename TaskFunc>
- void map(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf){
-   //Create a queue per thread
-  std::vector<unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>> queues;
-  for(int i =0; i<p.num_threads-1; i++) queues.push_back( unique_ptr<Queue<typename std::result_of<GenFunc()>::type >>(new Queue<typename std::result_of<GenFunc()>::type >(DEFAULT_SIZE,p.lockfree) ) );
-
-   #pragma omp parallel
-   {
-     #pragma omp single nowait
-     {
-   //Create threads
-     for(int i=0;i<p.num_threads-1;i++){
-        #pragma omp task firstprivate(i)
-        {
-             int tid = i;
-             typename std::result_of<GenFunc()>::type item;
-             item = (*queues[tid]).pop();
-             while( item ){
-                taskf(item.value());
-                item = (*queues[tid]).pop();
-             }
-        }
-     }	
-      //Generate elements
-     while(1){
-       int rr = 0;
-       auto k = in();
-       if(k.end){
-           for(int i=0;i<p.num_threads-1;i++){
-               (*queues[i]).push(k);
-           }
-           break;
-       }
-       (*queues[rr]).push(k);
-       rr++;
-       rr = (rr < p.num_threads -1) ? rr : 0; 
-     }
-     //Join threads
-     #pragma omp taskwait
-     }
-   }
-}
-
 template <typename InputIt, typename OutputIt, typename TaskFunc>
  void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const &taskf){
    
