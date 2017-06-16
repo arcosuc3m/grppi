@@ -21,6 +21,8 @@
 #ifndef GRPPI_PIPELINE_OMP_H
 #define GRPPI_PIPELINE_OMP_H
 
+#ifdef GRPPI_OMP
+
 #include <boost/lockfree/spsc_queue.hpp>
 
 using namespace std;
@@ -271,4 +273,6 @@ void pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
 }
 
 }
+#endif
+
 #endif

@@ -24,19 +24,12 @@
 #include "common/common.h"
 
 #include "ppi_seq/farm_seq.h"
+
 #include "ppi_thr/farm_thr.h"
 
-#if GRPPI_THRUST
-  #include "ppi_thrust/farm_thrust.hpp"
-#endif
+#include "ppi_omp/farm_omp.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/farm_omp.h"
-#endif
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/farm_tbb.h"
-#endif
+#include "ppi_tbb/farm_tbb.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

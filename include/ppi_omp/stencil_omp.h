@@ -21,6 +21,8 @@
 #ifndef GRPPI_STENCIL_OMP_H
 #define GRPPI_STENCIL_OMP_H
 
+#ifdef GRPPI_OMP
+
 using namespace std;
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
@@ -115,4 +117,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
 }
 }
+#endif
+
 #endif

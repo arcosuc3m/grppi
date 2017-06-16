@@ -22,6 +22,8 @@
 #ifndef GRPPI_STREAM_REDUCE_OMP_H
 #define GRPPI_STREAM_REDUCE_OMP_H
 
+#ifdef GRPPI_OMP
+
 #include "../reduce.h"
 
 using namespace std;
@@ -117,4 +119,6 @@ ReduceObj<parallel_execution_omp,TaskFunc, RedFunc> stream_reduce(parallel_execu
    return ReduceObj<parallel_execution_omp, TaskFunc, RedFunc>(p,taskf, red);
 }
 }
+#endif
+
 #endif

@@ -21,6 +21,8 @@
 #ifndef GRPPI_REDUCE_TBB_H
 #define GRPPI_REDUCE_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 
 using namespace std;
@@ -151,4 +153,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 }
 */
 }
+#endif
+
 #endif

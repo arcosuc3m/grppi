@@ -21,6 +21,8 @@
 #ifndef GRPPI_DIVIDEANDCONQUER_TBB_H
 #define GRPPI_DIVIDEANDCONQUER_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 namespace grppi{
 using namespace std;
@@ -134,4 +136,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 }
 */
 }
+#endif
+
 #endif

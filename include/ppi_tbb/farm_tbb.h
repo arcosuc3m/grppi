@@ -21,6 +21,8 @@
 #ifndef GRPPI_FARM_TBB_H
 #define GRPPI_FARM_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename SinkFunc>
@@ -124,4 +126,6 @@ FarmObj<parallel_execution_tbb,TaskFunc> farm(parallel_execution_tbb p, TaskFunc
    return FarmObj<parallel_execution_tbb, TaskFunc>(p,taskf);
 }
 }
+#endif
+
 #endif

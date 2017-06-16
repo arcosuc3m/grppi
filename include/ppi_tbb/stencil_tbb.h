@@ -21,6 +21,8 @@
 #ifndef GRPPI_STENCIL_TBB_H
 #define GRPPI_STENCIL_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 using namespace std;
 namespace grppi{
@@ -109,4 +111,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 }
 
 }
+#endif
+
 #endif

@@ -23,15 +23,12 @@
 #include "common/common.h"
 
 #include "ppi_seq/divideandconquer_seq.h"
+
 #include "ppi_thr/divideandconquer_thr.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/divideandconquer_omp.h"
-#endif
+#include "ppi_omp/divideandconquer_omp.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/divideandconquer_tbb.h"
-#endif
+#include "ppi_tbb/divideandconquer_tbb.h"
 
 
 #if 0 /* START DOCUMENTATION */

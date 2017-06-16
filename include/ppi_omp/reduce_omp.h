@@ -21,6 +21,8 @@
 #ifndef GRPPI_REDUCE_OMP_H
 #define GRPPI_REDUCE_OMP_H
 
+#ifdef GRPPI_OMP
+
 #include <thread>
 
 using namespace std;
@@ -196,5 +198,7 @@ reduce(parallel_execution_omp p, InputIt first, InputIt last, ReduceOperator op)
     return outVal;
 }
 }
+
+#endif
 
 #endif

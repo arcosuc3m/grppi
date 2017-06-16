@@ -24,15 +24,13 @@
 #include "common/common.h"
 
 #include "ppi_seq/stencil_seq.h"
+
 #include "ppi_thr/stencil_thr.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/stencil_omp.h"
-#endif
+#include "ppi_omp/stencil_omp.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/stencil_tbb.h"
-#endif
+#include "ppi_tbb/stencil_tbb.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

@@ -21,6 +21,8 @@
 #ifndef GRPPI_DIVIDEANDCONQUER_OMP_H
 #define GRPPI_DIVIDEANDCONQUER_OMP_H
 
+#ifdef GRPPI_OMP
+
 #include <thread>
 namespace grppi
 {
@@ -137,4 +139,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 }
 */
 }
+#endif
+
 #endif

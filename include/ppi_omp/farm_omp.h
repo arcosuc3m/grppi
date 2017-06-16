@@ -21,6 +21,8 @@
 #ifndef GRPPI_FARM_OMP_H
 #define GRPPI_FARM_OMP_H
 
+#ifdef GRPPI_OMP
+
 namespace grppi
 {
 using namespace std;
@@ -67,4 +69,6 @@ FarmObj<parallel_execution_omp,TaskFunc> farm(parallel_execution_omp p, TaskFunc
    return FarmObj<parallel_execution_omp, TaskFunc>(p,taskf);
 }
 }
+#endif
+
 #endif
