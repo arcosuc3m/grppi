@@ -3,11 +3,21 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 file(COPY ${CMAKE_SOURCE_DIR}/legacy_utest/txt DESTINATION "${CMAKE_BINARY_DIR}/legacy_utest/")
 
-find_package(GTest REQUIRED)
+# Set policy to support newer version of CMake and GTest
+# We will remove this when minimum version of CMake for GrPPI is move to 3.3 or
+# higher
+if(POLICY CMP0057)
+  cmake_policy(SET CMP0057 NEW)
+endif()
+
+find_package(GTest REQUIRED) 
+
 include_directories(${GTEST_INCLUDE_DIRS})
 
-# Add coverage options
-add_compile_options(--coverage)
+if ( NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") )
+  # Add coverage options
+  add_compile_options(--coverage)
+endif()
 
 set(NEW_TESTS_CPU 
     divideandconquer1     divideandconquer-fibonacci    farm1 
