@@ -3,7 +3,9 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 file(COPY ${CMAKE_SOURCE_DIR}/legacy_utest/txt DESTINATION "${CMAKE_BINARY_DIR}/legacy_utest/")
 
-# Required for new cmake versions
+# Set policy to support newer version of CMake and GTest
+# We will remove this when minimum version of CMake for GrPPI is move to 3.3 or
+# higher
 if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()

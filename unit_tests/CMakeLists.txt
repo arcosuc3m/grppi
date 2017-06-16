@@ -3,7 +3,9 @@ option(GRPPI_UNIT_TEST_ENABLE "Activate unit tests" OFF)
 
 if(GRPPI_UNIT_TEST_ENABLE)
   
-  # Required for new cmake versions
+  # Set policy to support newer version of CMake and GTest
+  # We will remove this when minimum version of CMake for GrPPI is move to 3.3 or
+  # higher
   if(POLICY CMP0057)
     cmake_policy(SET CMP0057 NEW)
   endif()
