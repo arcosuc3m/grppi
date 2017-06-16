@@ -21,6 +21,8 @@
 #ifndef GRPPI_MAP_THRUST_H
 #define GRPPI_MAP_THRUST_H
 
+#if GRPPI_THRUST
+
 #ifdef __CUDACC__
 
 #include <thrust/system/cuda/execution_policy.h>
@@ -120,6 +122,8 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
    }
 }
 }
+#endif
+
 #endif
 
 #endif

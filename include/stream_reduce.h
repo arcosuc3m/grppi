@@ -24,19 +24,14 @@
 #include "common/common.h"
 
 #include "ppi_seq/stream_reduce_seq.hpp"
+
 #include "ppi_thr/stream_reduce_thr.h"
 
-#ifdef GRPPI_OMP
-   #include "ppi_omp/stream_reduce_omp.h"
-#endif
+#include "ppi_omp/stream_reduce_omp.h"
 
-#ifdef GRPPI_THRUST
-   #include "ppi_thrust/stream_reduce_thrust.hpp"
-#endif
+#include "ppi_thrust/stream_reduce_thrust.h"
 
-#ifdef GRPPI_TBB
-   #include "ppi_tbb/stream_reduce_tbb.h"
-#endif
+#include "ppi_tbb/stream_reduce_tbb.h"
 
 #if 0 /* START DOCUMENTATION */
 /* @defgroup StreamReduce

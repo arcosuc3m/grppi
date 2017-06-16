@@ -21,6 +21,8 @@
 #ifndef GRPPI_STREAM_FILTER_OMP_H
 #define GRPPI_STREAM_FILTER_OMP_H
 
+#ifdef GRPPI_OMP
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
@@ -90,4 +92,6 @@ FilterObj<parallel_execution_omp, FilterFunc> stream_filter(parallel_execution_o
 
 }
 }
+#endif
+
 #endif

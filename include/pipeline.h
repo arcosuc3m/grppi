@@ -24,19 +24,15 @@
 #include "common/common.h"
 
 #include "ppi_seq/pipeline_seq.h"
+
 #include "ppi_thr/pipeline_thr.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/pipeline_omp.h"
-#endif
+#include "ppi_omp/pipeline_omp.h"
 
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/pipeline_thrust.hpp"
-#endif 
+#include "ppi_thrust/pipeline_thrust.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/pipeline_tbb.h"
-#endif 
+#include "ppi_tbb/pipeline_tbb.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

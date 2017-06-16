@@ -38,19 +38,15 @@ namespace grppi{
 }
 
 #include "ppi_seq/reduce_seq.h"
+
 #include "ppi_thr/reduce_thr.h"
 
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/reduce_thrust.hpp"
-#endif
+#include "ppi_thrust/reduce_thrust.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/reduce_omp.h"
-#endif
+#include "ppi_omp/reduce_omp.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/reduce_tbb.h"
-#endif
+#include "ppi_tbb/reduce_tbb.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

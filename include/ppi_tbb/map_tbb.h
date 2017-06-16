@@ -21,6 +21,8 @@
 #ifndef GRPPI_MAP_TBB_H
 #define GRPPI_MAP_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 namespace grppi{
 using namespace std;
@@ -46,4 +48,6 @@ void map(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOu
 
 }
 }
+#endif
+
 #endif

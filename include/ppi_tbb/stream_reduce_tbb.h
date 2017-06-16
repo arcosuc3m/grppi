@@ -21,6 +21,8 @@
 #ifndef GRPPI_STREAM_REDUCE_TBB_H
 #define GRPPI_STREAM_REDUCE_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include "../reduce.h"
 #include <tbb/tbb.h>
 
@@ -111,4 +113,6 @@ ReduceObj<parallel_execution_tbb,TaskFunc, RedFunc> stream_reduce(parallel_execu
    return ReduceObj<parallel_execution_tbb, TaskFunc, RedFunc>(p,taskf, red);
 }
 }
+#endif
+
 #endif

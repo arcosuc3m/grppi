@@ -21,6 +21,8 @@
 #ifndef GRPPI_STREAM_FILTER_TBB_H
 #define GRPPI_STREAM_FILTER_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 using namespace std;
 namespace grppi{
@@ -131,4 +133,6 @@ FilterObj<parallel_execution_tbb, FilterFunc> stream_filter(parallel_execution_t
 
 }
 }
+#endif
+
 #endif

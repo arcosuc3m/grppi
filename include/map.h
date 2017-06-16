@@ -24,20 +24,15 @@
 #include "common/common.h"
 
 #include "ppi_seq/map_seq.h"
+
 #include "ppi_thr/map_thr.h"
 
-#if GRPPI_THRUST
-  #include "ppi_thrust/map_thrust.hpp"
-#endif
+#include "ppi_thrust/map_thrust.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/map_omp.h"
+#include "ppi_omp/map_omp.h"
 
-#endif
+#include "ppi_tbb/map_tbb.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/map_tbb.h"
-#endif
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

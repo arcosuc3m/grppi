@@ -21,6 +21,8 @@
 #ifndef GRPPI_STREAM_REDUCE_THRUST_H
 #define GRPPI_STREAM_REDUCE_THRUST_H
 
+#ifdef GRPPI_THRUST
+
 #ifdef __CUDACC__
 
 #include <thrust/system/cuda/execution_policy.h>
@@ -94,6 +96,8 @@ ReduceObj<parallel_execution_thr,TaskFunc, RedFunc> StreamReduce(parallel_execut
 }
 
 */
+
+#endif
 
 #endif
 

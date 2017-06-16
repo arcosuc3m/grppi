@@ -21,6 +21,8 @@
 #ifndef GRPPI_FARM_THRUST_H
 #define GRPPI_FARM_THRUST_H
 
+#if GRPPI_THRUST
+
 #ifdef __CUDACC__
 
 #include <thrust/system/cuda/execution_policy.h>
@@ -170,6 +172,8 @@ FarmObj<parallel_execution_thrust<Policy>,TaskFunc> Farm(parallel_execution_thru
 }
 */
 }
+#endif
+
 #endif
 
 #endif

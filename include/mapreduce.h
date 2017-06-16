@@ -24,11 +24,10 @@
 #include "common/common.h"
 
 #include "ppi_seq/mapreduce_seq.h"
+
 #include "ppi_thr/mapreduce_thr.h"
 
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/mapreduce_thrust.hpp"
-#endif
+#include "ppi_thrust/mapreduce_thrust.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

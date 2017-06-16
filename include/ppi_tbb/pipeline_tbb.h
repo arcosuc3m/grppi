@@ -21,6 +21,8 @@
 #ifndef GRPPI_PIPELINE_TBB_H
 #define GRPPI_PIPELINE_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/pipeline.h>
 #include <tbb/tbb.h>
 
@@ -69,4 +71,6 @@ void pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
     tbb::parallel_pipeline(p.num_tokens, stage & stages(p, k, sts ... ) );
 }
 }
+#endif
+
 #endif

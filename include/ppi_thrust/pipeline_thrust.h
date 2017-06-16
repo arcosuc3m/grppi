@@ -21,6 +21,8 @@
 #ifndef GRPPI_PIPELINE_THRUST_H
 #define GRPPI_PIPELINE_THRUST_H
 
+#ifdef GRPPI_THRUST
+
 #ifdef __CUDACC__
 
 #include <thrust/system/cuda/execution_policy.h>
@@ -194,6 +196,8 @@ template <typename FuncIn,typename... Arguments>
     task.join();
 }
 }
+#endif
+
 #endif
 
 #endif

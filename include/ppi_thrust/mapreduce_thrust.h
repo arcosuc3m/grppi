@@ -21,6 +21,8 @@
 #ifndef GRPPI_MAPREDUCE_THRUST_H
 #define GRPPI_MAPREDUCE_THRUST_H
 
+#ifdef GRPPI_THRUST
+
 #ifdef __CUDACC__
 
 #include <thrust/system/cuda/execution_policy.h>
@@ -45,6 +47,8 @@ template < typename InputIt, typename Output, typename MapFunc, typename RedFunc
        out = thrust::transform_reduce(thrust::cuda::par, d_vec_in.begin(), d_vec_in.end(), map, 0, reduce);
 }
 }
+#endif
+
 #endif
 
 #endif
