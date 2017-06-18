@@ -32,6 +32,13 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
 {
 }
 
+template <typename InputIt, typename OutputIt, typename Operation, 
+          typename ... OtherInputIts>
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+         OutputIt first_out, Operation && op, OtherInputIts ... other_its) 
+{
+}
+
 
 template <typename E, typename ... O,
           typename InputIt, typename OutputIt, typename Operation,
@@ -42,6 +49,16 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
   map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
 }
 
+template <typename E, typename ... O,
+          typename InputIt, typename OutputIt, typename ... OtherInputIts,
+          typename Operation,
+          internal::requires_execution_not_supported<E> = 0>
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+         OutputIt first_out, Operation && op, OtherInputIts ... other_its) 
+{
+  map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op),
+    other_its...);
+}
 
 template <typename E, typename ... O,
           typename InputIt, typename OutputIt, typename Operation,
@@ -55,6 +72,24 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
   }
   else {
     map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
+  }
+}
+
+template <typename E, typename ... O,
+          typename InputIt, typename OutputIt, typename ... OtherInputIts,
+          typename Operation,
+          internal::requires_execution_supported<E> = 0>
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+         OutputIt first_out, Operation && op, OtherInputIts ... other_its) 
+{
+  if (typeid(E) == e.type()) {
+    map(*e.execution_ptr<E>(), 
+        first, last, first_out, std::forward<Operation>(op),
+        other_its...);
+  }
+  else {
+    map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op),
+      other_its...);
   }
 }
 
