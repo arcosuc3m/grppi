@@ -83,7 +83,7 @@ public:
 
   void check_multiple() {
     EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), begin(this->expected)+1, begin(this->w)));
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
 
   void setup_multiple_ary() {
@@ -96,7 +96,7 @@ public:
 
   void check_multiple_ary() {
     EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), begin(this->expected)+1, begin(this->w)));
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
 
 };
@@ -243,7 +243,7 @@ TYPED_TEST(map_test, static_multiple_ary)
 
 TYPED_TEST(map_test, poly_multiple_ary)
 {
-  this->setup_multiple();
+  this->setup_multiple_ary();
   grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
     [this](int x, int y, int z) {
       this->invocations++; 
