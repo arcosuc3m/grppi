@@ -41,7 +41,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 void map(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
    tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
            auto current = (firstOut+index);
-           *current = taskf(*(first+index));
+           *current = taskf(*(first+index), *(inputs+index)...);
        }
 
    );   
