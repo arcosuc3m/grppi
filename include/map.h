@@ -33,6 +33,8 @@
 
 #include "ppi_tbb/map_tbb.h"
 
+#include "poly/map.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
