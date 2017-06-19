@@ -78,7 +78,7 @@ template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename Out
 }
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
- void stream_reduce(parallel_execution_tbb s, GenFunc const &in, int windowsize, int offset, ReduceOperator const & op, SinkFunc const &sink)
+ void stream_reduce(parallel_execution_tbb const &s, GenFunc const &in, int windowsize, int offset, ReduceOperator const & op, SinkFunc const &sink)
 {
 
      std::vector<typename std::result_of<GenFunc()>::type::value_type> buffer;

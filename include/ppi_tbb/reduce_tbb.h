@@ -76,7 +76,7 @@ reduce(parallel_execution_tbb const &p, InputIt first, InputIt last, ReduceOpera
 
 template < typename InputIt, typename OutputIt, typename RedFunc>
  typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
-reduce (parallel_execution_tbb s, InputIt first, InputIt last, OutputIt firstOut, RedFunc const & reduce) {
+reduce (parallel_execution_tbb const &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc const & reduce) {
     while( first != last ) {
        reduce(*first, *firstOut);
        first++;

@@ -90,7 +90,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 
 
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
- void divide_and_conquer(parallel_execution_thr& p, Input & problem, Output & output,
+ void divide_and_conquer(parallel_execution_thr &p, Input & problem, Output & output,
             DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge) {
 
     std::atomic<int> num_threads (p.num_threads);

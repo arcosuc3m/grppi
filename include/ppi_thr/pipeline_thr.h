@@ -77,7 +77,7 @@ template <typename InStream, typename Stage, typename OutStream>
 
 //Last stage
 template <typename Stream, typename Stage>
- void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
+ void stages( parallel_execution_thr &p,Stream& st, Stage const& s ) {
 
    p.register_thread();
 
@@ -351,7 +351,7 @@ template <typename Stage, typename Stream,typename... Stages>
 //template <typename FuncIn,typename... Arguments>
 template <typename FuncIn, typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
+void pipeline( parallel_execution_thr &p, FuncIn const & in, Stages ... sts ) {
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
     //Create stream generator stage
