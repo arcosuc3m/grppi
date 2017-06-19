@@ -34,6 +34,8 @@
 #include "poly/map.h"
 
 
+#include "poly/map.h"
+
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
  *  @{
