@@ -25,7 +25,6 @@
 
 namespace grppi
 {
-using namespace std;
 
 template <typename GenFunc, typename TaskFunc>
 void farm(parallel_execution_omp p, GenFunc &&in, TaskFunc &&taskf) {

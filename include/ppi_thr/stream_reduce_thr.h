@@ -25,7 +25,6 @@
 
 #include <thread>
 
-using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
  void stream_reduce(parallel_execution_thr &p, GenFunc &&in, TaskFunc &&taskf, ReduceFunc &&red, OutputType &reduce_value ){

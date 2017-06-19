@@ -23,7 +23,6 @@
 
 #ifdef GRPPI_OMP
 
-using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
  void stream_filter(parallel_execution_omp p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {

@@ -25,7 +25,6 @@
 
 #include <boost/lockfree/spsc_queue.hpp>
 
-using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>

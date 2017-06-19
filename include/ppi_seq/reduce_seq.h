@@ -21,7 +21,6 @@
 #ifndef GRPPI_REDUCE_SEQ_H
 #define GRPPI_REDUCE_SEQ_H
 
-using namespace std;
 namespace grppi{
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 

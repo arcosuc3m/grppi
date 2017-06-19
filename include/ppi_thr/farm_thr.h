@@ -25,7 +25,7 @@
 #include <thread>
 #include <utility>
 #include <memory>
-using namespace std;
+
 namespace grppi{
 
 template <typename GenFunc, typename TaskFunc, typename SinkFunc>

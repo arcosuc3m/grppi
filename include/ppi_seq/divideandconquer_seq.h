@@ -21,7 +21,6 @@
 #ifndef GRPPI_DIVIDEANDCONQUER_SEQ_H
 #define GRPPI_DIVIDEANDCONQUER_SEQ_H
 namespace grppi{
-using namespace std;
 
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
  void divide_and_conquer(sequential_execution s, Input &problem, Output &output, DivFunc &&divide,

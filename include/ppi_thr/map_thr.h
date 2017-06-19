@@ -20,7 +20,7 @@
 
 #ifndef GRPPI_MAP_THR_H
 #define GRPPI_MAP_THR_H
-using namespace std;
+
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>

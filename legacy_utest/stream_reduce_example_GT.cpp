@@ -28,6 +28,7 @@
 using namespace grppi;
 
 std::vector<int> read_list(std::istream & is){
+  using namespace std;
   std::vector<int> result;
   string line;
   is >> ws;
@@ -43,6 +44,7 @@ std::vector<int> read_list(std::istream & is){
 
 
 int stream_reduce_example(auto &p) {
+    using namespace std;
  
 #ifndef NTHREADS
 #define NTHREADS 6

@@ -21,7 +21,6 @@
 #ifndef GRPPI_STENCIL_SEQ_H
 #define GRPPI_STENCIL_SEQ_H
 
-using namespace std;
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
  void stencil(sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {

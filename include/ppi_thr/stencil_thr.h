@@ -21,7 +21,6 @@
 #ifndef GRPPI_STENCIL_THR_H
 #define GRPPI_STENCIL_THR_H
 
-using namespace std;
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
  void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {

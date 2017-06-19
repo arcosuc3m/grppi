@@ -21,7 +21,6 @@
 #ifndef GRPPI_PIPELINE_SEQ_H
 #define GRPPI_PIPELINE_SEQ_H
 
-using namespace std;
 namespace grppi {
 
 template <typename InType, int currentStage, typename ...Stages>

@@ -27,6 +27,7 @@ using namespace std;
 using namespace grppi;
 
 void mapreduce_example1() {
+  using namespace std;
 
 #ifndef NTHREADS
 #define NTHREADS 6

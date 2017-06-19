@@ -26,7 +26,6 @@
 #include <tbb/pipeline.h>
 #include <tbb/tbb.h>
 
-using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>

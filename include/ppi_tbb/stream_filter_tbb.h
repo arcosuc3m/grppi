@@ -24,7 +24,7 @@
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
-using namespace std;
+
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
  void stream_filter(parallel_execution_tbb p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {

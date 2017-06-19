@@ -25,8 +25,6 @@
 
 #include <tbb/tbb.h>
 
-using namespace std;
-
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 namespace grppi{
 template < typename InputIt, typename Output,typename ReduceOperator>

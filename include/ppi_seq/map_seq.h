@@ -21,7 +21,6 @@
 #ifndef GRPPI_MAP_SEQ_H
 #define GRPPI_MAP_SEQ_H
 
-using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>

@@ -25,7 +25,6 @@
 
 #include <thread>
 
-using namespace std;
 namespace grppi{
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 

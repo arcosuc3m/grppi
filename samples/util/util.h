@@ -35,7 +35,7 @@ grppi::polymorphic_execution execution_mode(const std::string & opt) {
 }
 
 template <typename F, typename ...Args>
-bool run_test(const string & mode, F && f, Args && ... args) {
+bool run_test(const std::string & mode, F && f, Args && ... args) {
   auto e = execution_mode(mode);
   if (e.has_execution()) {
     f(e, std::forward<Args>(args)...);
