@@ -21,11 +21,13 @@
 #ifndef GRPPI_MAP_OMP_H
 #define GRPPI_MAP_OMP_H
 
+#ifdef GRPPI_OMP
+
 using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const &taskf){
+ void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc &&taskf){
    
   int numElements = last - first;
 
@@ -69,7 +71,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
  void internal_map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut,
-                         TaskFunc const &taskf, int i, int elemperthr, MoreIn ... inputs){
+                         TaskFunc &&taskf, int i, int elemperthr, MoreIn ... inputs){
         //Calculate local input and output iterator 
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
@@ -86,7 +88,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+ void map(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
    //Calculate number of elements per thread
    int numElements = last - first;
    int elemperthr = numElements/p.num_threads;
@@ -100,12 +102,12 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
        #pragma omp task firstprivate(i)
        {
-           internal_map(p, first, last, firstOut, taskf, i, elemperthr, inputs ...);
+           internal_map(p, first, last, firstOut, std::forward<TaskFunc>(taskf) , i, elemperthr, inputs ...);
        }
       //End task
      }
      //Map main thread
-     internal_map(p, first,last, firstOut, taskf, 0, elemperthr, inputs ...);
+     internal_map(p, first,last, firstOut, std::forward<TaskFunc>(taskf), 0, elemperthr, inputs ...);
 
    //Join threads
    #pragma omp taskwait
@@ -113,4 +115,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
    }
 }
 }
+#endif
+
 #endif

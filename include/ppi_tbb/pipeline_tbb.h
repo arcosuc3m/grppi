@@ -21,6 +21,8 @@
 #ifndef GRPPI_PIPELINE_TBB_H
 #define GRPPI_PIPELINE_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/pipeline.h>
 #include <tbb/tbb.h>
 
@@ -35,25 +37,25 @@ template <typename Stream, typename Stage>
 //Intermediate stages
 template <typename Task, template<typename, typename> class Stage, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb p, Stream st, Stage<parallel_execution_tbb, Task> se, Stages ... sgs ) {
+stages(parallel_execution_tbb p, Stream st, Stage<parallel_execution_tbb, Task> se, Stages && ... sgs ) {
     typedef typename std::result_of<Task(Stream)>::type outputType;
     outputType k;
-    return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, (*se.task) ) & stages(p, k, sgs ... );
+    return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, (*se.task) ) & stages(p, k, std::forward<Stages>(sgs) ... );
 }
 
 template <typename Stage, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb p, Stream st, Stage se, Stages ... sgs ) {
+stages(parallel_execution_tbb p, Stream st, Stage se, Stages && ... sgs ) {
     typedef typename std::result_of<Stage(Stream)>::type outputType;
     outputType k;
-    return tbb::make_filter<Stream, outputType>( tbb::filter::serial_in_order, se ) & stages(p, k, sgs ... );
+    return tbb::make_filter<Stream, outputType>( tbb::filter::serial_in_order, se ) & stages(p, k, std::forward<Stages>(sgs) ... );
 }
 
 //First stage
 template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
           typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
+void pipeline(parallel_execution_tbb p, FuncIn in, Stages && ... sts ) {
     typedef typename std::result_of<FuncIn()>::type::value_type outputType;
     outputType k;
     const auto stage = tbb::make_filter<void, outputType>(
@@ -66,7 +68,9 @@ void pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
         }
     );
     tbb::task_group_context context;
-    tbb::parallel_pipeline(p.num_tokens, stage & stages(p, k, sts ... ) );
+    tbb::parallel_pipeline(p.num_tokens, stage & stages(p, k, std::forward<Stages>(sts) ... ) );
 }
 }
+#endif
+
 #endif

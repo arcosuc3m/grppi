@@ -21,10 +21,12 @@
 #ifndef GRPPI_STREAM_FILTER_OMP_H
 #define GRPPI_STREAM_FILTER_OMP_H
 
+#ifdef GRPPI_OMP
+
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_omp p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
+ void stream_filter(parallel_execution_omp p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
     Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
     Queue< typename std::result_of<GenFunc()>::type > outqueue(DEFAULT_SIZE, p.lockfree);
@@ -90,4 +92,6 @@ FilterObj<parallel_execution_omp, FilterFunc> stream_filter(parallel_execution_o
 
 }
 }
+#endif
+
 #endif

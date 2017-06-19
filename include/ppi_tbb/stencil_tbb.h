@@ -21,11 +21,13 @@
 #ifndef GRPPI_STENCIL_TBB_H
 #define GRPPI_STENCIL_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 using namespace std;
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
- void stencil(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor ) {
+ void stencil(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {
 
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
@@ -65,7 +67,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc, typename NFunc>
- void stencil(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor, MoreIn ... inputs ) {
+ void stencil(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor, MoreIn ... inputs ) {
 
      int numElements = last - first;
      int elemperthr = numElements/p.num_threads;
@@ -109,4 +111,6 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 }
 
 }
+#endif
+
 #endif

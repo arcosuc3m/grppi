@@ -21,13 +21,15 @@
 #ifndef GRPPI_PIPELINE_OMP_H
 #define GRPPI_PIPELINE_OMP_H
 
+#ifdef GRPPI_OMP
+
 #include <boost/lockfree/spsc_queue.hpp>
 
 using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
-void stages( parallel_execution_omp p, Stream& st, Stage const& s ){
+void stages( parallel_execution_omp p, Stream& st, Stage && s ){
     //Start task
     typename Stream::value_type item;
     std::vector<typename Stream::value_type> elements;
@@ -72,7 +74,7 @@ void stages( parallel_execution_omp p, Stream& st, Stage const& s ){
 }
 
 template <typename Task, typename Stream,typename... Stages>
- void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_execution_omp, Task>& se, Stages ... sgs ) {
+ void stages( parallel_execution_omp p, Stream& st, FilterObj<parallel_execution_omp, Task>& se, Stages && ... sgs ) {
     if(p.ordering){
        Queue< typename Stream::value_type > q(DEFAULT_SIZE);
 
@@ -147,7 +149,7 @@ template <typename Task, typename Stream,typename... Stages>
           }
           qOut.push(item);
        }
-       stages(p, qOut, sgs ... );
+       stages(p, qOut, std::forward<Stages>(sgs) ... );
        #pragma omp taskwait
       }else{
        Queue< typename Stream::value_type > q(DEFAULT_SIZE);
@@ -175,17 +177,15 @@ template <typename Task, typename Stream,typename... Stages>
 
           }
        }
-       stages(p, q, sgs ... );
+       stages(p, q, std::forward<Stages>(sgs) ... );
        #pragma omp taskwait
     }
-
-
-
-
 }
 
+
+
 template <typename Task, typename Stream,typename... Stages>
- void stages( parallel_execution_omp p, Stream& st, FarmObj<parallel_execution_omp, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_omp p, Stream& st, FarmObj<parallel_execution_omp, Task> se, Stages && ... sgs ) {
    
     Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE);
     std::atomic<int> nend ( 0 );
@@ -205,7 +205,7 @@ template <typename Task, typename Stream,typename... Stages>
           q.push(make_pair(optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }
-    stages(p, q, sgs ... );
+    stages(p, q, std::forward<Stages>(sgs) ... );
     #pragma omp taskwait
 }
 
@@ -214,7 +214,7 @@ template <typename Task, typename Stream,typename... Stages>
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename ... Stages>
-void stages(parallel_execution_omp p, Stream& st, Stage const& se, Stages ... sgs ) {
+void stages(parallel_execution_omp p, Stream& st, Stage && se, Stages && ... sgs ) {
 
     //Create new queue
 //    boost::lockfree::spsc_queue< optional< typename std::result_of< Stage(typename Stream::value_type::value_type) > ::type>, boost::lockfree::capacity<BOOST_QUEUE_SIZE>> q;
@@ -234,7 +234,7 @@ void stages(parallel_execution_omp p, Stream& st, Stage const& se, Stages ... sg
     }
     //End task
     //Create next stage
-    stages(p, q, sgs ... );
+    stages(p, q, std::forward<Stages>(sgs) ... );
 //    #pragma omp taskwait
 }
 
@@ -242,7 +242,7 @@ void stages(parallel_execution_omp p, Stream& st, Stage const& se, Stages ... sg
 template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
           typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
+void pipeline(parallel_execution_omp p, FuncIn && in, Stages && ... sts ) {
 
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE);
@@ -264,6 +264,7 @@ void pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
                 }
             }
             //Create next stage
+            //stages(p, q, std::forward<Stages>(sts) ... );
             stages(p, q, sts ... );
             #pragma omp taskwait
         }
@@ -271,4 +272,6 @@ void pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
 }
 
 }
+#endif
+
 #endif

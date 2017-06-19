@@ -3,7 +3,6 @@ REQUIREMENTS
 
 Boost		-> http://www.boost.org
 Intel TBB	-> https://www.threadingbuildingblocks.org/
-Thrust		-> https://developer.nvidia.com/thrust
 
 
 INSTALLATION

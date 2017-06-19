@@ -77,7 +77,7 @@ template <typename InStream, typename Stage, typename OutStream>
 
 //Last stage
 template <typename Stream, typename Stage>
- void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
+ void stages( parallel_execution_thr & p,Stream& st, Stage const & s ) {
 
    p.register_thread();
 
@@ -151,7 +151,7 @@ template <typename Task, typename Red, typename Stream>
 
 //Filtering stage
 template <typename Task, typename Stream, typename... Stages>
- void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages && ... sgs ) {
     
     std::vector<std::thread> tasks;
     if(p.ordering){
@@ -236,7 +236,7 @@ template <typename Task, typename Stream, typename... Stages>
           qOut.push(item);
    p.deregister_thread();
        });
-       stages(p, qOut, sgs ... );
+       stages(p, qOut, std::forward<Stages>(sgs) ... );
        orderingthr.join();
     }else{
        Queue< typename Stream::value_type > q(DEFAULT_SIZE, p.lockfree);
@@ -268,7 +268,7 @@ template <typename Task, typename Stream, typename... Stages>
                
           }));
        }
-       stages(p, q, sgs ... );
+       stages(p, q, std::forward<Stages>(sgs) ... );
     }
     for(int i=0;i<tasks.size(); i++) tasks[i].join();
 
@@ -277,7 +277,7 @@ template <typename Task, typename Stream, typename... Stages>
 
 //Farm stage
 template <typename Task, typename Stream, typename... Stages>
- void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages && ... sgs ) {
     std::vector<std::thread> tasks;
     //Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
     Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
@@ -306,7 +306,7 @@ template <typename Task, typename Stream, typename... Stages>
              })
           );
     }
-    stages(p, q, sgs ... );
+    stages(p, q, std::forward<Stages>(sgs) ... );
     
     for(int i=0;i<tasks.size(); i++) tasks[i].join();
 
@@ -314,7 +314,7 @@ template <typename Task, typename Stream, typename... Stages>
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename... Stages>
- void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p,Stream& st, Stage const & se, Stages && ... sgs ) {
 
     //Create new queue
 
@@ -343,7 +343,7 @@ template <typename Stage, typename Stream,typename... Stages>
 
     //End task
     //Create next stage
-    stages(p, q, sgs ... );
+    stages(p, q, std::forward<Stages>(sgs) ... );
     task.join();
 }
 
@@ -351,7 +351,7 @@ template <typename Stage, typename Stream,typename... Stages>
 //template <typename FuncIn,typename... Arguments>
 template <typename FuncIn, typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
+void pipeline( parallel_execution_thr& p, FuncIn && in, Stages && ... sts ) {
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
     //Create stream generator stage
@@ -373,19 +373,19 @@ void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
     );
 
     //Create next stage
-    stages(p, q, sts ... );
+    stages(p, q, std::forward<Stages>(sts) ... );
     task.join();
 }
 
 
 
 //template <typename Stage, typename = typename std::enable_if<!std::is_convertible<Stage,execution_model>::value>::type, typename ...Stages>
-//PipelineObj<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage && s, Stages && ...sts)
+//PipelineObj<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
 template <typename Execution_model, typename Stage,  
           /*typename std::enable_if<_has_arguments<Stage>::value>::type,*/  
           typename ...Stages,
           requires_arguments<Stage> = 0>
-PipelineObj< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage && s, Stages && ...sts)
+PipelineObj< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
 {
     return PipelineObj<Execution_model,Stage, Stages ...> (p, s, sts...);
 }

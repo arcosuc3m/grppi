@@ -24,20 +24,15 @@
 #include "common/common.h"
 
 #include "ppi_seq/map_seq.h"
+
 #include "ppi_thr/map_thr.h"
 
-#if GRPPI_THRUST
-  #include "ppi_thrust/map_thrust.hpp"
-#endif
+#include "ppi_omp/map_omp.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/map_omp.h"
+#include "ppi_tbb/map_tbb.h"
 
-#endif
+#include "poly/map.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/map_tbb.h"
-#endif
 
 #include "poly/map.h"
 
@@ -69,7 +64,7 @@
  *    This section of code will be parallelize.
  */
 template <typename InputIt, typename OutputIt, typename TaskFunc>
- void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf );
+ void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf );
 
 
 /**  @param exec     Execution_model flag to indicates the type of execution
@@ -87,7 +82,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
  *  
  */
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

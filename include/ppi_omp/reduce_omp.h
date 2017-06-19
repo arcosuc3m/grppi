@@ -21,6 +21,8 @@
 #ifndef GRPPI_REDUCE_OMP_H
 #define GRPPI_REDUCE_OMP_H
 
+#ifdef GRPPI_OMP
+
 #include <thread>
 
 using namespace std;
@@ -79,7 +81,7 @@ reduce(parallel_execution_omp p, InputIt first, InputIt last, Output &firstOut, 
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
  typename std::enable_if<!is_iterator<Output>::value, void>::type
-Reduce(parallel_execution_omp p, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
+Reduce(parallel_execution_omp p, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
 
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
@@ -122,7 +124,7 @@ Reduce(parallel_execution_omp p, InputIt first, InputIt last, Output & firstOut,
 */
 template < typename InputIt, typename OutputIt, typename RedFunc>
  typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
-reduce(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, RedFunc const &reduce) {
+reduce(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut, RedFunc &&reduce) {
     while( first != last ) {
        reduce(*first, *firstOut);
        first++;
@@ -134,7 +136,7 @@ reduce(parallel_execution_omp p, InputIt first, InputIt last, OutputIt firstOut,
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );
@@ -196,5 +198,7 @@ reduce(parallel_execution_omp p, InputIt first, InputIt last, ReduceOperator op)
     return outVal;
 }
 }
+
+#endif
 
 #endif

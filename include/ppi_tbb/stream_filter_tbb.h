@@ -21,11 +21,13 @@
 #ifndef GRPPI_STREAM_FILTER_TBB_H
 #define GRPPI_STREAM_FILTER_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_tbb p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
+ void stream_filter(parallel_execution_tbb p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
     tbb::task_group g;
 
@@ -131,4 +133,6 @@ FilterObj<parallel_execution_tbb, FilterFunc> stream_filter(parallel_execution_t
 
 }
 }
+#endif
+
 #endif

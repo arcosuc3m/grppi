@@ -24,15 +24,13 @@
 #include "common/common.h"
 
 #include "ppi_seq/stream_filter_seq.h"
+
 #include "ppi_thr/stream_filter_thr.h"
 
-#ifdef GRPPI_OMP
-	#include "ppi_omp/stream_filter_omp.h"
-#endif
+#include "ppi_omp/stream_filter_omp.h"
 
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/stream_filter_tbb.h"
-#endif 
+#include "ppi_tbb/stream_filter_tbb.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
@@ -63,7 +61,7 @@
  *    the filter output
  */
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc const & in, FilterFunc const & filter, OutFunc const & out );
+void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

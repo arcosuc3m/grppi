@@ -21,11 +21,13 @@
 #ifndef GRPPI_MAP_TBB_H
 #define GRPPI_MAP_TBB_H
 
+#ifdef GRPPI_TBB
+
 #include <tbb/tbb.h>
 namespace grppi{
 using namespace std;
 template <typename InputIt, typename OutputIt, typename TaskFunc>
-void map(parallel_execution_tbb p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
+void map(parallel_execution_tbb p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc && taskf){
    tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
            auto current = (firstOut+index);
            *current = taskf(*(first+index));
@@ -36,14 +38,16 @@ void map(parallel_execution_tbb p, InputIt first,InputIt last, OutputIt firstOut
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-void map(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+void map(parallel_execution_tbb p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
    tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
            auto current = (firstOut+index);
-           *current = taskf(*(first+index));
+           *current = taskf(*(first+index), *(inputs+index)...);
        }
 
    );   
 
 }
 }
+#endif
+
 #endif

@@ -25,7 +25,6 @@
 
 #include "ppi_seq/stream_iteration_seq.h"
 #include "ppi_thr/stream_iteration_thr.h"
-//#include "ppi_thrust/farm_thrust.hpp"
 
 #ifdef OMP_ENABLE
 //	#include "ppi_omp/farm_omp.hpp"
@@ -57,7 +56,7 @@
  *    should be parallelize
  */
 template <typename GenFunc, typename TaskFunc>
-void Farm(execution_model exec, GenFunc const &in, TaskFunc const & taskf);
+void Farm(execution_model exec, GenFunc &&in, TaskFunc && taskf);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

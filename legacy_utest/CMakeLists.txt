@@ -32,7 +32,7 @@ set(NEW_TESTS_CPU
 
 
 foreach( t ${NEW_TESTS_CPU} )
-    add_executable(${t}_GT EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
+    add_executable(${t}_GT  ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
     target_link_libraries(${t}_GT 
       ${GTEST_BOTH_LIBRARIES} 
       ${CMAKE_THREAD_LIBS_INIT} 
@@ -41,18 +41,3 @@ foreach( t ${NEW_TESTS_CPU} )
       gcov)
     GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
 endforeach( t )
-
-
-set(NEW_TESTS_GPU
-    bench_farm  farm4  map4  mapreduce2  stream_reduce2
-)
-
-# CUDA tests
-if(CUDA_FOUND)
-  foreach( t ${NEW_TESTS_GPU} )
-      CUDA_ADD_EXECUTABLE(${t}_GT ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cu)
-      target_link_libraries(${t}_GT ${GTEST_BOTH_LIBRARIES} gcov pthread tbb)
-      target_link_libraries(${t}_GT ${Boost_LIBRARIES} )
-      GTEST_ADD_TESTS(${t}_GT "" ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cu)
-  endforeach( t )
-endif(CUDA_FOUND)

@@ -24,11 +24,8 @@
 #include "common/common.h"
 
 #include "ppi_seq/mapreduce_seq.h"
-#include "ppi_thr/mapreduce_thr.h"
 
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/mapreduce_thrust.hpp"
-#endif
+#include "ppi_thr/mapreduce_thr.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
@@ -64,7 +61,7 @@
  *	@param inputs		Extra inputs to be applied to the function 'map'
  */
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >
-void MapReduce (execution_model exec, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, ReduceOperator op, MoreIn ... inputs);
+void MapReduce (execution_model exec, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */
