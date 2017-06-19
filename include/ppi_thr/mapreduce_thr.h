@@ -25,7 +25,7 @@
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator,typename ... MoreIn >
- void map_reduce (parallel_execution_thr & p, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, ReduceOperator op, MoreIn ... inputs) {
+ void map_reduce (parallel_execution_thr & p, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
     // Register the thread in the execution model
     p.register_thread();
     while( first != last ) {
@@ -40,7 +40,7 @@ template < typename InputIt, typename OutputIt, typename MapFunc, typename Reduc
 
 
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( parallel_execution_thr& p, InputIt first, InputIt last, MapFunc const &  map, T init, ReduceOperator op){
+ T map_reduce ( parallel_execution_thr& p, InputIt first, InputIt last, MapFunc &&  map, T init, ReduceOperator op){
     T out = init;
     std::vector<T> partialOuts(p.num_threads);
     std::vector<std::thread> tasks;
@@ -57,7 +57,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
             // Register thread
             p.register_thread();
 
-            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, map, op);
+            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, std::forward<MapFunc>(map), op);
 
             // Deregister thread
             p.deregister_thread();
@@ -65,7 +65,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
          begin, end, out)
        );
     }
-    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, map, op);
+    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, std::forward<MapFunc>(map), op);
     for(auto task = tasks.begin();task != tasks.end();task++){    
        (*task).join();
     }
@@ -77,7 +77,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

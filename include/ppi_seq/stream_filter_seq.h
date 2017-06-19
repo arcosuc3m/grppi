@@ -24,7 +24,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void stream_filter(sequential_execution, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
+void stream_filter(sequential_execution, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
     while( 1 ) {
         auto k = in();
@@ -37,7 +37,7 @@ void stream_filter(sequential_execution, GenFunc const & in, FilterFunc const & 
 
 
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void stream_filter( GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
+void stream_filter( GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
     while( 1 ) {
         auto k = in();

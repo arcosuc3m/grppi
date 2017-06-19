@@ -24,8 +24,8 @@ namespace grppi{
 using namespace std;
 
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
- void divide_and_conquer(sequential_execution s, Input &problem, Output &output, DivFunc const &divide,
-                               TaskFunc const &task, MergeFunc const &merge) {
+ void divide_and_conquer(sequential_execution s, Input &problem, Output &output, DivFunc &&divide,
+                               TaskFunc &&task, MergeFunc &&merge) {
      
     auto subproblems = divide(problem);
     if(subproblems.size()>1){
@@ -33,7 +33,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 	int division = 0;
         for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
             //THREAD
-                divide_and_conquer(s, *i, partials[division], divide, task, merge);
+                divide_and_conquer(s, *i, partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge) );
             //END THREAD
         }
         //JOIN
@@ -50,7 +50,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 
 /*
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

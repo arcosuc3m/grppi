@@ -57,7 +57,7 @@
  *    the filter output
  */
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc const & in, FilterFunc const & filter, OutFunc const & out );
+void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
 /* @} */
 #endif  /* END DOCUMENTATION */
 #endif
