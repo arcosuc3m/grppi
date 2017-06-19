@@ -13,7 +13,6 @@
   * [BOOST](http://www.boost.org/)
 
 ## Additional Libraries ##
-  * [CUDA](https://developer.nvidia.com/cuda-downloads)
 
   * [TBB](https://www.threadingbuildingblocks.org/)
 
@@ -42,7 +41,7 @@
 
 ### Advanced Options
 
-The project make use of different libraries such as OpenMP (OMP), Threading Building Blocks (TBB) or CUDA. This libraries can be disabled in the cmake configuration file with ccmake. 
+The project make use of different libraries such as OpenMP (OMP) or Threading Building Blocks (TBB). This libraries can be disabled in the cmake configuration file with ccmake. 
 
 ## Using different compilers ##
 
@@ -98,10 +97,3 @@ This tests include also the **coverage** option. Once the cmake has been execute
 	make coverage_farm1_GT 
 
 The coverage files will be created in build/tests/mycov.
-
-## CUDA Tests ##
-The project includes some CUDA based tests. This tests are not implemented with Google Test. CUDA can be enabled/disabled with cmake, by default is enabled. If CUDA is disabled the corresponding tests will not be compiled.
-
-To compile a CUDA program that uses GrPPI the following line code can be used:
-
-nvcc program-name.cu -I /PATH/GrPPI -I /PATH/GrPPI/fastflow/  --expt-extended-lambda -std=c++11 -Wno-deprecated-gpu-targets -lboost_system -lboost_thread
