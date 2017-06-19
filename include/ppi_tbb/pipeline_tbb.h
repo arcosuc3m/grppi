@@ -30,14 +30,14 @@ using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
- const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb p, Stream st, Stage s ) {
+ const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb const &p, Stream st, Stage s ) {
     return tbb::make_filter<Stream, void>( tbb::filter::serial_in_order, s );
 }
 
 //Intermediate stages
 template <typename Task, template<typename, typename> class Stage, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb p, Stream st, Stage<parallel_execution_tbb, Task> se, Stages ... sgs ) {
+stages(parallel_execution_tbb const &p, Stream st, Stage<parallel_execution_tbb, Task> se, Stages ... sgs ) {
     typedef typename std::result_of<Task(Stream)>::type outputType;
     outputType k;
     return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, (*se.task) ) & stages(p, k, sgs ... );
@@ -45,7 +45,7 @@ stages(parallel_execution_tbb p, Stream st, Stage<parallel_execution_tbb, Task> 
 
 template <typename Stage, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb p, Stream st, Stage se, Stages ... sgs ) {
+stages(parallel_execution_tbb const &p, Stream st, Stage se, Stages ... sgs ) {
     typedef typename std::result_of<Stage(Stream)>::type outputType;
     outputType k;
     return tbb::make_filter<Stream, outputType>( tbb::filter::serial_in_order, se ) & stages(p, k, sgs ... );
@@ -55,7 +55,7 @@ stages(parallel_execution_tbb p, Stream st, Stage se, Stages ... sgs ) {
 template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
           typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline(parallel_execution_tbb p, FuncIn in, Stages ... sts ) {
+void pipeline(parallel_execution_tbb const &p, FuncIn in, Stages ... sts ) {
     typedef typename std::result_of<FuncIn()>::type::value_type outputType;
     outputType k;
     const auto stage = tbb::make_filter<void, outputType>(

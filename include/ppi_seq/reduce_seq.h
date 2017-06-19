@@ -27,7 +27,7 @@ namespace grppi{
 
 template < typename InputIt, typename Output, typename ReduceOperator>
  typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
+reduce(sequential_execution const &s, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
     typename ReduceOperator::result_type identityVal = !op(false,true);
     while( first != last ) {
        identityVal = op(identityVal, *first);
@@ -37,7 +37,7 @@ reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, R
 }
 
 template < typename InputIt, typename ReduceOperator>
- typename ReduceOperator::result_type reduce(sequential_execution s, InputIt first, InputIt last, ReduceOperator op) {
+ typename ReduceOperator::result_type reduce(sequential_execution const &s, InputIt first, InputIt last, ReduceOperator op) {
     typename ReduceOperator::result_type identityVal = !op(false,true);
     auto firstOut = identityVal;
 //  first++;
@@ -51,7 +51,7 @@ template < typename InputIt, typename ReduceOperator>
 
 template < typename InputIt, typename OutputIt, typename RedFunc>
  typename  std::enable_if<is_iterator<OutputIt>::value, void>::type 
-reduce (sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, RedFunc const & reduce) {
+reduce (sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc const & reduce) {
     while( first != last ) {
        reduce(*first, *firstOut);
        first++;
@@ -62,7 +62,7 @@ reduce (sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, 
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
  typename std::enable_if<!is_iterator<Output>::value, void>::type
-Reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
+Reduce(sequential_execution const &s, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
     while( first != last ) {
        reduce(*first, firstOut);
        first++;

@@ -29,7 +29,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
- void stream_reduce(parallel_execution_tbb p, GenFunc const &in, TaskFunc const &taskf, ReduceFunc const &red, OutputType &reduce_value ){
+ void stream_reduce(parallel_execution_tbb const &p, GenFunc const &in, TaskFunc const &taskf, ReduceFunc const &red, OutputType &reduce_value ){
 
     Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
     Queue<optional<OutputType>> end_queue (DEFAULT_SIZE, p.lockfree);

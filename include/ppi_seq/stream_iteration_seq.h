@@ -49,7 +49,7 @@ template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFu
 }
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(sequential_execution s, GenFunc const & in, PipelineObj<sequential_execution, Stages...> const & f, Predicate const & condition, OutFunc const & out){
+ void stream_iteration(sequential_execution const &s, GenFunc const & in, PipelineObj<sequential_execution, Stages...> const & f, Predicate const & condition, OutFunc const & out){
    while(1){
        auto k = in();
        if(!k) break; 

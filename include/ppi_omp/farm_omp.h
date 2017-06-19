@@ -28,7 +28,7 @@ namespace grppi
 using namespace std;
 
 template <typename GenFunc, typename TaskFunc>
-void farm(parallel_execution_omp p, GenFunc const &in, TaskFunc const &taskf) {
+void farm(parallel_execution_omp const &p, GenFunc const &in, TaskFunc const &taskf) {
 	
     Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
     #pragma omp parallel

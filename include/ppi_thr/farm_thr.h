@@ -155,7 +155,7 @@ template <typename GenFunc, typename TaskFunc>
 
 
 template <typename TaskFunc>
-FarmObj<parallel_execution_thr,TaskFunc> farm(parallel_execution_thr &p, TaskFunc && taskf){
+FarmObj<parallel_execution_thr,TaskFunc> farm(parallel_execution_thr& p, TaskFunc && taskf){
    
    return FarmObj<parallel_execution_thr, TaskFunc>(p, taskf);
 }

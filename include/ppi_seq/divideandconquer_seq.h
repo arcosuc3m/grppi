@@ -24,7 +24,7 @@ namespace grppi{
 using namespace std;
 
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
- void divide_and_conquer(sequential_execution s, Input &problem, Output &output, DivFunc const &divide,
+ void divide_and_conquer(sequential_execution const &s, Input &problem, Output &output, DivFunc const &divide,
                                TaskFunc const &task, MergeFunc const &merge) {
      
     auto subproblems = divide(problem);
