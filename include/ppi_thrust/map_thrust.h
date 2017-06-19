@@ -36,7 +36,7 @@ using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename Policy>
- void map(parallel_execution_thrust_internal<Policy>  p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
+ void map(parallel_execution_thrust_internal<Policy>  p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc && taskf){
    
    std::vector<std::thread> tasks;
 
@@ -79,7 +79,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename Polic
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc, typename Policy>
- void map(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+ void map(parallel_execution_thrust_internal<Policy>  p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
    int numElements = last - first;

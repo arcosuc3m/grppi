@@ -77,7 +77,7 @@ template <typename InStream, typename Stage, typename OutStream>
 
 //Last stage
 template <typename Stream, typename Stage>
- void stages( parallel_execution_thr & p,Stream& st, Stage const& s ) {
+ void stages( parallel_execution_thr & p,Stream& st, Stage const & s ) {
 
    p.register_thread();
 
@@ -314,7 +314,7 @@ template <typename Task, typename Stream, typename... Stages>
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename... Stages>
- void stages( parallel_execution_thr &p,Stream& st, Stage const& se, Stages ... sgs ) {
+ void stages( parallel_execution_thr &p,Stream& st, Stage const & se, Stages ... sgs ) {
 
     //Create new queue
 
@@ -351,7 +351,7 @@ template <typename Stage, typename Stream,typename... Stages>
 //template <typename FuncIn,typename... Arguments>
 template <typename FuncIn, typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
+void pipeline( parallel_execution_thr& p, FuncIn && in, Stages ... sts ) {
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
     //Create stream generator stage
@@ -380,12 +380,12 @@ void pipeline( parallel_execution_thr& p, FuncIn const & in, Stages ... sts ) {
 
 
 //template <typename Stage, typename = typename std::enable_if<!std::is_convertible<Stage,execution_model>::value>::type, typename ...Stages>
-//PipelineObj<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage && s, Stages && ...sts)
+//PipelineObj<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
 template <typename Execution_model, typename Stage,  
           /*typename std::enable_if<_has_arguments<Stage>::value>::type,*/  
           typename ...Stages,
           requires_arguments<Stage> = 0>
-PipelineObj< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage && s, Stages && ...sts)
+PipelineObj< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
 {
     return PipelineObj<Execution_model,Stage, Stages ...> (p, s, sts...);
 }

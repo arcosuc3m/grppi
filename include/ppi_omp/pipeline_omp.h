@@ -29,7 +29,7 @@ using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
-void stages( parallel_execution_omp p, Stream& st, Stage const& s ){
+void stages( parallel_execution_omp p, Stream& st, Stage && s ){
     //Start task
     typename Stream::value_type item;
     std::vector<typename Stream::value_type> elements;
@@ -216,7 +216,7 @@ template <typename Task, typename Stream,typename... Stages>
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename ... Stages>
-void stages(parallel_execution_omp p, Stream& st, Stage const& se, Stages ... sgs ) {
+void stages(parallel_execution_omp p, Stream& st, Stage && se, Stages ... sgs ) {
 
     //Create new queue
 //    boost::lockfree::spsc_queue< optional< typename std::result_of< Stage(typename Stream::value_type::value_type) > ::type>, boost::lockfree::capacity<BOOST_QUEUE_SIZE>> q;
@@ -244,7 +244,7 @@ void stages(parallel_execution_omp p, Stream& st, Stage const& se, Stages ... sg
 template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
           typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
-void pipeline(parallel_execution_omp p, FuncIn const & in, Stages ... sts ) {
+void pipeline(parallel_execution_omp p, FuncIn && in, Stages ... sts ) {
 
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE);

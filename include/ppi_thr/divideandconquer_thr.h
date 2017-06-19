@@ -29,7 +29,7 @@ using namespace std;
 namespace grppi{
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
  void internal_divide_and_conquer(parallel_execution_thr &p, Input &problem, Output &output,
-                                        DivFunc const &divide, TaskFunc const &task, MergeFunc const &merge,
+                                        DivFunc &&divide, TaskFunc &&task, MergeFunc &&merge,
                                         std::atomic<int> &num_threads) {
 
    if(num_threads.load()>0){
@@ -91,7 +91,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
  void divide_and_conquer(parallel_execution_thr& p, Input & problem, Output & output,
-            DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge) {
+            DivFunc && divide, TaskFunc && task, MergeFunc && merge) {
 
     std::atomic<int> num_threads (p.num_threads);
     
@@ -152,7 +152,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

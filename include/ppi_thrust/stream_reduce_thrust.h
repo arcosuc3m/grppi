@@ -36,7 +36,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType, typename Policy>
- void stream_reduce(parallel_execution_thrust_internal<Policy> p, GenFunc const &in, TaskFunc const &taskf, ReduceFunc const &red, OutputType &reduce_value ){
+ void stream_reduce(parallel_execution_thrust_internal<Policy> p, GenFunc &&in, TaskFunc &&taskf, ReduceFunc &&red, OutputType &reduce_value ){
 
     typedef typename std::result_of<GenFunc()>::type::value_type::value_type inputtype;
 

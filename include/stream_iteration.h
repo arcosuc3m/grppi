@@ -57,7 +57,7 @@
  *    should be parallelize
  */
 template <typename GenFunc, typename TaskFunc>
-void Farm(execution_model exec, GenFunc const &in, TaskFunc const & taskf);
+void Farm(execution_model exec, GenFunc &&in, TaskFunc && taskf);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

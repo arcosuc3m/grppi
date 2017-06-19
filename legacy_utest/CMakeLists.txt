@@ -32,7 +32,7 @@ set(NEW_TESTS_CPU
 
 
 foreach( t ${NEW_TESTS_CPU} )
-    add_executable(${t}_GT EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
+    add_executable(${t}_GT  ${CMAKE_SOURCE_DIR}/legacy_utest/${t}_GT.cpp)
     target_link_libraries(${t}_GT 
       ${GTEST_BOTH_LIBRARIES} 
       ${CMAKE_THREAD_LIBS_INIT} 
