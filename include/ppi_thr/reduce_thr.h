@@ -29,7 +29,7 @@ namespace grppi{
 
 template < typename InputIt, typename Output, typename ReduceOperator>
  typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(parallel_execution_thr& p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
+reduce(parallel_execution_thr &p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
 
     typename ReduceOperator::result_type identityVal = !op(false,true);
 

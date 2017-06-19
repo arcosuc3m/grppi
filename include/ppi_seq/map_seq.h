@@ -25,7 +25,8 @@ using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf ) {
+ void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf ) {
+
     while( first != last ) {
        *firstOut = taskf(*first);
        first++;
@@ -34,7 +35,8 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 }
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
+ void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
+
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         advance_iterators( inputs... );

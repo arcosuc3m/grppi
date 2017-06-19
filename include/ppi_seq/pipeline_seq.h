@@ -42,13 +42,14 @@ template <typename InType, int currentStage, typename ...Stages>
 
 //Last stage
 template <typename Stream, typename Stage>
-void stages(sequential_execution s, Stream st, Stage && se ) {
+void stages(sequential_execution &s, Stream st, Stage && se ) {
     se( st );
 }
 
 //Filter stage
 template <typename task, typename Stream, typename... Stages>
-void stages(sequential_execution s, Stream st, FilterObj<sequential_execution, task> && se, Stages && ... sgs ) {
+void stages(sequential_execution &s, Stream st, FilterObj<sequential_execution, task> && se, Stages && ... sgs ) {
+
 //   auto out = se.run(st);
      if((*se.task)(st))
         stages(s, st, std::forward<Stages>(sgs) ... );
@@ -56,7 +57,8 @@ void stages(sequential_execution s, Stream st, FilterObj<sequential_execution, t
 
 
 template <typename task, template <typename,typename> class Stage, typename Stream, typename... Stages>
-void stages(sequential_execution s, Stream st, Stage<sequential_execution, task> && se, Stages && ... sgs ) {
+void stages(sequential_execution &s, Stream st, Stage<sequential_execution, task> && se, Stages && ... sgs ) {
+
 //   auto out = se.run(st);
      auto out = (*se.task)(st);
      stages(s, out, std::forward<Stages>(sgs) ... );
@@ -64,14 +66,15 @@ void stages(sequential_execution s, Stream st, Stage<sequential_execution, task>
 
 //Intermediate stages
 template <typename Stage, typename Stream, typename... Stages>
-void stages(sequential_execution s, Stream st, Stage && se, Stages && ... sgs ) {
+void stages(sequential_execution &s, Stream st, Stage && se, Stages && ... sgs ) {
     auto out = se( st );
     stages(s, out, std::forward<Stages>(sgs) ... );
 }
 
 //First stage
 template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type, typename ...Stages>
-void pipeline(sequential_execution s, FuncIn && in, Stages && ... sgs ) {
+void pipeline(sequential_execution &s, FuncIn && in, Stages && ... sgs ) {
+
     while( 1 ) {
         auto k = in();
         if( !k )

@@ -72,6 +72,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
  void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
+
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
    int numElements = last - first;

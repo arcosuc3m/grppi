@@ -26,7 +26,8 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_omp p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
+ void stream_filter(parallel_execution_omp &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
+
 
     Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
     Queue< typename std::result_of<GenFunc()>::type > outqueue(DEFAULT_SIZE, p.lockfree);
@@ -87,7 +88,7 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 }
 
 template <typename FilterFunc>
-FilterObj<parallel_execution_omp, FilterFunc> stream_filter(parallel_execution_omp p, FilterFunc && taskf){
+FilterObj<parallel_execution_omp, FilterFunc> stream_filter(parallel_execution_omp &p, FilterFunc && taskf){
    return FilterObj<parallel_execution_omp, FilterFunc>(p, taskf);
 
 }

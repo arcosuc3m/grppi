@@ -48,7 +48,7 @@ void farm(sequential_execution , GenFunc &&in, TaskFunc && taskf, SinkFunc &&sin
 
 
 template <typename TaskFunc>
-FarmObj<sequential_execution,TaskFunc> farm(sequential_execution s, TaskFunc && taskf){
+FarmObj<sequential_execution,TaskFunc> farm(sequential_execution &s, TaskFunc && taskf){
    return FarmObj<sequential_execution, TaskFunc>(s ,taskf);
 }
 }
