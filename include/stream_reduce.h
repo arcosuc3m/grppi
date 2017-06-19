@@ -29,8 +29,6 @@
 
 #include "ppi_omp/stream_reduce_omp.h"
 
-#include "ppi_thrust/stream_reduce_thrust.h"
-
 #include "ppi_tbb/stream_reduce_tbb.h"
 
 #if 0 /* START DOCUMENTATION */

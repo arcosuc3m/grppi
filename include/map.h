@@ -27,8 +27,6 @@
 
 #include "ppi_thr/map_thr.h"
 
-#include "ppi_thrust/map_thrust.h"
-
 #include "ppi_omp/map_omp.h"
 
 #include "ppi_tbb/map_tbb.h"
