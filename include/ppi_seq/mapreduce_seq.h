@@ -25,7 +25,8 @@
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >
-void map_reduce (sequential_execution s, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
+void map_reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
+
     while( first != last ) {
        auto mapresult = map(*first, inputs ... );
        reduce(s, mapresult.begin(), mapresult.end(), *firstOut, op);

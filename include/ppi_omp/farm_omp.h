@@ -27,7 +27,7 @@ namespace grppi
 {
 
 template <typename GenFunc, typename TaskFunc>
-void farm(parallel_execution_omp p, GenFunc &&in, TaskFunc &&taskf) {
+void farm(parallel_execution_omp &p, GenFunc &&in, TaskFunc &&taskf) {
 	
     Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
     #pragma omp parallel
@@ -64,7 +64,7 @@ void farm(parallel_execution_omp p, GenFunc &&in, TaskFunc &&taskf) {
 }
 
 template <typename TaskFunc>
-FarmObj<parallel_execution_omp,TaskFunc> farm(parallel_execution_omp p, TaskFunc && taskf){
+FarmObj<parallel_execution_omp,TaskFunc> farm(parallel_execution_omp &p, TaskFunc && taskf){
    return FarmObj<parallel_execution_omp, TaskFunc>(p,taskf);
 }
 }

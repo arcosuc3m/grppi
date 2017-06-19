@@ -26,7 +26,7 @@
 #include <tbb/tbb.h>
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename SinkFunc>
- void farm(parallel_execution_tbb p, GenFunc &&in, TaskFunc && taskf , SinkFunc &&sink) {
+ void farm(parallel_execution_tbb &p, GenFunc &&in, TaskFunc && taskf , SinkFunc &&sink) {
 
     tbb::task_group g;
     Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
@@ -85,7 +85,7 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
 
 
 template <typename GenFunc, typename TaskFunc>
- void farm(parallel_execution_tbb p, GenFunc &&in, TaskFunc && taskf ) {
+ void farm(parallel_execution_tbb &p, GenFunc &&in, TaskFunc && taskf ) {
 
     tbb::task_group g;
     Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
@@ -122,7 +122,7 @@ template <typename GenFunc, typename TaskFunc>
 
 
 template <typename TaskFunc>
-FarmObj<parallel_execution_tbb,TaskFunc> farm(parallel_execution_tbb p, TaskFunc && taskf){
+FarmObj<parallel_execution_tbb,TaskFunc> farm(parallel_execution_tbb &p, TaskFunc && taskf){
    return FarmObj<parallel_execution_tbb, TaskFunc>(p,taskf);
 }
 }

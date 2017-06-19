@@ -26,7 +26,7 @@
 
 namespace grppi{
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
- void stream_reduce(sequential_execution s, GenFunc &&in, TaskFunc && taskf, ReduceFunc &&red, OutputType &reduce_value ) {
+ void stream_reduce(sequential_execution &s, GenFunc &&in, TaskFunc && taskf, ReduceFunc &&red, OutputType &reduce_value ) {
 
     while( 1 ) {
         auto k = in();
@@ -39,7 +39,7 @@ template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename Out
 
 
 template <typename GenFunc, typename TaskFunc, typename ReduceFunc>
- void stream_reduce(sequential_execution s, GenFunc &&in, TaskFunc && taskf, ReduceFunc &&red) {
+ void stream_reduce(sequential_execution &s, GenFunc &&in, TaskFunc && taskf, ReduceFunc &&red) {
     while( 1 ) {
         auto k = in();
         if( !k )
@@ -51,7 +51,7 @@ template <typename GenFunc, typename TaskFunc, typename ReduceFunc>
 
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
- void stream_reduce(sequential_execution s, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
+ void stream_reduce(sequential_execution &s, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
 {
      
      std::vector<typename std::result_of<GenFunc()>::type::value_type> buffer;

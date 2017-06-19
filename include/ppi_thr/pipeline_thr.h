@@ -351,6 +351,7 @@ template <typename Stage, typename Stream,typename... Stages>
 template <typename FuncIn, typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
 void pipeline( parallel_execution_thr& p, FuncIn && in, Stages && ... sts ) {
+
     //Create first queue
     Queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
     //Create stream generator stage

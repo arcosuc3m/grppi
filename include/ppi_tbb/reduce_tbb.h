@@ -29,7 +29,7 @@
 namespace grppi{
 template < typename InputIt, typename Output,typename ReduceOperator>
  typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(parallel_execution_tbb p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
    typename ReduceOperator::result_type identityVal = !op(false,true); 
    //FIXME: Necesita el valor inicial de la operacion
    firstOut = op(firstOut, 
@@ -52,7 +52,7 @@ reduce(parallel_execution_tbb p, InputIt first, InputIt last, Output & firstOut,
 
 template < typename InputIt, typename ReduceOperator>
  typename ReduceOperator::result_type
-reduce(parallel_execution_tbb p, InputIt first, InputIt last, ReduceOperator op) {
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator op) {
    typename ReduceOperator::result_type identityVal = !op(false, true); 
    //FIXME: Necesita el valor inicial de la operacion
    return tbb::parallel_reduce(tbb::blocked_range<InputIt>( first, last ), identityVal,
@@ -74,7 +74,7 @@ reduce(parallel_execution_tbb p, InputIt first, InputIt last, ReduceOperator op)
 
 template < typename InputIt, typename OutputIt, typename RedFunc>
  typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
-reduce (parallel_execution_tbb s, InputIt first, InputIt last, OutputIt firstOut, RedFunc && reduce) {
+reduce (parallel_execution_tbb &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc && reduce) {
     while( first != last ) {
        reduce(*first, *firstOut);
        first++;
