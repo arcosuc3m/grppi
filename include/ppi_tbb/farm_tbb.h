@@ -25,12 +25,12 @@
 
 #include <tbb/tbb.h>
 namespace grppi{
-template <typename GenFunc, typename TaskFunc, typename SinkFunc>
- void farm(parallel_execution_tbb &p, GenFunc &&in, TaskFunc && taskf , SinkFunc &&sink) {
+template <typename GenFunc, typename Operation, typename SinkFunc>
+ void farm(parallel_execution_tbb &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
 
     tbb::task_group g;
     Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-    Queue< optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE,p.lockfree);
+    Queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE,p.lockfree);
     //Create threads
     std::atomic<int>nend(0);
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -39,13 +39,13 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
              typename std::result_of<GenFunc()>::type item;
              item = queue.pop(  );
              while( item ) {
-               auto out = taskf( item.value() );
-               queueout.push( optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type >(out) ) ;
+               auto out = op( item.value() );
+               queueout.push( optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type >(out) ) ;
                item = queue.pop(  );
              }
              nend++;
              if(nend == p.num_threads)
-                 queueout.push( optional< typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type >() );
+                 queueout.push( optional< typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type >() );
 
          }
       );
@@ -55,7 +55,7 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
    //SINK 
    std::thread sinkt(
        [&](){
-          optional< typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > item;
+          optional< typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > item;
           item = queueout.pop(  );
           while( item ) {
             sink( item.value() );
@@ -84,8 +84,8 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
 
 
 
-template <typename GenFunc, typename TaskFunc>
- void farm(parallel_execution_tbb &p, GenFunc &&in, TaskFunc && taskf ) {
+template <typename GenFunc, typename Operation>
+ void farm(parallel_execution_tbb &p, GenFunc &&in, Operation && op ) {
 
     tbb::task_group g;
     Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
@@ -96,7 +96,7 @@ template <typename GenFunc, typename TaskFunc>
               typename std::result_of<GenFunc()>::type item;
               item = queue.pop();
               while( item ) {
-                taskf( item.value() );
+                op( item.value() );
                 item = queue.pop();
               }
           }
@@ -121,9 +121,9 @@ template <typename GenFunc, typename TaskFunc>
 
 
 
-template <typename TaskFunc>
-FarmObj<parallel_execution_tbb,TaskFunc> farm(parallel_execution_tbb &p, TaskFunc && taskf){
-   return FarmObj<parallel_execution_tbb, TaskFunc>(p,taskf);
+template <typename Operation>
+FarmObj<parallel_execution_tbb,Operation> farm(parallel_execution_tbb &p, Operation && op){
+   return FarmObj<parallel_execution_tbb, Operation>(p,op);
 }
 }
 #endif

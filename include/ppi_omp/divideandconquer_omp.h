@@ -27,9 +27,9 @@
 
 namespace grppi{
 
-template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
+template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
  void internal_divide_and_conquer(parallel_execution_omp &p, Input & problem, Output & output,
-            DivFunc && divide, TaskFunc && task, MergeFunc && merge, std::atomic<int> & num_threads) {
+            DivFunc && divide, Operation && op, MergeFunc && merge, std::atomic<int> & num_threads) {
    
     // Sequential execution fo internal implementation
     sequential_execution seq;
@@ -44,20 +44,20 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
          auto i = subproblems.begin()+1;
          for(i; i != subproblems.end()&& num_threads.load()>0; i++, division++){
             //THREAD
-             #pragma omp task firstprivate(i, division) shared(divide, task, merge, partials, num_threads)
+             #pragma omp task firstprivate(i, division) shared(divide, op, merge, partials, num_threads)
              {
-                 internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
+                 internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
               //END TRHEAD
              }
              num_threads --;
              
           }
           for(i; i != subproblems.end(); i++){
-              divide_and_conquer(seq,*i,partials[division], divide, task, merge);
+              divide_and_conquer(seq,*i,partials[division], divide, op, merge);
           }
           
           //Main thread works on the first subproblem.
-          internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
+          internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
 
           #pragma omp taskwait
 
@@ -65,19 +65,19 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
               merge(partials[i], output);
           }
         }else{
-          task(problem, output);
+          op(problem, output);
         }
      }else{
-        divide_and_conquer(seq, problem, output, std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
+        divide_and_conquer(seq, problem, output, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
      }
 
 
 
 }
 
-template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
+template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
  void divide_and_conquer(parallel_execution_omp &p, Input & problem, Output & output,
-            DivFunc && divide, TaskFunc && task, MergeFunc && merge) {
+            DivFunc && divide, Operation && op, MergeFunc && merge) {
 
     // Sequential execution fo internal implementation
     sequential_execution seq;
@@ -98,24 +98,24 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
           auto i = subproblems.begin()+1;
           for(i; i != subproblems.end()&& num_threads.load()>0; i++, division++){
               //THREAD
-              #pragma omp task firstprivate(i,division) shared(partials,divide,task,merge, num_threads)
+              #pragma omp task firstprivate(i,division) shared(partials,divide,op,merge, num_threads)
               {
-                  internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
+                  internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
               //END TRHEAD
               }
                   num_threads --;
 
           }
           for(i; i != subproblems.end(); i++){
-              divide_and_conquer(seq,*i,partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
+              divide_and_conquer(seq,*i,partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
           }
 
     	  //Main thread works on the first subproblem.
         
          if(num_threads.load()>0){
-            internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
+            internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
         }else{
-            divide_and_conquer(seq, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
+            divide_and_conquer(seq, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
         }
           #pragma omp taskwait
           }
@@ -124,20 +124,20 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
               merge(partials[i], output);
           }
         }else{
-          task(problem, output);
+          op(problem, output);
         }
     }else{
-        divide_and_conquer(seq, problem, output, std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
+        divide_and_conquer(seq, problem, output, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
     }
 }
 
 
 /*
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
     while( first != last ) {
-        *firstOut = taskf( *first, *inputs ... );
+        *firstOut = op( *first, *inputs ... );
         NextInputs( inputs... );
         first++;
         firstOut++;

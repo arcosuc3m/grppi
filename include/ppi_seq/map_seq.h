@@ -23,21 +23,21 @@
 
 namespace grppi{
 
-template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf ) {
+template <typename InputIt, typename OutputIt, typename Operation>
+ void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op ) {
 
     while( first != last ) {
-       *firstOut = taskf(*first);
+       *firstOut = op(*first);
        first++;
        firstOut++;
     }
 }
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+ void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
 
     while( first != last ) {
-        *firstOut = taskf( *first, *inputs ... );
+        *firstOut = op( *first, *inputs ... );
         advance_iterators( inputs... );
         first++;
         firstOut++;

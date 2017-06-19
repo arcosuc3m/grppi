@@ -128,8 +128,8 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 }
 
 template <typename FilterFunc>
-FilterObj<parallel_execution_tbb, FilterFunc> stream_filter(parallel_execution_tbb &p, FilterFunc && taskf){
-   return FilterObj<parallel_execution_tbb, FilterFunc>(p, taskf);
+FilterObj<parallel_execution_tbb, FilterFunc> stream_filter(parallel_execution_tbb &p, FilterFunc && op){
+   return FilterObj<parallel_execution_tbb, FilterFunc>(p, op);
 
 }
 }

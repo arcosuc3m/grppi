@@ -32,36 +32,36 @@ class PipelineObj{
       PipelineObj(E &p, Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) { exectype = &p;}
 };
 
-template <typename E,class TaskFunc, class RedFunc>
+template <typename E,class Operation, class RedFunc>
 class ReduceObj
 {
    public:
-      TaskFunc * task;
+      Operation * task;
       RedFunc * red;
       E exectype;
-      ReduceObj(E s, TaskFunc farm, RedFunc r){exectype=s; task = &farm; red= &r;}
+      ReduceObj(E s, Operation farm, RedFunc r){exectype=s; task = &farm; red= &r;}
 };
 
-template <typename E,class TaskFunc>
+template <typename E,class Operation>
 class FarmObj
 {
    public:
-      TaskFunc * task;
+      Operation * task;
       E * exectype;
       int farmtype;
-      FarmObj(E &s,TaskFunc f){exectype=&s; task = &f;};
+      FarmObj(E &s,Operation f){exectype=&s; task = &f;};
 
 
 };
 
-template <typename E,class TaskFunc>
+template <typename E,class Operation>
 class FilterObj
 {
    public:
-      TaskFunc * task;
+      Operation * task;
       E *exectype;
       int filtertype;
-      FilterObj(E& s,TaskFunc f){exectype=&s; task = &f;};
+      FilterObj(E& s,Operation f){exectype=&s; task = &f;};
 };
 
 } // end namespace grppi

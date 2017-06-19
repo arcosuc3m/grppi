@@ -23,8 +23,8 @@
 
 namespace grppi{
 
-template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc && taskf){
+template <typename InputIt, typename OutputIt, typename Operation>
+ void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, Operation && op){
    
    std::vector<std::thread> tasks;
    int numElements = last - first; 
@@ -43,7 +43,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
           p.register_thread();
           
           while(begin!=end){
-            *out = taskf(*begin);
+            *out = op(*begin);
             begin++;
             out++;
           }
@@ -57,7 +57,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
    //Map main threads
    auto end = first+elemperthr;
    while(first!=end){
-         *firstOut = taskf(*first);
+         *firstOut = op(*first);
          first++;
          firstOut++;
    }
@@ -70,8 +70,8 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 }
 
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+ void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs){
 
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
@@ -93,7 +93,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
             advance_iterators(nelem*tid, inputs ...);
             while(begin!=end){
-               *out = taskf(*begin, *inputs ...);
+               *out = op(*begin, *inputs ...);
                advance_iterators(inputs ...);
                begin++;
                out++;
@@ -109,7 +109,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
    //Map main thread
    auto end = first + elemperthr;
    while(first!=end){
-         *firstOut = taskf(*first, *inputs ...);
+         *firstOut = op(*first, *inputs ...);
          advance_iterators(inputs ...);
          first++;
          firstOut++;

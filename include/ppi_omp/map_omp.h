@@ -25,8 +25,8 @@
 
 namespace grppi{
 
-template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc &&taskf){
+template <typename InputIt, typename OutputIt, typename Operation>
+ void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation &&op){
    
   int numElements = last - first;
 
@@ -47,7 +47,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
         if(i == p.num_threads -1 ) end = last;
         auto out = firstOut + (elemperthr * i);
         while(begin!=end){
-          *out = taskf(*begin);
+          *out = op(*begin);
           begin++;
           out++;
         }
@@ -58,7 +58,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
       auto out = firstOut;
       auto end = first+elemperthr;
       while(beg!=end){
-            *out = taskf(*beg);
+            *out = op(*beg);
             beg++;
             out++;
       }
@@ -68,9 +68,9 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 }
 
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
  void internal_map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut,
-                         TaskFunc &&taskf, int i, int elemperthr, MoreIn ... inputs){
+                         Operation &&op, int i, int elemperthr, MoreIn ... inputs){
         //Calculate local input and output iterator 
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
@@ -78,7 +78,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
         auto out = firstOut + (elemperthr * i);
         advance_iterators(elemperthr*i, inputs ...);
         while(begin!=end){
-           *out = taskf(*begin, *inputs ...);
+           *out = op(*begin, *inputs ...);
            advance_iterators(inputs ...);
            begin++;
            out++;
@@ -86,8 +86,8 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 }
 
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+ void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs){
    //Calculate number of elements per thread
    int numElements = last - first;
    int elemperthr = numElements/p.num_threads;
@@ -101,12 +101,12 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
        #pragma omp task firstprivate(i)
        {
-           internal_map(p, first, last, firstOut, std::forward<TaskFunc>(taskf) , i, elemperthr, inputs ...);
+           internal_map(p, first, last, firstOut, std::forward<Operation>(op) , i, elemperthr, inputs ...);
        }
       //End task
      }
      //Map main thread
-     internal_map(p, first,last, firstOut, std::forward<TaskFunc>(taskf), 0, elemperthr, inputs ...);
+     internal_map(p, first,last, firstOut, std::forward<Operation>(op), 0, elemperthr, inputs ...);
 
    //Join threads
    #pragma omp taskwait

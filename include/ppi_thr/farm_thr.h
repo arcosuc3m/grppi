@@ -28,14 +28,14 @@
 
 namespace grppi{
 
-template <typename GenFunc, typename TaskFunc, typename SinkFunc>
- void farm(parallel_execution_thr &p, GenFunc &&in, TaskFunc && taskf , SinkFunc &&sink) {
+template <typename GenFunc, typename Operation, typename SinkFunc>
+ void farm(parallel_execution_thr &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
-//    Queue< optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE);
+//    Queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE);
     Queue< typename std::result_of<GenFunc()>::type > queue (DEFAULT_SIZE,p.lockfree);
-    Queue< optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE, p.lockfree);
+    Queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE, p.lockfree);
     std::atomic<int> nend(0);
     //Create threads
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -49,15 +49,15 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
                     item = queue.pop( ) ;
                     //auto item = queue.pop( );
                     while( item ) {
-                       auto out = taskf( item.value() );
-                       queueout.push( optional < typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type >(out) );
+                       auto out = op( item.value() );
+                       queueout.push( optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type >(out) );
                        // item = queue.pop( );
                        item = queue.pop( ) ;
                     }
                     queue.push(item);
                     nend++;
                     if(nend == p.num_threads)
-                        queueout.push( optional< typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type >() ) ;
+                        queueout.push( optional< typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type >() ) ;
 
                     // Deregister the thread in the execution model
                     p.deregister_thread();
@@ -73,7 +73,7 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
                 // Register the thread in the execution model
                 p.register_thread();
 
-                optional< typename std::result_of<TaskFunc(typename std::result_of<GenFunc()>::type::value_type)>::type > item;
+                optional< typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > item;
                 item = queueout.pop( ) ;
                 // auto item = queueout.pop(  ) ;
                  while( item ) {
@@ -108,8 +108,8 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc>
 
 }
 
-template <typename GenFunc, typename TaskFunc>
- void farm(parallel_execution_thr &p, GenFunc &&in, TaskFunc && taskf ) {
+template <typename GenFunc, typename Operation>
+ void farm(parallel_execution_thr &p, GenFunc &&in, Operation && op ) {
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
@@ -125,7 +125,7 @@ template <typename GenFunc, typename TaskFunc>
                     typename std::result_of<GenFunc()>::type item;
                     item = queue.pop( );
                     while( item ) {
-                       taskf( item.value() );
+                       op( item.value() );
                        item = queue.pop( );
                     }
                     queue.push(item);
@@ -154,10 +154,10 @@ template <typename GenFunc, typename TaskFunc>
 }
 
 
-template <typename TaskFunc>
-FarmObj<parallel_execution_thr,TaskFunc> farm(parallel_execution_thr &p, TaskFunc && taskf){
+template <typename Operation>
+FarmObj<parallel_execution_thr,Operation> farm(parallel_execution_thr &p, Operation && op){
    
-   return FarmObj<parallel_execution_thr, TaskFunc>(p, taskf);
+   return FarmObj<parallel_execution_thr, Operation>(p, op);
 }
 
 }

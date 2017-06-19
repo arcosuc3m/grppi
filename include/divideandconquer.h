@@ -58,8 +58,8 @@
  *  @param merge    Merge function: will join the the result of the 'task' 
  *    function
  */
-template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
- void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc && divide, TaskFunc && task, MergeFunc && merge);
+template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
+ void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc && divide, Operation && task, MergeFunc && merge);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

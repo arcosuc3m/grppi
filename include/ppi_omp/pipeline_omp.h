@@ -73,8 +73,8 @@ void stages( parallel_execution_omp &p, Stream& st, Stage && s ){
    //End task
 }
 
-template <typename Task, typename Stream,typename... Stages>
- void stages( parallel_execution_omp &p, Stream& st, FilterObj<parallel_execution_omp, Task>& se, Stages && ... sgs ) {
+template <typename Operation, typename Stream,typename... Stages>
+ void stages( parallel_execution_omp &p, Stream& st, FilterObj<parallel_execution_omp, Operation>& se, Stages && ... sgs ) {
     if(p.ordering){
        Queue< typename Stream::value_type > q(DEFAULT_SIZE);
 
@@ -184,17 +184,17 @@ template <typename Task, typename Stream,typename... Stages>
 
 
 
-template <typename Task, typename Stream,typename... Stages>
- void stages( parallel_execution_omp &p, Stream& st, FarmObj<parallel_execution_omp, Task> se, Stages && ... sgs ) {
+template <typename Operation, typename Stream,typename... Stages>
+ void stages( parallel_execution_omp &p, Stream& st, FarmObj<parallel_execution_omp, Operation> se, Stages && ... sgs ) {
    
-    Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE);
+    Queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE);
     std::atomic<int> nend ( 0 );
     for( int th = 0; th < se.exectype->num_threads; th++){
       #pragma omp task shared(nend,q,se,st)
       {
          auto item = st.pop();
          while( item.first ) {
-         auto out = optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >( (*se.task)(item.first.value()) );
+         auto out = optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >( (*se.task)(item.first.value()) );
 
           q.push( std::make_pair(out,item.second)) ;
           item = st.pop( );
@@ -202,7 +202,7 @@ template <typename Task, typename Stream,typename... Stages>
         st.push(item);
         nend++;
         if(nend == se.exectype->num_threads)
-          q.push(make_pair(optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+          q.push(make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }
     stages(p, q, std::forward<Stages>(sgs) ... );

@@ -125,10 +125,11 @@ template <typename Stream, typename Stage>
 }
 
 //Stream reduce stage
-template <typename Task, typename Red, typename Stream>
- void stages( parallel_execution_thr &p, Stream& st, ReduceObj<parallel_execution_thr, Task, Red>& se) {
+template <typename Operation, typename Red, typename Stream>
+void stages(parallel_execution_thr & p, Stream & st,
+ReduceObj<parallel_execution_thr, Operation, Red> & se) {
     std::vector<std::thread> tasks;
-    Queue<typename std::result_of< Task(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.lockfree);
+    Queue<typename std::result_of<Operation(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.lockfree);
 
     for( int th = 0; th < se.exectype.num_threads; th++){
         tasks.push_back(
@@ -140,7 +141,7 @@ template <typename Task, typename Red, typename Stream>
                  queueOut.push( local ) ;
                  item = st.pop( );
               }
-              typename std::result_of< Task(typename Stream::value_type) >::type out;
+              typename std::result_of<Operation(typename Stream::value_type) >::type out;
               queueOut.push( out ) ;
        }));
     }
@@ -149,8 +150,9 @@ template <typename Task, typename Red, typename Stream>
 }
 
 //Filtering stage
-template <typename Task, typename Stream, typename... Stages>
- void stages( parallel_execution_thr &p, Stream& st, FilterObj<parallel_execution_thr, Task> se, Stages && ... sgs ) {
+template <typename Operation, typename Stream, typename... Stages>
+void stages(parallel_execution_thr &p, Stream& st,
+            FilterObj<parallel_execution_thr,Operation> se, Stages && ... sgs ) {
     
     std::vector<std::thread> tasks;
     if(p.ordering){
@@ -275,11 +277,12 @@ template <typename Task, typename Stream, typename... Stages>
 }
 
 //Farm stage
-template <typename Task, typename Stream, typename... Stages>
- void stages( parallel_execution_thr &p, Stream& st, FarmObj<parallel_execution_thr, Task> se, Stages && ... sgs ) {
+template <typename Operation, typename Stream, typename... Stages>
+void stages(parallel_execution_thr &p, Stream& st, 
+            FarmObj<parallel_execution_thr,Operation> se, Stages && ... sgs ) {
     std::vector<std::thread> tasks;
     //Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
-    Queue< std::pair < optional < typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
+    Queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
     std::atomic<int> nend ( 0 );
     for( int th = 0; th < se.exectype->num_threads; th++){
           tasks.push_back(
@@ -290,7 +293,7 @@ template <typename Task, typename Stream, typename... Stages>
                   long order = 0;
                   auto item = st.pop(); 
                   while( item.first ) {
-                      auto out = optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >( (*se.task)(item.first.value()) );
+                      auto out = optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >( (*se.task)(item.first.value()) );
                       
                       q.push( std::make_pair(out,item.second)) ;
                       item = st.pop( ); 
@@ -298,7 +301,7 @@ template <typename Task, typename Stream, typename... Stages>
                  st.push(item);
                  nend++;
                  if(nend == se.exectype->num_threads) 
-                      q.push(make_pair(optional< typename std::result_of< Task(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+                      q.push(make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
                 
                  //Deregister the thread in the execution model
                  se.exectype->deregister_thread();

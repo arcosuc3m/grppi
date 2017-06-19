@@ -27,8 +27,8 @@
 #include <tbb/tbb.h>
 
 namespace grppi{
-template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
- void stream_reduce(parallel_execution_tbb &p, GenFunc &&in, TaskFunc &&taskf, ReduceFunc &&red, OutputType &reduce_value ){
+template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
+ void stream_reduce(parallel_execution_tbb &p, GenFunc &&in, Operation &&op, ReduceFunc &&red, OutputType &reduce_value ){
 
     Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
     Queue<optional<OutputType>> end_queue (DEFAULT_SIZE, p.lockfree);
@@ -43,7 +43,7 @@ template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename Out
                     typename std::result_of<GenFunc()>::type item;
                     item = queue.pop( ) ;
                     while( item ) {
-                        OutputType out = taskf( item.value() );
+                        OutputType out = op( item.value() );
                         end_queue.push( optional<OutputType>(out) );
                         item = queue.pop(  );
                     }
@@ -107,9 +107,9 @@ template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
 
 }
 
-template <typename TaskFunc, typename RedFunc>
-ReduceObj<parallel_execution_tbb,TaskFunc, RedFunc> stream_reduce(parallel_execution_thr &p, TaskFunc && taskf, RedFunc && red){
-   return ReduceObj<parallel_execution_tbb, TaskFunc, RedFunc>(p,taskf, red);
+template <typename Operation, typename RedFunc>
+ReduceObj<parallel_execution_tbb,Operation, RedFunc> stream_reduce(parallel_execution_thr &p, Operation && op, RedFunc && red){
+   return ReduceObj<parallel_execution_tbb, Operation, RedFunc>(p,op, red);
 }
 }
 #endif
