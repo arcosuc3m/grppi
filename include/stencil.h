@@ -45,7 +45,7 @@
  *  The Stencil divide the data structure in as many parts as threads are 
  *  available to be used. Then each threads perform the computation needed for
  *  each neighbor of that element using the 'neighbor' function and perform 
- *  the code section 'taskf' with the data computed with the neighbors.
+ *  the code section 'op' with the data computed with the neighbors.
  *  @{
  */
 /** @param exec     Execution_model flag to indicates the type of execution
@@ -57,14 +57,14 @@
  *    structure.
  *  @param firstOut Iterator pointing to the first elements of the output data
  *    structure.
- *  @param taskf    Task function: function that contains the code section that 
+ *  @param op    Task function: function that contains the code section that 
  *    will be parallelized.
  *  @param neighbor Support function: function that handle how to get the needed
  *    data from the neighbors. This functions serves as support for getting data
- *    to 'taskf'.
+ *    to 'op'.
  */
-template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
- void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor );
+template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
+ void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor );
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

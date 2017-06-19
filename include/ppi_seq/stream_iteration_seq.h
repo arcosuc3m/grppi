@@ -22,8 +22,8 @@
 
 namespace grppi{
 
-template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
- void stream_iteration(sequential_execution, GenFunc && in, TaskFunc && f, Predicate && condition, OutFunc && out){
+template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
+ void stream_iteration(sequential_execution, GenFunc && in, Operation && f, Predicate && condition, OutFunc && out){
    while(1){
        auto k = in();
        if(!k) break;
@@ -35,8 +35,8 @@ template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFu
    }
 }
 
-template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
- void stream_iteration(sequential_execution, GenFunc && in, FarmObj<sequential_execution, TaskFunc> && f, Predicate && condition, OutFunc && out){
+template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
+ void stream_iteration(sequential_execution, GenFunc && in, FarmObj<sequential_execution, Operation> && f, Predicate && condition, OutFunc && out){
    while(1){
        auto k = in();       
        if(!k) break;

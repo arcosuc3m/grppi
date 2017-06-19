@@ -22,8 +22,8 @@
 #define GRPPI_STENCIL_THR_H
 
 namespace grppi{
-template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
- void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {
+template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
+ void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
@@ -44,7 +44,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
 
               while(begin!=end){
                 auto neighbors = neighbor(begin);
-                *out = taskf(begin, neighbors);
+                *out = op(begin, neighbors);
                 begin++;
                 out++;
               }
@@ -59,7 +59,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
    auto end = first + elemperthr;
    while(first!=end){
       auto neighbors = neighbor(first);
-      *firstOut = taskf(first, neighbors);
+      *firstOut = op(first, neighbors);
       first++;
       firstOut++;
    }
@@ -71,8 +71,8 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
  
 }
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc, typename NFunc>
- void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor, MoreIn ... inputs ) {
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+ void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
      std::vector<std::thread> tasks;
      int numElements = last - first;
@@ -96,7 +96,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
                GetStart(n, i, inputs ...);
                while(begin!=end){
                  auto neighbors = neighbor(begin);
-                 *out = taskf(*begin, neighbors,inputs...);
+                 *out = op(*begin, neighbors,inputs...);
                  begin++;
                  NextInputs( inputs ... );
                  out++;
@@ -113,7 +113,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
    auto end = first + elemperthr;
    while(first!=end){
       auto neighbors = neighbor(first);
-      *firstOut = taskf(*first, neighbors, inputs...);
+      *firstOut = op(*first, neighbors, inputs...);
       first++;
       NextInputs( inputs ... );
       firstOut++;

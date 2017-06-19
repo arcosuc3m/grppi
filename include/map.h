@@ -45,8 +45,8 @@
  *  @brief Apply the map pattern for parallelizing the code section
  *
  *  The Map pattern is applied to iterable data structures in which all the
- *  the elements are processed the same way, with the same 'taskf' function.
- *  This function parallelize the execution of the 'taskf' function in different
+ *  the elements are processed the same way, with the same 'op' function.
+ *  This function parallelize the execution of the 'op' function in different
  *  elements of the input data structure.
  *
  *  @{
@@ -63,8 +63,8 @@
  *    code that will be applied to each elements of the input data structure.
  *    This section of code will be parallelize.
  */
-template <typename InputIt, typename OutputIt, typename TaskFunc>
- void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf );
+template <typename InputIt, typename OutputIt, typename Operation>
+ void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op );
 
 
 /**  @param exec     Execution_model flag to indicates the type of execution
@@ -78,11 +78,11 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
  *  @param tasf     Task function: function that will contain the section of
  *    code that will be applied to each elements of the input data structure.
  *    This section of code will be parallelize.
- *  @param inputs   List of additional inputs to the function 'taskf'
+ *  @param inputs   List of additional inputs to the function 'op'
  *  
  */
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+ void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

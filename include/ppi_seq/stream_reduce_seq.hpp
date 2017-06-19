@@ -25,26 +25,26 @@
 #include <vector>
 
 namespace grppi{
-template <typename GenFunc, typename TaskFunc, typename ReduceFunc, typename OutputType>
- void stream_reduce(sequential_execution &s, GenFunc &&in, TaskFunc && taskf, ReduceFunc &&red, OutputType &reduce_value ) {
+template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
+ void stream_reduce(sequential_execution &s, GenFunc &&in, Operation && op, ReduceFunc &&red, OutputType &reduce_value ) {
 
     while( 1 ) {
         auto k = in();
         if( !k ) 
             break;
-        auto u = taskf(k.value());
+        auto u = op(k.value());
         red(u, reduce_value);
     }
 }
 
 
-template <typename GenFunc, typename TaskFunc, typename ReduceFunc>
- void stream_reduce(sequential_execution &s, GenFunc &&in, TaskFunc && taskf, ReduceFunc &&red) {
+template <typename GenFunc, typename Operation, typename ReduceFunc>
+ void stream_reduce(sequential_execution &s, GenFunc &&in, Operation && op, ReduceFunc &&red) {
     while( 1 ) {
         auto k = in();
         if( !k )
             break;
-        auto u = taskf(k.value());
+        auto u = op(k.value());
         red(u);
     }
 }

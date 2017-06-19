@@ -235,10 +235,10 @@ reduce(parallel_execution_thr &p, InputIt first, InputIt last, ReduceOperator op
 
 /*
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
     while( first != last ) {
-        *firstOut = taskf( *first, *inputs ... );
+        *firstOut = op( *first, *inputs ... );
         NextInputs( inputs... );
         first++;
         firstOut++;

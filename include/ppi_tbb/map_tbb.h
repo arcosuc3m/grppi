@@ -26,22 +26,22 @@
 #include <tbb/tbb.h>
 namespace grppi{
 
-template <typename InputIt, typename OutputIt, typename TaskFunc>
-void map(parallel_execution_tbb &p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc && taskf){
+template <typename InputIt, typename OutputIt, typename Operation>
+void map(parallel_execution_tbb &p, InputIt first,InputIt last, OutputIt firstOut, Operation && op){
    tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
            auto current = (firstOut+index);
-           *current = taskf(*(first+index));
+           *current = op(*(first+index));
        }
    );   
 }
 
 
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-void map(parallel_execution_tbb &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
+void map(parallel_execution_tbb &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs){
    tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
            auto current = (firstOut+index);
-           *current = taskf(*(first+index), *(inputs+index)...);
+           *current = op(*(first+index), *(inputs+index)...);
        }
 
    );   

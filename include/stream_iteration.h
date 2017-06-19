@@ -41,9 +41,9 @@
  *
  *  @brief Apply the farm pattern for parallelizing the code section
  *
- *  The Farm pattern apply a function 'taskf' to every independent element 
+ *  The Farm pattern apply a function 'op' to every independent element 
  *  returned by the generator function 'in'. The 'in' function read a data
- *	stream and forwards the result to the 'taskf' function. The task function
+ *	stream and forwards the result to the 'op' function. The task function
  *	is executed in parallel for as many thread as the user indicates in the
  *	'exec' variable.
  *  @{
@@ -52,11 +52,11 @@
  *    (sequential or parallel) and the implementation framework
  *  @param in   Generator function: This function determine how to read the data
  *    before start the parallel stage
- *  @param taskf Task function: Function that contains the code section that 
+ *  @param op Task function: Function that contains the code section that 
  *    should be parallelize
  */
-template <typename GenFunc, typename TaskFunc>
-void Farm(execution_model exec, GenFunc &&in, TaskFunc && taskf);
+template <typename GenFunc, typename Operation>
+void Farm(execution_model exec, GenFunc &&in, Operation && op);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

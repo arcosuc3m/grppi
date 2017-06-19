@@ -48,8 +48,8 @@ void stream_filter( GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 }
 
 template <typename FilterFunc>
-FilterObj<sequential_execution, FilterFunc> stream_filter(sequential_execution &s, FilterFunc && taskf){
-   return FilterObj<sequential_execution, FilterFunc>(s, taskf);
+FilterObj<sequential_execution, FilterFunc> stream_filter(sequential_execution &s, FilterFunc && op){
+   return FilterObj<sequential_execution, FilterFunc>(s, op);
 }
 
 }

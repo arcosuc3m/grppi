@@ -22,11 +22,11 @@
 #define GRPPI_STENCIL_SEQ_H
 
 namespace grppi{
-template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
- void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {
+template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
+ void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
     while( first != last ) {
        auto neighbors = neighbor(first);   
-       *firstOut = taskf(first, neighbors);
+       *firstOut = op(first, neighbors);
        first++;
        firstOut++;
 
@@ -35,11 +35,11 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
 }
 
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc, typename NFunc>
- void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor, MoreIn ... inputs ) {
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+ void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
     while( first != last ) {
         auto neighbors = neighbor(first);
-        *firstOut = taskf(first, neighbors, *inputs ...);
+        *firstOut = op(first, neighbors, *inputs ...);
         NextInputs( inputs... );
         first++;
         firstOut++;

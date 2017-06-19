@@ -77,8 +77,8 @@ template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Sta
 
 }
 
-template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
- void stream_iteration(parallel_execution_thr &p, GenFunc && in, FarmObj<parallel_execution_thr,TaskFunc> && se, Predicate && condition, OutFunc && out){
+template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
+ void stream_iteration(parallel_execution_thr &p, GenFunc && in, FarmObj<parallel_execution_thr,Operation> && se, Predicate && condition, OutFunc && out){
    std::vector<std::thread> tasks;
    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
    Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
@@ -156,8 +156,8 @@ template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFu
 }
 
 }
-/*template<typename GenFunc, typename TaskFunc, typename Predicate, typename OutFunc>
- void StreamIteration(sequential_execution, GenFunc && in, TaskFunc && f, Predicate && condition, OutFunc && out){
+/*template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
+ void StreamIteration(sequential_execution, GenFunc && in, Operation && f, Predicate && condition, OutFunc && out){
    while(1){
        auto k = in();
        if(!k) break;
