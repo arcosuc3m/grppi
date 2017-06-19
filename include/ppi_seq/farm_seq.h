@@ -21,7 +21,6 @@
 #ifndef GRPPI_FARM_SEQ_H
 #define GRPPI_FARM_SEQ_H
 
-using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>
 void farm(sequential_execution , GenFunc &&in, TaskFunc && taskf ) {

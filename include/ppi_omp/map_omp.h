@@ -23,7 +23,6 @@
 
 #ifdef GRPPI_OMP
 
-using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>

@@ -21,7 +21,6 @@
 #ifndef GRPPI_STREAM_FILTER_THR_H
 #define GRPPI_STREAM_FILTER_THR_H
 
-using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
  void stream_filter(parallel_execution_thr &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {

@@ -23,7 +23,6 @@
 
 #include <thread>
 
-using namespace std;
 namespace grppi{
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>

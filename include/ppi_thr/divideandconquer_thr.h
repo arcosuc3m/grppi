@@ -24,8 +24,6 @@
 #include <thread>
 #include <atomic>
 
-
-using namespace std;
 namespace grppi{
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
  void internal_divide_and_conquer(parallel_execution_thr &p, Input &problem, Output &output,

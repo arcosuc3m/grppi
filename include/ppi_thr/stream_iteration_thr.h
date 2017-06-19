@@ -25,8 +25,6 @@
 #include <utility>
 #include <memory>
 
-
-
 namespace grppi{ 
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>

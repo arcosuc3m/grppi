@@ -23,7 +23,6 @@
 
 #ifdef GRPPI_OMP
 
-using namespace std;
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
  void stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {

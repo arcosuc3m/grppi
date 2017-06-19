@@ -25,7 +25,6 @@
 
 #include <tbb/tbb.h>
 namespace grppi{
-using namespace std;
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
  void internal_divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output & output,
             DivFunc && divide, TaskFunc && task, MergeFunc && merge, std::atomic<int>& num_threads) {

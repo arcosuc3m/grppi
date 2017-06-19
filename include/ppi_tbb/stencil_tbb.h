@@ -24,7 +24,7 @@
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
-using namespace std;
+
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
  void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {
