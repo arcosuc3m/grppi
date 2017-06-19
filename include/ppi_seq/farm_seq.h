@@ -24,7 +24,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename TaskFunc>
-void farm(sequential_execution , GenFunc const &in, TaskFunc const & taskf ) {
+void farm(sequential_execution , GenFunc &&in, TaskFunc && taskf ) {
 
     while( 1 ) {
         auto k = in();
@@ -35,7 +35,7 @@ void farm(sequential_execution , GenFunc const &in, TaskFunc const & taskf ) {
 }
 
 template <typename GenFunc, typename TaskFunc, typename SinkFunc>
-void farm(sequential_execution , GenFunc const &in, TaskFunc const & taskf, SinkFunc const &sink ) {
+void farm(sequential_execution , GenFunc &&in, TaskFunc && taskf, SinkFunc &&sink ) {
 
     while( 1 ) {
         auto k = in();

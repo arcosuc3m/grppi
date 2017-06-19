@@ -37,7 +37,7 @@ using namespace std;
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
- void stages( parallel_execution_thrust p,Stream& st, Stage const& s ) {
+ void stages( parallel_execution_thrust p,Stream& st, Stage && s ) {
 
     //Start task
 //    std::thread task( 
@@ -147,7 +147,7 @@ template <typename Task, typename Stream, typename... Stages>
 
 //Intermediate stages
 template <typename Stage, typename Stream,typename... Stages>
- void stages( parallel_execution_thrust p,Stream& st, Stage const& se, Stages ... sgs ) {
+ void stages( parallel_execution_thrust p,Stream& st, Stage && se, Stages ... sgs ) {
 
     //Create new queue
     Queue< typename std::result_of<Stage(typename Stream::value_type)>::type> q(DEFAULT_SIZE,p.lockfree);
@@ -174,7 +174,7 @@ template <typename Stage, typename Stream,typename... Stages>
 
 //First stage
 template <typename FuncIn,typename... Arguments>
- void pipeline( parallel_execution_thrust p, FuncIn const & in, Arguments ... sts ) {
+ void pipeline( parallel_execution_thrust p, FuncIn && in, Arguments ... sts ) {
 
     //Create first queue
     Queue< typename std::result_of<FuncIn()>::type > q(DEAFULT_SIZE,p.lockfree);

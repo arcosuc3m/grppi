@@ -51,7 +51,7 @@ class FarmObj{
 */
 
 template <typename GenFunc, typename TaskFunc, typename SinkFunc, typename Policy>
- void farm(parallel_execution_thrust_internal<Policy> p, GenFunc const &in, TaskFunc const & taskf , SinkFunc const &sink) {
+ void farm(parallel_execution_thrust_internal<Policy> p, GenFunc &&in, TaskFunc && taskf , SinkFunc &&sink) {
 
     //Create gpus
     std::vector<std::thread> tasks;
@@ -124,7 +124,7 @@ template <typename GenFunc, typename TaskFunc, typename SinkFunc, typename Polic
 }
 	
 template <typename GenFunc, typename TaskFunc, typename Policy>
- void farm(parallel_execution_thrust_internal<Policy> p, GenFunc const &in, TaskFunc const & taskf ) {
+ void farm(parallel_execution_thrust_internal<Policy> p, GenFunc &&in, TaskFunc && taskf ) {
 
     typedef typename std::result_of<GenFunc()>::type::value_type::value_type inputtype;
     std::vector<std::thread> tasks;

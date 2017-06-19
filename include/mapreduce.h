@@ -63,7 +63,7 @@
  *	@param inputs		Extra inputs to be applied to the function 'map'
  */
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >
-void MapReduce (execution_model exec, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, ReduceOperator op, MoreIn ... inputs);
+void MapReduce (execution_model exec, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */
