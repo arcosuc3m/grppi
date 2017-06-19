@@ -27,7 +27,7 @@ using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(parallel_execution_omp const &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc &&taskf){
+ void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc &&taskf){
    
   int numElements = last - first;
 
@@ -70,7 +70,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void internal_map(parallel_execution_omp const &p, InputIt first, InputIt last, OutputIt firstOut,
+ void internal_map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut,
                          TaskFunc &&taskf, int i, int elemperthr, MoreIn ... inputs){
         //Calculate local input and output iterator 
         auto begin = first + (elemperthr * i);
@@ -88,7 +88,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(parallel_execution_omp const &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
+ void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
    //Calculate number of elements per thread
    int numElements = last - first;
    int elemperthr = numElements/p.num_threads;

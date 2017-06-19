@@ -27,7 +27,7 @@
 namespace grppi{
 using namespace std;
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
- void internal_divide_and_conquer(parallel_execution_tbb const &p, Input & problem, Output & output,
+ void internal_divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output & output,
             DivFunc && divide, TaskFunc && task, MergeFunc && merge, std::atomic<int>& num_threads) {
    
     if(num_threads.load()>0){
@@ -73,7 +73,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 }
 
 template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
- void divide_and_conquer(parallel_execution_tbb const &p, Input & problem, Output & output,
+ void divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output & output,
             DivFunc && divide, TaskFunc && task, MergeFunc && merge) {
 
     std::atomic<int> num_threads( p.num_threads );
