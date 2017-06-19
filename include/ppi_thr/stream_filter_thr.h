@@ -24,7 +24,7 @@
 using namespace std;
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_thr &p, GenFunc const & in, FilterFunc const & filter, OutFunc const & out ) {
+ void stream_filter(parallel_execution_thr &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
     std::vector<std::thread> tasks;
 

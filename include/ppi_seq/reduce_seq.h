@@ -51,7 +51,8 @@ template < typename InputIt, typename ReduceOperator>
 
 template < typename InputIt, typename OutputIt, typename RedFunc>
  typename  std::enable_if<is_iterator<OutputIt>::value, void>::type 
-reduce (sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc const & reduce) {
+reduce (sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc && reduce) {
+
     while( first != last ) {
        reduce(*first, *firstOut);
        first++;
@@ -62,7 +63,11 @@ reduce (sequential_execution const &s, InputIt first, InputIt last, OutputIt fir
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
  typename std::enable_if<!is_iterator<Output>::value, void>::type
+<<<<<<< HEAD
 Reduce(sequential_execution const &s, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
+=======
+Reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
+>>>>>>> latest
     while( first != last ) {
        reduce(*first, firstOut);
        first++;
@@ -74,7 +79,7 @@ Reduce(sequential_execution const &s, InputIt first, InputIt last, Output & firs
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

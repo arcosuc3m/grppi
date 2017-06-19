@@ -24,7 +24,7 @@
 using namespace std;
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
- void stencil(sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor ) {
+ void stencil(sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor ) {
     while( first != last ) {
        auto neighbors = neighbor(first);   
        *firstOut = taskf(first, neighbors);
@@ -37,7 +37,7 @@ template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc, typename NFunc>
- void stencil(sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor, MoreIn ... inputs ) {
+ void stencil(sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, NFunc && neighbor, MoreIn ... inputs ) {
     while( first != last ) {
         auto neighbors = neighbor(first);
         *firstOut = taskf(first, neighbors, *inputs ...);

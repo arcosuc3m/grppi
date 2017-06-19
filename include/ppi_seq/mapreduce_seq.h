@@ -25,7 +25,8 @@
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >
-void map_reduce (sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, ReduceOperator op, MoreIn ... inputs) {
+void map_reduce (sequential_execution const &s, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
+
     while( first != last ) {
        auto mapresult = map(*first, inputs ... );
        reduce(s, mapresult.begin(), mapresult.end(), *firstOut, op);
@@ -36,7 +37,7 @@ void map_reduce (sequential_execution const &s, InputIt first, InputIt last, Out
 
 //Parallel STL like function
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc const &  map, T init, ReduceOperator op){
+ T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc &&  map, T init, ReduceOperator op){
     T out = init;
 
     while(first != last){
@@ -49,7 +50,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
 }
 
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc const &  map, ReduceOperator op){
+ T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc &&  map, ReduceOperator op){
     T out;  
     bool firstElement = true;
     while(first != last){
@@ -67,7 +68,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
 /*
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
+ void Reduce( InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = taskf( *first, *inputs ... );
         NextInputs( inputs... );

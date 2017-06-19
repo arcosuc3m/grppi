@@ -24,7 +24,7 @@ using namespace std;
 namespace grppi{
 
 template <typename InputIt, typename OutputIt, typename TaskFunc>
- void map(parallel_execution_thr &p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc const & taskf){
+ void map(parallel_execution_thr& p, InputIt first,InputIt last, OutputIt firstOut, TaskFunc && taskf){
    
    std::vector<std::thread> tasks;
    int numElements = last - first; 
@@ -71,7 +71,8 @@ template <typename InputIt, typename OutputIt, typename TaskFunc>
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
- void map(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs){
+ void map(parallel_execution_thr& p, InputIt first, InputIt last, OutputIt firstOut, TaskFunc && taskf, MoreIn ... inputs){
+
  std::vector<std::thread> tasks;
    //Calculate number of elements per thread
    int numElements = last - first;

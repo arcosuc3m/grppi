@@ -32,6 +32,13 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
 {
 }
 
+template <typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt2, typename ... OtherInputIts>
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+         OutputIt first_out, Operation && op, InputIt2 first2, 
+         OtherInputIts ... other_its) 
+{
+}
 
 template <typename E, typename ... O,
           typename InputIt, typename OutputIt, typename Operation,
@@ -40,6 +47,18 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
          OutputIt first_out, Operation && op) 
 {
   map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
+}
+
+template <typename E, typename ... O,
+          typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt2, typename ... OtherInputIts,
+          internal::requires_execution_not_supported<E> = 0>
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+         OutputIt first_out, Operation && op, InputIt2 first2, 
+         OtherInputIts ... other_its) 
+{
+  map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op),
+                       first2, other_its...);
 }
 
 
@@ -58,6 +77,25 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
   }
 }
 
+template <typename E, typename ... O,
+          typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt2, typename ... OtherInputIts,
+          internal::requires_execution_supported<E> = 0>
+void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+         OutputIt first_out, Operation && op, InputIt2 first2, 
+         OtherInputIts ... other_its) 
+{
+  if (typeid(E) == e.type()) {
+    map(*e.execution_ptr<E>(), 
+        first, last, first_out, std::forward<Operation>(op), first2,
+        other_its...);
+  }
+  else {
+    map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op), 
+                         first2, other_its...);
+  }
+}
+
 /// Runs a map pattern with an input sequence, an output sequence and a task
 /// function.
 /// InputIt: Iterator for the input sequence.
@@ -73,21 +111,20 @@ void map(polymorphic_execution & e, InputIt first, InputIt last,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, first, last, first_out, std::forward<Operation>(op));
-
 }
 
 
-template <typename InputIt, typename OutputIt, typename ... OtherInputIts,
+template <typename InputIt, typename OutputIt, typename InputIt2, typename ... OtherInputIts,
           typename Operation>
 void map(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op, OtherInputIts ... other_its) 
+         OutputIt first_out, Operation && op, InputIt2 first2, OtherInputIts ... other_its) 
 {
   map_multi_impl<
     sequential_execution,
     parallel_execution_thr,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, first, last, first_out, std::forward<Operation>(op), other_its...);
+  >(e, first, last, first_out, std::forward<Operation>(op), first2, other_its...);
 }
 
 
