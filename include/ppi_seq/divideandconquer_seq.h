@@ -33,7 +33,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
 	int division = 0;
         for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
             //THREAD
-                divide_and_conquer(s, *i, partials[division], divide, task, merge);
+                divide_and_conquer(s, *i, partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge) );
             //END THREAD
         }
         //JOIN

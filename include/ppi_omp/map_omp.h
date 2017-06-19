@@ -102,12 +102,12 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Tas
 
        #pragma omp task firstprivate(i)
        {
-           internal_map(p, first, last, firstOut, taskf, i, elemperthr, inputs ...);
+           internal_map(p, first, last, firstOut, std::forward<TaskFunc>(taskf) , i, elemperthr, inputs ...);
        }
       //End task
      }
      //Map main thread
-     internal_map(p, first,last, firstOut, taskf, 0, elemperthr, inputs ...);
+     internal_map(p, first,last, firstOut, std::forward<TaskFunc>(taskf), 0, elemperthr, inputs ...);
 
    //Join threads
    #pragma omp taskwait

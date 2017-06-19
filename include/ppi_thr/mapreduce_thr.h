@@ -57,7 +57,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
             // Register thread
             p.register_thread();
 
-            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, map, op);
+            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, std::forward<MapFunc>(map), op);
 
             // Deregister thread
             p.deregister_thread();
@@ -65,7 +65,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
          begin, end, out)
        );
     }
-    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, map, op);
+    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, std::forward<MapFunc>(map), op);
     for(auto task = tasks.begin();task != tasks.end();task++){    
        (*task).join();
     }

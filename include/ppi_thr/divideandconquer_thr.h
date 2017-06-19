@@ -49,7 +49,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
                     // Register the thread in the execution model
                     p.register_thread(); 
 
-                    internal_divide_and_conquer(p, *i, partials[division], divide, task, merge, num_threads);
+                    internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
 
                     // Deregister the thread in the execution model
                     p.deregister_thread();
@@ -63,11 +63,11 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
         }
 
         for(i; i != subproblems.end(); i++){
-              divide_and_conquer(sequential_execution {},*i,partials[division], divide, task, merge);
+              divide_and_conquer(sequential_execution {},*i,partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
         }
           //Main thread works on the first subproblem.
 
-        internal_divide_and_conquer(p, *subproblems.begin(), partials[0], divide, task, merge, num_threads);
+        internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
           //JOIN
         for(int i=0; i< tasks.size(); i++){
           tasks[i].join();
@@ -80,7 +80,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
         task(problem, output);
       }
     }else{
-        divide_and_conquer(sequential_execution {}, problem, output, divide, task, merge);
+        divide_and_conquer(sequential_execution {}, problem, output, std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
     }
 }
 
@@ -111,7 +111,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
                     // Register the thread in the execution model
                     p.register_thread();
 
-                    internal_divide_and_conquer(p, *i, partials[division], divide, task, merge, num_threads);
+                    internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
                    
                     // Deregister the thread in the execution model
                     p.deregister_thread();
@@ -123,13 +123,13 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
             //END TRHEAD
         }
         for(i; i != subproblems.end(); i++){
-              divide_and_conquer(sequential_execution {},*i,partials[division], divide, task, merge);
+              divide_and_conquer(sequential_execution {},*i,partials[division], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
         }
           //Main thread works on the first subproblem.
         if(num_threads.load()>0){
-            internal_divide_and_conquer(p, *subproblems.begin(), partials[0], divide, task, merge, num_threads);
+            internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge), num_threads);
         }else{
-            divide_and_conquer(sequential_execution {}, *subproblems.begin(), partials[0], divide, task, merge);
+            divide_and_conquer(sequential_execution {}, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
         }
 
           //JOIN
@@ -144,7 +144,7 @@ template <typename Input, typename Output, typename DivFunc, typename TaskFunc, 
         task(problem, output);
       }
     }else{
-        divide_and_conquer(sequential_execution {}, problem, output, divide, task, merge);
+        divide_and_conquer(sequential_execution {}, problem, output, std::forward<DivFunc>(divide), std::forward<TaskFunc>(task), std::forward<MergeFunc>(merge));
     }
 }
 
