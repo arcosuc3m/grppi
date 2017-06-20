@@ -22,15 +22,10 @@
 #define GRPPI_STREAMFILTER_H
 
 #include "common/common.h"
-
 #include "seq/stream_filter.h"
-
 #include "native/stream_filter.h"
-
 #include "omp/stream_filter.h"
-
 #include "tbb/stream_filter.h"
-
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

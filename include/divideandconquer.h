@@ -21,15 +21,10 @@
 #define GRPPI_DIVIDEANDCONQUER_H
 
 #include "common/common.h"
-
 #include "seq/divideandconquer.h"
-
 #include "native/divideandconquer.h"
-
 #include "omp/divideandconquer.h"
-
 #include "tbb/divideandconquer.h"
-
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

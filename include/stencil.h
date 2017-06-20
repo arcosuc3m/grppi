@@ -22,15 +22,10 @@
 #define GRPPI_STENCIL_H
 
 #include "common/common.h"
-
 #include "seq/stencil.h"
-
 #include "native/stencil.h"
-
 #include "omp/stencil.h"
-
 #include "tbb/stencil.h"
-
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

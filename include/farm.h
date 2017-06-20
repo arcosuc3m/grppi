@@ -22,13 +22,9 @@
 #define GRPPI_FARM_H
 
 #include "common/common.h"
-
 #include "seq/farm.h"
-
 #include "native/farm.h"
-
 #include "omp/farm.h"
-
 #include "tbb/farm.h"
 
 #if 0 /* START DOCUMENTATION */

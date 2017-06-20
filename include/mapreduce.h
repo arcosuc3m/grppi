@@ -22,9 +22,7 @@
 #define GRPPI_MAPREDUCE_H
 
 #include "common/common.h"
-
 #include "seq/mapreduce.h"
-
 #include "native/mapreduce.h"
 
 #if 0 /* START DOCUMENTATION */

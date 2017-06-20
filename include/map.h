@@ -22,15 +22,10 @@
 #define GRPPI_MAP_H
 
 #include "common/common.h"
-
 #include "seq/map.h"
-
 #include "native/map.h"
-
 #include "omp/map.h"
-
 #include "tbb/map.h"
-
 #include "poly/map.h"
 
 #if 0 /* START DOCUMENTATION */

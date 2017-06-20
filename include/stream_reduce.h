@@ -22,13 +22,9 @@
 #define GRPPI_STREAMREDUCE_H
 
 #include "common/common.h"
-
-#include "seq/stream_reduce.hpp"
-
+#include "seq/stream_reduce.h"
 #include "native/stream_reduce.h"
-
 #include "omp/stream_reduce.h"
-
 #include "tbb/stream_reduce.h"
 
 #if 0 /* START DOCUMENTATION */
