@@ -23,13 +23,13 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/stream_filter_seq.h"
+#include "seq/stream_filter.h"
 
-#include "ppi_thr/stream_filter_thr.h"
+#include "thr/stream_filter.h"
 
-#include "ppi_omp/stream_filter_omp.h"
+#include "omp/stream_filter.h"
 
-#include "ppi_tbb/stream_filter_tbb.h"
+#include "tbb/stream_filter.h"
 
 
 #if 0 /* START DOCUMENTATION */

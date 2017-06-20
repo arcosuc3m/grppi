@@ -37,13 +37,13 @@ namespace grppi{
   };
 }
 
-#include "ppi_seq/reduce_seq.h"
+#include "seq/reduce.h"
 
-#include "ppi_thr/reduce_thr.h"
+#include "thr/reduce.h"
 
-#include "ppi_omp/reduce_omp.h"
+#include "omp/reduce.h"
 
-#include "ppi_tbb/reduce_tbb.h"
+#include "tbb/reduce.h"
 
 
 #if 0 /* START DOCUMENTATION */

@@ -23,13 +23,13 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/stencil_seq.h"
+#include "seq/stencil.h"
 
-#include "ppi_thr/stencil_thr.h"
+#include "thr/stencil.h"
 
-#include "ppi_omp/stencil_omp.h"
+#include "omp/stencil.h"
 
-#include "ppi_tbb/stencil_tbb.h"
+#include "tbb/stencil.h"
 
 
 #if 0 /* START DOCUMENTATION */

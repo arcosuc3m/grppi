@@ -23,9 +23,9 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/mapreduce_seq.h"
+#include "seq/mapreduce.h"
 
-#include "ppi_thr/mapreduce_thr.h"
+#include "thr/mapreduce.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

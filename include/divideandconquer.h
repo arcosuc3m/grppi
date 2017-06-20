@@ -22,13 +22,13 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/divideandconquer_seq.h"
+#include "seq/divideandconquer.h"
 
-#include "ppi_thr/divideandconquer_thr.h"
+#include "thr/divideandconquer.h"
 
-#include "ppi_omp/divideandconquer_omp.h"
+#include "omp/divideandconquer.h"
 
-#include "ppi_tbb/divideandconquer_tbb.h"
+#include "tbb/divideandconquer.h"
 
 
 #if 0 /* START DOCUMENTATION */

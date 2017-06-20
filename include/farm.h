@@ -23,13 +23,13 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/farm_seq.h"
+#include "seq/farm.h"
 
-#include "ppi_thr/farm_thr.h"
+#include "thr/farm.h"
 
-#include "ppi_omp/farm_omp.h"
+#include "omp/farm.h"
 
-#include "ppi_tbb/farm_tbb.h"
+#include "tbb/farm.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

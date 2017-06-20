@@ -23,13 +23,13 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/pipeline_seq.h"
+#include "seq/pipeline.h"
 
-#include "ppi_thr/pipeline_thr.h"
+#include "thr/pipeline.h"
 
-#include "ppi_omp/pipeline_omp.h"
+#include "omp/pipeline.h"
 
-#include "ppi_tbb/pipeline_tbb.h"
+#include "tbb/pipeline.h"
 
 
 #if 0 /* START DOCUMENTATION */

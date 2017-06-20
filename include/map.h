@@ -23,16 +23,13 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/map_seq.h"
+#include "seq/map.h"
 
-#include "ppi_thr/map_thr.h"
+#include "thr/map.h"
 
-#include "ppi_omp/map_omp.h"
+#include "omp/map.h"
 
-#include "ppi_tbb/map_tbb.h"
-
-#include "poly/map.h"
-
+#include "tbb/map.h"
 
 #include "poly/map.h"
 
