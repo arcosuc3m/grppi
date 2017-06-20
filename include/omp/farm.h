@@ -29,7 +29,7 @@ namespace grppi
 template <typename GenFunc, typename Operation>
 void farm(parallel_execution_omp &p, GenFunc &&in, Operation &&op) {
 	
-    Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
     #pragma omp parallel
     {
 	#pragma omp single nowait

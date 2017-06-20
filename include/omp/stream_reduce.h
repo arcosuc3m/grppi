@@ -30,8 +30,8 @@ namespace grppi{
 template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
  void stream_reduce(parallel_execution_omp &p, GenFunc &&in, Operation && op, ReduceFunc &&red, OutputType &reduce_value ){
 	
-    Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
-    Queue<optional<OutputType>> end_queue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue<optional<OutputType>> end_queue(DEFAULT_SIZE, p.lockfree);
     std::atomic<int> nend(0);
     std::vector<std::thread> tasks;
     #pragma omp parallel
