@@ -64,8 +64,8 @@ void farm(parallel_execution_omp &p, GenFunc &&in, Operation &&op) {
 }
 
 template <typename Operation>
-FarmObj<parallel_execution_omp,Operation> farm(parallel_execution_omp &p, Operation && op){
-   return FarmObj<parallel_execution_omp, Operation>(p,op);
+farm_info<parallel_execution_omp,Operation> farm(parallel_execution_omp &p, Operation && op){
+   return farm_info<parallel_execution_omp, Operation>(p,op);
 }
 }
 #endif

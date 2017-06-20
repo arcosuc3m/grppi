@@ -24,14 +24,14 @@
 namespace grppi {
 
 template <typename InType, int currentStage, typename ...Stages>
- typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
+ typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, pipeline_info<sequential_execution, Stages...> const & pipe)
 {
      return (*std::get<currentStage>(pipe.stages))(in);
 }
 
 
 template <typename InType, int currentStage, typename ...Stages>
- typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, PipelineObj<sequential_execution, Stages...> const & pipe)
+ typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), InType>::type composed_pipeline(InType in, pipeline_info<sequential_execution, Stages...> const & pipe)
 {
      auto val = (*std::get<currentStage>(pipe.stages))(in);
      return composed_pipeline<InType, currentStage+1, Stages...>(val,pipe);
@@ -47,7 +47,7 @@ void stages(sequential_execution &s, Stream st, Stage && se ) {
 
 //Filter stage
 template <typename task, typename Stream, typename... Stages>
-void stages(sequential_execution &s, Stream st, FilterObj<sequential_execution, task> && se, Stages && ... sgs ) {
+void stages(sequential_execution &s, Stream st, filter_info<sequential_execution, task> && se, Stages && ... sgs ) {
 
 //   auto out = se.run(st);
      if((*se.task)(st))

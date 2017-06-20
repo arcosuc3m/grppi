@@ -36,7 +36,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
 }
 
 template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(sequential_execution, GenFunc && in, FarmObj<sequential_execution, Operation> && f, Predicate && condition, OutFunc && out){
+ void stream_iteration(sequential_execution, GenFunc && in, farm_info<sequential_execution, Operation> && f, Predicate && condition, OutFunc && out){
    while(1){
        auto k = in();       
        if(!k) break;
@@ -49,7 +49,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
 }
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(sequential_execution &s, GenFunc && in, PipelineObj<sequential_execution, Stages...> && f, Predicate && condition, OutFunc && out){
+ void stream_iteration(sequential_execution &s, GenFunc && in, pipeline_info<sequential_execution, Stages...> && f, Predicate && condition, OutFunc && out){
    while(1){
        auto k = in();
        if(!k) break; 
