@@ -22,10 +22,10 @@
 #define GRPPI_COMMON_H
 
 // Includes for execution policies
-#include "seq_policy.h"
-#include "thread_policy.h"
-#include "omp_policy.h"
-#include "tbb_policy.h"
+#include "sequential_execution.h"
+#include "parallel_execution_native.h"
+#include "parallel_execution_omp.h"
+#include "parallel_execution_tbb.h"
 
 // Includes with GRPPI internals
 #include "optional.h"

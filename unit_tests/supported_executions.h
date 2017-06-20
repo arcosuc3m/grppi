@@ -3,10 +3,10 @@
 
 #include <gtest/gtest.h>
 
-#include "common/seq_policy.h"
-#include "common/thread_policy.h"
-#include "common/omp_policy.h"
-#include "common/tbb_policy.h"
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
 
 using executions = ::testing::Types<
   grppi::sequential_execution,
