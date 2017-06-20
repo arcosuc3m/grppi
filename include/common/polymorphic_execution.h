@@ -24,10 +24,10 @@
 #include <typeinfo>
 #include <memory>
 
-#include "common/seq_policy.h"
-#include "common/thread_policy.h"
-#include "common/tbb_policy.h"
-#include "common/omp_policy.h"
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_tbb.h"
+#include "common/parallel_execution_omp.h"
 
 namespace grppi{
 
