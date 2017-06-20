@@ -39,11 +39,7 @@ class Queue{
       std::atomic<unsigned long long> internal_pread;
 
       bool lockfree = false;
-    /*int pread;
-      int pwrite;
-      condition_variable;
-      ...
-      */
+
       std::mutex mutex;
       std::condition_variable emptycv;
       std::condition_variable fullcv;
@@ -65,7 +61,6 @@ class Queue{
          internal_pwrite = 0;
          lockfree = active;
       }
-      
 
       Queue<T>(int _size){
          size = _size;
@@ -99,8 +94,7 @@ bool Queue<T>::full(unsigned long long current){
 template <typename T>
 T Queue<T>::pop(){
   if(lockfree){
-     //Extrae_event(6000000,1);
-
+    
      unsigned long long current;
 
      do{
@@ -114,10 +108,10 @@ T Queue<T>::pop(){
      do{
         current = aux;
      }while(!pread.compare_exchange_weak(current, current+1));
-     //Extrae_event(6000000,0);
+     
      return std::move(item);
   }else{
-     //Extrae_event(6000000,1);
+     
      std::unique_lock<std::mutex> lk(mutex);
      while(empty(pread)){
         emptycv.wait(lk);
@@ -126,7 +120,7 @@ T Queue<T>::pop(){
      pread++;    
      lk.unlock();
      fullcv.notify_one();
-     //Extrae_event(6000000,0);
+     
      return std::move(item);
   }
 
@@ -135,7 +129,7 @@ T Queue<T>::pop(){
 template <typename T>
 bool Queue<T>::push(T item){
   if(lockfree){
-     //Extrae_event(6000000,2);
+
      unsigned long long current;
      do{
          current = internal_pwrite.load();
@@ -149,20 +143,20 @@ bool Queue<T>::push(T item){
      do{
         current = aux;
      }while(!pwrite.compare_exchange_weak(current, current+1));
-     //Extrae_event(6000000,0);
+
      return true;
   }else{
-    //Extrae_event(6000000,2);
+
     std::unique_lock<std::mutex> lk(mutex);
     while(full(pwrite)){
         fullcv.wait(lk);
     }
     buffer[pwrite%size] = std::move(item);
-    //buffer[pwrite%size] = item;
+
     pwrite++;
     lk.unlock();
     emptycv.notify_one();
-    //Extrae_event(6000000,0);
+
     return true;
   }
 
