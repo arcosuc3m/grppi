@@ -27,7 +27,7 @@
 
 namespace grppi{
 template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
- void stream_reduce(parallel_execution_thr &p, GenFunc &&in, Operation &&op, ReduceFunc &&red, OutputType &reduce_value ){
+ void stream_reduce(parallel_execution_native &p, GenFunc &&in, Operation &&op, ReduceFunc &&red, OutputType &reduce_value ){
 
     Queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE,p.lockfree);
     Queue<optional<OutputType>> end_queue(DEFAULT_SIZE,p.lockfree);
@@ -86,7 +86,7 @@ template <typename GenFunc, typename Operation, typename ReduceFunc, typename Ou
 
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
- void stream_reduce(parallel_execution_thr &p, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
+ void stream_reduce(parallel_execution_native &p, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
 {
      
      std::vector<typename std::result_of<GenFunc()>::type::value_type> buffer;
@@ -119,8 +119,8 @@ template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
 
 
 template <typename Operation, typename RedFunc>
-reduction_info<parallel_execution_thr,Operation, RedFunc> stream_reduce(parallel_execution_thr p, Operation && op, RedFunc && red){
-   return reduction_info<parallel_execution_thr, Operation, RedFunc>(p,op, red);
+reduction_info<parallel_execution_native,Operation, RedFunc> stream_reduce(parallel_execution_native p, Operation && op, RedFunc && red){
+   return reduction_info<parallel_execution_native, Operation, RedFunc>(p,op, red);
 }
 }
 #endif

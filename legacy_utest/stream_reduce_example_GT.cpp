@@ -84,7 +84,7 @@ TEST(GrPPI, stream_reduce_example_seq ){
 }
 
 TEST(GrPPI, stream_reduce_example_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(5060408, stream_reduce_example(p) );
 }
 

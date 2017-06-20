@@ -40,7 +40,7 @@ void mapreduce_example1() {
 #elif TBB
     #error Not yet implemented!
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif

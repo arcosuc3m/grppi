@@ -28,7 +28,7 @@
 namespace grppi{ 
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(parallel_execution_thr &p, GenFunc && in, pipeline_info<parallel_execution_thr , Stages...> && se, Predicate && condition, OutFunc && out){
+ void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
    Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
    std::atomic<int> nend (0);
@@ -78,7 +78,7 @@ template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Sta
 }
 
 template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(parallel_execution_thr &p, GenFunc && in, farm_info<parallel_execution_thr,Operation> && se, Predicate && condition, OutFunc && out){
+ void stream_iteration(parallel_execution_native &p, GenFunc && in, farm_info<parallel_execution_native,Operation> && se, Predicate && condition, OutFunc && out){
    std::vector<std::thread> tasks;
    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
    Queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);

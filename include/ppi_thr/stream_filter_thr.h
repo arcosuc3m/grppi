@@ -23,7 +23,7 @@
 
 namespace grppi{
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_thr &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
+ void stream_filter(parallel_execution_native &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
     std::vector<std::thread> tasks;
 
@@ -141,8 +141,8 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 }
 
 template <typename FilterFunc>
-filter_info<parallel_execution_thr, FilterFunc> stream_filter(parallel_execution_thr &p, FilterFunc && op){
-   return filter_info<parallel_execution_thr, FilterFunc>(p, op);
+filter_info<parallel_execution_native, FilterFunc> stream_filter(parallel_execution_native &p, FilterFunc && op){
+   return filter_info<parallel_execution_native, FilterFunc>(p, op);
 
 }
 }

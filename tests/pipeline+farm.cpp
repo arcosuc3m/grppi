@@ -41,7 +41,7 @@ void pipeline_farm_example() {
 #elif TBB
     parallel_execution_tbb p{3}, f{NTHREADS-3};
 #elif THR
-    parallel_execution_thr p{3}, f{NTHREADS-3};
+    parallel_execution_native p{3}, f{NTHREADS-3};
 #else
     sequential_execution p{}, f{};
 #endif

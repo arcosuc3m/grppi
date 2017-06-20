@@ -88,7 +88,7 @@ TEST(GrPPI, pipeline_example_seq ){
 }
 
 TEST(GrPPI, pipeline_example_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(99402, pipeline_example(p) );
 }
 
