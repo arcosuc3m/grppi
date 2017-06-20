@@ -29,7 +29,7 @@ namespace grppi{
 constexpr int DEFAULT_SIZE = 100;
 
 template <typename T>
-class Queue{
+class mpmc_queue{
    private:
       int size;
       std::vector<T> buffer;
@@ -52,7 +52,7 @@ class Queue{
       bool push(T item);
       bool empty();
       
-      Queue<T>(int _size, bool active){
+      mpmc_queue<T>(int _size, bool active){
          size = _size;
          buffer = std::vector<T>(size);
          pread = 0;
@@ -62,7 +62,7 @@ class Queue{
          lockfree = active;
       }
 
-      Queue<T>(int _size){
+      mpmc_queue<T>(int _size){
          size = _size;
          buffer = std::vector<T>(size);
          pread = 0;
@@ -74,25 +74,25 @@ class Queue{
 
 
 template <typename T>
-bool Queue<T>::empty(){
+bool mpmc_queue<T>::empty(){
     return pread.load()==pwrite.load();
 }
 
 
 template <typename T>
-bool Queue<T>::empty(unsigned long long current){
+bool mpmc_queue<T>::empty(unsigned long long current){
   if(current >= pwrite.load()) return true;  
   return false;
 }
 
 template <typename T>
-bool Queue<T>::full(unsigned long long current){
+bool mpmc_queue<T>::full(unsigned long long current){
   if(current >= (pread.load()+size)) return true;
   return false;
 
 }
 template <typename T>
-T Queue<T>::pop(){
+T mpmc_queue<T>::pop(){
   if(lockfree){
     
      unsigned long long current;
@@ -127,7 +127,7 @@ T Queue<T>::pop(){
 }
 
 template <typename T>
-bool Queue<T>::push(T item){
+bool mpmc_queue<T>::push(T item){
   if(lockfree){
 
      unsigned long long current;
