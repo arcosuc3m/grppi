@@ -45,6 +45,7 @@ The only interface currently offered for this pattern is based in iterators:
 vector<double> v1 = get_first_vector();
 vector<double> v2 = get_second_vector();
 vector<double> v3 = get_third_vector();
+vector<double> w(v.size());
 map(exec, begin(v1), end(v1), begin(w),
   [](double x, double y, double z) { return x+y+z; },
   begin(v2), begin(v3)
