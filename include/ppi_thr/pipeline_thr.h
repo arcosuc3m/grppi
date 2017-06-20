@@ -26,14 +26,14 @@
 namespace grppi{
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
- typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
+ typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, pipeline_info<parallel_execution_thr, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
 {
       composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), qout, tasks);
 }
 
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
- typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, PipelineObj<parallel_execution_thr, Stages...> const & pipe, OutStream & qout,std::vector<std::thread> & tasks)
+ typename std::enable_if<(currentStage < (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, pipeline_info<parallel_execution_thr, Stages...> const & pipe, OutStream & qout,std::vector<std::thread> & tasks)
 {
       typedef typename std::tuple_element<currentStage, decltype(pipe.stages)>::type lambdaPointerType;
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
@@ -127,7 +127,7 @@ template <typename Stream, typename Stage>
 //Stream reduce stage
 template <typename Operation, typename Red, typename Stream>
 void stages(parallel_execution_thr & p, Stream & st,
-ReduceObj<parallel_execution_thr, Operation, Red> & se) {
+reduction_info<parallel_execution_thr, Operation, Red> & se) {
     std::vector<std::thread> tasks;
     Queue<typename std::result_of<Operation(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.lockfree);
 
@@ -152,7 +152,7 @@ ReduceObj<parallel_execution_thr, Operation, Red> & se) {
 //Filtering stage
 template <typename Operation, typename Stream, typename... Stages>
 void stages(parallel_execution_thr &p, Stream& st,
-            FilterObj<parallel_execution_thr,Operation> se, Stages && ... sgs ) {
+            filter_info<parallel_execution_thr,Operation> se, Stages && ... sgs ) {
     
     std::vector<std::thread> tasks;
     if(p.ordering){
@@ -279,7 +279,7 @@ void stages(parallel_execution_thr &p, Stream& st,
 //Farm stage
 template <typename Operation, typename Stream, typename... Stages>
 void stages(parallel_execution_thr &p, Stream& st, 
-            FarmObj<parallel_execution_thr,Operation> se, Stages && ... sgs ) {
+            farm_info<parallel_execution_thr,Operation> se, Stages && ... sgs ) {
     std::vector<std::thread> tasks;
     //Queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
     Queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
@@ -383,14 +383,14 @@ void pipeline( parallel_execution_thr& p, FuncIn && in, Stages && ... sts ) {
 
 
 //template <typename Stage, typename = typename std::enable_if<!std::is_convertible<Stage,execution_model>::value>::type, typename ...Stages>
-//PipelineObj<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
+//pipeline_info<Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
 template <typename Execution_model, typename Stage,  
           /*typename std::enable_if<_has_arguments<Stage>::value>::type,*/  
           typename ...Stages,
           requires_arguments<Stage> = 0>
-PipelineObj< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
+pipeline_info< Execution_model,Stage,Stages...> pipeline(Execution_model &p, Stage const & s, Stages && ...sts)
 {
-    return PipelineObj<Execution_model,Stage, Stages ...> (p, s, sts...);
+    return pipeline_info<Execution_model,Stage, Stages ...> (p, s, sts...);
 }
 }
 #endif

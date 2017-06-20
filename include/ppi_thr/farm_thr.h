@@ -155,9 +155,9 @@ template <typename GenFunc, typename Operation>
 
 
 template <typename Operation>
-FarmObj<parallel_execution_thr,Operation> farm(parallel_execution_thr &p, Operation && op){
+farm_info<parallel_execution_thr,Operation> farm(parallel_execution_thr &p, Operation && op){
    
-   return FarmObj<parallel_execution_thr, Operation>(p, op);
+   return farm_info<parallel_execution_thr, Operation>(p, op);
 }
 
 }

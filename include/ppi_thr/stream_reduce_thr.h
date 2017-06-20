@@ -119,8 +119,8 @@ template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
 
 
 template <typename Operation, typename RedFunc>
-ReduceObj<parallel_execution_thr,Operation, RedFunc> stream_reduce(parallel_execution_thr p, Operation && op, RedFunc && red){
-   return ReduceObj<parallel_execution_thr, Operation, RedFunc>(p,op, red);
+reduction_info<parallel_execution_thr,Operation, RedFunc> stream_reduce(parallel_execution_thr p, Operation && op, RedFunc && red){
+   return reduction_info<parallel_execution_thr, Operation, RedFunc>(p,op, red);
 }
 }
 #endif

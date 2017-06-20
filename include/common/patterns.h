@@ -25,43 +25,43 @@
 namespace grppi{
 
 template <typename E,typename Stage, typename ... Stages>
-class PipelineObj{
+class pipeline_info{
    public:
       E * exectype;
       std::tuple<Stage *, Stages *...> stages;
-      PipelineObj(E &p, Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) { exectype = &p;}
+      pipeline_info(E &p, Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) { exectype = &p;}
 };
 
 template <typename E,class Operation, class RedFunc>
-class ReduceObj
+class reduction_info
 {
    public:
       Operation * task;
       RedFunc * red;
       E exectype;
-      ReduceObj(E s, Operation farm, RedFunc r){exectype=s; task = &farm; red= &r;}
+      reduction_info(E s, Operation farm, RedFunc r){exectype=s; task = &farm; red= &r;}
 };
 
 template <typename E,class Operation>
-class FarmObj
+class farm_info
 {
    public:
       Operation * task;
       E * exectype;
       int farmtype;
-      FarmObj(E &s,Operation f){exectype=&s; task = &f;};
+      farm_info(E &s,Operation f){exectype=&s; task = &f;};
 
 
 };
 
 template <typename E,class Operation>
-class FilterObj
+class filter_info
 {
    public:
       Operation * task;
       E *exectype;
       int filtertype;
-      FilterObj(E& s,Operation f){exectype=&s; task = &f;};
+      filter_info(E& s,Operation f){exectype=&s; task = &f;};
 };
 
 } // end namespace grppi
