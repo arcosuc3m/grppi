@@ -22,14 +22,10 @@
 #define GRPPI_FARM_H
 
 #include "common/common.h"
-
-#include "ppi_seq/farm_seq.h"
-
-#include "ppi_thr/farm_thr.h"
-
-#include "ppi_omp/farm_omp.h"
-
-#include "ppi_tbb/farm_tbb.h"
+#include "seq/farm.h"
+#include "native/farm.h"
+#include "omp/farm.h"
+#include "tbb/farm.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

@@ -27,7 +27,7 @@
 #include <vector>
 #include <type_traits>
 
-#include "ppi_thr/pool.h"
+#include "native/pool.h"
 
 namespace grppi {
 

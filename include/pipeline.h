@@ -22,15 +22,10 @@
 #define GRPPI_PIPELINE_H
 
 #include "common/common.h"
-
-#include "ppi_seq/pipeline_seq.h"
-
-#include "ppi_thr/pipeline_thr.h"
-
-#include "ppi_omp/pipeline_omp.h"
-
-#include "ppi_tbb/pipeline_tbb.h"
-
+#include "seq/pipeline.h"
+#include "native/pipeline.h"
+#include "omp/pipeline.h"
+#include "tbb/pipeline.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

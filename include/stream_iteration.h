@@ -23,15 +23,15 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/stream_iteration_seq.h"
-#include "ppi_thr/stream_iteration_thr.h"
+#include "seq/stream_iteration.h"
+#include "native/stream_iteration.h"
 
 #ifdef OMP_ENABLE
-//	#include "ppi_omp/farm_omp.hpp"
+//	#include "omp/farm_omp.hpp"
 #endif
 
 #ifdef TBB_ENABLE
-//	#include "ppi_tbb/farm_tbb.hpp"
+//	#include "tbb/farm_tbb.hpp"
 #endif
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
