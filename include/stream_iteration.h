@@ -24,7 +24,7 @@
 #include "common/common.h"
 
 #include "seq/stream_iteration.h"
-#include "thr/stream_iteration.h"
+#include "native/stream_iteration.h"
 
 #ifdef OMP_ENABLE
 //	#include "omp/farm_omp.hpp"

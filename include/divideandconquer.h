@@ -24,7 +24,7 @@
 
 #include "seq/divideandconquer.h"
 
-#include "thr/divideandconquer.h"
+#include "native/divideandconquer.h"
 
 #include "omp/divideandconquer.h"
 

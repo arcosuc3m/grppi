@@ -25,7 +25,7 @@
 
 #include "seq/stencil.h"
 
-#include "thr/stencil.h"
+#include "native/stencil.h"
 
 #include "omp/stencil.h"
 

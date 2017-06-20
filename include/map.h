@@ -25,7 +25,7 @@
 
 #include "seq/map.h"
 
-#include "thr/map.h"
+#include "native/map.h"
 
 #include "omp/map.h"
 

@@ -25,7 +25,7 @@
 
 #include "seq/stream_reduce.hpp"
 
-#include "thr/stream_reduce.h"
+#include "native/stream_reduce.h"
 
 #include "omp/stream_reduce.h"
 

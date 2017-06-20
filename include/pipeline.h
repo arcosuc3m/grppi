@@ -25,7 +25,7 @@
 
 #include "seq/pipeline.h"
 
-#include "thr/pipeline.h"
+#include "native/pipeline.h"
 
 #include "omp/pipeline.h"
 

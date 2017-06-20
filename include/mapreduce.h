@@ -25,7 +25,7 @@
 
 #include "seq/mapreduce.h"
 
-#include "thr/mapreduce.h"
+#include "native/mapreduce.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

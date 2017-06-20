@@ -39,7 +39,7 @@ namespace grppi{
 
 #include "seq/reduce.h"
 
-#include "thr/reduce.h"
+#include "native/reduce.h"
 
 #include "omp/reduce.h"
 

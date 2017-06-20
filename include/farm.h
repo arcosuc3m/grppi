@@ -25,7 +25,7 @@
 
 #include "seq/farm.h"
 
-#include "thr/farm.h"
+#include "native/farm.h"
 
 #include "omp/farm.h"
 

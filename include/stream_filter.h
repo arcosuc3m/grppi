@@ -25,7 +25,7 @@
 
 #include "seq/stream_filter.h"
 
-#include "thr/stream_filter.h"
+#include "native/stream_filter.h"
 
 #include "omp/stream_filter.h"
 
