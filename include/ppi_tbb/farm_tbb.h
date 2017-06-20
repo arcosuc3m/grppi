@@ -122,8 +122,8 @@ template <typename GenFunc, typename Operation>
 
 
 template <typename Operation>
-FarmObj<parallel_execution_tbb,Operation> farm(parallel_execution_tbb &p, Operation && op){
-   return FarmObj<parallel_execution_tbb, Operation>(p,op);
+farm_info<parallel_execution_tbb,Operation> farm(parallel_execution_tbb &p, Operation && op){
+   return farm_info<parallel_execution_tbb, Operation>(p,op);
 }
 }
 #endif
