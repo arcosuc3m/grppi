@@ -26,7 +26,7 @@ grppi::polymorphic_execution execution_mode(const std::string & opt) {
   if ("seq" == opt) 
     return make_polymorphic_execution<sequential_execution>();
   if ("thr" == opt) 
-    return make_polymorphic_execution<parallel_execution_thr>();
+    return make_polymorphic_execution<parallel_execution_native>();
   if ("omp" == opt) 
     return make_polymorphic_execution<parallel_execution_omp>();
   if ("tbb" == opt) 
@@ -52,7 +52,7 @@ void print_available_modes(std::ostream & os) {
     os << "    seq -> Sequential execution" << endl;
   }
 
-  if (is_supported<parallel_execution_thr>()) {
+  if (is_supported<parallel_execution_native>()) {
     os << "    thr -> ISO Threads backend" << endl;
   }
 

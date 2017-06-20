@@ -35,7 +35,7 @@ namespace grppi{
 template <typename E>
 constexpr bool is_execution_policy() {
   return is_sequential_execution<E>() 
-      || is_parallel_execution_thr<E>()
+      || is_parallel_execution_native<E>()
       || is_parallel_execution_tbb<E>()
       || is_parallel_execution_omp<E>()
   ;

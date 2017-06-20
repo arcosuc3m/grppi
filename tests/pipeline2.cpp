@@ -40,7 +40,7 @@ void pipeline_example2() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif

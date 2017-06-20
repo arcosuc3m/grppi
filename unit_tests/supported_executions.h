@@ -11,7 +11,7 @@
 using executions = ::testing::Types<
   grppi::sequential_execution,
 
-  grppi::parallel_execution_thr
+  grppi::parallel_execution_native
 
 #ifdef GRPPI_OMP
   ,

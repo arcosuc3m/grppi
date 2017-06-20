@@ -26,7 +26,7 @@
 
 namespace grppi{
 template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- void internal_divide_and_conquer(parallel_execution_thr &p, Input &problem, Output &output,
+ void internal_divide_and_conquer(parallel_execution_native &p, Input &problem, Output &output,
                                         DivFunc &&divide, Operation &&op, MergeFunc &&merge,
                                         std::atomic<int> &num_threads) {
   // Sequential execution fo internal implementation
@@ -90,7 +90,7 @@ template <typename Input, typename Output, typename DivFunc, typename Operation,
 
 
 template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- void divide_and_conquer(parallel_execution_thr& p, Input & problem, Output & output,
+ void divide_and_conquer(parallel_execution_native& p, Input & problem, Output & output,
             DivFunc && divide, Operation && op, MergeFunc && merge) {
   
     // Sequential execution fo internal implementation

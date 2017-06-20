@@ -66,7 +66,7 @@ TEST(GrPPI, reduce_example3_seq ){
 }
 
 TEST(GrPPI, reduce_example3_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(999999999, reduce_example3(p) );
 }
 

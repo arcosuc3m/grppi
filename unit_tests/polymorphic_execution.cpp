@@ -29,7 +29,7 @@ TEST(poly_exec, empty)
   polymorphic_execution e;
   EXPECT_FALSE(e.has_execution());
   EXPECT_EQ(nullptr, e.execution_ptr<sequential_execution>());
-  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_thr>());
+  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_native>());
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_omp>());
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_tbb>());
 }
@@ -43,8 +43,8 @@ TEST(poly_exec, sequential)
   EXPECT_NE(nullptr, e.execution_ptr<sequential_execution>());
   EXPECT_EQ(typeid(sequential_execution), e.type());
 
-  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_thr>());
-  EXPECT_NE(typeid(parallel_execution_thr), e.type());
+  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_native>());
+  EXPECT_NE(typeid(parallel_execution_native), e.type());
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_omp>());
   EXPECT_NE(typeid(parallel_execution_omp), e.type());
@@ -56,14 +56,14 @@ TEST(poly_exec, sequential)
 
 TEST(poly_exec, parallel_thr)
 {
-  auto e = make_polymorphic_execution<parallel_execution_thr>();
+  auto e = make_polymorphic_execution<parallel_execution_native>();
   EXPECT_TRUE(e.has_execution());
 
   EXPECT_EQ(nullptr, e.execution_ptr<sequential_execution>());
   EXPECT_NE(typeid(sequential_execution), e.type());
 
-  EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_thr>());
-  EXPECT_EQ(typeid(parallel_execution_thr), e.type());
+  EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_native>());
+  EXPECT_EQ(typeid(parallel_execution_native), e.type());
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_omp>());
   EXPECT_NE(typeid(parallel_execution_omp), e.type());
@@ -86,8 +86,8 @@ TEST(poly_exec, parallel_omp)
   EXPECT_EQ(nullptr, e.execution_ptr<sequential_execution>());
   EXPECT_FALSE(e.is_execution<sequential_execution>());
 
-  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_thr>());
-  EXPECT_FALSE(e.is_execution<parallel_execution_thr>());
+  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_native>());
+  EXPECT_FALSE(e.is_execution<parallel_execution_native>());
 
   if (is_supported<parallel_execution_omp>()) {
     EXPECT_NE(nullptr, e.execution_ptr<parallel_execution_omp>());
@@ -116,8 +116,8 @@ TEST(poly_exec, parallel_tbb)
   EXPECT_EQ(nullptr, e.execution_ptr<sequential_execution>());
   EXPECT_FALSE(e.is_execution<sequential_execution>());;
 
-  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_thr>());
-  EXPECT_FALSE(e.is_execution<parallel_execution_thr>());
+  EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_native>());
+  EXPECT_FALSE(e.is_execution<parallel_execution_native>());
 
   EXPECT_EQ(nullptr, e.execution_ptr<parallel_execution_omp>());
   EXPECT_FALSE(e.is_execution<parallel_execution_omp>());

@@ -29,7 +29,7 @@
 namespace grppi{
 
 template <typename GenFunc, typename Operation, typename SinkFunc>
- void farm(parallel_execution_thr &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
+ void farm(parallel_execution_native &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
@@ -109,7 +109,7 @@ template <typename GenFunc, typename Operation, typename SinkFunc>
 }
 
 template <typename GenFunc, typename Operation>
- void farm(parallel_execution_thr &p, GenFunc &&in, Operation && op ) {
+ void farm(parallel_execution_native &p, GenFunc &&in, Operation && op ) {
 
     std::vector<std::thread> tasks;
 //    Queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
@@ -155,9 +155,9 @@ template <typename GenFunc, typename Operation>
 
 
 template <typename Operation>
-farm_info<parallel_execution_thr,Operation> farm(parallel_execution_thr &p, Operation && op){
+farm_info<parallel_execution_native,Operation> farm(parallel_execution_native &p, Operation && op){
    
-   return farm_info<parallel_execution_thr, Operation>(p, op);
+   return farm_info<parallel_execution_native, Operation>(p, op);
 }
 
 }

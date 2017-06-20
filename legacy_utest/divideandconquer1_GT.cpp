@@ -85,7 +85,7 @@ TEST(GrPPI, divideandconquer1_seq ){
 }
 
 TEST(GrPPI, divideandconquer1_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(190, dividec_example1(p) );
 }
 
