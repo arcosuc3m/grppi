@@ -25,7 +25,7 @@
 
 namespace grppi{
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator,typename ... MoreIn >
- void map_reduce (parallel_execution_thr & p, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
+ void map_reduce (parallel_execution_native & p, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
 
     // Register the thread in the execution model
     p.register_thread();
@@ -41,7 +41,7 @@ template < typename InputIt, typename OutputIt, typename MapFunc, typename Reduc
 
 
 template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( parallel_execution_thr& p, InputIt first, InputIt last, MapFunc &&  map, T init, ReduceOperator op){
+ T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, MapFunc &&  map, T init, ReduceOperator op){
 
     using namespace std;
     T out = init;

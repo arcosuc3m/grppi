@@ -107,7 +107,7 @@ void map(polymorphic_execution & e, InputIt first, InputIt last,
 {
   map_multi_impl<
     sequential_execution,
-    parallel_execution_thr,
+    parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, first, last, first_out, std::forward<Operation>(op));
@@ -121,7 +121,7 @@ void map(polymorphic_execution & e, InputIt first, InputIt last,
 {
   map_multi_impl<
     sequential_execution,
-    parallel_execution_thr,
+    parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, first, last, first_out, std::forward<Operation>(op), first2, other_its...);

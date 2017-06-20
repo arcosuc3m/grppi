@@ -23,7 +23,7 @@
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
- void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
+ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
@@ -72,7 +72,7 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 }
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void stencil(parallel_execution_thr &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
      std::vector<std::thread> tasks;
      int numElements = last - first;

@@ -39,7 +39,7 @@ void pipeline_example1() {
 #elif TBB
     #error TBB not yet implemented!
 #elif THR
-    parallel_execution_thr p{3}, f{NTHREADS-3};
+    parallel_execution_native p{3}, f{NTHREADS-3};
 #else
     parallel_execution_ff p{3}, f{NTHREADS-3};
 #endif

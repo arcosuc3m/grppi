@@ -79,7 +79,7 @@ TEST(GrPPI, divideandconquer_fibonacci_GT_seq ){
 }
 
 TEST(GrPPI, divideandconquer_fibonacci_GT_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(63245986, fibonacci_example(p) );
 }
 

@@ -86,7 +86,7 @@ reduce (parallel_execution_tbb &s, InputIt first, InputIt last, OutputIt firstOu
 /*
 template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
  typename std::enable_if<!is_iterator<Output>::value, void>::type
-Reduce(parallel_execution_thr p, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
+Reduce(parallel_execution_native p, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
 
     std::vector<std::thread> tasks;
     int numElements = last - first;

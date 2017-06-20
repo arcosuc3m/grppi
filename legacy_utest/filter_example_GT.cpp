@@ -85,7 +85,7 @@ TEST(GrPPI, filter_example_seq ){
 }
 
 TEST(GrPPI, filter_example_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(1000, filter_example(p) );
 }
 

@@ -53,7 +53,7 @@ TEST(GrPPI, map_example3_seq ){
 }
 
 TEST(GrPPI, map_example3_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(1998, map_example3(p) );
 }
 

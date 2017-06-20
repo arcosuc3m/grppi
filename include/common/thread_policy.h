@@ -35,7 +35,7 @@ namespace grppi {
 //extern thread_pool pool;
 /** @brief Set the execution mode to parallel with posix thread implementation 
  */
-struct parallel_execution_thr {
+struct parallel_execution_native {
   public: 
   thread_pool pool;
   bool ordering = true;
@@ -64,20 +64,20 @@ struct parallel_execution_thr {
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */
-  parallel_execution_thr(){ /*if(!initialised)*/ pool.initialise(this->num_threads); };
+  parallel_execution_native(){ /*if(!initialised)*/ pool.initialise(this->num_threads); };
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
    *  @param _threads number of threads used in the parallel mode
    */
-  parallel_execution_thr(int _threads){ num_threads=_threads;  pool.initialise (_threads);};
+  parallel_execution_native(int _threads){ num_threads=_threads;  pool.initialise (_threads);};
 
   /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
    *
    *  @param _threads number of threads used in the parallel mode
    *  @param _order enable or disable the ordered execution
    */
-  parallel_execution_thr(int _threads, bool order){ num_threads=_threads; ordering = order; pool.initialise (_threads);};
+  parallel_execution_native(int _threads, bool order){ num_threads=_threads; ordering = order; pool.initialise (_threads);};
   private: 
      std::atomic_flag lock = ATOMIC_FLAG_INIT;
      std::vector<std::thread::id> thid_table;
@@ -86,15 +86,15 @@ struct parallel_execution_thr {
 
 /// Determine if a type is a threading execution policy.
 template <typename E>
-constexpr bool is_parallel_execution_thr() {
-  return std::is_same<E, parallel_execution_thr>::value;
+constexpr bool is_parallel_execution_native() {
+  return std::is_same<E, parallel_execution_native>::value;
 }
 
 template <typename E>
 constexpr bool is_supported();
 
 template <>
-constexpr bool is_supported<parallel_execution_thr>() {
+constexpr bool is_supported<parallel_execution_native>() {
   return true;
 }
 

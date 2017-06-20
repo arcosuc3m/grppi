@@ -75,7 +75,7 @@ TEST(GrPPI, farm2_seq ){
 }
 
 TEST(GrPPI, farm2_thr ){
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
     EXPECT_EQ(499500000, farm_example2(p) );
 }
 
