@@ -98,7 +98,7 @@ TYPED_TEST(divideandconquer_test, static_empty)
       std::vector<std::vector<int> > subproblem;
       return subproblem; 
     },
-    [&](auto & problem, int & out) { 
+    [this](auto & problem, int & out) { 
       // Base
       this->invocations_base++; 
     }, 
@@ -120,7 +120,7 @@ TYPED_TEST(divideandconquer_test, poly_empty)
       std::vector<std::vector<int> > subproblem;
       return subproblem; 
     },
-    [&](auto & problem, int & out) { 
+    [this](auto & problem, int & out) { 
       // Base
       this->invocations_base++; 
     }, 
@@ -145,7 +145,7 @@ TYPED_TEST(divideandconquer_test, static_single)
       subproblem.push_back(v);
       return subproblem; 
     },
-    [&](auto & problem, int & out) { 
+    [this](auto & problem, int & out) { 
       // Base
       this->invocations_base++; 
       out = problem[0];
@@ -169,7 +169,7 @@ TYPED_TEST(divideandconquer_test, poly_single)
       subproblem.push_back(v);
       return subproblem; 
     },
-    [&](auto & problem, int & out) { 
+    [this](auto & problem, int & out) { 
       // Base
       this->invocations_base++; 
       out = problem[0];
@@ -198,7 +198,7 @@ TYPED_TEST(divideandconquer_test, static_multiple)
       }
       return subproblem; 
     },
-    [&](auto & problem, auto & out) { 
+    [this](auto & problem, auto & out) { 
       // Base
       this->invocations_base++; 
       out = problem[0];
@@ -226,7 +226,7 @@ TYPED_TEST(divideandconquer_test, poly_multiple)
       }
       return subproblem; 
     },
-    [&](auto & problem, auto & out) { 
+    [this](auto & problem, auto & out) { 
       // Base
       this->invocations_base++; 
       out = problem[0];
