@@ -41,6 +41,11 @@ struct parallel_execution_native {
   bool ordering = true;
   int num_threads = 4;
   bool lockfree = false;
+  int queue_size = 100;
+
+  void set_queue_size(int _size){
+     queue_size = _size;
+  }
 
   int get_threadID(){
       while (lock.test_and_set(std::memory_order_acquire));

@@ -37,6 +37,13 @@ struct parallel_execution_omp{
   bool ordering = true;
   bool lockfree = false;
   int num_threads = 4;
+  int queue_size = 100;
+
+  void set_queue_size(int _size){
+     queue_size = _size;
+  }
+
+
   int get_threadID(){
      return omp_get_thread_num();
   }

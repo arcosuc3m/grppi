@@ -36,6 +36,12 @@ struct parallel_execution_tbb{
   bool lockfree = false;
   int num_threads = 4;
   int num_tokens = 100;
+  int queue_size = 100;
+
+  void set_queue_size(int _size){
+     queue_size = _size;
+  }
+
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */

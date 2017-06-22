@@ -26,12 +26,10 @@
 
 namespace grppi{
 
-constexpr int DEFAULT_SIZE = 100;
-
 template <typename T>
 class mpmc_queue{
    private:
-      int size;
+      int size = 100;
       std::vector<T> buffer;
       std::atomic<unsigned long long> pread;
       std::atomic<unsigned long long> pwrite;
