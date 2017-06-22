@@ -5,7 +5,7 @@ The **stencil** pattern applies an operation to a set of neighbor elements in on
 The interface to the **map** pattern is provided by function `grppi::stencil()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
 ~~~c++
-grppi(exec, other_arguments...);
+grppi::stencil(exec, other_arguments...);
 ~~~
 
 ## Stencil

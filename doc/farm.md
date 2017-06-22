@@ -5,7 +5,7 @@ The **farm** pattern (or *task-farm*) is a streaming pattern that applies an ope
 The interface to the **farm** pattern is provided by function `grppi::farm()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
 ~~~c++
-grppi(exec, other_arguments...);
+grppi::farm(exec, other_arguments...);
 ~~~
 
 ## Farm variants
