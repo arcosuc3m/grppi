@@ -28,7 +28,7 @@ namespace grppi{
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
  typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, pipeline_info<parallel_execution_native, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
 {
-      composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), qout, tasks);
+      composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), qout, tasks);
 }
 
 
@@ -39,9 +39,9 @@ template <typename InStream, typename OutStream, int currentStage, typename ...S
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static mpmc_queue<optional<queueType>> queueOut(DEFAULT_SIZE,(pipe.exectype)->lockfree); 
+      static mpmc_queue<optional<queueType>> queueOut(DEFAULT_SIZE,pipe.exectype.lockfree); 
 
-      composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
+      composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
       composed_pipeline<mpmc_queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
        
 }
@@ -159,11 +159,11 @@ void stages(parallel_execution_native &p, Stream& st,
        mpmc_queue< typename Stream::value_type > q(DEFAULT_SIZE,p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
               std::thread([&](){
                  //Register the thread in the execution model
-                 se.exectype->register_thread();
+                 se.exectype.register_thread();
                  typename Stream::value_type item;
                  item = st.pop( ) ;
                  while( item.first ) {
@@ -176,14 +176,14 @@ void stages(parallel_execution_native &p, Stream& st,
                      item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
                  }
                  //MODIFIED from se->exectype.deregister_thread();
                  //Deregister the thread in the execution model
-                 se.exectype->deregister_thread();
+                 se.exectype.deregister_thread();
 
           }));
        } 
@@ -243,11 +243,11 @@ void stages(parallel_execution_native &p, Stream& st,
        mpmc_queue< typename Stream::value_type > q(DEFAULT_SIZE, p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
               std::thread([&](){
                   //Register the thread in the execution model
-                  se.exectype->register_thread();
+                  se.exectype.register_thread();
                  typename Stream::value_type item;
                  item = st.pop( ) ;
                  while( item.first ) {
@@ -259,13 +259,13 @@ void stages(parallel_execution_native &p, Stream& st,
                       item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
                  }
                  //Deregister the thread in the execution model
-                 se.exectype->deregister_thread();
+                 se.exectype.deregister_thread();
                
           }));
        }
@@ -284,11 +284,11 @@ void stages(parallel_execution_native &p, Stream& st,
     //mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
     mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
     std::atomic<int> nend ( 0 );
-    for( int th = 0; th < se.exectype->num_threads; th++){
+    for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
               std::thread([&](){
                   //Register the thread in the execution model
-                  se.exectype->register_thread();
+                  se.exectype.register_thread();
 
                   long order = 0;
                   auto item = st.pop(); 
@@ -300,11 +300,11 @@ void stages(parallel_execution_native &p, Stream& st,
                  }
                  st.push(item);
                  nend++;
-                 if(nend == se.exectype->num_threads) 
+                 if(nend == se.exectype.num_threads) 
                       q.push(make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
                 
                  //Deregister the thread in the execution model
-                 se.exectype->deregister_thread();
+                 se.exectype.deregister_thread();
              })
           );
     }
