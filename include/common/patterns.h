@@ -29,7 +29,7 @@ class pipeline_info{
    public:
       E & exectype;
       std::tuple<Stage *, Stages *...> stages;
-      pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages(std::make_tuple(&s, &sts...)) {}
+      pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages{std::make_tuple(&s, &sts...)} {}
 };
 
 template <typename E,class Operation, class RedFunc>
