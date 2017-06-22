@@ -28,7 +28,7 @@ namespace grppi{
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
  typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, pipeline_info<parallel_execution_native, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
 {
-      composed_pipeline((pipe.exectype), qin, std::get<currentStage>(pipe.stages), qout, tasks);
+      composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), qout, tasks);
 }
 
 
@@ -39,9 +39,9 @@ template <typename InStream, typename OutStream, int currentStage, typename ...S
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static mpmc_queue<optional<queueType>> queueOut(DEFAULT_SIZE,(pipe.exectype).lockfree); 
+      static mpmc_queue<optional<queueType>> queueOut(DEFAULT_SIZE,pipe.exectype.lockfree); 
 
-      composed_pipeline((pipe.exectype), qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
+      composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
       composed_pipeline<mpmc_queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
        
 }
