@@ -8,7 +8,19 @@ The interface to the **pipeline** pattern is provided by function `grppi::pipeli
 grppi::pipeline(exec, other_arguments...);
 ~~~
 
-## Pipeline
+## Pipeline variants
+
+TODO
+
+## Key elements in pipeline
+
+TODO
+
+## Details on pipeline variants
+
+TODO
+
+### Pipeline
 
 The pipeline has an intial phase where the data is initially generated. The next stages will process the data and finally it will arrive to the last stage.
 

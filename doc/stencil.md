@@ -8,6 +8,18 @@ The interface to the **map** pattern is provided by function `grppi::stencil()`.
 grppi::stencil(exec, other_arguments...);
 ~~~
 
+## Stencil variants
+
+TODO
+
+## Key elements in stencil
+
+TODO
+
+## Details on stencil variants
+
+TODO
+
 ## Stencil
 
 The **Stencil** takes a data set and extracts a set of neighbors elements that are transformed by applying an unary function and generating a new data set.
