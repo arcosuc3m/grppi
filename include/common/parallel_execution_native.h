@@ -28,6 +28,7 @@
 #include <type_traits>
 
 #include "native/pool.h"
+#include "mpmc_queue.h"
 
 namespace grppi {
 
@@ -40,7 +41,7 @@ struct parallel_execution_native {
   thread_pool pool;
   bool ordering = true;
   int num_threads = 4;
-  bool lockfree = false;
+  queue_mode lockfree = queue_mode::blocking;
 
   int get_threadID(){
       while (lock.test_and_set(std::memory_order_acquire));
