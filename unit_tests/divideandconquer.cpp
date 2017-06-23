@@ -89,18 +89,17 @@ TYPED_TEST(divideandconquer_test, static_empty)
 {
   this->setup_empty();
   grppi::divide_and_conquer(this->execution_, this->v, this->out,
+    // Divide
     [this](auto & v) { 
-      // Divide
       this->invocations_divide++; 
-      std::vector<std::vector<int> > subproblem;
-      return subproblem; 
+      return std::vector<std::vector<int> >{}; 
     },
+    // Solve base case
     [this](auto & problem, int & out) { 
-      // Base
       this->invocations_base++; 
     }, 
+    // Combine
     [this](auto & partial, auto & out) { 
-      // Merge
       this->invocations_merge++; 
     }
   );
@@ -113,20 +112,18 @@ TYPED_TEST(divideandconquer_test, static_single)
 {
   this->setup_single();
   grppi::divide_and_conquer(this->execution_, this->v, this->out,
+    // Divide
     [this](auto & v) { 
-      // Divide
       this->invocations_divide++; 
-      std::vector<std::vector<int>> subproblem;
-      subproblem.push_back(v);
-      return subproblem; 
+      return std::vector<std::vector<int>>{v}; 
     },
+    // Solve base case
     [this](auto & problem, int & out) { 
-      // Base
       this->invocations_base++; 
       out = problem[0];
     }, 
+    // Combine
     [this](auto & partial, auto & out) { 
-      // Merge
       this->invocations_merge++; 
     }
   );
@@ -140,8 +137,8 @@ TYPED_TEST(divideandconquer_test, static_multiple)
   this->setup_multiple();
   
   grppi::divide_and_conquer(this->execution_, this->v, this->out,
+    // Divide
     [this](auto & v) { 
-      // Divide
       this->invocations_divide++; 
       std::vector<std::vector<int>> subproblem;
       for(int i=0; i < v.size(); i++){
@@ -149,13 +146,13 @@ TYPED_TEST(divideandconquer_test, static_multiple)
       }
       return subproblem; 
     },
+    // Solve base case
     [this](auto & problem, auto & out) { 
-      // Base
       this->invocations_base++; 
       out = problem[0];
     }, 
+    // Combine
     [this](auto & partial, auto & out) { 
-      // Merge
       this->invocations_merge++; 
       out += partial;
     }
