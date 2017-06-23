@@ -35,7 +35,6 @@ public:
 
   // Variables
   int out;
-  int expected;
   int counter;
 
   // Vectors
