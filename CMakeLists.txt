@@ -74,7 +74,7 @@ else()
 endif()
 
 # TBB Library
-find_package( TBB REQUIRED ) 
+find_package( TBB ) 
 if( TBB_FOUND )
     option( GRPPI_TBB_ENABLE "Require TBB library" ON )
 else( TBB_FOUND )
