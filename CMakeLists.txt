@@ -95,7 +95,10 @@ if( GRPPI_OMP_ENABLE )
 endif( GRPPI_OMP_ENABLE )
 
 # Doxygen Documentation
-add_subdirectory(doxy)
+option( GRPPI_DOXY_ENABLE "Require Doxygen library" OFF )
+if( GRPPI_DOXY_ENABLE )
+    add_subdirectory(doxy)
+endif( GRPPI_DOXY_ENABLE )
 
 # Installation
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
