@@ -46,31 +46,31 @@ public:
   std::atomic<int> invocations_last{0};
   std::atomic<int> invocations_intermediate{0};
 
-  void setup_empty() {
+  void setup_two_stages_empty() {
   }
 
-  void check_empty() {
+  void check_two_stages_empty() {
     ASSERT_EQ(1, invocations_init); 
     ASSERT_EQ(0, invocations_last); 
   }
 
-  void setup_single() {
+  void setup_two_stages() {
     out = 0;
     counter = 2;
   }
 
-  void check_single() {
+  void check_two_stages() {
     ASSERT_EQ(2, invocations_init); 
     ASSERT_EQ(1, invocations_last); 
     EXPECT_EQ(1, this->out);
   }
 
-  void setup_multiple() {
+  void setup_three_stages() {
     counter = 5;
     out = 0;
   }
 
-  void check_multiple() {
+  void check_three_stages() {
     ASSERT_EQ(5, invocations_init); 
     ASSERT_EQ(4, invocations_last); 
     ASSERT_EQ(4, invocations_intermediate);
@@ -83,9 +83,9 @@ public:
 // Test for execution policies defined in supported_executions.h
 TYPED_TEST_CASE(pipeline_test, executions);
 
-TYPED_TEST(pipeline_test, static_empty)
+TYPED_TEST(pipeline_test, static_two_stages_empty)
 {
-  this->setup_empty();
+  this->setup_two_stages_empty();
     grppi::pipeline( this->execution_,
     [this]() { 
         this->invocations_init++;
@@ -96,14 +96,14 @@ TYPED_TEST(pipeline_test, static_empty)
     }
   );
 
-  this->check_empty();
+  this->check_two_stages_empty();
 }
 
 
 
-TYPED_TEST(pipeline_test, static_single)
+TYPED_TEST(pipeline_test, static_two_stages)
 {
-  this->setup_single();
+  this->setup_two_stages();
     grppi::pipeline( this->execution_,
     [this]() { 
         this->invocations_init++;
@@ -119,14 +119,14 @@ TYPED_TEST(pipeline_test, static_single)
       this->out += x;
     }
   );
-  this->check_single();
+  this->check_two_stages();
 }
 
 
 
-TYPED_TEST(pipeline_test, static_multiple)
+TYPED_TEST(pipeline_test, static_three_stages)
 {
-  this->setup_multiple();
+  this->setup_three_stages();
     grppi::pipeline( this->execution_,
     [this]() { 
         this->invocations_init++;
@@ -146,5 +146,5 @@ TYPED_TEST(pipeline_test, static_multiple)
       this->out += y;
     }
   );
-  this->check_multiple();
+  this->check_three_stages();
 }
