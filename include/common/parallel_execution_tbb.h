@@ -34,11 +34,16 @@ namespace grppi{
  *    (TBB) framework implementation
  */
 struct parallel_execution_tbb{
+  constexpr static int default_queue_size = 100;
+  constexpr static int default_num_threads = 4;
+  constexpr static int default_num_tokens = 100;
+
+  int queue_size = default_queue_size;
+  int num_threads = default_num_threads;
+  int num_tokens = default_num_tokens;
+
   bool ordering = true;
   queue_mode lockfree = queue_mode::blocking;
-  int num_threads = 4;
-  int num_tokens = 100;
-  int queue_size = 100;
 
   void set_queue_size(int new_size){
      queue_size = new_size;

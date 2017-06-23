@@ -39,10 +39,12 @@ namespace grppi {
 struct parallel_execution_native {
   public: 
   thread_pool pool;
+  constexpr static int default_queue_size = 100;
+  constexpr static int default_num_threads = 4;
+  int queue_size = default_queue_size;
+  int num_threads = default_num_threads;
   bool ordering = true;
-  int num_threads = 4;
   queue_mode lockfree = queue_mode::blocking;
-  int queue_size = 100;
 
   void set_queue_size(int new_size){
      queue_size = new_size;
