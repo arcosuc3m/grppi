@@ -44,12 +44,12 @@ struct parallel_execution_native {
   queue_mode lockfree = queue_mode::blocking;
   int queue_size = 100;
 
-  void set_queue_size(int _size){
-     queue_size = _size;
+  void set_queue_size(int new_size){
+     queue_size = new_size;
   }
 
 
-  int get_threadID(){
+  int get_thread_id(){
       while (lock.test_and_set(std::memory_order_acquire));
       auto it = std::find(thid_table.begin(), thid_table.end(), std::this_thread::get_id());
       auto id = std::distance(thid_table.begin(), it);

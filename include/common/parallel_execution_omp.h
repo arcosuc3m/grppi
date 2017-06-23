@@ -41,12 +41,12 @@ struct parallel_execution_omp{
   int num_threads = 4;
   int queue_size = 100;
 
-  void set_queue_size(int _size){
-     queue_size = _size;
+  void set_queue_size(int new_size){
+     queue_size = new_size;
   }
 
 
-  int get_threadID(){
+  int get_thread_id(){
      return omp_get_thread_num();
   }
   /** @brief Set num_threads to the maximum number of thread available by the
