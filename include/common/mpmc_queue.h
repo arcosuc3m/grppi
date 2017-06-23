@@ -30,28 +30,9 @@ constexpr int DEFAULT_SIZE = 100;
 
 template <typename T>
 class mpmc_queue{
-   private:
-      int size;
-      std::vector<T> buffer;
-      std::atomic<unsigned long long> pread;
-      std::atomic<unsigned long long> pwrite;
-      std::atomic<unsigned long long> internal_pwrite;
-      std::atomic<unsigned long long> internal_pread;
-
-      bool lockfree = false;
-
-      std::mutex mutex;
-      std::condition_variable emptycv;
-      std::condition_variable fullcv;
-
-      bool full(unsigned long long current);
-      bool empty(unsigned long long current);
-   public:  
+   public:
       typedef T value_type;
-      T pop();
-      bool push(T item);
-      bool empty();
-      
+
       mpmc_queue<T>(int _size, bool active){
          size = _size;
          buffer = std::vector<T>(size);
@@ -70,6 +51,28 @@ class mpmc_queue{
          internal_pread = 0;
          internal_pwrite = 0;
       }
+
+      bool empty();
+      T pop();
+      bool push(T item);
+
+   private:
+      bool full(unsigned long long current);
+      bool empty(unsigned long long current);
+
+      int size;
+      std::vector<T> buffer;
+      std::atomic<unsigned long long> pread;
+      std::atomic<unsigned long long> pwrite;
+      std::atomic<unsigned long long> internal_pread;
+      std::atomic<unsigned long long> internal_pwrite;
+
+      bool lockfree = false;
+
+      std::mutex mutex;
+      std::condition_variable emptycv;
+      std::condition_variable fullcv;
+
 };
 
 
@@ -78,19 +81,6 @@ bool mpmc_queue<T>::empty(){
     return pread.load()==pwrite.load();
 }
 
-
-template <typename T>
-bool mpmc_queue<T>::empty(unsigned long long current){
-  if(current >= pwrite.load()) return true;  
-  return false;
-}
-
-template <typename T>
-bool mpmc_queue<T>::full(unsigned long long current){
-  if(current >= (pread.load()+size)) return true;
-  return false;
-
-}
 template <typename T>
 T mpmc_queue<T>::pop(){
   if(lockfree){
@@ -159,7 +149,20 @@ bool mpmc_queue<T>::push(T item){
 
     return true;
   }
+}
+
+template <typename T>
+bool mpmc_queue<T>::empty(unsigned long long current){
+  if(current >= pwrite.load()) return true;
+  return false;
+}
+
+template <typename T>
+bool mpmc_queue<T>::full(unsigned long long current){
+  if(current >= (pread.load()+size)) return true;
+  return false;
 
 }
+
 
 }
