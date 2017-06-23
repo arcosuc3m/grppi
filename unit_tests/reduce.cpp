@@ -41,10 +41,6 @@ public:
 
   // Vectors
   vector<int> v{};
-  vector<int> v2{};
-  vector<int> v3{};
-  vector<int> w{};
-  vector<int> expected{};
 
   void setup_empty() {
     out = 0;
@@ -71,8 +67,6 @@ public:
   void check_multiple() {
     EXPECT_EQ(15, this->out); 
   }
-
-
 
 };
 
