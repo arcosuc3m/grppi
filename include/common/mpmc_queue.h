@@ -54,12 +54,13 @@ class mpmc_queue{
 
       int size;
       std::vector<T> buffer;
+      queue_mode mode;
+
       std::atomic<unsigned long long> pread;
       std::atomic<unsigned long long> pwrite;
       std::atomic<unsigned long long> internal_pread;
       std::atomic<unsigned long long> internal_pwrite;
 
-      bool lockfree = false;
 
       std::mutex m;
       std::condition_variable empty;
