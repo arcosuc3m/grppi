@@ -31,7 +31,7 @@ template < typename InputIt, typename OutputIt, typename MapFunc, typename Reduc
     p.register_thread();
     while( first != last ) {
        auto mapresult = map(*first, inputs ... );
-       reduce(p, mapresult.begin(), mapresult.end(), *firstOut, op);
+       *firstOut = reduce(p, mapresult.begin(), mapresult.end(), op);
        first++;
        firstOut++;
     }

@@ -27,42 +27,21 @@
 
 //typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 namespace grppi{
-template < typename InputIt, typename Output,typename ReduceOperator>
- typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
-   typename ReduceOperator::result_type identityVal = !op(false,true); 
-   //FIXME: Necesita el valor inicial de la operacion
-   firstOut = op(firstOut, 
-                 tbb::parallel_reduce(tbb::blocked_range<InputIt>( first, last ), identityVal, 
-                 [&](const tbb::blocked_range<InputIt> &r, Output temp){   
-                   for(InputIt i=r.begin(); i!= r.end(); ++i){
-                       temp = op(temp,*i);
-                   }
-                   return temp;
-                 },
-                 [&](Output a, Output b) -> Output {
-                   a = op(a,b);
-                   return a;
-                 }
-                )
-              );
-}
-
-
 
 template < typename InputIt, typename ReduceOperator>
- typename ReduceOperator::result_type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator op) {
-   typename ReduceOperator::result_type identityVal = !op(false, true); 
+typename std::iterator_traits<InputIt>::value_type
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator op){
+
+    auto identityVal = init;
    //FIXME: Necesita el valor inicial de la operacion
    return tbb::parallel_reduce(tbb::blocked_range<InputIt>( first, last ), identityVal,
-              [&](const tbb::blocked_range<InputIt> &r, typename ReduceOperator::result_type  temp){
+              [&](const tbb::blocked_range<InputIt> &r,typename std::iterator_traits<InputIt>::value_type  temp){
                  for(InputIt i=r.begin(); i!= r.end(); ++i){
                    temp = op( temp, *i);
                  }
                  return temp;
               },
-              [&](typename ReduceOperator::result_type a, typename ReduceOperator::result_type b) -> typename ReduceOperator::result_type
+              [&](typename std::iterator_traits<InputIt>::value_type a, typename std::iterator_traits<InputIt>::value_type b) -> typename std::iterator_traits<InputIt>::value_type
               {
                 a = op(a,b);
                 return a;
@@ -71,85 +50,13 @@ reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator op
    
 }
 
-
-template < typename InputIt, typename OutputIt, typename RedFunc>
- typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
-reduce (parallel_execution_tbb &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc && reduce) {
-    while( first != last ) {
-       reduce(*first, *firstOut);
-       first++;
-       firstOut++;
-    }
+template < typename InputIt, typename ReduceOperator>
+typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator op){
+   auto identityVal = !op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
 }
 
-
-/*
-template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
- typename std::enable_if<!is_iterator<Output>::value, void>::type
-Reduce(parallel_execution_native p, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
-
-    std::vector<std::thread> tasks;
-    int numElements = last - first;
-    int elemperthr = numElements/CXX_NUM_THREADS;
-
-    //local output
-    std::vector<Output> out(CXX_NUM_THREADS);
-     int i;
-    //Create threads
-    for(i=1;i<CXX_NUM_THREADS;i++){
-
-      auto begin = first + (elemperthr * i);
-      auto end = first + (elemperthr * (i+1));
-      if(i == CXX_NUM_THREADS -1) end = last;
-
-      tasks.push_back(
-         std::thread( [&](InputIt begin, InputIt end, int tid){
-               while( begin != end ) {
-                       reduce(*begin, out[tid] );
-                       begin++;
-               }
-
-         },
-         begin, end, i
-         )
-      );
-
-    }
-
-    //Main thread
-    auto end = first + elemperthr;
-    while(first!=end){
-         reduce(*first , out[0]);
-         first++;
-    }
-
-    //Join threads
-    for(int i=0;i<CXX_NUM_THREADS-1;i++){
-      tasks[i].join();
-    }
-
-    auto it = out.begin();
-    while( it!= out.end()){
-       freduce(*it,firstOut);
-       it++;   
-    }      
-
-}
-*/
-
-
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 }
 #endif
 

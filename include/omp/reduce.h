@@ -26,134 +26,15 @@
 #include <thread>
 
 namespace grppi{
-//typename std::enable_if<!is_iterator<Output>::value, bool>::type,
-
-template < typename InputIt, typename Output, typename ReduceOperator>
- typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, Output &firstOut, ReduceOperator op) {
-    int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-    typename ReduceOperator::result_type identityVal = !op(false,true);
-  
-    //local output
-    std::vector<Output> out(p.num_threads);
-    #pragma omp parallel
-    {
-    #pragma omp single nowait
-    {
-    //Create threads
-      for(int i=1;i<p.num_threads;i++){
-        #pragma omp task firstprivate(i) shared(out) 
-        { 
-          auto begin = first + (elemperthr * i);
-          auto end = first + (elemperthr * (i+1));
-          out[i] = identityVal;
-//          begin++;
-          if(i == p.num_threads -1) end = last;
-          while( begin < end ) {
-	       out[i] = op( out[i], *begin );
-	       begin++;
-          }
-        }
-      } 
-
-   
-      //Main thread
-      auto begin = first;
-      auto end = first + elemperthr;
-      out[0] = identityVal;
-//      begin++;
-      while(begin!=end){
-         out[0] = op( out[0], *begin);
-         begin++;
-      }
-    #pragma omp taskwait
-    }
-    }
-     
-    auto it = out.begin();
-    while( it!= out.end()){
-       firstOut = op( firstOut, *it);
-       it++;
-    }
-}
-/*
-template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
- typename std::enable_if<!is_iterator<Output>::value, void>::type
-Reduce(parallel_execution_omp p, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
-
-    int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-    //local output
-    std::vector<Output> out(p.num_threads);
-    #pragma omp parallel
-    {
-    #pragma omp single nowait
-    {
-      //Create threads
-      for(int i=1;i<p.num_threads;i++){
-        #pragma omp task firstprivate(i)
-        {
-          auto begin = first + (elemperthr * i);
-          auto end = first + (elemperthr * (i+1));
-          if(i == p.num_threads -1) end = last;
-          while( begin != end ) {
-            reduce(*begin, out[i] );
-            begin++;
-          }
-        }
-      }
-
-      //Main thread
-      auto end = first + elemperthr;
-      while(first!=end){
-         reduce(*first , out[0]);
-         first++;
-      }
-    #pragma omp taskwait
-    }
-    }
-    auto it = out.begin();
-    while( it!= out.end()){
-       freduce(*it,firstOut);
-       it++;   
-    }      
-
-}
-*/
-template < typename InputIt, typename OutputIt, typename RedFunc>
- typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, RedFunc &&reduce) {
-    while( first != last ) {
-       reduce(*first, *firstOut);
-       first++;
-       firstOut++;
-    }
-}
-
-
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 
 template < typename InputIt, typename ReduceOperator>
- typename ReduceOperator::result_type
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, ReduceOperator op) {
+typename std::iterator_traits<InputIt>::value_type
+reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator op){
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
-    typename ReduceOperator::result_type identityVal = !op(false,true);
-
+    auto identityVal = init;
     //local output
-    std::vector<typename ReduceOperator::result_type> out(p.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(p.num_threads);
     //Create threads
     #pragma omp parallel
     {
@@ -168,7 +49,6 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, ReduceOperator op
          #pragma omp task firstprivate (begin, end,i)
          {
             out[i] = identityVal;
-    //        begin++;
             while( begin != end ) {
                 out[i] = op(*begin, out[i] );
                 begin++;
@@ -180,7 +60,6 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, ReduceOperator op
     //Main thread
     auto end = first + elemperthr;
     out[0] = identityVal;
-//    first++;
     while(first!=end){
          out[0] = op(*first , out[0]);
          first++;
@@ -190,13 +69,25 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, ReduceOperator op
     }
     }
 
-    typename ReduceOperator::result_type outVal = out[0];
+    auto outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){
        outVal = op(outVal, out[i]);
     }
     return outVal;
 }
+
+template < typename InputIt, typename ReduceOperator>
+typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(parallel_execution_omp &p, InputIt first, InputIt last, ReduceOperator op){
+   auto identityVal = !op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
 }
+
+
+
+}
+
+
 
 #endif
 
