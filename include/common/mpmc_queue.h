@@ -52,13 +52,13 @@ class mpmc_queue{
          internal_pwrite = 0;
       }
 
-      bool empty () const noexcept;
+      bool is_empty () const noexcept;
       T pop () ;
       bool push (T item) ;
 
    private:
-      bool full (unsigned long long current) const noexcept;
-      bool empty (unsigned long long current) const noexcept;
+      bool is_full (unsigned long long current) const noexcept;
+      bool is_empty (unsigned long long current) const noexcept;
 
       int size;
       std::vector<T> buffer;
@@ -69,15 +69,15 @@ class mpmc_queue{
 
       bool lockfree = false;
 
-      std::mutex mutex;
-      std::condition_variable emptycv;
-      std::condition_variable fullcv;
+      std::mutex m;
+      std::condition_variable empty;
+      std::condition_variable full;
 
 };
 
 
 template <typename T>
-bool mpmc_queue<T>::empty() const noexcept {
+bool mpmc_queue<T>::is_empty() const noexcept {
     return pread.load()==pwrite.load();
 }
 
@@ -91,7 +91,7 @@ T mpmc_queue<T>::pop() {
         current = internal_pread.load();
      }while(!internal_pread.compare_exchange_weak(current, current+1));
           
-     while(empty(current));
+     while(is_empty(current));
 
      auto item = std::move(buffer[current%size]); 
      auto aux = current;
@@ -102,14 +102,14 @@ T mpmc_queue<T>::pop() {
      return std::move(item);
   }else{
      
-     std::unique_lock<std::mutex> lk(mutex);
-     while(empty(pread)){
-        emptycv.wait(lk);
+     std::unique_lock<std::mutex> lk(m);
+     while(is_empty(pread)){
+        empty.wait(lk);
      }  
      auto item = std::move(buffer[pread%size]);
      pread++;    
      lk.unlock();
-     fullcv.notify_one();
+     full.notify_one();
      
      return std::move(item);
   }
@@ -125,7 +125,7 @@ bool mpmc_queue<T>::push(T item) {
          current = internal_pwrite.load();
      }while(!internal_pwrite.compare_exchange_weak(current, current+1));
 
-     while(full(current));
+     while(is_full(current));
 
      buffer[current%size] = std::move(item);
   
@@ -137,28 +137,28 @@ bool mpmc_queue<T>::push(T item) {
      return true;
   }else{
 
-    std::unique_lock<std::mutex> lk(mutex);
-    while(full(pwrite)){
-        fullcv.wait(lk);
+    std::unique_lock<std::mutex> lk(m);
+    while(is_full(pwrite)){
+        full.wait(lk);
     }
     buffer[pwrite%size] = std::move(item);
 
     pwrite++;
     lk.unlock();
-    emptycv.notify_one();
+    empty.notify_one();
 
     return true;
   }
 }
 
 template <typename T>
-bool mpmc_queue<T>::empty(unsigned long long current) const noexcept {
+bool mpmc_queue<T>::is_empty(unsigned long long current) const noexcept {
   if(current >= pwrite.load()) return true;
   return false;
 }
 
 template <typename T>
-bool mpmc_queue<T>::full(unsigned long long current) const noexcept{
+bool mpmc_queue<T>::is_full(unsigned long long current) const noexcept{
   if(current >= (pread.load()+size)) return true;
   return false;
 
