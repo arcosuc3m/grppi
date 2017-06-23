@@ -73,12 +73,17 @@ else()
 	message( FATAL_ERROR "Boost library is not installed in your system" )    
 endif()
 
-# TBB Library 
-option( GRPPI_TBB_ENABLE "Require TBB library" ON )
+# TBB Library
+find_package( TBB REQUIRED ) 
+if( TBB_FOUND )
+    option( GRPPI_TBB_ENABLE "Require TBB library" ON )
+else( TBB_FOUND )
+    option( GRPPI_TBB_ENABLE "Require TBB library" OFF )
+endif( TBB_FOUND )
+
 message( STATUS "TBB: " ${GRPPI_TBB_ENABLE} )
 if( GRPPI_TBB_ENABLE )
     include_directories(${TBB_INCLUDE_DIRS} )
-    find_package(TBB REQUIRED)
     add_definitions( "-DGRPPI_TBB" )
 endif( GRPPI_TBB_ENABLE )
 
