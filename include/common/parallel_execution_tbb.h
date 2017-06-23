@@ -26,6 +26,8 @@
 
 #include <type_traits>
 
+#include "mpmc_queue.h"
+
 namespace grppi{
 
 /** @brief Set the execution mode to parallel with threading building blocks
@@ -33,7 +35,7 @@ namespace grppi{
  */
 struct parallel_execution_tbb{
   bool ordering = true;
-  bool lockfree = false;
+  queue_mode lockfree = queue_mode::blocking;
   int num_threads = 4;
   int num_tokens = 100;
   int queue_size = 100;

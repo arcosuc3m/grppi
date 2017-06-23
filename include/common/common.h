@@ -29,7 +29,6 @@
 
 // Includes with GRPPI internals
 #include "optional.h"
-#include "mpmc_queue.h"
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"

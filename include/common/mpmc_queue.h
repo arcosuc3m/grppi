@@ -18,6 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
+#ifndef GRPPI_MPMC_QUEUE_H
+#define GRPPI_MPMC_QUEUE_H
+
+
 #include <vector>
 #include <atomic>
 #include <iostream>
@@ -26,17 +30,22 @@
 
 namespace grppi{
 
+
+
+enum class queue_mode {lockfree = true, blocking = false};
+
 template <typename T>
 class mpmc_queue{
    private:
       int size;
       std::vector<T> buffer;
+      queue_mode mode;
+
       std::atomic<unsigned long long> pread;
       std::atomic<unsigned long long> pwrite;
       std::atomic<unsigned long long> internal_pwrite;
       std::atomic<unsigned long long> internal_pread;
 
-      bool lockfree = false;
 
       std::mutex mutex;
       std::condition_variable emptycv;
@@ -44,30 +53,15 @@ class mpmc_queue{
 
       bool full(unsigned long long current);
       bool empty(unsigned long long current);
-   public:  
+   public: 
       typedef T value_type;
       T pop();
       bool push(T item);
       bool empty();
       
-      mpmc_queue<T>(int _size, bool active){
-         size = _size;
-         buffer = std::vector<T>(size);
-         pread = 0;
-         pwrite = 0;
-         internal_pread = 0;
-         internal_pwrite = 0;
-         lockfree = active;
-      }
+      mpmc_queue<T>(int _size, queue_mode active = queue_mode::blocking ):
+           size{_size}, buffer{std::vector<T>(size)}, mode{active}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
 
-      mpmc_queue<T>(int _size){
-         size = _size;
-         buffer = std::vector<T>(size);
-         pread = 0;
-         pwrite = 0;
-         internal_pread = 0;
-         internal_pwrite = 0;
-      }
 };
 
 
@@ -91,7 +85,7 @@ bool mpmc_queue<T>::full(unsigned long long current){
 }
 template <typename T>
 T mpmc_queue<T>::pop(){
-  if(lockfree){
+  if(mode == queue_mode::lockfree){
     
      unsigned long long current;
 
@@ -126,7 +120,7 @@ T mpmc_queue<T>::pop(){
 
 template <typename T>
 bool mpmc_queue<T>::push(T item){
-  if(lockfree){
+  if(mode == queue_mode::lockfree){
 
      unsigned long long current;
      do{
@@ -161,3 +155,5 @@ bool mpmc_queue<T>::push(T item){
 }
 
 }
+
+#endif

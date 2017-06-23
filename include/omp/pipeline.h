@@ -79,7 +79,7 @@ template <typename Operation, typename Stream,typename... Stages>
        mpmc_queue< typename Stream::value_type > q(p.queue_size,p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
            #pragma omp task shared(q,se,st,nend)
            {
                  typename Stream::value_type item;
@@ -93,7 +93,7 @@ template <typename Operation, typename Stream,typename... Stages>
                      item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -155,7 +155,7 @@ template <typename Operation, typename Stream,typename... Stages>
        mpmc_queue< typename Stream::value_type > q(p.queue_size,p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
              #pragma omp task shared(q,se,st,nend)
              {
                  typename Stream::value_type item;
@@ -169,7 +169,7 @@ template <typename Operation, typename Stream,typename... Stages>
                       item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -189,7 +189,7 @@ template <typename Operation, typename Stream,typename... Stages>
    
     mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
-    for( int th = 0; th < se.exectype->num_threads; th++){
+    for( int th = 0; th < se.exectype.num_threads; th++){
       #pragma omp task shared(nend,q,se,st)
       {
          auto item = st.pop();
@@ -201,7 +201,7 @@ template <typename Operation, typename Stream,typename... Stages>
         }
         st.push(item);
         nend++;
-        if(nend == se.exectype->num_threads)
+        if(nend == se.exectype.num_threads)
           q.push(make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }

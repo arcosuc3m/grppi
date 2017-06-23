@@ -86,7 +86,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
    //Stream generator
    std::thread gen([&](){
       // Register the thread in the execution model
-      se.exectype->register_thread();
+      se.exectype.register_thread();
 
       while(1){
          auto k = in();
@@ -104,20 +104,20 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
          item = queue.pop();
       }
       nend++;
-      if(nend == se.exectype->num_threads)
+      if(nend == se.exectype.num_threads)
          queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
       else queue.push(item);
 
       // Deregister the thread in the execution model
-      se.exectype->deregister_thread();
+      se.exectype.deregister_thread();
 
    });
    //Farm workers
-   for(int th = 1; th < se.exectype->num_threads; th++) {
+   for(int th = 1; th < se.exectype.num_threads; th++) {
       tasks.push_back(
           std::thread([&](){
               // Register the thread in the execution model
-              se.exectype->register_thread();
+              se.exectype.register_thread();
 
               auto item = queue.pop();
               while(item){
@@ -129,12 +129,12 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
                   item = queue.pop();
               }
               nend++;
-              if(nend == se.exectype->num_threads)
+              if(nend == se.exectype.num_threads)
                   queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
               else queue.push(item);
 
               // Deregister the thread in the execution model
-              se.exectype->deregister_thread();
+              se.exectype.deregister_thread();
           }
       ));
    }
