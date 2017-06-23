@@ -28,6 +28,8 @@
 
 #include <omp.h>
 
+#include "mpmc_queue.h"
+
 namespace grppi{
 
 /** @brief Set the execution mode to parallel with ompenmp framework 
@@ -35,7 +37,7 @@ namespace grppi{
  */
 struct parallel_execution_omp{
   bool ordering = true;
-  bool lockfree = false;
+  queue_mode lockfree = queue_mode::blocking;
   int num_threads = 4;
   int get_threadID(){
      return omp_get_thread_num();

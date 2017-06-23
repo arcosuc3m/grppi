@@ -73,12 +73,17 @@ else()
 	message( FATAL_ERROR "Boost library is not installed in your system" )    
 endif()
 
-# TBB Library 
-option( GRPPI_TBB_ENABLE "Require TBB library" ON )
+# TBB Library
+find_package( TBB ) 
+if( TBB_FOUND )
+    option( GRPPI_TBB_ENABLE "Require TBB library" ON )
+else( TBB_FOUND )
+    option( GRPPI_TBB_ENABLE "Require TBB library" OFF )
+endif( TBB_FOUND )
+
 message( STATUS "TBB: " ${GRPPI_TBB_ENABLE} )
 if( GRPPI_TBB_ENABLE )
     include_directories(${TBB_INCLUDE_DIRS} )
-    find_package(TBB REQUIRED)
     add_definitions( "-DGRPPI_TBB" )
 endif( GRPPI_TBB_ENABLE )
 
@@ -95,7 +100,10 @@ if( GRPPI_OMP_ENABLE )
 endif( GRPPI_OMP_ENABLE )
 
 # Doxygen Documentation
-add_subdirectory(doxy)
+option( GRPPI_DOXY_ENABLE "Require Doxygen library" OFF )
+if( GRPPI_DOXY_ENABLE )
+    add_subdirectory(doxy)
+endif( GRPPI_DOXY_ENABLE )
 
 # Installation
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"

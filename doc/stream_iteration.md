@@ -4,7 +4,7 @@ The **stream iteration** pattern evaluates a condition over the elements of a da
 
 The interface to the **stream iteration** pattern is provided by function `grppi::stream_iteration()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
-~~~c++
+~~~{.cpp}
 grppi::stream_iterate(exec, other_arguments...);
 ~~~
 

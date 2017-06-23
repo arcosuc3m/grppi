@@ -18,6 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
+#ifndef GRPPI_MPMC_QUEUE_H
+#define GRPPI_MPMC_QUEUE_H
+
+
 #include <vector>
 #include <atomic>
 #include <iostream>
@@ -28,30 +32,18 @@ namespace grppi{
 
 constexpr int DEFAULT_SIZE = 100;
 
+enum class queue_mode {lockfree = true, blocking = false};
+
 template <typename T>
 class mpmc_queue{
+
    public:
       using value_type = T;
 
-      mpmc_queue<T>(int _size, bool active){
-         size = _size;
-         buffer = std::vector<T>(size);
-         pread = 0;
-         pwrite = 0;
-         internal_pread = 0;
-         internal_pwrite = 0;
-         lockfree = active;
-      }
-
-      mpmc_queue<T>(int _size){
-         size = _size;
-         buffer = std::vector<T>(size);
-         pread = 0;
-         pwrite = 0;
-         internal_pread = 0;
-         internal_pwrite = 0;
-      }
-
+      mpmc_queue<T>(int _size, queue_mode active = queue_mode::blocking ):
+           size{_size}, buffer{std::vector<T>(size)}, mode{active}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
+      
+     
       bool is_empty () const noexcept;
       T pop () ;
       bool push (T item) ;
@@ -82,8 +74,8 @@ bool mpmc_queue<T>::is_empty() const noexcept {
 }
 
 template <typename T>
-T mpmc_queue<T>::pop() {
-  if(lockfree){
+T mpmc_queue<T>::pop(){
+  if(mode == queue_mode::lockfree){
     
      unsigned long long current;
 
@@ -117,9 +109,8 @@ T mpmc_queue<T>::pop() {
 }
 
 template <typename T>
-bool mpmc_queue<T>::push(T item) {
-  if(lockfree){
-
+bool mpmc_queue<T>::push(T item){
+  if(mode == queue_mode::lockfree){
      unsigned long long current;
      do{
          current = internal_pwrite.load();
@@ -164,5 +155,6 @@ bool mpmc_queue<T>::is_full(unsigned long long current) const noexcept{
 
 }
 
-
 }
+
+#endif
