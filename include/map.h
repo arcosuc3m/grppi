@@ -28,55 +28,12 @@
 #include "tbb/map.h"
 #include "poly/map.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BDataPattern
- *  @{
- */
-/** @defgroup Map
- *
- *  @brief Apply the map pattern for parallelizing the code section
- *
- *  The Map pattern is applied to iterable data structures in which all the
- *  the elements are processed the same way, with the same 'op' function.
- *  This function parallelize the execution of the 'op' function in different
- *  elements of the input data structure.
- *
- *  @{
- */
-/** @param exec     Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param first    Iterator to the first element we want to modify in the
- *    iterable datastructure
- *  @param last     Iterator to the last element we want to modify in the 
- *    iterable datastructure
- *  @param firstOut Iterator to the first element where we want to store the
- *    result of the operations
- *  @param tasf     Task function: function that will contain the section of
- *    code that will be applied to each elements of the input data structure.
- *    This section of code will be parallelize.
- */
-template <typename InputIt, typename OutputIt, typename Operation>
- void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op );
+/** 
+\defgroup map_pattern
 
+\brief Map pattern.
 
-/**  @param exec     Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param first    Iterator to the first element we want to modify in the
- *    iterable datastructure
- *  @param last     Iterator to the last element we want to modify in the 
- *    iterable datastructure
- *  @param firstOut Iterator to the first element where we want to store the
- *    result of the operations
- *  @param tasf     Task function: function that will contain the section of
- *    code that will be applied to each elements of the input data structure.
- *    This section of code will be parallelize.
- *  @param inputs   List of additional inputs to the function 'op'
- *  
- */
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+\ref map-pattern
+*/
 
 #endif
