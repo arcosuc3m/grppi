@@ -22,7 +22,6 @@
 #include <gtest/gtest.h>
 
 #include "pipeline.h"
-#include "common/polymorphic_execution.h"
 
 #include "supported_executions.h"
 
@@ -33,8 +32,6 @@ template <typename T>
 class pipeline_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
 
   // Variables
   int out;
@@ -102,22 +99,6 @@ TYPED_TEST(pipeline_test, static_empty)
   this->check_empty();
 }
 
-TYPED_TEST(pipeline_test, poly_empty)
-{
-  this->setup_empty();
-    grppi::pipeline( this->poly_execution_,
-    [this]() { 
-        this->invocations_init++;
-        return optional<int>(); 
-    },
-    [this]( auto x ) {
-      this->invocations_last++;
-    }
-  );
-
-  this->check_empty();
-}
-
 
 
 TYPED_TEST(pipeline_test, static_single)
@@ -141,58 +122,12 @@ TYPED_TEST(pipeline_test, static_single)
   this->check_single();
 }
 
-TYPED_TEST(pipeline_test, poly_single)
-{
-  this->setup_single();
-    grppi::pipeline( this->poly_execution_,
-    [this]() { 
-        this->invocations_init++;
-        this->counter--;
-        if(this->counter  == 0){
-          return optional<int>(); 
-        }else{
-          return optional<int>(this->counter);
-        }
-    },
-    [this]( auto x ) {
-      this->invocations_last++;
-      this->out += x;
-    }
-  );
-  this->check_single();
-}
-
 
 
 TYPED_TEST(pipeline_test, static_multiple)
 {
   this->setup_multiple();
     grppi::pipeline( this->execution_,
-    [this]() { 
-        this->invocations_init++;
-        this->counter--;
-        if(this->counter  == 0){
-          return optional<int>(); 
-        }else{
-          return optional<int>(this->counter);
-        }
-    },
-    [this]( auto x ) {
-      this->invocations_intermediate++;
-      return x*2;
-    },
-    [this]( auto y ) {
-      this->invocations_last++;
-      this->out += y;
-    }
-  );
-  this->check_multiple();
-}
-
-TYPED_TEST(pipeline_test, poly_multiple)
-{
-  this->setup_multiple();
-    grppi::pipeline( this->poly_execution_,
     [this]() { 
         this->invocations_init++;
         this->counter--;
