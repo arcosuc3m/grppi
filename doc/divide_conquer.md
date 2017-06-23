@@ -4,7 +4,7 @@ The **divide/conquer** pattern splits a problem into two or more independent sub
 
 The interface to the **Divide&Conquer** pattern is provided by function `grppi::divide_conquer()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
-~~~c++
+~~~{.cpp}
 grppi::divide_conquer(exec, other_arguments...);
 ~~~
 
@@ -32,7 +32,7 @@ The **divide/conquer** pattern takes an input problem and generates an output pr
 
 ---
 **Example**: Missing example
-~~~c++
+~~~{.cpp}
 vector<int> v{1,3,5,7,2,4,6,8};
 
 struct range {

@@ -4,7 +4,7 @@ The **stream reduction** pattern consists on the use of the reduce pattern over 
 
 The interface to the **stream reduction** pattern is provided by function `grppi::stream_reduce()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
-~~~c++
+~~~{.cpp}
 grppi::stream_readuce(exec, other_arguments...);
 ~~~
 
