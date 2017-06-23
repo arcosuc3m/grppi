@@ -40,7 +40,7 @@ struct parallel_execution_native {
   thread_pool pool;
   bool ordering = true;
   int num_threads = 4;
-  bool lockfree = false;
+  Queue_mode lockfree = Queue_mode::blocking;
 
   int get_threadID(){
       while (lock.test_and_set(std::memory_order_acquire));

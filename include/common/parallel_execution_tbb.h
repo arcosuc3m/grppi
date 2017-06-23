@@ -33,7 +33,7 @@ namespace grppi{
  */
 struct parallel_execution_tbb{
   bool ordering = true;
-  bool lockfree = false;
+  Queue_mode lockfree = Queue_mode::blocking;
   int num_threads = 4;
   int num_tokens = 100;
   /** @brief Set num_threads to the maximum number of thread available by the

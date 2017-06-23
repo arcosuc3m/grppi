@@ -35,7 +35,7 @@ namespace grppi{
  */
 struct parallel_execution_omp{
   bool ordering = true;
-  bool lockfree = false;
+  Queue_mode lockfree = Queue_mode::blocking;
   int num_threads = 4;
   int get_threadID(){
      return omp_get_thread_num();
