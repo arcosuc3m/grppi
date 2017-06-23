@@ -22,7 +22,6 @@
 #define GRPPI_COMMON_H
 
 // Includes for execution policies
-#include "queue_modes.h"
 #include "sequential_execution.h"
 #include "parallel_execution_native.h"
 #include "parallel_execution_omp.h"
@@ -30,7 +29,6 @@
 
 // Includes with GRPPI internals
 #include "optional.h"
-#include "mpmc_queue.h"
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"
