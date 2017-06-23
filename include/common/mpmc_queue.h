@@ -31,7 +31,7 @@ constexpr int DEFAULT_SIZE = 100;
 template <typename T>
 class mpmc_queue{
    public:
-      typedef T value_type;
+      using value_type = T;
 
       mpmc_queue<T>(int _size, bool active){
          size = _size;
@@ -52,13 +52,13 @@ class mpmc_queue{
          internal_pwrite = 0;
       }
 
-      bool empty();
-      T pop();
-      bool push(T item);
+      bool empty () const noexcept;
+      T pop () ;
+      bool push (T item) ;
 
    private:
-      bool full(unsigned long long current);
-      bool empty(unsigned long long current);
+      bool full (unsigned long long current) const noexcept;
+      bool empty (unsigned long long current) const noexcept;
 
       int size;
       std::vector<T> buffer;
@@ -77,12 +77,12 @@ class mpmc_queue{
 
 
 template <typename T>
-bool mpmc_queue<T>::empty(){
+bool mpmc_queue<T>::empty() const noexcept {
     return pread.load()==pwrite.load();
 }
 
 template <typename T>
-T mpmc_queue<T>::pop(){
+T mpmc_queue<T>::pop() {
   if(lockfree){
     
      unsigned long long current;
@@ -117,7 +117,7 @@ T mpmc_queue<T>::pop(){
 }
 
 template <typename T>
-bool mpmc_queue<T>::push(T item){
+bool mpmc_queue<T>::push(T item) {
   if(lockfree){
 
      unsigned long long current;
@@ -152,13 +152,13 @@ bool mpmc_queue<T>::push(T item){
 }
 
 template <typename T>
-bool mpmc_queue<T>::empty(unsigned long long current){
+bool mpmc_queue<T>::empty(unsigned long long current) const noexcept {
   if(current >= pwrite.load()) return true;
   return false;
 }
 
 template <typename T>
-bool mpmc_queue<T>::full(unsigned long long current){
+bool mpmc_queue<T>::full(unsigned long long current) const noexcept{
   if(current >= (pread.load()+size)) return true;
   return false;
 
