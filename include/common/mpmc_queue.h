@@ -29,7 +29,7 @@ namespace grppi{
 template <typename T>
 class mpmc_queue{
    private:
-      int size = 100;
+      int size;
       std::vector<T> buffer;
       std::atomic<unsigned long long> pread;
       std::atomic<unsigned long long> pwrite;
