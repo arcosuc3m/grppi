@@ -28,8 +28,8 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
  void stream_filter(parallel_execution_omp &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
 
 
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
-    mpmc_queue< typename std::result_of<GenFunc()>::type > outqueue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size, p.lockfree);
+    mpmc_queue< typename std::result_of<GenFunc()>::type > outqueue(p.queue_size, p.lockfree);
     #pragma omp parallel
     {
     #pragma omp single nowait 

@@ -30,7 +30,7 @@
 
 namespace grppi{
 
-constexpr int DEFAULT_SIZE = 100;
+
 
 enum class queue_mode {lockfree = true, blocking = false};
 
