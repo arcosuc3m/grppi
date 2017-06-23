@@ -22,7 +22,6 @@
 #include <gtest/gtest.h>
 
 #include "divideandconquer.h"
-#include "common/polymorphic_execution.h"
 
 #include "supported_executions.h"
 
@@ -33,8 +32,6 @@ template <typename T>
 class divideandconquer_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
 
   // Variables
   int out;
@@ -110,58 +107,12 @@ TYPED_TEST(divideandconquer_test, static_empty)
   this->check_empty();
 }
 
-TYPED_TEST(divideandconquer_test, poly_empty)
-{
-  this->setup_empty();
-  grppi::divide_and_conquer(this->poly_execution_, this->v, this->out,
-    [this](auto & v) { 
-      // Divide
-      this->invocations_divide++; 
-      std::vector<std::vector<int> > subproblem;
-      return subproblem; 
-    },
-    [this](auto & problem, int & out) { 
-      // Base
-      this->invocations_base++; 
-    }, 
-    [this](auto & partial, auto & out) { 
-      // Merge
-      this->invocations_merge++; 
-    }
-  );
-  this->check_empty();
-}
-
 
 
 TYPED_TEST(divideandconquer_test, static_single)
 {
   this->setup_single();
   grppi::divide_and_conquer(this->execution_, this->v, this->out,
-    [this](auto & v) { 
-      // Divide
-      this->invocations_divide++; 
-      std::vector<std::vector<int>> subproblem;
-      subproblem.push_back(v);
-      return subproblem; 
-    },
-    [this](auto & problem, int & out) { 
-      // Base
-      this->invocations_base++; 
-      out = problem[0];
-    }, 
-    [this](auto & partial, auto & out) { 
-      // Merge
-      this->invocations_merge++; 
-    }
-  );
-  this->check_single();
-}
-
-TYPED_TEST(divideandconquer_test, poly_single)
-{
-  this->setup_single();
-  grppi::divide_and_conquer(this->poly_execution_, this->v, this->out,
     [this](auto & v) { 
       // Divide
       this->invocations_divide++; 
@@ -189,34 +140,6 @@ TYPED_TEST(divideandconquer_test, static_multiple)
   this->setup_multiple();
   
   grppi::divide_and_conquer(this->execution_, this->v, this->out,
-    [this](auto & v) { 
-      // Divide
-      this->invocations_divide++; 
-      std::vector<std::vector<int>> subproblem;
-      for(int i=0; i < v.size(); i++){
-        subproblem.push_back( std::vector<int>{v[i]} );
-      }
-      return subproblem; 
-    },
-    [this](auto & problem, auto & out) { 
-      // Base
-      this->invocations_base++; 
-      out = problem[0];
-    }, 
-    [this](auto & partial, auto & out) { 
-      // Merge
-      this->invocations_merge++; 
-      out += partial;
-    }
-  );
-  this->check_multiple();
-}
-
-TYPED_TEST(divideandconquer_test, poly_multiple)
-{
-  this->setup_multiple();
-  
-  grppi::divide_and_conquer(this->poly_execution_, this->v, this->out,
     [this](auto & v) { 
       // Divide
       this->invocations_divide++; 
