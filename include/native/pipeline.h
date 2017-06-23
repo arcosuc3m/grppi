@@ -39,7 +39,7 @@ template <typename InStream, typename OutStream, int currentStage, typename ...S
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static mpmc_queue<optional<queueType>> queueOut((pipe.exectype)->queue_size,(pipe.exectype)->lockfree); 
+      static mpmc_queue<optional<queueType>> queueOut(pipe.exectype.queue_size,pipe.exectype.lockfree); 
 
       composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
       composed_pipeline<mpmc_queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
