@@ -17,7 +17,6 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
-/// \file Sequential implementations of map pattern
 
 #ifndef GRPPI_MAP_SEQ_H
 #define GRPPI_MAP_SEQ_H
@@ -30,7 +29,7 @@ namespace grppi{
 */
 
 /**
-\brief Invoke [map pattern](@ref mappattern) on a data sequence.
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
 \tparam Operation Callable type for the transformation operation.
@@ -52,6 +51,18 @@ void map(sequential_execution & ex,
   }
 }
 
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+\param inputs Additional iterators with first elements of additional sequences.
+*/
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
  void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
 
