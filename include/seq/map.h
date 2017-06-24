@@ -29,7 +29,8 @@ namespace grppi{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence.
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
 \tparam Operation Callable type for the transformation operation.
@@ -42,7 +43,7 @@ namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation>
 void map(sequential_execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Operation && op ) 
+         Operation && op) 
 {
   while(first != last) {
     *first_out = op(*first);
@@ -52,7 +53,8 @@ void map(sequential_execution & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence.
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
 \tparam Operation Callable type for the transformation operation.
@@ -61,17 +63,20 @@ void map(sequential_execution & ex,
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
 \param op Transformation operation.
-\param inputs Additional iterators with first elements of additional sequences.
+\param more_firsts Additional iterators with first elements of additional sequences.
 */
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void map(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        advance_iterators( inputs... );
-        first++;
-        firstOut++;
-    }
+ void map(sequential_execution & ex, 
+          InputIt first, InputIt last, OutputIt first_out, 
+          Operation && op, 
+          MoreIn ... more_firsts) 
+{
+  while( first != last ) {
+    *first_out = op(*first, *more_firsts...);
+    advance_iterators(more_firsts...);
+    first++;
+    first_out++;
+  }
 }
 
 /**
