@@ -29,11 +29,9 @@
 #include "poly/map.h"
 
 /** 
-\defgroup map_pattern
+\defgroup map_pattern Map pattern
 
-\brief Map pattern.
-
-\ref map-pattern
+\brief Interface for applyinng the \ref map-pattern.
 */
 
 #endif
