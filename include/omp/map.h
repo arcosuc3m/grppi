@@ -25,8 +25,25 @@
 
 namespace grppi{
 
+/**
+\addtogroup map_pattern
+@{
+*/
+
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with OpenMP
+parallel execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+*/
 template <typename InputIt, typename OutputIt, typename Operation>
- void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation &&op){
+void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation &&op){
    
   int numElements = last - first;
 
@@ -67,9 +84,8 @@ template <typename InputIt, typename OutputIt, typename Operation>
   }
 }
 
-
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void internal_map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut,
+void internal_map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut,
                          Operation &&op, int i, int elemperthr, MoreIn ... inputs){
         //Calculate local input and output iterator 
         auto begin = first + (elemperthr * i);
@@ -85,7 +101,19 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
         }
 }
 
-
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+\param more_firsts Additional iterators with first elements of additional sequences.
+*/
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
  void map(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs){
    //Calculate number of elements per thread
@@ -113,6 +141,10 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
    }
    }
 }
+
+/**
+@}
+*/
 }
 #endif
 
