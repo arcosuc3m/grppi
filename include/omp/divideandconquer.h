@@ -134,18 +134,6 @@ Output divide_and_conquer(parallel_execution_omp &p, Input & problem, Output ini
 }
 
 
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 }
 #endif
 
