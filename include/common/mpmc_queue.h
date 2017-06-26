@@ -40,7 +40,7 @@ class mpmc_queue{
    public:
       using value_type = T;
 
-      mpmc_queue<T>(int _size, queue_mode active = queue_mode::blocking ):
+      mpmc_queue<T>(int _size, queue_mode active):
            size{_size}, buffer{std::vector<T>(size)}, mode{active}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
       
      
