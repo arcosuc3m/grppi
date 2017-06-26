@@ -27,16 +27,15 @@
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
- void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
+ void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
+  OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
     tbb::task_group g;
  
     for(int i=1;i<p.num_threads;i++){
-      
-
-
+  
        g.run( [&neighbor, &op, first, firstOut, elemperthr, i, last, p ]() {
                 auto begin = first + (elemperthr * i);
                 auto end = first + (elemperthr * (i+1));
@@ -67,7 +66,8 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+ void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
+  OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
      int numElements = last - first;
      int elemperthr = numElements/p.num_threads;
@@ -76,20 +76,21 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
      for(int i=1;i<p.num_threads;i++){
 
         
-        g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( )mutable{
-        auto begin = first + (elemperthr * i);
-        auto end = first + (elemperthr * (i+1));
+        g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( ){
+               auto begin = first + (elemperthr * i);
+               auto end = first + (elemperthr * (i+1));
 
                if(i==p.num_threads-1) end = last;
 
                auto out = firstOut + (elemperthr * i);
-        
-               advance_iterators(elemperthr, i, inputs ...);
+               int iteration = (elemperthr*i);
+               //advance_iterators(elemperthr*i, inputs ...);
                while(begin!=end){
                  auto neighbors = neighbor(begin);
-                 *out = op(*begin, neighbors,inputs...);
+                 *out = op(*begin, neighbors, *(inputs+iteration)...);
                  begin++;
-                 advance_iterators( inputs ... );
+                 iteration++;
+                 //advance_iterators( inputs ... );
                  out++;
                }
             });
