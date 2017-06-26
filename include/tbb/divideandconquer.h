@@ -133,7 +133,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
  void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
     while( first != last ) {
         *firstOut = op( *first, *inputs ... );
-        advance_iterators( inputs... );
+        NextInputs( inputs... );
         first++;
         firstOut++;
     }
