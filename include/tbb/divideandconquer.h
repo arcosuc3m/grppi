@@ -26,12 +26,12 @@
 #include <tbb/tbb.h>
 namespace grppi{
 template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- void internal_divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output & output,
+Output internal_divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output init,
             DivFunc && divide, Operation && op, MergeFunc && merge, std::atomic<int>& num_threads) {
    
     // Sequential execution fo internal implementation
     sequential_execution seq;
-
+    auto out = init;
     if(num_threads.load()>0){
        auto subproblems = divide(problem);
 
@@ -45,7 +45,7 @@ template <typename Input, typename Output, typename DivFunc, typename Operation,
             //THREAD
             g.run(
               [&p, i, &partials, division, &divide, &op, &merge, &num_threads](){
-                 internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
+                 partials[division] = internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
               }
             );
               //END TRHEAD
@@ -53,34 +53,34 @@ template <typename Input, typename Output, typename DivFunc, typename Operation,
           }
           //Main thread works on the first subproblem.
           for(i; i != subproblems.end(); i++){
-              divide_and_conquer(seq,*i,partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
+              partials[division] = divide_and_conquer(seq,*i,partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
           }
 
-          internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
+          partials[0] = internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
 
           g.wait();
 
           for(int i = 0; i<partials.size();i++){ // MarcoA - this is moved to the user code
-              merge(partials[i], output);
+              merge(partials[i], out);
           }
 
         }else{
-          op(problem, output);
+          out = op(problem);
         }
 
      }else{
-        divide_and_conquer(seq, problem, output, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
+        return divide_and_conquer(seq, problem, out, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
      }
-
+     return out;
 }
 
 template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- void divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output & output,
+Output divide_and_conquer(parallel_execution_tbb &p, Input & problem, Output init,
             DivFunc && divide, Operation && op, MergeFunc && merge) {
 
     // Sequential execution fo internal implementation
     sequential_execution seq;
-
+    auto out = init; 
     std::atomic<int> num_threads( p.num_threads );
 
     if(num_threads.load()>0){
@@ -96,49 +96,38 @@ template <typename Input, typename Output, typename DivFunc, typename Operation,
               //THREAD
               g.run(
                  [&p, i, &partials, division, &divide, &op, &merge, &num_threads](){
-                     internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
+                     partials[division] = internal_divide_and_conquer(p, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
                   }
               );
               num_threads--;
               //END TRHEAD
           }
           for(i; i != subproblems.end(); i++){
-              divide_and_conquer(seq,*i,partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
+              partials[division] = divide_and_conquer(seq,*i,partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
           }
           //Main thread works on the first subproblem.
 
           if(num_threads.load()>0){
-            internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
+            partials[0] = internal_divide_and_conquer(p, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
           }else{
-            divide_and_conquer(seq, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
+            partials[0] = divide_and_conquer(seq, *subproblems.begin(), partials[0], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
           }
 
           g.wait();
 
           for(int i = 0; i<partials.size();i++){ // MarcoA - this is moved to the user code
-              merge(partials[i], output);
+              merge(partials[i], out);
           }
         }else{
-          op(problem, output);
+          out = op(problem);
         }
     }else{
-       divide_and_conquer(seq, problem, output, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
+       return divide_and_conquer(seq, problem, out, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
     }
+    return out;
 }
 
 
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 }
 #endif
 

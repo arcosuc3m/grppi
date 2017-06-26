@@ -23,40 +23,29 @@
 namespace grppi{
 
 template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- void divide_and_conquer(sequential_execution &s, Input &problem, Output &output, DivFunc &&divide,
+ Output divide_and_conquer(sequential_execution &s, Input &problem, Output init, DivFunc &&divide,
                                Operation &&op, MergeFunc &&merge) {
      
     auto subproblems = divide(problem);
+    Output out = init;
     if(subproblems.size()>1){
         std::vector<Output> partials(subproblems.size());
 	int division = 0;
         for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
             //THREAD
-                divide_and_conquer(s, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
+            partials[division] = divide_and_conquer(s, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
             //END THREAD
         }
         //JOIN
         for(int i = 0; i<partials.size();i++){
-              merge(partials[i], output);
+              merge(partials[i], out);
         }
     }else{
 
-        op(problem, output);
-
+        out = op(problem);
     }
+    return out;
 }
 
-
-/*
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 }
 #endif
