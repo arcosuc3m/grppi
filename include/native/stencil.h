@@ -93,7 +93,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
                // Register the thread in the execution model
                p.register_thread();
                
-               advance_iterators(n, i, inputs ...);
+               advance_iterators(n*i, inputs ...);
                while(begin!=end){
                  auto neighbors = neighbor(begin);
                  *out = op(*begin, neighbors,inputs...);
