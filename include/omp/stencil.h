@@ -86,7 +86,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
 
            auto out = firstOut + (elemperthr * i);
         
-           advance_iterators(elemperthr, i, inputs ...);
+           advance_iterators(elemperthr*i, inputs ...);
            while(begin!=end){
              auto neighbors = neighbor(begin);
              *out = op(*begin, neighbors,inputs...);
