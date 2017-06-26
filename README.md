@@ -6,23 +6,20 @@
 
 Currently, **GrPPI** supports the following patterns:
 
-  * Divide-and-conquer
+  * Data parallel patterns
+    * Map
+    * Map-reduce
+    * Reduce
+    * Stencil
 
-  * Farm
+  * Task parallel patterns
+    * Divide-and-conquer
 
-  * Map
-
-  * Map-reduce
-
-  * Pipeline
-
-  * Reduce
-
-  * Stencil
-
-  * Stream-filter
-
-  * Stream-reduce
+  * Streaming patterns
+    * Farm
+    * Pipeline
+    * Stream-filter
+    * Stream-reduce
 
 ## Install and compile instructions
 
