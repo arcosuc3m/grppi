@@ -30,85 +30,83 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
  void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
   OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
-    int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-    tbb::task_group g;
- 
-    for(int i=1;i<p.num_threads;i++){
-  
-       g.run( [&neighbor, &op, first, firstOut, elemperthr, i, last, p ]() {
-                auto begin = first + (elemperthr * i);
-                auto end = first + (elemperthr * (i+1));
-                if( i == p.num_threads-1) end = last;
-                auto out = firstOut + (elemperthr * i);
-                while(begin!=end){
-                  auto neighbors = neighbor(begin);
-                  *out = op(begin, neighbors);
-                  begin++;
-                  out++;
-                }
-              }
-        );
-    }
-   //MAIN 
+  int numElements = last - first;
+  int elemperthr = numElements/p.num_threads;
+  tbb::task_group g;
+
+  for(int i=1;i<p.num_threads;i++){
+
+     g.run( [&neighbor, &op, first, firstOut, elemperthr, i, last, p ]() {
+        auto begin = first + (elemperthr * i);
+        auto end = first + (elemperthr * (i+1));
+        if( i == p.num_threads-1) end = last;
+        auto out = firstOut + (elemperthr * i);
+        while(begin!=end){
+          auto neighbors = neighbor(begin);
+          *out = op(begin, neighbors);
+          begin++;
+          out++;
+        }
+      }
+    );
+   }
+     //MAIN 
    auto end = first + elemperthr;
    while(first!=end){
-      auto neighbors = neighbor(first);
-      *firstOut = op(first, neighbors);
-      first++;
-      firstOut++;
-   }
+    auto neighbors = neighbor(first);
+    *firstOut = op(first, neighbors);
+    first++;
+    firstOut++;
+  }
 
-   g.wait();
- 
+  g.wait();
+
 }
 
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
+void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
   OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
-     int numElements = last - first;
-     int elemperthr = numElements/p.num_threads;
-     tbb::task_group g;
+   int numElements = last - first;
+   int elemperthr = numElements/p.num_threads;
+   tbb::task_group g;
 
-     for(int i=1;i<p.num_threads;i++){
-
-        
-        g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( ){
-               auto begin = first + (elemperthr * i);
-               auto end = first + (elemperthr * (i+1));
-
-               if(i==p.num_threads-1) end = last;
-
-               auto out = firstOut + (elemperthr * i);
-               int iteration = (elemperthr*i);
-               //advance_iterators(elemperthr*i, inputs ...);
-               while(begin!=end){
-                 auto neighbors = neighbor(begin);
-                 *out = op(*begin, neighbors, *(inputs+iteration)...);
-                 begin++;
-                 iteration++;
-                 //advance_iterators( inputs ... );
-                 out++;
-               }
-            });
-    }
-
-   //MAIN 
-   auto end = first + elemperthr;
-   while(first!=end){
-      auto neighbors = neighbor(first);
-      *firstOut = op(*first, neighbors, inputs...);
-      first++;
-      advance_iterators( inputs ... );
-      firstOut++;
-   }
+   for(int i=1;i<p.num_threads;i++){
 
 
-   //Join threads
-   g.wait();
+    g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( ){
+     auto begin = first + (elemperthr * i);
+     auto end = first + (elemperthr * (i+1));
+
+     if(i==p.num_threads-1) end = last;
+
+     auto out = firstOut + (elemperthr * i);
+     int iteration = (elemperthr*i);
+     while(begin!=end){
+       auto neighbors = neighbor(begin);
+       *out = op(*begin, neighbors, *(inputs+iteration)...);
+       begin++;
+       iteration++;
+       out++;
+     }
+   });
+  }
+
+  //MAIN 
+  auto end = first + elemperthr;
+  while(first!=end){
+    auto neighbors = neighbor(first);
+    *firstOut = op(*first, neighbors, inputs...);
+    first++;
+    advance_iterators( inputs ... );
+    firstOut++;
+  }
+
+
+  //Join threads
+  g.wait();
 }
 
 }
