@@ -22,13 +22,13 @@
 #define GRPPI_STREAM_FILTER_THR_H
 
 namespace grppi{
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_native &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
+template <typename Generator, typename Predicate, typename Consumer>
+ void stream_filter(parallel_execution_native &p, Generator && gen, Predicate && pred, Consumer && cons ) {
 
     std::vector<std::thread> tasks;
 
-    mpmc_queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(p.queue_size,p.lockfree);
-    mpmc_queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(p.queue_size,p.lockfree);
+    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > queue(p.queue_size,p.lockfree);
+    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > outqueue(p.queue_size,p.lockfree);
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
     for(int i=0; i< p.num_threads - 1; i++){
@@ -39,16 +39,16 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
                // Register the thread in the execution model
                p.register_thread();
 
-               std::pair< typename std::result_of<GenFunc()>::type,long > item;
+               std::pair< typename std::result_of<Generator()>::type,long > item;
                //dequeue a pair element - order
                item = queue.pop();
                while( item.first ){
-                   if(filter(item.first.value()))
+                   if(pred(item.first.value()))
                        //If is an acepted element
                        outqueue.push(item);
                    else{
                        //If is a discarded element
-                       outqueue.push(std::make_pair(typename std::result_of<GenFunc()>::type(),item.second));
+                       outqueue.push(std::make_pair(typename std::result_of<Generator()>::type(),item.second));
                    }
                    item = queue.pop();
                }
@@ -71,8 +71,8 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
            p.register_thread();
 
            int nend = 0;
-           std::pair<typename std::result_of<GenFunc()>::type, long> item;
-           std::vector< std::pair<typename std::result_of<GenFunc()>::type, long> > aux_vector;
+           std::pair<typename std::result_of<Generator()>::type, long> item;
+           std::vector< std::pair<typename std::result_of<Generator()>::type, long> > aux_vector;
            long order = 0;
            //Dequeue an element
            item = outqueue.pop();
@@ -87,7 +87,7 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
                   //If the element is the next one to be procesed
                   if(order == item.second){
                       if(item.first)
-                         out(item.first.value());
+                         cons(item.first.value());
                       order++;
                   }else{
                       //If the incoming element is disordered
@@ -98,7 +98,7 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
               for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
                   if((*it).second == order){
                        if((*it).first)
-                          out((*it).first.value());
+                          cons((*it).first.value());
                        aux_vector.erase(it);
                        order++;
                   }
@@ -109,7 +109,7 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
                for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
                   if((*it).second == order){
                        if((*it).first)
-                          out((*it).first.value());
+                          cons((*it).first.value());
                        aux_vector.erase(it);
                        order++;
                   }
@@ -125,10 +125,10 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
     //THREAD 0 ENQUEUE ELEMENTS
     long order = 0;
     while(1){
-        auto k = in();
+        auto k = gen();
         queue.push(make_pair(k,order));
         order++;
-        if( k.end ){
+        if( k){
            for(int i = 0; i< p.num_threads -1; i++){
               queue.push(make_pair(k,0));
            }
@@ -140,9 +140,9 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 
 }
 
-template <typename FilterFunc>
-filter_info<parallel_execution_native, FilterFunc> stream_filter(parallel_execution_native &p, FilterFunc && op){
-   return filter_info<parallel_execution_native, FilterFunc>(p, op);
+template <typename Predicate>
+filter_info<parallel_execution_native, Predicate> stream_filter(parallel_execution_native &p, Predicate && pred){
+   return filter_info<parallel_execution_native, Predicate>(p, std::forward<Predicate>(pred));
 
 }
 }

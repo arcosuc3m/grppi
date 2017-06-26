@@ -22,34 +22,21 @@
 #define GRPPI_STREAM_FILTER_SEQ_H
 
 namespace grppi{
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void stream_filter(sequential_execution, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
+template <typename Generator, typename Predicate, typename Consumer>
+void stream_filter(sequential_execution, Generator && gen, Predicate && pred, Consumer && cons) {
 
     while( 1 ) {
-        auto k = in();
-        if( k.end )
+        auto k = gen();
+        if( k )
             break;
-        if(filter(k.elem))
-            out(k.elem);
+        if(pred(k.value()))
+            cons(k.value());
     }
 }
 
-
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void stream_filter( GenFunc && in, FilterFunc && filter, OutFunc && out ) {
-
-    while( 1 ) {
-        auto k = in();
-        if( k.end ) 
-            break;
-        if(filter(k.elem))
-            out(k.elem);
-    }
-}
-
-template <typename FilterFunc>
-filter_info<sequential_execution, FilterFunc> stream_filter(sequential_execution &s, FilterFunc && op){
-   return filter_info<sequential_execution, FilterFunc>(s, op);
+template <typename Predicate>
+filter_info<sequential_execution, Predicate> stream_filter(sequential_execution &s, Predicate && pred){
+   return filter_info<sequential_execution, Predicate>(s, std::forward<Predicate>(pred));
 }
 
 }
