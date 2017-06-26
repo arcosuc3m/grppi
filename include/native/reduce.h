@@ -6,13 +6,7 @@
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-*te < typename InputIt, typename ReduceOperator>
-typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_native &p, InputIt first, InputIt last, ReduceOperator op){
-   auto identityVal = !op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
-}
-
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,7 +28,7 @@ namespace grppi{
 
 template < typename InputIt, typename ReduceOperator>
 typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator op){
+reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator && op){
    
     auto identityVal = init;
 
@@ -78,7 +72,7 @@ reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::
 
 template < typename InputIt, typename ReduceOperator>
 typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_native &p, InputIt first, InputIt last, ReduceOperator op){
+reduce(parallel_execution_native &p, InputIt first, InputIt last, ReduceOperator && op){
    auto identityVal = !op(false,true);
    return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
 }

@@ -30,7 +30,7 @@ namespace grppi{
 
 template < typename InputIt, typename ReduceOperator>
 typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator op){
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator && op){
 
     auto identityVal = init;
    //FIXME: Necesita el valor inicial de la operacion
@@ -52,7 +52,7 @@ reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::ite
 
 template < typename InputIt, typename ReduceOperator>
 typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator op){
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator &&op){
    auto identityVal = !op(false,true);
    return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
 }
