@@ -24,14 +24,14 @@
 #include "../reduce.h"
 
 namespace grppi{
-template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator,typename ... MoreIn >
- void map_reduce (parallel_execution_native & p, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
+template < typename InputIt, typename OutputIt, typename Transformer, typename Combiner,typename ... MoreIn >
+ void map_reduce (parallel_execution_native & p, InputIt first, InputIt last, OutputIt firstOut, Transformer && transform_op, Combiner && combine_op, MoreIn ... inputs) {
 
     // Register the thread in the execution model
     p.register_thread();
     while( first != last ) {
-       auto mapresult = map(*first, inputs ... );
-       *firstOut = reduce(p, mapresult.begin(), mapresult.end(), op);
+       auto mapresult = transform_op(*first, inputs ... );
+       *firstOut = reduce( p, mapresult.begin(), mapresult.end(), std::forward<Combiner>(combine_op) );
        first++;
        firstOut++;
     }
@@ -40,8 +40,8 @@ template < typename InputIt, typename OutputIt, typename MapFunc, typename Reduc
 }
 
 
-template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, MapFunc &&  map, T init, ReduceOperator op){
+template <typename InputIt, typename Transformer, class T, typename Combiner>
+ T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op, T init, Combiner &&combine_op){
 
     using namespace std;
     T out = init;
@@ -60,7 +60,7 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
             // Register thread
             p.register_thread();
 
-            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, std::forward<MapFunc>(map), op);
+            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
 
             // Deregister thread
             p.deregister_thread();
@@ -68,11 +68,11 @@ template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
          begin, end, out)
        );
     }
-    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, std::forward<MapFunc>(map), op);
+    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
     for(auto task = tasks.begin();task != tasks.end();task++){    
        (*task).join();
     }
-    Reduce(sequential_execution{}, partialOuts.begin(), partialOuts.end(), out, op);
+    Reduce(sequential_execution{}, partialOuts.begin(), partialOuts.end(), out, std::forward<Combiner>(combine_op));
 
     return out;
 }

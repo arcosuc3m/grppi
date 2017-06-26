@@ -24,22 +24,22 @@
 namespace grppi{
 
 
-template < typename InputIt, typename ReduceOperator>
+template < typename InputIt, typename Combiner>
 typename std::iterator_traits<InputIt>::value_type
-reduce(sequential_execution &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator &&op){
+reduce(sequential_execution &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner &&combine_op){
     auto firstOut = init;
     while( first != last ) {
-       firstOut = op( firstOut, *first );
+       firstOut = combine_op( firstOut, *first );
        first++;
     }
     return firstOut;
 }
 
-template < typename InputIt, typename ReduceOperator>
-typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(sequential_execution &p, InputIt first, InputIt last, ReduceOperator &&op){
-   auto identityVal = !op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
+template < typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(sequential_execution &p, InputIt first, InputIt last, Combiner &&combine_op){
+   auto identityVal = !combine_op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
 }
 
 

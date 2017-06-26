@@ -25,36 +25,34 @@
 
 #include <tbb/tbb.h>
 
-//typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 namespace grppi{
 
-template < typename InputIt, typename ReduceOperator>
+template < typename InputIt, typename Combiner>
 typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator && op){
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner && combine_op){
 
     auto identityVal = init;
-   //FIXME: Necesita el valor inicial de la operacion
    return tbb::parallel_reduce(tbb::blocked_range<InputIt>( first, last ), identityVal,
               [&](const tbb::blocked_range<InputIt> &r,typename std::iterator_traits<InputIt>::value_type  temp){
                  for(InputIt i=r.begin(); i!= r.end(); ++i){
-                   temp = op( temp, *i);
+                   temp = combine_op( temp, *i);
                  }
                  return temp;
               },
               [&](typename std::iterator_traits<InputIt>::value_type a, typename std::iterator_traits<InputIt>::value_type b) -> typename std::iterator_traits<InputIt>::value_type
               {
-                a = op(a,b);
+                a = combine_op(a,b);
                 return a;
               }
           );
    
 }
 
-template < typename InputIt, typename ReduceOperator>
-typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, ReduceOperator &&op){
-   auto identityVal = !op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
+template < typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(parallel_execution_tbb &p, InputIt first, InputIt last, Combiner &&combine_op){
+   auto identityVal = !combine_op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
 }
 
 }

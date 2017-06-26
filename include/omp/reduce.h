@@ -27,9 +27,9 @@
 
 namespace grppi{
 
-template < typename InputIt, typename ReduceOperator>
+template < typename InputIt, typename Combiner>
 typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, ReduceOperator &&op){
+reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner &&combine_op){
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
     auto identityVal = init;
@@ -50,7 +50,7 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::ite
          {
             out[i] = identityVal;
             while( begin != end ) {
-                out[i] = op(*begin, out[i] );
+                out[i] = combine_op(*begin, out[i] );
                 begin++;
             }
          }
@@ -61,7 +61,7 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::ite
     auto end = first + elemperthr;
     out[0] = identityVal;
     while(first!=end){
-         out[0] = op(*first , out[0]);
+         out[0] = combine_op(*first , out[0]);
          first++;
     }
 
@@ -71,16 +71,16 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::ite
 
     auto outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){
-       outVal = op(outVal, out[i]);
+       outVal = combine_op(outVal, out[i]);
     }
     return outVal;
 }
 
-template < typename InputIt, typename ReduceOperator>
-typename std::result_of< ReduceOperator(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, ReduceOperator &&op){
-   auto identityVal = !op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<ReduceOperator>(op));
+template < typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(parallel_execution_omp &p, InputIt first, InputIt last, Combiner &&combine_op){
+   auto identityVal = !combine_op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
 }
 
 
