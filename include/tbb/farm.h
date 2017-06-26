@@ -123,7 +123,7 @@ template <typename GenFunc, typename Operation>
 
 template <typename Operation>
 farm_info<parallel_execution_tbb,Operation> farm(parallel_execution_tbb &p, Operation && op){
-   return farm_info<parallel_execution_tbb, Operation>(p,op);
+   return farm_info<parallel_execution_tbb, Operation>(p, std::forward<Operation>(op) );
 }
 }
 #endif
