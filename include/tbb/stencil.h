@@ -84,12 +84,12 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
 
                auto out = firstOut + (elemperthr * i);
         
-               GetStart(elemperthr, i, inputs ...);
+               advance_iterators(elemperthr, i, inputs ...);
                while(begin!=end){
                  auto neighbors = neighbor(begin);
                  *out = op(*begin, neighbors,inputs...);
                  begin++;
-                 NextInputs( inputs ... );
+                 advance_iterators( inputs ... );
                  out++;
                }
             });
@@ -101,7 +101,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
       auto neighbors = neighbor(first);
       *firstOut = op(*first, neighbors, inputs...);
       first++;
-      NextInputs( inputs ... );
+      advance_iterators( inputs ... );
       firstOut++;
    }
 

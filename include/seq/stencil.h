@@ -40,7 +40,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
     while( first != last ) {
         auto neighbors = neighbor(first);
         *firstOut = op(first, neighbors, *inputs ...);
-        NextInputs( inputs... );
+        advance_iterators( inputs... );
         first++;
         firstOut++;
     }
