@@ -18,6 +18,7 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 #include <atomic>
+#include <experimental/optional>
 
 #include <gtest/gtest.h>
 
@@ -43,11 +44,7 @@ public:
 
   // Vectors
   vector<int> v{};
-  vector<int> v2{};
-  vector<int> v3{};
-  vector<int> w{};
-  vector<int> expected{};
-
+  
   // Invocation counter
   std::atomic<int> invocations_gen{0};
   std::atomic<int> invocations_kernel{0};
@@ -75,7 +72,6 @@ public:
     EXPECT_EQ(2, this->out);
   }
 
-
   void setup_single_sink() {
     out = 0;
     v = vector<int>{1};
@@ -86,10 +82,8 @@ public:
   void check_single_sink() {
     EXPECT_EQ(2, invocations_gen);
     EXPECT_EQ(1, invocations_reduce);
-
     EXPECT_EQ(1, this->out);
   }
-
 
   void setup_multiple() {
     out = 0;
@@ -100,10 +94,8 @@ public:
     EXPECT_EQ(6, invocations_gen);
     EXPECT_EQ(5, invocations_kernel);
     EXPECT_EQ(5, invocations_reduce);
-
     EXPECT_EQ(30, this->out);
   }
-
 
   void setup_multiple_sink() {
     out = 0;
@@ -115,21 +107,19 @@ public:
   void check_multiple_sink() {
     EXPECT_EQ(6, invocations_gen);
     EXPECT_EQ(5, invocations_reduce);
-
     EXPECT_EQ(15, this->out);
   }
 
-  void setup_multiple_sink2() {
+  void setup_window_offset() {
     out = 0;
     v = vector<int>{1,2,3,4,5,6};
     window = 2;
     offset = 1;
   }
 
-  void check_multiple_sink2() {
+  void check_window_offset() {
     EXPECT_EQ(7, invocations_gen);
     EXPECT_EQ(5, invocations_reduce);
-
     EXPECT_EQ(35, this->out);
   }
 
@@ -138,14 +128,14 @@ public:
 // Test for execution policies defined in supported_executions.h
 TYPED_TEST_CASE(stream_reduce_test, executions);
 
+// Check functionality with empty stream
 TYPED_TEST(stream_reduce_test, static_empty)
 {    
-
   this->setup_empty();
   grppi::stream_reduce(this->execution_,
-    [this]() { 
+    [this]() -> std::experimental::optional<int> { 
       this->invocations_gen++; 
-      return optional<int> ();
+      return {};
     },
     [this](auto v) { 
       this->invocations_kernel++; 
@@ -156,18 +146,17 @@ TYPED_TEST(stream_reduce_test, static_empty)
     },
     this->out
   );
-
   this->check_empty();
 }
 
+// Check functionality with empty stream and sink function
 TYPED_TEST(stream_reduce_test, static_empty_sink)
 { 
-
   this->setup_empty();
   grppi::stream_reduce(this->execution_,
-    [this]() { 
+    [this]() -> std::experimental::optional<int> { 
       this->invocations_gen++; 
-      return optional<int> ();
+      return {};
     },
     this->window, 
     this->offset,
@@ -179,11 +168,9 @@ TYPED_TEST(stream_reduce_test, static_empty_sink)
   this->check_empty();
 }
 
-
-
+// Process single element 
 TYPED_TEST(stream_reduce_test, static_single)
 {    
-
   this->setup_single();
   grppi::stream_reduce(this->execution_,
     [this]() { 
@@ -198,7 +185,6 @@ TYPED_TEST(stream_reduce_test, static_single)
       }else{
         return optional<int> ();
       }
-      
     },
     [this](auto v) { 
       this->invocations_kernel++; 
@@ -214,10 +200,9 @@ TYPED_TEST(stream_reduce_test, static_single)
   this->check_single();
 }
 
-
+// Process single element and use sink function
 TYPED_TEST(stream_reduce_test, static_single_sink)
 { 
-
   this->setup_single_sink();
   grppi::stream_reduce(this->execution_,
     [this]() { 
@@ -232,7 +217,6 @@ TYPED_TEST(stream_reduce_test, static_single_sink)
       }else{
         return optional<int> ();
       }
-
     },
     this->window, 
     this->offset,
@@ -245,10 +229,9 @@ TYPED_TEST(stream_reduce_test, static_single_sink)
   this->check_single_sink();
 }
 
-
+// Process multiple elements 
 TYPED_TEST(stream_reduce_test, static_multiple)
 {    
-
   this->setup_multiple();
   grppi::stream_reduce(this->execution_,
     [this]() { 
@@ -263,7 +246,6 @@ TYPED_TEST(stream_reduce_test, static_multiple)
       }else{
         return optional<int> ();
       }
-      
     },
     [this](auto v) { 
       this->invocations_kernel++; 
@@ -279,10 +261,9 @@ TYPED_TEST(stream_reduce_test, static_multiple)
   this->check_multiple();
 }
 
-
+// Process multiple elements and use sink function
 TYPED_TEST(stream_reduce_test, static_multiple_sink)
 { 
-
   this->setup_multiple_sink();
   grppi::stream_reduce(this->execution_,
     [this]() { 
@@ -297,7 +278,6 @@ TYPED_TEST(stream_reduce_test, static_multiple_sink)
       }else{
         return optional<int> ();
       }
-
     },
     this->window, 
     this->offset,
@@ -310,10 +290,10 @@ TYPED_TEST(stream_reduce_test, static_multiple_sink)
   this->check_multiple_sink();
 }
 
-TYPED_TEST(stream_reduce_test, static_multiple_sink2)
+// Process multiple elements with changes in the window and offset parameters
+TYPED_TEST(stream_reduce_test, static_window_offset)
 { 
-
-  this->setup_multiple_sink2();
+  this->setup_window_offset();
   grppi::stream_reduce(this->execution_,
     [this]() { 
       this->invocations_gen++; 
@@ -327,7 +307,6 @@ TYPED_TEST(stream_reduce_test, static_multiple_sink2)
       }else{
         return optional<int> ();
       }
-
     },
     this->window, 
     this->offset,
@@ -337,5 +316,5 @@ TYPED_TEST(stream_reduce_test, static_multiple_sink2)
       this->out += a;
     }
   );
-  this->check_multiple_sink2();
+  this->check_window_offset();
 }
