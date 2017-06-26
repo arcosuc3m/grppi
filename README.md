@@ -7,7 +7,7 @@
 Currently, **GrPPI** supports the following patterns:
 
   * Data parallel patterns
-    * Map
+    * [Map](doc/map.md)
     * Map-reduce
     * Reduce
     * Stencil
