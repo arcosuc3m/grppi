@@ -685,12 +685,12 @@ TYPED_TEST(farm_test, static_empty_composed)
       return optional<int>();
     },
     grppi::farm(this->execution_,
-    [this](<int> x) {
+    [this](int x) {
       //this->invocations_op++;
       return x;
     }
     ),
-    [this]( auto y ) {
+    [this](auto y ) {
       this->invocations_sk++;
     }
   );
@@ -706,12 +706,12 @@ TYPED_TEST(farm_test, static_empty_composed)
 //      return optional<int>();
 //    },
 //    grppi::farm(this->poly_execution_,
-//    [this](<int> x) {
+//    [this](int x) {
 //      //this->invocations_op++;
 //      return x;
 //    }
 //    ),
-//    [this]( auto y ) {
+//    [this](auto y ) {
 //      this->invocations_sk++;
 //    }
 //  );
@@ -731,12 +731,12 @@ TYPED_TEST(farm_test, static_single_composed)
         return optional<int>();
     },
     grppi::farm(this->execution_,
-    [this](<int> x) {
+    [this](int x) {
       //this->invocations_op++;
       return x*2;
     }
     ),
-    [this]( auto x ) {
+    [this](auto x ) {
       this->invocations_sk++;
       this->w[this->idx_out] = x;
       this->idx_out++;
@@ -759,12 +759,12 @@ TYPED_TEST(farm_test, static_single_composed)
 //        return optional<int>();
 //    },
 //    grppi::farm(this->poly_execution_,
-//    [this](<int> x) {
+//    [this](int x) {
 //      //this->invocations_op++;
 //      return x*2;
 //    }
 //    ),
-//    [this]( auto x ) {
+//    [this](auto x ) {
 //      this->invocations_sk++;
 //      this->w[this->idx_out] = x;
 //      this->idx_out++;
@@ -788,12 +788,12 @@ TYPED_TEST(farm_test, static_multiple_composed)
         return optional<int>();
     },
     grppi::farm(this->execution_,
-    [this](<int> x) {
+    [this](int x) {
       //this->invocations_op++;
       return x*2;
     }
     ),
-    [this]( auto x ) {
+    [this](auto x ) {
       this->invocations_sk++;
       this->w[this->idx_out] = x;
       this->idx_out++;
@@ -816,12 +816,12 @@ TYPED_TEST(farm_test, static_multiple_composed)
 //        return optional<int>();
 //    },
 //    grppi::farm(this->poly_execution_,
-//    [this](<int> x) {
+//    [this](int x) {
 //      //this->invocations_op++;
 //      return x*2;
 //    }
 //    ),
-//    [this]( auto x ) {
+//    [this](auto x ) {
 //      this->invocations_sk++;
 //      this->w[this->idx_out] = x;
 //      this->idx_out++;
