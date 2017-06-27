@@ -57,7 +57,7 @@ The only interface currently offered for this pattern is based in iterators
   * The output data set is specified by an iterator to the start of the output sequence.
 
 ---
-**Example**: Squaring values in a vector.
+**Example**: Doubling values in a vector.
 ~~~{.cpp}
 vector<double> v = get_the_vector();
 vector<double> w(v.size());
