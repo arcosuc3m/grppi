@@ -123,7 +123,6 @@ TYPED_TEST(farm_test, static_empty)
     },
     [this](int x) {
       this->invocations_op++;
-      return x; 
     }
   );
   this->check_empty();
@@ -139,7 +138,6 @@ TYPED_TEST(farm_test, poly_empty)
     },
     [this](int x) {
       this->invocations_op++;
-      return x; 
     }
   );
   this->check_empty();
