@@ -22,8 +22,12 @@
 #include <gtest/gtest.h>
 
 #include "pipeline.h"
+#include "farm.h"
 
 #include "supported_executions.h"
+
+#include <iostream>
+#include <numeric>
 
 using namespace std;
 using namespace grppi;
@@ -39,6 +43,7 @@ public:
 
   // Vectors
   vector<int> v{};
+  vector<vector<int> > v2{};
 
   // Invocation counter
   std::atomic<int> invocations_init{0};
@@ -74,6 +79,19 @@ public:
     ASSERT_EQ(4, invocations_last); 
     ASSERT_EQ(4, invocations_intermediate);
     EXPECT_EQ(20, this->out);
+  }
+
+  void setup_composed() {
+    counter = 5;
+    out = 0;
+
+  }
+
+  void check_composed() {
+    ASSERT_EQ(5, invocations_init); 
+    ASSERT_EQ(4, invocations_last); 
+    //ASSERT_EQ(4, invocations_intermediate);
+    EXPECT_EQ(40, this->out);
   }
 
 
@@ -146,4 +164,41 @@ TYPED_TEST(pipeline_test, static_three_stages)
     }
   );
   this->check_three_stages();
+}
+
+
+
+TYPED_TEST(pipeline_test, static_three_stages_composed)
+{
+  this->setup_composed();
+    grppi::pipeline( this->execution_,
+    [this]() { 
+        this->invocations_init++;
+        this->counter--;
+        std::vector<int> v(5);
+        std::iota(begin(v), end(v), 0);
+
+        if(this->counter  <= 0){
+          return optional< std::vector<int> >();
+        }else{
+          return optional<std::vector<int>>(v);
+        }
+    },
+    grppi::farm(this->execution_,
+        [this](std::vector<int> v) {
+          //this->invocations_intermediate++;
+          int acumm = 0;
+          for(int i = 0; i < v.size(); i++ ){
+            acumm += v[i];
+          }
+          return acumm;
+        }
+    ),
+    [this]( auto y ) {
+      this->invocations_last++;
+      this->out += y;
+    }
+  );
+
+  this->check_composed();
 }
