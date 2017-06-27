@@ -50,6 +50,7 @@ public:
   // Invocation counter
   std::atomic<int> invocations_in{0};
   std::atomic<int> invocations_op{0};
+  std::atomic<int> invocations_sk{0};
 
   void setup_empty() {
   }
@@ -57,6 +58,7 @@ public:
   void check_empty() {
     ASSERT_EQ(1, invocations_in); // Functor in was invoked once
     ASSERT_EQ(0, invocations_op); // Functor op was not invoked
+    ASSERT_EQ(0, invocations_sk); // Functor op was not invoked
   }
 
   void setup_single() {
@@ -67,6 +69,12 @@ public:
   void check_single() {
     ASSERT_EQ(2, invocations_in); // Functor in was invoked once
     EXPECT_EQ(1, this->invocations_op); // one invocation of function op
+    EXPECT_EQ(84, this->w[0]);
+  }
+  void check_single_sink() {
+    ASSERT_EQ(2, invocations_in); // Functor in was invoked once
+    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
+    EXPECT_EQ(1, this->invocations_sk); // one invocation of function sk
     EXPECT_EQ(84, this->w[0]);
   }
 
@@ -83,6 +91,13 @@ public:
     EXPECT_EQ(66, this->w[0]);
   }
 
+  void check_single_ary_sink() {
+    ASSERT_EQ(2, invocations_in); // Functor in was invoked twice
+    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
+    EXPECT_EQ(1, this->invocations_sk); // one invocation of function sk
+    EXPECT_EQ(66, this->w[0]);
+  }
+
   void setup_multiple() {
     v = vector<int>{1,2,3,4,5};
     w = vector<int>(5);
@@ -90,8 +105,15 @@ public:
   }
 
   void check_multiple() {
-    EXPECT_EQ(6, this->invocations_in); // five invocations of function in
+    EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+  }
+  
+    void check_multiple_sink() {
+    EXPECT_EQ(6, this->invocations_in); // six invocations of function in
+    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
+    EXPECT_EQ(5, this->invocations_sk); // five invocations of function sk
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
 
@@ -104,10 +126,18 @@ public:
   }
 
   void check_multiple_ary() {
-    EXPECT_EQ(6, this->invocations_in); // five invocations of function in
+    EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
+  
+  void check_multiple_ary_sink() {
+    EXPECT_EQ(6, this->invocations_in); // six invocations of function in
+    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
+    EXPECT_EQ(5, this->invocations_sk); // five invocations of function sk
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+  }
+
 
 };
 
@@ -140,6 +170,46 @@ TYPED_TEST(farm_test, static_empty)
 //    [this](int x) {
 //      this->invocations_op++;
 //    }
+//  );
+//  this->check_empty();
+//}
+
+TYPED_TEST(farm_test, static_empty_sink)
+{
+  this->setup_empty();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      return optional<int>();
+    },
+    [this](int x) {
+      this->invocations_op++;
+      return x;
+    },
+    [this](int x) {
+      this->invocations_sk++;
+    }
+
+  );
+  this->check_empty();
+}
+
+//TYPED_TEST(farm_test, poly_empty_sink)
+//{
+//  this->setup_empty();
+//  grppi::farm(this->poly_execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      return optional<int>();
+//    },
+//    [this](int x) {
+//      this->invocations_op++;
+//      return x;
+//    },
+//    [this](int x) {
+//      this->invocations_sk++;
+//    }
+//
 //  );
 //  this->check_empty();
 //}
