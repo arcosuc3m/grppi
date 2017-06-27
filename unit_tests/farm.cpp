@@ -145,7 +145,7 @@ TYPED_TEST(farm_test, poly_empty)
   this->check_empty();
 }
 
-//TYPED_TEST(map_test, static_empty_ary)
+//TYPED_TEST(farm_test, static_empty_ary)
 //{
 //  this->setup_empty();
 //  grppi::farm(this->execution_,
@@ -165,7 +165,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_empty();
 //}
 //
-//TYPED_TEST(map_test, poly_empty_ary)
+//TYPED_TEST(farm_test, poly_empty_ary)
 //{
 //  this->setup_empty();
 //  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
@@ -178,7 +178,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_empty();
 //}
 //
-//TYPED_TEST(map_test, static_single)
+//TYPED_TEST(farm_test, static_single)
 //{
 //  this->setup_single();
 //  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
@@ -190,7 +190,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_single();
 //}
 //
-//TYPED_TEST(map_test, poly_single)
+//TYPED_TEST(farm_test, poly_single)
 //{
 //  this->setup_single();
 //  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
@@ -202,7 +202,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_single();
 //}
 //
-//TYPED_TEST(map_test, static_single_ary)
+//TYPED_TEST(farm_test, static_single_ary)
 //{
 //  this->setup_single_ary();
 //  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
@@ -215,7 +215,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_single_ary();
 //}
 //
-//TYPED_TEST(map_test, poly_single_ary)
+//TYPED_TEST(farm_test, poly_single_ary)
 //{
 //  this->setup_single_ary();
 //  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
@@ -228,7 +228,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_single_ary();
 //}
 //
-//TYPED_TEST(map_test, static_multiple)
+//TYPED_TEST(farm_test, static_multiple)
 //{
 //  this->setup_multiple();
 //  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
@@ -240,7 +240,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_multiple();
 //}
 //
-//TYPED_TEST(map_test, poly_multiple)
+//TYPED_TEST(farm_test, poly_multiple)
 //{
 //  this->setup_multiple();
 //  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
@@ -252,7 +252,7 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_multiple();
 //}
 //
-//TYPED_TEST(map_test, static_multiple_ary)
+//TYPED_TEST(farm_test, static_multiple_ary)
 //{
 //  this->setup_multiple_ary();
 //  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
@@ -265,11 +265,11 @@ TYPED_TEST(farm_test, poly_empty)
 //  this->check_multiple_ary();
 //}
 //
-//TYPED_TEST(map_test, poly_multiple_ary)
+//TYPED_TEST(farm_test, poly_multiple_ary)
 //{
 //  this->setup_multiple_ary();
 //  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int x, int y, int z) {
+//    [this:](int x, int y, int z) {
 //      this->invocations++; 
 //      return x+y+z; 
 //    },
