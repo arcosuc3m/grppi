@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include "farm.h"
+#include "pipeline.h"
 #include "common/polymorphic_execution.h"
 
 #include "supported_executions.h"
@@ -671,4 +672,161 @@ TYPED_TEST(farm_test, static_multiple_ary)
 //    }
 //  );
 //  this->check_multiple_ary_sink();
+//}
+
+
+
+TYPED_TEST(farm_test, static_empty_composed)
+{
+  this->setup_empty();
+    grppi::pipeline( this->execution_,
+    [this]() { 
+      this->invocations_in++;
+      return optional<int>();
+    },
+    grppi::farm(this->execution_,
+    [this](<int> x) {
+      //this->invocations_op++;
+      return x;
+    }
+    ),
+    [this]( auto y ) {
+      this->invocations_sk++;
+    }
+  );
+  this->check_empty();
+}
+
+//TYPED_TEST(farm_test, poly_empty_composed)
+//{
+//  this->setup_empty();
+//    grppi::pipeline( this->poly_execution_,
+//    [this]() { 
+//      this->invocations_in++;
+//      return optional<int>();
+//    },
+//    grppi::farm(this->poly_execution_,
+//    [this](<int> x) {
+//      //this->invocations_op++;
+//      return x;
+//    }
+//    ),
+//    [this]( auto y ) {
+//      this->invocations_sk++;
+//    }
+//  );
+//  this->check_empty();
+//}
+
+TYPED_TEST(farm_test, static_single_composed)
+{
+  this->setup_single();
+    grppi::pipeline( this->execution_,
+    [this]() {
+      this->invocations_in++;
+      if ( this->idx_in < this->v.size() ) {
+        this->idx_in++;
+        return optional<int>(this->v[this->idx_in-1]);
+      } else
+        return optional<int>();
+    },
+    grppi::farm(this->execution_,
+    [this](<int> x) {
+      //this->invocations_op++;
+      return x*2;
+    }
+    ),
+    [this]( auto x ) {
+      this->invocations_sk++;
+      this->w[this->idx_out] = x;
+      this->idx_out++;
+    }
+    }
+  );
+  this->check_single_sink();
+}
+
+//TYPED_TEST(farm_test, poly_single_composed)
+//{
+//  this->setup_single();
+//    grppi::pipeline( this->poly_execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      if ( this->idx_in < this->v.size() ) {
+//        this->idx_in++;
+//        return optional<int>(this->v[this->idx_in-1]);
+//      } else
+//        return optional<int>();
+//    },
+//    grppi::farm(this->poly_execution_,
+//    [this](<int> x) {
+//      //this->invocations_op++;
+//      return x*2;
+//    }
+//    ),
+//    [this]( auto x ) {
+//      this->invocations_sk++;
+//      this->w[this->idx_out] = x;
+//      this->idx_out++;
+//    }
+//    }
+//  );
+//  this->check_single_sink();
+//}
+
+
+TYPED_TEST(farm_test, static_multiple_composed)
+{
+  this->setup_multiple();
+    grppi::pipeline( this->execution_,
+    [this]() {
+      this->invocations_in++;
+      if ( this->idx_in < this->v.size() ) {
+        this->idx_in++;
+        return optional<int>(this->v[this->idx_in-1]);
+      } else
+        return optional<int>();
+    },
+    grppi::farm(this->execution_,
+    [this](<int> x) {
+      //this->invocations_op++;
+      return x*2;
+    }
+    ),
+    [this]( auto x ) {
+      this->invocations_sk++;
+      this->w[this->idx_out] = x;
+      this->idx_out++;
+    }
+    }
+  );
+  this->check_multiple_sink();
+}
+
+//TYPED_TEST(farm_test, poly_multiple_composed)
+//{
+//  this->setup_multiple();
+//    grppi::pipeline( this->poly_execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      if ( this->idx_in < this->v.size() ) {
+//        this->idx_in++;
+//        return optional<int>(this->v[this->idx_in-1]);
+//      } else
+//        return optional<int>();
+//    },
+//    grppi::farm(this->poly_execution_,
+//    [this](<int> x) {
+//      //this->invocations_op++;
+//      return x*2;
+//    }
+//    ),
+//    [this]( auto x ) {
+//      this->invocations_sk++;
+//      this->w[this->idx_out] = x;
+//      this->idx_out++;
+//    }
+//    }
+//  );
+//  this->check_multiple_sink();
 //}
