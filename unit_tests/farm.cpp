@@ -143,20 +143,20 @@ TYPED_TEST(farm_test, static_empty)
 //  this->check_empty();
 //}
 
-//TYPED_TEST(farm_test, static_empty_ary)
-//{
-//  this->setup_empty();
-//  grppi::farm(this->execution_,
-//    [this]() {
-//      this->invocations_in++;
-//      return optional<tuple<int,int,int>>();
-//    },
-//    [this](int x, int y, int z) { 
-//      this->invocations_op++;
-//    }
-//  );
-//  this->check_empty();
-//}
+TYPED_TEST(farm_test, static_empty_ary)
+{
+  this->setup_empty();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      return optional<tuple<int,int,int>>();
+    },
+    [this](int x, int y, int z) { 
+      this->invocations_op++;
+    }
+  );
+  this->check_empty();
+}
 
 //TYPED_TEST(farm_test, poly_empty_ary)
 //{
