@@ -40,7 +40,6 @@ public:
   // Vectors
   vector<int> v{};
   vector<int> v2{};
-  vector<int> v3{};
   vector<int> w{};
   vector<int> expected{};
 
@@ -175,7 +174,7 @@ TYPED_TEST(stencil_test, static_single_ary)
   grppi::stencil(this->execution_, begin(this->v), end(this->v), begin(this->w),
     [this](auto it, auto x, auto y ) { 
       this->invocations_operation++;
-      return it + x + *y;
+      return it + x + y;
     },
     [this](auto it) { 
       this->invocations_neighbour++; 
@@ -219,7 +218,7 @@ TYPED_TEST(stencil_test, static_multiple_ary)
   grppi::stencil(this->execution_, begin(this->v), end(this->v), begin(this->w),
     [this](auto it, auto x, auto y ) { 
       this->invocations_operation++;
-      return it + x + *y;
+      return it + x + y;
     },
     [this](auto it) { 
       this->invocations_neighbour++; 
