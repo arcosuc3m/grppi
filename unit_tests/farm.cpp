@@ -741,7 +741,6 @@ TYPED_TEST(farm_test, static_single_composed)
       this->w[this->idx_out] = x;
       this->idx_out++;
     }
-    }
   );
   this->check_single_sink();
 }
@@ -768,7 +767,6 @@ TYPED_TEST(farm_test, static_single_composed)
 //      this->invocations_sk++;
 //      this->w[this->idx_out] = x;
 //      this->idx_out++;
-//    }
 //    }
 //  );
 //  this->check_single_sink();
@@ -798,7 +796,6 @@ TYPED_TEST(farm_test, static_multiple_composed)
       this->w[this->idx_out] = x;
       this->idx_out++;
     }
-    }
   );
   this->check_multiple_sink();
 }
@@ -825,7 +822,6 @@ TYPED_TEST(farm_test, static_multiple_composed)
 //      this->invocations_sk++;
 //      this->w[this->idx_out] = x;
 //      this->idx_out++;
-//    }
 //    }
 //  );
 //  this->check_multiple_sink();
