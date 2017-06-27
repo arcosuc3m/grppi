@@ -132,9 +132,9 @@ TYPED_TEST(farm_test, poly_empty)
 {
   this->setup_empty();
   grppi::farm(this->poly_execution_,
-    [this](int x) {
+    [this]() {
       this->invocations_in++;
-      return x;
+      return optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
