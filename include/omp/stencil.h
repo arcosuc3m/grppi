@@ -104,17 +104,8 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
     }
 
    //MAIN
-   auto begin = first;
-   auto out = firstOut; 
-   auto end = first + elemperthr;
-   while(begin!=end){
-      auto neighbors = neighbor(begin);
-      *out = op(*begin, neighbors, *inputs...);
-      begin++;
-      advance_iterators( inputs ... );
-      out++;
-   }
-
+   internal_stencil(p, first, last, firstOut, std::forward<Operation>(op) , std::forward<NFunc>(neighbor), 0, elemperthr, inputs ...);  
+   
    #pragma omp taskwait
    }
    }
