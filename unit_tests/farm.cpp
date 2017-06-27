@@ -178,15 +178,15 @@ TYPED_TEST(farm_test, static_single)
   grppi::farm(this->execution_,
     [this]() {
       this->invocations_in++;
-      if ( this->idx_in < v.size() ) {
+      if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(v[this->idx_in-1]);
+        return optional<int>(this->v[this->idx_in-1]);
       } else
         return optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
-      w[this->idx_out] = v[this->idx_out] * 2;
+      this->w[this->idx_out] = this->v[this->idx_out] * 2;
       this->idx_out++;
     }
   );
