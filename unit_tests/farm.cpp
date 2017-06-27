@@ -44,7 +44,8 @@ public:
   vector<int> expected{};
 
   // entry counter
-  int idx = 0;
+  int idx_in = 0;
+  int idx_out = 0;
 
   // Invocation counter
   std::atomic<int> invocations_in{0};
@@ -143,20 +144,20 @@ TYPED_TEST(farm_test, static_empty)
 //  this->check_empty();
 //}
 
-TYPED_TEST(farm_test, static_empty_ary)
-{
-  this->setup_empty();
-  grppi::farm(this->execution_,
-    [this]() {
-      this->invocations_in++;
-      return optional<tuple<int,int,int>>();
-    },
-    [this](int x, int y, int z) { 
-      this->invocations_op++;
-    }
-  );
-  this->check_empty();
-}
+//TYPED_TEST(farm_test, static_empty_ary)
+//{
+//  this->setup_empty();
+//  grppi::farm(this->execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      return optional<tuple<int,int,int>>();
+//    },
+//    [this](int x, int y, int z) { 
+//      this->invocations_op++;
+//    }
+//  );
+//  this->check_empty();
+//}
 
 //TYPED_TEST(farm_test, poly_empty_ary)
 //{
@@ -170,19 +171,28 @@ TYPED_TEST(farm_test, static_empty_ary)
 //  );
 //  this->check_empty();
 //}
-//
-//TYPED_TEST(farm_test, static_single)
-//{
-//  this->setup_single();
-//  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int i) {
-//      this->invocations++; 
-//      return i*2; 
-//    }
-//  );
-//  this->check_single();
-//}
-//
+
+TYPED_TEST(farm_test, static_single)
+{
+  this->setup_single();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      if ( idx_in < v.size() ) {
+        idx_in++;
+        return optional<int>(v[idx_in-1]);
+      } else
+        return optional<int>();
+    },
+    [this](int x) {
+      this->invocations_op++;
+      w[idx_out] = v[idx_out] * 2;
+      idx_out++;
+    }
+  );
+  this->check_single();
+}
+
 //TYPED_TEST(farm_test, poly_single)
 //{
 //  this->setup_single();
