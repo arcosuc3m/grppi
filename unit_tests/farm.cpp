@@ -18,6 +18,7 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 #include <atomic>
+#include <utility>
 
 #include <gtest/gtest.h>
 
