@@ -90,7 +90,7 @@ public:
   }
 
   void check_multiple() {
-    EXPECT_EQ(5, this->invocations_in); // five invocations of function in
+    EXPECT_EQ(6, this->invocations_in); // five invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
@@ -104,7 +104,7 @@ public:
   }
 
   void check_multiple_ary() {
-    EXPECT_EQ(5, this->invocations_in); // five invocations of function in
+    EXPECT_EQ(6, this->invocations_in); // five invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
@@ -144,10 +144,25 @@ TYPED_TEST(farm_test, static_empty)
 //  this->check_empty();
 //}
 
-//TYPED_TEST(farm_test, static_empty_ary)
+TYPED_TEST(farm_test, static_empty_ary)
+{
+  this->setup_empty();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      return optional<tuple<int,int,int>>();
+    },
+    [this](tuple<int,int,int> x) {
+      this->invocations_op++;
+    }
+  );
+  this->check_empty();
+}
+
+//TYPED_TEST(farm_test, poly_empty_ary)
 //{
 //  this->setup_empty();
-//  grppi::farm(this->execution_,
+//  grppi::farm(this->poly_execution_,
 //    [this]() {
 //      this->invocations_in++;
 //      return optional<tuple<int,int,int>>();
@@ -155,19 +170,6 @@ TYPED_TEST(farm_test, static_empty)
 //    [this](int x, int y, int z) { 
 //      this->invocations_op++;
 //    }
-//  );
-//  this->check_empty();
-//}
-
-//TYPED_TEST(farm_test, poly_empty_ary)
-//{
-//  this->setup_empty();
-//  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int x, int y, int z) { 
-//      this->invocations++; 
-//      return x+y+z; 
-//    },
-//    begin(this->v2), begin(this->v3)
 //  );
 //  this->check_empty();
 //}
@@ -186,7 +188,7 @@ TYPED_TEST(farm_test, static_single)
     },
     [this](int x) {
       this->invocations_op++;
-      this->w[this->idx_out] = this->v[this->idx_out] * 2;
+      this->w[this->idx_out] = x * 2;
       this->idx_out++;
     }
   );
@@ -196,101 +198,158 @@ TYPED_TEST(farm_test, static_single)
 //TYPED_TEST(farm_test, poly_single)
 //{
 //  this->setup_single();
-//  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int i) {
-//      this->invocations++; 
-//      return i*2; 
+//  grppi::farm(this->poly_execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      if ( this->idx_in < this->v.size() ) {
+//        this->idx_in++;
+//        return optional<int>(this->v[this->idx_in-1]);
+//      } else
+//        return optional<int>();
+//    },
+//    [this](int x) {
+//      this->invocations_op++;
+//      this->w[this->idx_out] = this->v[this->idx_out] * 2;
+//      this->idx_out++;
 //    }
 //  );
 //  this->check_single();
 //}
-//
-//TYPED_TEST(farm_test, static_single_ary)
-//{
-//  this->setup_single_ary();
-//  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int x, int y, int z) {
-//      this->invocations++; 
-//      return x+y+z; 
-//    },
-//    begin(this->v2), begin(this->v3)
-//  );
-//  this->check_single_ary();
-//}
-//
+
+TYPED_TEST(farm_test, static_single_ary)
+{
+  this->setup_single_ary();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      if ( this->idx_in < this->v.size() ) {
+        this->idx_in++;
+        return optional<tuple<int,int,int>>(
+            make_tuple(this->v[this->idx_in-1],
+                       this->v2[this->idx_in-1],
+                       this->v3[this->idx_in-1]));
+      } else
+        return optional<tuple<int,int,int>>();
+    },
+    [this](tuple<int,int,int> x) {
+      this->invocations_op++;
+      this->w[this->idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
+      this->idx_out++;
+    }
+  );
+  this->check_single_ary();
+}
+
 //TYPED_TEST(farm_test, poly_single_ary)
 //{
-////  this->setup_single_ary();
-//  grppi::farm(this->execution_,
+//  this->setup_single_ary();
+//  grppi::farm(this->poly_execution_,
 //    [this]() {
 //      this->invocations_in++;
-//      if ( idx < v.size() ) {
-//        idx++;
-//        return optional<tuple<int,int,int>>( make_tuple(v[idx-1],v1[idx-1],v2[idx-1]) );
+//      if ( this->idx_in < this->v.size() ) {
+//        this->idx_in++;
+//        return optional<tuple<int,int,int>>(
+//            make_tuple(this->v[this->idx_in-1],
+//                       this->v2[this->idx_in-1],
+//                       this->v3[this->idx_in-1]));
 //      } else
 //        return optional<tuple<int,int,int>>();
 //    },
-//    [this](int x, int y, int z) { 
+//    [this](tuple<int,int,int> x) {
 //      this->invocations_op++;
-//      return x+y+z; 
+//      this->w[this->idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
+//      this->idx_out++;
 //    }
-//
-//  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int x, int y, int z) {
-//      this->invocations++; 
-//      return x+y+z; 
-//    },
-//    begin(this->v2), begin(this->v3)
 //  );
 //  this->check_single_ary();
 //}
-//
-//TYPED_TEST(farm_test, static_multiple)
-//{
-//  this->setup_multiple();
-//  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int i) {
-//      this->invocations++; 
-//      return i*2; 
-//    }
-//  );
-//  this->check_multiple();
-//}
-//
+
+TYPED_TEST(farm_test, static_multiple)
+{
+  this->setup_multiple();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      if ( this->idx_in < this->v.size() ) {
+        this->idx_in++;
+        return optional<int>(this->v[this->idx_in-1]);
+      } else
+        return optional<int>();
+    },
+    [this](int x) {
+      this->invocations_op++;
+      this->w[this->idx_out] = x * 2;
+      this->idx_out++;
+    }
+  );
+  this->check_multiple();
+}
+
 //TYPED_TEST(farm_test, poly_multiple)
 //{
 //  this->setup_multiple();
-//  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int i) {
-//      this->invocations++; 
-//      return i*2; 
+//  grppi::farm(this->poly_execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      if ( this->idx_in < this->v.size() ) {
+//        this->idx_in++;
+//        return optional<int>(this->v[this->idx_in-1]);
+//      } else
+//        return optional<int>();
+//    },
+//    [this](int x) {
+//      this->invocations_op++;
+//      this->w[this->idx_out] = x * 2;
+//      this->idx_out++;
 //    }
 //  );
 //  this->check_multiple();
 //}
-//
-//TYPED_TEST(farm_test, static_multiple_ary)
-//{
-//  this->setup_multiple_ary();
-//  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this](int x, int y, int z) {
-//      this->invocations++; 
-//      return x+y+z; 
-//    },
-//    begin(this->v2), begin(this->v3)
-//  );
-//  this->check_multiple_ary();
-//}
-//
+
+TYPED_TEST(farm_test, static_multiple_ary)
+{
+  this->setup_multiple_ary();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      if ( this->idx_in < this->v.size() ) {
+        this->idx_in++;
+        return optional<tuple<int,int,int>>(
+            make_tuple(this->v[this->idx_in-1],
+                       this->v2[this->idx_in-1],
+                       this->v3[this->idx_in-1]));
+      } else
+        return optional<tuple<int,int,int>>();
+    },
+    [this](tuple<int,int,int> x) {
+      this->invocations_op++;
+      this->w[this->idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
+      this->idx_out++;
+    }
+  );
+  this->check_multiple_ary();
+}
+
 //TYPED_TEST(farm_test, poly_multiple_ary)
 //{
 //  this->setup_multiple_ary();
-//  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-//    [this:](int x, int y, int z) {
-//      this->invocations++; 
-//      return x+y+z; 
+//  grppi::farm(this->poly_execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      if ( this->idx_in < this->v.size() ) {
+//        this->idx_in++;
+//        return optional<tuple<int,int,int>>(
+//            make_tuple(this->v[this->idx_in-1],
+//                       this->v2[this->idx_in-1],
+//                       this->v3[this->idx_in-1]));
+//      } else
+//        return optional<tuple<int,int,int>>();
 //    },
-//    begin(this->v2), begin(this->v3)
+//    [this](tuple<int,int,int> x) {
+//      this->invocations_op++;
+//      this->w[this->idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
+//      this->idx_out++;
+//    }
 //  );
 //  this->check_multiple_ary();
 //}
