@@ -58,17 +58,17 @@ public:
     ASSERT_EQ(0, invocations_op); // Functor op was not invoked
   }
 
-//  void setup_single() {
-//    v = vector<int>{42};
-//    w = vector<int>{99};
-//  }
-//
-//  void check_single() {
-//    ASSERT_EQ(1, invocations_in); // Functor in was invoked once
-//    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
-//    EXPECT_EQ(84, this->w[0]);
-//  }
-//
+  void setup_single() {
+    v = vector<int>{42};
+    w = vector<int>{99};
+  }
+
+  void check_single() {
+    ASSERT_EQ(1, invocations_in); // Functor in was invoked once
+    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
+    EXPECT_EQ(84, this->w[0]);
+  }
+
 //  void setup_single_ary() {
 //    v = vector<int>{11};
 //    v2 = vector<int>{22};
@@ -128,41 +128,36 @@ TYPED_TEST(farm_test, static_empty)
   this->check_empty();
 }
 
-//TYPED_TEST(farm_test, poly_empty)
-//{
-//  this->setup_empty();
-//  grppi::farm(this->poly_execution_,
-//    [this]() {
-//      this->invocations_in++;
-//      return optional<int>();
-//    },
-//    [this](int x) {
-//      this->invocations_op++;
-//    }
-//  );
-//  this->check_empty();
-//}
-//
-//TYPED_TEST(farm_test, static_empty_ary)
-//{
-//  this->setup_empty();
-//  grppi::farm(this->execution_,
-//    [this]() {
-//      this->invocations_in++;
-//      if ( idx < v.size() ) {
-//        idx++;
-//        return optional<tuple<int,int,int>>( make_tuple(v[idx-1],v1[idx-1],v2[idx-1]) );
-//      } else
-//        return optional<tuple<int,int,int>>();
-//    },
-//    [this](int x, int y, int z) { 
-//      this->invocations_op++;
-//      return x+y+z; 
-//    }
-//  );
-//  this->check_empty();
-//}
-//
+TYPED_TEST(farm_test, poly_empty)
+{
+  this->setup_empty();
+  grppi::farm(this->poly_execution_,
+    [this]() {
+      this->invocations_in++;
+      return optional<int>();
+    },
+    [this](int x) {
+      this->invocations_op++;
+    }
+  );
+  this->check_empty();
+}
+
+TYPED_TEST(farm_test, static_empty_ary)
+{
+  this->setup_empty();
+  grppi::farm(this->execution_,
+    [this]() {
+      this->invocations_in++;
+      return optional<tuple<int,int,int>>();
+    },
+    [this](int x, int y, int z) { 
+      this->invocations_op++;
+    }
+  );
+  this->check_empty();
+}
+
 //TYPED_TEST(farm_test, poly_empty_ary)
 //{
 //  this->setup_empty();
@@ -215,7 +210,21 @@ TYPED_TEST(farm_test, static_empty)
 //
 //TYPED_TEST(farm_test, poly_single_ary)
 //{
-//  this->setup_single_ary();
+////  this->setup_single_ary();
+//  grppi::farm(this->execution_,
+//    [this]() {
+//      this->invocations_in++;
+//      if ( idx < v.size() ) {
+//        idx++;
+//        return optional<tuple<int,int,int>>( make_tuple(v[idx-1],v1[idx-1],v2[idx-1]) );
+//      } else
+//        return optional<tuple<int,int,int>>();
+//    },
+//    [this](int x, int y, int z) { 
+//      this->invocations_op++;
+//      return x+y+z; 
+//    }
+//
 //  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
 //    [this](int x, int y, int z) {
 //      this->invocations++; 
