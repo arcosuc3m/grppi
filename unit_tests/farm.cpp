@@ -65,7 +65,7 @@ public:
   }
 
   void check_single() {
-    ASSERT_EQ(1, invocations_in); // Functor in was invoked once
+    ASSERT_EQ(2, invocations_in); // Functor in was invoked once
     EXPECT_EQ(1, this->invocations_op); // one invocation of function op
     EXPECT_EQ(84, this->w[0]);
   }
