@@ -69,44 +69,44 @@ public:
     EXPECT_EQ(84, this->w[0]);
   }
 
-//  void setup_single_ary() {
-//    v = vector<int>{11};
-//    v2 = vector<int>{22};
-//    v3 = vector<int>{33};
-//    w = vector<int>{99};
-//  }
-//
-//  void check_single_ary() {
-//    ASSERT_EQ(2, invocations_in); // Functor in was invoked twice
-//    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
-//    EXPECT_EQ(66, this->w[0]);
-//  }
-//
-//  void setup_multiple() {
-//    v = vector<int>{1,2,3,4,5};
-//    w = vector<int>(5);
-//    expected = vector<int>{2,4,6,8,10};
-//  }
-//
-//  void check_multiple() {
-//    EXPECT_EQ(5, this->invocations_in); // five invocations of function in
-//    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
-//    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
-//  }
-//
-//  void setup_multiple_ary() {
-//    v = vector<int>{1,2,3,4,5};
-//    v2 = vector<int>{2,4,6,8,10};
-//    v3 = vector<int>{10,10,10,10,10};
-//    w = vector<int>(5);
-//    expected = vector<int>{13,16,19,22,25};
-//  }
-//
-//  void check_multiple_ary() {
-//    EXPECT_EQ(5, this->invocations_in); // five invocations of function in
-//    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
-//    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
-//  }
+  void setup_single_ary() {
+    v = vector<int>{11};
+    v2 = vector<int>{22};
+    v3 = vector<int>{33};
+    w = vector<int>{99};
+  }
+
+  void check_single_ary() {
+    ASSERT_EQ(2, invocations_in); // Functor in was invoked twice
+    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
+    EXPECT_EQ(66, this->w[0]);
+  }
+
+  void setup_multiple() {
+    v = vector<int>{1,2,3,4,5};
+    w = vector<int>(5);
+    expected = vector<int>{2,4,6,8,10};
+  }
+
+  void check_multiple() {
+    EXPECT_EQ(5, this->invocations_in); // five invocations of function in
+    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+  }
+
+  void setup_multiple_ary() {
+    v = vector<int>{1,2,3,4,5};
+    v2 = vector<int>{2,4,6,8,10};
+    v3 = vector<int>{10,10,10,10,10};
+    w = vector<int>(5);
+    expected = vector<int>{13,16,19,22,25};
+  }
+
+  void check_multiple_ary() {
+    EXPECT_EQ(5, this->invocations_in); // five invocations of function in
+    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+  }
 
 };
 
