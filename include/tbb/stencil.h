@@ -86,7 +86,7 @@ void stencil(parallel_execution_tbb &p, InputIt first, InputIt last,
      int iteration = (elemperthr*i);
      while(begin!=end){
        auto neighbors = neighbor(begin);
-       *out = op(*begin, neighbors, (inputs+iteration)...);
+       *out = op(*begin, neighbors, *(inputs+iteration)...);
        begin++;
        iteration++;
        out++;
@@ -98,7 +98,7 @@ void stencil(parallel_execution_tbb &p, InputIt first, InputIt last,
   auto end = first + elemperthr;
   while(first!=end){
     auto neighbors = neighbor(first);
-    *firstOut = op(*first, neighbors, inputs...);
+    *firstOut = op(*first, neighbors, *inputs...);
     first++;
     advance_iterators( inputs ... );
     firstOut++;

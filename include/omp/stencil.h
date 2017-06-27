@@ -67,6 +67,26 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 }
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+ void internal_stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut,
+                         Operation &&op, NFunc && neighbor, int i, int elemperthr, MoreIn ... inputs){
+        //Calculate local input and output iterator 
+        auto begin = first + (elemperthr * i);
+        auto end = first + (elemperthr * (i+1));
+        if( i == p.num_threads-1) end = last;
+        auto out = firstOut + (elemperthr * i);
+        advance_iterators(elemperthr*i, inputs ...);
+        while(begin!=end){
+          auto neighbors = neighbor(begin);
+           *out = op(*begin,neighbors, *inputs ...);
+           advance_iterators(inputs ...);
+           begin++;
+           out++;
+        }
+}
+
+
+
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
  void stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
      int numElements = last - first;
@@ -79,21 +99,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
      for(int i=1;i<p.num_threads;i++){
         #pragma omp task firstprivate(i)// firstprivate(inputs...)
         {
-           auto begin = first + (elemperthr * i);
-           auto end = first + (elemperthr * (i+1));
-
-	       if(i==p.num_threads-1) end = last;
-
-           auto out = firstOut + (elemperthr * i);
-        
-           advance_iterators(elemperthr*i, inputs ...);
-           while(begin!=end){
-             auto neighbors = neighbor(begin);
-             *out = op(*begin, neighbors,inputs...);
-             begin++;
-             advance_iterators( inputs ... );
-             out++;
-          }
+           internal_stencil(p, first, last, firstOut, std::forward<Operation>(op) , std::forward<NFunc>(neighbor), i, elemperthr, inputs ...);  
        }
     }
 
@@ -103,7 +109,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
    auto end = first + elemperthr;
    while(begin!=end){
       auto neighbors = neighbor(begin);
-      *out = op(*begin, neighbors,inputs...);
+      *out = op(*begin, neighbors, *inputs...);
       begin++;
       advance_iterators( inputs ... );
       out++;

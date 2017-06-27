@@ -83,7 +83,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
 
-	if(i==p.num_threads-1) end = last;
+	     if(i==p.num_threads-1) end = last;
 
         auto out = firstOut + (elemperthr * i);
         
@@ -96,7 +96,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
                advance_iterators(n*i, inputs ...);
                while(begin!=end){
                  auto neighbors = neighbor(begin);
-                 *out = op(*begin, neighbors,inputs...);
+                 *out = op(*begin, neighbors, *inputs...);
                  begin++;
                  advance_iterators( inputs ... );
                  out++;
@@ -113,7 +113,7 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
    auto end = first + elemperthr;
    while(first!=end){
       auto neighbors = neighbor(first);
-      *firstOut = op(*first, neighbors, inputs...);
+      *firstOut = op(*first, neighbors, *inputs...);
       first++;
       advance_iterators( inputs ... );
       firstOut++;
