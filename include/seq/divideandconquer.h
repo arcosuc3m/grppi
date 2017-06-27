@@ -22,22 +22,24 @@
 #define GRPPI_DIVIDEANDCONQUER_SEQ_H
 namespace grppi{
 
-template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- Output divide_and_conquer(sequential_execution &s, Input &problem, Output init, DivFunc &&divide,
+template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
+typename std::result_of<Operation(Input)>::type divide_and_conquer(sequential_execution &s, Input &problem, DivFunc &&divide,
                                Operation &&op, MergeFunc &&merge) {
      
+    using Output = typename std::result_of<Operation(Input)>::type;
     auto subproblems = divide(problem);
-    Output out = init;
+    Output out;
     if(subproblems.size()>1){
         std::vector<Output> partials(subproblems.size());
 	int division = 0;
         for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
             //THREAD
-            partials[division] = divide_and_conquer(s, *i, partials[division], std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
+            partials[division] = divide_and_conquer(s, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
             //END THREAD
         }
+        out = partials[0] ;
         //JOIN
-        for(int i = 0; i<partials.size();i++){
+        for(int i = 1; i<partials.size();i++){
               merge(partials[i], out);
         }
     }else{

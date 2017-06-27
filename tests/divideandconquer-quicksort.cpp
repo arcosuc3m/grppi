@@ -55,7 +55,7 @@ void dividec_example1() {
     }
     std::vector<int> out;
     
-    out = divide_and_conquer(p,v, out,
+    out = divide_and_conquer(p,v,
                      [&](vector<int> & v){
         std::vector<std::vector<int>> subproblem;
         if(v.size() == 1){ subproblem.push_back(v);return subproblem; }
