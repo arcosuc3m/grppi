@@ -122,11 +122,57 @@ TYPED_TEST(stream_reduce_test, static_empty)
   this->check_empty();
 }
 
+TYPED_TEST(stream_reduce_test, poly_empty)
+{ 
+  this->setup_empty();
+  grppi::stream_reduce(this->poly_execution_,
+    [this]() -> std::experimental::optional<int> { 
+      this->invocations_gen++; 
+      return {};
+    },
+    this->window, 
+    this->offset,
+    std::plus<int>(),
+    [this](int a) { 
+      this->invocations_reduce++; 
+    }
+  );
+  this->check_empty();
+}
+
 // Process single element
 TYPED_TEST(stream_reduce_test, static_single)
 { 
   this->setup_single();
   grppi::stream_reduce(this->execution_,
+    [this]() { 
+      this->invocations_gen++; 
+      
+      if(this->v.size() > 0){
+        
+        optional<int> problem(this->v.back());
+        this->v.pop_back();
+        return problem;
+
+      }else{
+        return optional<int> ();
+      }
+    },
+    this->window, 
+    this->offset,
+    std::plus<int>(),
+    [this](int a) { 
+      this->invocations_reduce++;
+      this->out += a;
+    }
+  );
+  this->check_single();
+}
+
+TYPED_TEST(stream_reduce_test, poly_single)
+{ 
+  this->setup_single();
+  grppi::stream_reduce(this->poly_execution_,
     [this]() { 
       this->invocations_gen++; 
       
@@ -180,11 +226,68 @@ TYPED_TEST(stream_reduce_test, static_multiple)
   this->check_multiple();
 }
 
+TYPED_TEST(stream_reduce_test, poly_multiple)
+{ 
+  this->setup_multiple();
+  grppi::stream_reduce(this->poly_execution_,
+    [this]() { 
+      this->invocations_gen++; 
+      
+      if(this->v.size() > 0){
+        
+        optional<int> problem(this->v.back());
+        this->v.pop_back();
+        return problem;
+
+      }else{
+        return optional<int> ();
+      }
+    },
+    this->window, 
+    this->offset,
+    std::plus<int>(),
+    [this](int a) { 
+      this->invocations_reduce++;
+      this->out += a;
+    }
+  );
+  this->check_multiple();
+}
+
+
 // Process multiple elements with changes in the window and offset parameters
 TYPED_TEST(stream_reduce_test, static_window_offset)
 { 
   this->setup_window_offset();
   grppi::stream_reduce(this->execution_,
+    [this]() { 
+      this->invocations_gen++; 
+      
+      if(this->v.size() > 0){
+        
+        optional<int> problem(this->v.back());
+        this->v.pop_back();
+        return problem;
+
+      }else{
+        return optional<int> ();
+      }
+    },
+    this->window, 
+    this->offset,
+    std::plus<int>(),
+    [this](int a) { 
+      this->invocations_reduce++;
+      this->out += a;
+    }
+  );
+  this->check_window_offset();
+}
+
+TYPED_TEST(stream_reduce_test, poly_window_offset)
+{ 
+  this->setup_window_offset();
+  grppi::stream_reduce(this->poly_execution_,
     [this]() { 
       this->invocations_gen++; 
       
