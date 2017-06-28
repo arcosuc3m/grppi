@@ -1,7 +1,7 @@
 /**
-* @version		GrPPI v0.2
-* @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
+* @version    GrPPI v0.2
+* @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+* @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -35,7 +35,6 @@ public:
 
   // Variables
   int out;
-  int expected;
 
   // Vectors
   vector<int> v{};
@@ -67,18 +66,28 @@ public:
   }
 
   void setup_multiple() {
-    v = vector<int>{1,2,3,4,5};
+    v = vector<int>{1,2,3,4,5,6,7,8,9,10};
     out = 0;
-    expected = 15;
   }
 
   void check_multiple() {
-    EXPECT_EQ(6, this->invocations_divide);
-    EXPECT_EQ(5, this->invocations_base); 
+    EXPECT_EQ(11, this->invocations_divide);
+    EXPECT_EQ(6, this->invocations_base); 
     EXPECT_EQ(5, this->invocations_merge); 
-    EXPECT_EQ(this->expected, this->out);
+    EXPECT_EQ(55, this->out);
   }
 
+  void setup_multiple_triple_div() {
+    v = vector<int>{1,2,3,4,5,6,7,8,9,10};
+    out = 0;
+  }
+
+  void check_multiple_triple_div() {
+    EXPECT_EQ(7, this->invocations_divide);
+    EXPECT_EQ(5, this->invocations_base); 
+    EXPECT_EQ(4, this->invocations_merge); 
+    EXPECT_EQ(55, this->out);
+  }
 
 };
 
@@ -88,18 +97,19 @@ TYPED_TEST_CASE(divideandconquer_test, executions);
 TYPED_TEST(divideandconquer_test, static_empty)
 {
   this->setup_empty();
-  grppi::divide_and_conquer(this->execution_, this->v, this->out,
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
       return std::vector<std::vector<int> >{}; 
     },
     // Solve base case
-    [this](auto & problem, int & out) { 
-      this->invocations_base++; 
+    [this](auto problem) { 
+      this->invocations_base++;
+      return 0; 
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto partial, auto out) { 
       this->invocations_merge++; 
     }
   );
@@ -107,49 +117,59 @@ TYPED_TEST(divideandconquer_test, static_empty)
 }
 
 
-
 TYPED_TEST(divideandconquer_test, static_single)
 {
   this->setup_single();
-  grppi::divide_and_conquer(this->execution_, this->v, this->out,
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
       return std::vector<std::vector<int>>{v}; 
     },
     // Solve base case
-    [this](auto & problem, int & out) { 
+    [this](auto problem) { 
       this->invocations_base++; 
-      out = problem[0];
+      return problem[0];
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto partial, auto out) { 
       this->invocations_merge++; 
     }
   );
   this->check_single();
 }
 
-
-
 TYPED_TEST(divideandconquer_test, static_multiple)
 {
   this->setup_multiple();
   
-  grppi::divide_and_conquer(this->execution_, this->v, this->out,
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
       std::vector<std::vector<int>> subproblem;
-      for(int i=0; i < v.size(); i++){
-        subproblem.push_back( std::vector<int>{v[i]} );
+      if(v.size() > 2){
+          std::vector<int> p1;
+          std::vector<int> p2;
+          int i=0;
+          for(i; i < v.size()/2; i++){
+              p1.push_back(v[i]);
+          }
+          for(i; i < v.size(); i++){
+              p2.push_back(v[i]);
+          }
+          subproblem.push_back( p1);
+          subproblem.push_back( p2);
       }
       return subproblem; 
     },
     // Solve base case
-    [this](auto & problem, auto & out) { 
+    [this](auto problem) { 
       this->invocations_base++; 
-      out = problem[0];
+      int acumm = 0;
+      for(int i=0; i < problem.size(); i++)
+        acumm += problem[i];
+      return acumm;
     }, 
     // Combine
     [this](auto & partial, auto & out) { 
@@ -158,4 +178,180 @@ TYPED_TEST(divideandconquer_test, static_multiple)
     }
   );
   this->check_multiple();
+}
+
+TYPED_TEST(divideandconquer_test, static_multiple_single_thread)
+{
+  this->setup_multiple();
+  this->execution_.num_threads = 1;
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      std::vector<std::vector<int>> subproblem;
+      if(v.size() > 2){
+          std::vector<int> p1;
+          std::vector<int> p2;
+          int i=0;
+          for(i; i < v.size()/2; i++){
+              p1.push_back(v[i]);
+          }
+          for(i; i < v.size(); i++){
+              p2.push_back(v[i]);
+          }
+          subproblem.push_back( p1);
+          subproblem.push_back( p2);
+      }
+      return subproblem; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++; 
+      int acumm = 0;
+      for(int i=0; i < problem.size(); i++)
+        acumm += problem[i];
+      return acumm;
+    }, 
+    // Combine
+    [this](auto & partial, auto & out) { 
+      this->invocations_merge++; 
+      out += partial;
+    }
+  );
+  this->check_multiple();
+}
+
+
+TYPED_TEST(divideandconquer_test, static_multiple_five_threads)
+{
+  this->setup_multiple();
+  this->execution_.num_threads = 5;
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      std::vector<std::vector<int>> subproblem;
+      if(v.size() > 2){
+          std::vector<int> p1;
+          std::vector<int> p2;
+          int i=0;
+          for(i; i < v.size()/2; i++){
+              p1.push_back(v[i]);
+          }
+          for(i; i < v.size(); i++){
+              p2.push_back(v[i]);
+          }
+          subproblem.push_back( p1);
+          subproblem.push_back( p2);
+      }
+      return subproblem; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++; 
+      int acumm = 0;
+      for(int i=0; i < problem.size(); i++)
+        acumm += problem[i];
+      return acumm;
+    }, 
+    // Combine
+    [this](auto & partial, auto & out) { 
+      this->invocations_merge++; 
+      out += partial;
+    }
+  );
+  this->check_multiple();
+}
+
+
+TYPED_TEST(divideandconquer_test, static_multiple_triple_div_2_threads)
+{
+  this->setup_multiple_triple_div();
+  this->execution_.num_threads = 2;
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      std::vector<std::vector<int>> subproblem;
+      if (v.size() > 3){
+          std::vector<int> p1;
+          std::vector<int> p2;
+          std::vector<int> p3;
+          int i=0;
+          for(i; i < v.size()/3; i++){
+              p1.push_back(v[i]);
+          }
+          for(i; i < (v.size()*2)/3; i++){
+              p2.push_back(v[i]);
+          }
+          for(i; i < v.size(); i++){
+              p3.push_back(v[i]);
+          }
+          subproblem.push_back( p1);
+          subproblem.push_back( p2);
+          subproblem.push_back( p3);
+      }
+      return subproblem; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++; 
+      int acumm = 0;
+      for(int i=0; i < problem.size(); i++)
+        acumm += problem[i];
+      return acumm;
+    }, 
+    // Combine
+    [this](auto & partial, auto & out) { 
+      this->invocations_merge++; 
+      out += partial;
+    }
+  );
+  this->check_multiple_triple_div();
+}
+
+TYPED_TEST(divideandconquer_test, static_multiple_triple_div_4_threads)
+{
+  this->setup_multiple_triple_div();
+  this->execution_.num_threads = 4;
+  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      std::vector<std::vector<int>> subproblem;
+      if (v.size() > 3){
+          std::vector<int> p1;
+          std::vector<int> p2;
+          std::vector<int> p3;
+          int i=0;
+          for(i; i < v.size()/3; i++){
+              p1.push_back(v[i]);
+          }
+          for(i; i < (v.size()*2)/3; i++){
+              p2.push_back(v[i]);
+          }
+          for(i; i < v.size(); i++){
+              p3.push_back(v[i]);
+          }
+          subproblem.push_back( p1);
+          subproblem.push_back( p2);
+          subproblem.push_back( p3);
+      }
+      return subproblem; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++; 
+      int acumm = 0;
+      for(int i=0; i < problem.size(); i++)
+        acumm += problem[i];
+      return acumm;
+    }, 
+    // Combine
+    [this](auto & partial, auto & out) { 
+      this->invocations_merge++; 
+      out += partial;
+    }
+  );
+  this->check_multiple_triple_div();
 }
