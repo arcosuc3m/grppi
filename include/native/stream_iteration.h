@@ -28,7 +28,7 @@
 namespace grppi{ 
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
+void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
    mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
    std::atomic<int> nend (0);
@@ -52,7 +52,7 @@ template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Sta
 
    std::vector<std::thread> pipeThreads;
    composed_pipeline< mpmc_queue< typename std::result_of<GenFunc()>::type >, mpmc_queue< typename std::result_of<GenFunc()>::type >, 0, Stages ...>
-      (queue, se, queueOut, pipeThreads); 
+      (queue, std::forward<pipeline_info<parallel_execution_native , Stages...> >(se) , queueOut, pipeThreads); 
  
    while(1){
       //If every element has been processed

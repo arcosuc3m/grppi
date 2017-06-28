@@ -24,12 +24,12 @@
 #ifdef GRPPI_OMP
 
 namespace grppi{
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
- void stream_filter(parallel_execution_omp &p, GenFunc && in, FilterFunc && filter, OutFunc && out ) {
+template <typename Generator, typename Predicate, typename Consumer>
+ void stream_filter(parallel_execution_omp &p, Generator && gen, Predicate && pred, Consumer && cons ) {
 
 
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size, p.lockfree);
-    mpmc_queue< typename std::result_of<GenFunc()>::type > outqueue(p.queue_size, p.lockfree);
+    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.queue_size, p.lockfree);
+    mpmc_queue< typename std::result_of<Generator()>::type > outqueue(p.queue_size, p.lockfree);
     #pragma omp parallel
     {
     #pragma omp single nowait 
@@ -40,10 +40,10 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 
         #pragma omp task shared(queue, outqueue)
         {
-            typename std::result_of<GenFunc()>::type item;
+            typename std::result_of<Generator()>::type item;
             item = queue.pop();
             while( item ){
-                 if(filter(item.value()))
+                 if(pred(item.value()))
                       outqueue.push(item);
                  item = queue.pop();
             }
@@ -55,7 +55,7 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
          //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
 
          int nend = 0;
-         typename std::result_of<GenFunc()>::type item;
+         typename std::result_of<Generator()>::type item;
          item = outqueue.pop();
          while(nend != p.num_threads - 1){
             if(!item){
@@ -63,7 +63,7 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
                 if(nend == p.num_threads - 1) break;
             }
             else {
-                out(item.value());
+                cons(item.value());
             }
             item = outqueue.pop();
          }
@@ -71,9 +71,9 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 
     //THREAD 0 ENQUEUE ELEMENTS
     while(1){
-        auto k = in();
+        auto k = gen();
         queue.push(k);
-        if( k.end ){
+        if( k ){
            for(int i = 0; i< p.num_threads-1; i++){
               queue.push(k);
            }
@@ -86,9 +86,9 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 
 }
 
-template <typename FilterFunc>
-filter_info<parallel_execution_omp, FilterFunc> stream_filter(parallel_execution_omp &p, FilterFunc && op){
-   return filter_info<parallel_execution_omp, FilterFunc>(p, op);
+template <typename Predicate>
+filter_info<parallel_execution_omp, Predicate> stream_filter(parallel_execution_omp &p, Predicate && pred){
+   return filter_info<parallel_execution_omp, Predicate>(p, std::forward<Predicate>(pred) );
 
 }
 }

@@ -23,103 +23,147 @@
 
 namespace grppi{
 
+/**
+\addtogroup map_pattern
+@{
+\addtogroup map_pattern_native Native parallel map pattern.
+Implementation of map pattern for native parallel back-end.
+@{
+*/
+
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with native
+paralell execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+*/
 template <typename InputIt, typename OutputIt, typename Operation>
- void map(parallel_execution_native& p, InputIt first,InputIt last, OutputIt firstOut, Operation && op){
-   
-   std::vector<std::thread> tasks;
-   int numElements = last - first; 
-   int elemperthr = numElements/p.num_threads; 
+void map(parallel_execution_native & ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Operation && op)
+{
+  std::vector<std::thread> tasks;
+  int numElements = last - first; 
+  int elemperthr = numElements / ex.num_threads; 
 
-   for(int i=1;i<p.num_threads;i++){
-      auto begin = first + (elemperthr * i); 
-      auto end = first + (elemperthr * (i+1)); 
+  for(int i=1;i<ex.num_threads;i++){
+    auto begin = first + (elemperthr * i); 
+    auto end = first + (elemperthr * (i+1)); 
 
-      if(i == p.num_threads -1 ) end= last;
+    if(i == ex.num_threads-1 ) end= last;
 
-      auto out = firstOut + (elemperthr * i);
-      tasks.push_back(
-        std::thread( [&](InputIt begin, InputIt end, OutputIt out){
-          // Register the thread in the execution model
-          p.register_thread();
+    auto out = first_out + (elemperthr * i);
+    tasks.push_back(
+      std::thread( [&](InputIt begin, InputIt end, OutputIt out){
+        // Register the thread in the execution model
+        ex.register_thread();
           
-          while(begin!=end){
-            *out = op(*begin);
-            begin++;
-            out++;
-          }
+        while(begin!=end){
+          *out = op(*begin);
+          begin++;
+          out++;
+        }
           
-          // Deregister the thread in the execution model
-          p.deregister_thread();
-        },
-        begin, end, out)
-      );
-   }
-   //Map main threads
-   auto end = first+elemperthr;
-   while(first!=end){
-         *firstOut = op(*first);
-         first++;
-         firstOut++;
-   }
+        // Deregister the thread in the execution model
+        ex.deregister_thread();
+       },
+       begin, end, out)
+     );
+  }
+  //Map main threads
+  auto end = first+elemperthr;
+  while(first!=end) {
+    *first_out = op(*first);
+    first++;
+    first_out++;
+  }
 
-   //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
-      tasks[i].join();
-   }
-
+  //Join threads
+  for(int i=0;i<ex.num_threads-1;i++){
+    tasks[i].join();
+  }
 }
 
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with native
+parallel execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+\param inputs Additional iterators with first elements of additional sequences.
+*/
+template <typename InputIt, typename OutputIt, typename ... MoreIn, 
+          typename Operation>
+void map(parallel_execution_native& ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Operation && op, 
+         MoreIn ... inputs)
+{
+  std::vector<std::thread> tasks;
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void map(parallel_execution_native& p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs){
+  //Calculate number of elements per thread
+  int numElements = last - first;
+  int elemperthr = numElements / ex.num_threads;
 
- std::vector<std::thread> tasks;
-   //Calculate number of elements per thread
-   int numElements = last - first;
-   int elemperthr = numElements/p.num_threads;
-   //Create tasks
-   for(int i=1;i<p.num_threads;i++){
-      //Calculate local input and output iterator 
-      auto begin = first + (elemperthr * i);
-      auto end = first + (elemperthr * (i+1));
-      if( i == p.num_threads-1) end = last;
-      auto out = firstOut + (elemperthr * i);
-      //Begin task
-      tasks.push_back(
-        std::thread( [&](InputIt begin, InputIt end, OutputIt out, int tid, int nelem, MoreIn ... inputs){
+  //Create tasks
+  for(int i=1;i<ex.num_threads;i++){
+    //Calculate local input and output iterator 
+    auto begin = first + (elemperthr * i);
+    auto end = first + (elemperthr * (i+1));
+    if( i == ex.num_threads-1) end = last;
+    auto out = first_out + (elemperthr * i);
+    //Begin task
+    tasks.push_back(
+      std::thread( [&](InputIt begin, InputIt end, OutputIt out, int tid, int nelem, MoreIn ... inputs){
 
-            // Register the thread in the execution model
-            p.register_thread();
+        // Register the thread in the execution model
+        ex.register_thread();
 
-            advance_iterators(nelem*tid, inputs ...);
-            while(begin!=end){
-               *out = op(*begin, *inputs ...);
-               advance_iterators(inputs ...);
-               begin++;
-               out++;
-            }
+        advance_iterators(nelem*tid, inputs ...);
+        while(begin!=end) {
+          *out = op(*begin, *inputs ...);
+          advance_iterators(inputs ...);
+          begin++;
+          out++;
+        }
 
-            // Deregister the thread in the execution model
-            p.deregister_thread();
-        },
-        begin, end, out, i, elemperthr, inputs...)
-      );
-      //End task
-   }
-   //Map main thread
-   auto end = first + elemperthr;
-   while(first!=end){
-         *firstOut = op(*first, *inputs ...);
-         advance_iterators(inputs ...);
-         first++;
-         firstOut++;
-   }
+        // Deregister the thread in the execution model
+        ex.deregister_thread();
+      },
+      begin, end, out, i, elemperthr, inputs...)
+    );
+    //End task
+  }
 
+  //Map main thread
+  auto end = first + elemperthr;
+  while(first!=end) {
+    *first_out = op(*first, *inputs ...);
+    advance_iterators(inputs ...);
+    first++;
+    first_out++;
+  }
 
-   //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
-      tasks[i].join();
-   }
+  //Join threads
+  for(int i=0;i<ex.num_threads-1;i++) {
+    tasks[i].join();
+  }
 }
+
+/**
+@}
+@}
+*/
 }
 #endif
