@@ -20,7 +20,7 @@ if ( NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") )
 endif()
 
 set(NEW_TESTS_CPU 
-    divideandconquer1     divideandconquer-fibonacci    farm1 
+    farm1 
     farm2                 farm3                         farm_example 
     filter_example        map1                          #map2 
     map3                  mapreduce1                    pipeline1 
