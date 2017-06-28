@@ -35,6 +35,13 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
    }
 }
 
+
+template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
+ void stream_iteration(sequential_execution &s, GenFunc && in, farm_info<sequential_execution, Operation> & f, Predicate && condition, OutFunc && out){
+    stream_iteration(s, std::forward<GenFunc>( in ), std::forward<farm_info<sequential_execution, Operation> &&>( f ), 
+          std::forward<Predicate>( condition), std::forward< OutFunc >( out ) );
+}
+
 template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
  void stream_iteration(sequential_execution, GenFunc && in, farm_info<sequential_execution, Operation> && f, Predicate && condition, OutFunc && out){
    while(1){
@@ -42,10 +49,15 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
        if(!k) break;
        auto val = k.value();
        do{
-          val = (*f.task)(val);
+          val = f.task(val);
        } while(condition(val));
        out(val);
    }
+}
+
+template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
+ void stream_iteration(sequential_execution &s, GenFunc && in, pipeline_info<sequential_execution, Stages...> & f, Predicate && condition, OutFunc && out){
+    stream_iteration(s, std::forward<GenFunc>(in), std::forward<pipeline_info<sequential_execution, Stages...> &&>( f ), std::forward<Predicate>(condition), std::forward< OutFunc>( out ));
 }
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
