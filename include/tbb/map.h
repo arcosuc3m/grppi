@@ -1,4 +1,4 @@
-/**
+/*
 * @version    GrPPI v0.2
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
@@ -26,28 +26,76 @@
 #include <tbb/tbb.h>
 namespace grppi{
 
+/**
+\addtogroup map_pattern
+@{
+\addtogroup map_pattern_tbb TBB parallel map pattern.
+Implementation of map pattern for TBB parallel back-end.
+@{
+*/
+
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with TBB
+parallel execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+*/
 template <typename InputIt, typename OutputIt, typename Operation>
-void map(parallel_execution_tbb &p, InputIt first,InputIt last, OutputIt firstOut, Operation && op){
-   tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
-           auto current = (firstOut+index);
-           *current = op(*(first+index));
-       }
-   );   
+void map(parallel_execution_tbb &ex, 
+         InputIt first, InputIt last, 
+         OutputIt first_out, 
+         Operation && op)
+{
+  tbb::parallel_for(
+    static_cast<std::size_t>(0), 
+    static_cast<std::size_t>((last-first)), 
+    [&] (std::size_t index){
+      auto current = (first_out+index);
+      *current = op(*(first+index));
+    }
+  );   
 }
 
-
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
-void map(parallel_execution_tbb &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs){
-   tbb::parallel_for(static_cast<std::size_t>(0),static_cast<std::size_t>( (last-first) ), [&] (std::size_t index){
-           auto current = (firstOut+index);
-           *current = op(*(first+index), *(inputs+index)...);
-       }
-
-   );   
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with TBB
+parallel execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+\param more_firsts Additional iterators with first elements of additional sequences.
+*/
+template <typename InputIt, typename OutputIt, 
+          typename ... MoreIn, 
+          typename Operation>
+void map(parallel_execution_tbb & ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Operation && op, 
+         MoreIn ... inputs)
+{
+  tbb::parallel_for(
+    static_cast<std::size_t>(0),
+    static_cast<std::size_t>((last-first)), 
+    [&] (std::size_t index){
+      auto current = (first_out+index);
+      *current = op(*(first+index), *(inputs+index)...);
+    }
+ );   
 
 }
+
 }
+
 #endif
 
 #endif

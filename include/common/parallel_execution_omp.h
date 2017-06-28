@@ -28,16 +28,27 @@
 
 #include <omp.h>
 
+#include "mpmc_queue.h"
+
 namespace grppi{
 
 /** @brief Set the execution mode to parallel with ompenmp framework 
  *    implementation 
  */
 struct parallel_execution_omp{
+  constexpr static int default_queue_size = 100;
+  constexpr static int default_num_threads = 4;
+  int queue_size = default_queue_size;
+  int num_threads = default_num_threads;
   bool ordering = true;
-  bool lockfree = false;
-  int num_threads = 4;
-  int get_threadID(){
+  queue_mode lockfree = queue_mode::blocking;
+
+  void set_queue_size(int new_size){
+     queue_size = new_size;
+  }
+
+
+  int get_thread_id(){
      return omp_get_thread_num();
   }
   /** @brief Set num_threads to the maximum number of thread available by the

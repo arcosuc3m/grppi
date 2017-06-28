@@ -28,14 +28,12 @@
 
 namespace grppi{
 
-template <typename GenFunc, typename Operation, typename SinkFunc>
- void farm(parallel_execution_native &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
+template <typename Generator, typename Operation, typename Consumer>
+void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consumer &&cons) {
 
     std::vector<std::thread> tasks;
-//    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
-//    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE);
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue (DEFAULT_SIZE,p.lockfree);
-    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue< typename std::result_of<Generator()>::type > queue (p.queue_size,p.lockfree);
+    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
     std::atomic<int> nend(0);
     //Create threads
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -45,19 +43,19 @@ template <typename GenFunc, typename Operation, typename SinkFunc>
                     // Register the thread in the execution model
                     p.register_thread();
 
-                    typename std::result_of<GenFunc()>::type item;
+                    typename std::result_of<Generator()>::type item;
                     item = queue.pop( ) ;
                     //auto item = queue.pop( );
                     while( item ) {
                        auto out = op( item.value() );
-                       queueout.push( optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type >(out) );
+                       queueout.push( optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
                        // item = queue.pop( );
                        item = queue.pop( ) ;
                     }
                     queue.push(item);
                     nend++;
                     if(nend == p.num_threads)
-                        queueout.push( optional< typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type >() ) ;
+                        queueout.push( optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
 
                     // Deregister the thread in the execution model
                     p.deregister_thread();
@@ -73,11 +71,11 @@ template <typename GenFunc, typename Operation, typename SinkFunc>
                 // Register the thread in the execution model
                 p.register_thread();
 
-                optional< typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > item;
+                optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
                 item = queueout.pop( ) ;
                 // auto item = queueout.pop(  ) ;
                  while( item ) {
-                    sink( item.value() );
+                    cons( item.value() );
 //                  item = queueout.pop(  ) ;
                     item = queueout.pop( );
                  }
@@ -90,7 +88,7 @@ template <typename GenFunc, typename Operation, typename SinkFunc>
 
    //Generate elements
     while( 1 ) {
-        auto k = in();
+        auto k = gen();
         queue.push( k );
         if( !k ) {
 /*            for( int i = 0; i < p.num_threads; i++ ) {
@@ -108,12 +106,11 @@ template <typename GenFunc, typename Operation, typename SinkFunc>
 
 }
 
-template <typename GenFunc, typename Operation>
- void farm(parallel_execution_native &p, GenFunc &&in, Operation && op ) {
+template <typename Generator, typename Operation>
+ void farm(parallel_execution_native &p, Generator &&gen, Operation && op ) {
 
     std::vector<std::thread> tasks;
-//    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
+    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.queue_size,p.lockfree);
     //Create threads
 //    std::atomic<int> nend(0);
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -122,7 +119,7 @@ template <typename GenFunc, typename Operation>
                 [&](){
                     // Register the thread in the execution model
                     p.register_thread();
-                    typename std::result_of<GenFunc()>::type item;
+                    typename std::result_of<Generator()>::type item;
                     item = queue.pop( );
                     while( item ) {
                        op( item.value() );
@@ -138,7 +135,7 @@ template <typename GenFunc, typename Operation>
 
     //Generate elements
     while( 1 ) {
-        auto k = in();
+        auto k = gen();
         queue.push( k ) ;
         if( !k ) {
 /*            for( int i = 0; i < p.num_threads; i++ ) {
@@ -157,7 +154,7 @@ template <typename GenFunc, typename Operation>
 template <typename Operation>
 farm_info<parallel_execution_native,Operation> farm(parallel_execution_native &p, Operation && op){
    
-   return farm_info<parallel_execution_native, Operation>(p, op);
+   return farm_info<parallel_execution_native, Operation>(p, std::forward<Operation>(op) );
 }
 
 }

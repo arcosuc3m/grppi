@@ -26,6 +26,7 @@
 #include "native/stencil.h"
 #include "omp/stencil.h"
 #include "tbb/stencil.h"
+#include "poly/stencil.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

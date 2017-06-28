@@ -46,8 +46,7 @@ void reduce_example1() {
 
     std::vector<double> in(10);
     for(int i=0;i<in.size();i++) in[i] = (i+1);
-    double out=1;
-    reduce(p, in.begin(), in.end(), out, std::divides<double>());
+    double out = reduce(p, in.begin(), in.end(), std::divides<double>());
     std::cout<<"REDUCE : "<< out <<std::endl;
 
 }

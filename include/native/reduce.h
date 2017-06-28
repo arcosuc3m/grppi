@@ -25,159 +25,18 @@
 #include <functional>
 
 namespace grppi{
-//typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 
-template < typename InputIt, typename Output, typename ReduceOperator>
- typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(parallel_execution_native &p, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
-
-    typename ReduceOperator::result_type identityVal = !op(false,true);
-
-
-    std::vector<std::thread> tasks;
-    int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-    std::atomic<int> finishedTask(1); 
-    //local output
-    std::vector<Output> out(p.num_threads);
-    //Create threads
-    for(int i=1;i<p.num_threads;i++){
-      
-      auto begin = first + (elemperthr * i);
-      auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
-
-      p.pool.create_task(boost::bind<void>(
-           [&](InputIt begin, InputIt end, int tid){
-               out[tid] = identityVal;
-//               begin++;
-               
-               for( ; begin != end; begin++ ) {
-                   out[tid] = op( out[tid], *begin );
-                   //begin++;
-               }
-               finishedTask++;
-            },
-            std::move(begin), std::move(end), i
-      ));
-     /* 
-      tasks.push_back(
-
-         std::thread( [&](InputIt begin, InputIt end, int tid){
-            out[tid] = *begin;
-            begin++;
-         	while( begin != end ) {
-		 		out[tid] = op(*begin, out[tid] );
-		 		begin++;
-	        }
-         }, 
-         begin, end, i
-         )   
-      );
-*/
-    }   
+template < typename InputIt, typename Combiner>
+typename std::iterator_traits<InputIt>::value_type
+reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner && combine_op){
    
-    //Main thread
-    auto end = first + elemperthr;
-    out[0] = identityVal;
-//    first++;
-    while(first!=end){
-         out[0] = op( out[0], *first);
-         first++;
-    }
-    while(finishedTask.load()!=p.num_threads);//{std::cout<<finishedTask.load()<<" "<<p.num_threads<<std::endl; }
+    auto identityVal = init;
 
-    //Join threads
-   /* for(int i=0;i<p.num_threads-1;i++){
-      tasks[i].join();
-    }*/
-  
-    auto it = out.begin();
-    while( it!= out.end()){
-       firstOut = op( firstOut, *it);
-       it++;
-    }
-}
-
-/*
-template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
- typename std::enable_if<!is_iterator<Output>::value, void>::type
-Reduce(parallel_execution_native p, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
-
-    std::vector<std::thread> tasks;
-    int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-
-    //local output
-    std::vector<Output> out(p.num_threads);
-    int i;
-    //Create threads
-    for(i=1;i<p.num_threads;i++){
-
-      auto begin = first + (elemperthr * i);
-      auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
-
-      tasks.push_back(
-         std::thread( [&](InputIt begin, InputIt end, int tid){
-               while( begin != end ) {
-                       reduce(*begin, out[tid] );
-                       begin++;
-               }
-
-         },
-         begin, end, i
-         )
-      );
-
-    }
-
-    //Main thread
-    auto end = first + elemperthr;
-    while(first!=end){
-         reduce(*first , out[0]);
-         first++;
-    }
-
-    //Join threads
-    for(int i=0;i<p.num_threads-1;i++){
-      tasks[i].join();
-    }
-
-    auto it = out.begin();
-    while( it!= out.end()){
-       freduce(*it,firstOut);
-       it++;   
-    }      
-
-}
-*/
-
-
-template < typename InputIt, typename OutputIt, typename  RedFunc>
- typename  std::enable_if<is_iterator<OutputIt>::value, void>::type 
-reduce (parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, RedFunc && reduce) {
-    while( first != last ) {
-       reduce( *first, *firstOut);
-       first++;
-       firstOut++;
-    }
-}
-
-
-
-
-template < typename InputIt, typename ReduceOperator>
- typename ReduceOperator::result_type
-reduce(parallel_execution_native &p, InputIt first, InputIt last, ReduceOperator op) {
-    typename ReduceOperator::result_type identityVal = !op(false,true);
-
-//    std::vector<std::thread> tasks;
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
     std::atomic<int> finishedTask(1);
     //local output
-    std::vector<typename ReduceOperator::result_type> out(p.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(p.num_threads);
     //Create threads
     for(int i=1;i<p.num_threads;i++){
 
@@ -187,63 +46,36 @@ reduce(parallel_execution_native &p, InputIt first, InputIt last, ReduceOperator
       p.pool.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
-    //           begin++;
                for( ; begin != end; begin++ ) {
-                   out[tid] = op(out[tid], *begin );
-                   //begin++;
+                   out[tid] = combine_op(out[tid], *begin );
                }
                finishedTask++;
             },
             std::move(begin), std::move(end), i
       ));
-/*
-      tasks.push_back(
-         std::thread( [&](InputIt begin, InputIt end, int tid){
-            out[tid] = *begin;
-            begin++;
-            while( begin != end ) {
-                out[tid] = op(*begin, out[tid] );
-                begin++;
-            }
-         },
-         begin, end, i
-         )
-      );
-*/
     }
     //Main thread
     auto end = first + elemperthr;
     out[0] = identityVal;
-//    first++;
     for(;first!=end;first++){
-         out[0] = op( out[0], *first);
+         out[0] = combine_op( out[0], *first);
     }
 
-    //Join threads
-  //  for(int i=0;i<p.num_threads-1;i++){
-  //    tasks[i].join();
-  //  }
-    while(finishedTask.load()!=p.num_threads);//{std::cout<<finishedTask.load()<<" "<<p.num_threads<<std::endl; }
-    
-    typename ReduceOperator::result_type outVal = out[0];
+    while(finishedTask.load()!=p.num_threads);
+
+    auto outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){
-       outVal = op(outVal, out[i]);
+       outVal = combine_op(outVal, out[i]);
     }
     return outVal;
 }
 
-
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
+template < typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(parallel_execution_native &p, InputIt first, InputIt last, Combiner && combine_op){
+   auto identityVal = !combine_op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
 }
-*/
+
 }
 #endif
