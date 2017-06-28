@@ -26,6 +26,7 @@
 #include "native/pipeline.h"
 #include "omp/pipeline.h"
 #include "tbb/pipeline.h"
+#include "poly/pipeline.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

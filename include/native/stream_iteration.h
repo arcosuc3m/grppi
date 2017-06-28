@@ -97,7 +97,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
       auto item = queue.pop();
       while(item){
          do{
-             auto out = typename std::result_of<GenFunc()>::type( (*se.task)(item.value()) );
+             auto out = typename std::result_of<GenFunc()>::type( se.task(item.value()) );
              item = out;
          }while(condition(item.value()));
          queueOut.push(item);
@@ -122,7 +122,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
               auto item = queue.pop();
               while(item){
                   do{
-                      auto out = typename std::result_of<GenFunc()>::type ( (*se.task)(item.value()) );
+                      auto out = typename std::result_of<GenFunc()>::type ( se.task(item.value()) );
                       item = out;
                   }while(condition(item.value()));
                   queueOut.push(item);
