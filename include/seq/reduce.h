@@ -42,7 +42,5 @@ reduce(sequential_execution &p, InputIt first, InputIt last, Combiner &&combine_
    return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
 }
 
-
-
 }
 #endif
