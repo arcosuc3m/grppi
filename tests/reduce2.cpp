@@ -51,25 +51,23 @@ void reduce_example1() {
           in[i][k]= 1;
        }
     }
-    std::vector<int> out(100);
+    std::vector<int> out(100,0);
 
 
     int out2 =0 ;
-//    Reduce(in.begin(), in.end(), out2, [&](auto & in, int & out){  out += in; }  );
-//    Reduce(in.begin(), in.end(), out2, [&](auto & in, auto & out){
-//       Reduce(in.begin(), in.end(), out, [&](auto & in, auto & out){ out += in; });
-//     },  [&](auto & in, auto & out){ out += in; } );
-//
+    
+    out = reduce(p, in.begin(), in.end(), out ,[&p](auto val, auto vec){
+         auto it = val.begin();
+         auto it2= vec.begin();
+         while( it!=val.end() && it2 != vec.end()){
+             *it += *it2;
+             it++;
+             it2++;
+         }
+         return val; 
+    });
 
-     reduce(p, in.begin(), in.end(), out.begin(), [&](auto & in, auto & out){
-             reduce(p, in.begin(), in.end(), out,  std::plus<int>() );
-         } 
-     );
-
-    reduce(p, out.begin(), out.end(), out2,  std::plus<int>() );
- 
-
-    std::cout<<out2<<std::endl;
+    out2 += reduce(p, out.begin(), out.end(), std::plus<int>() );
 
 //    for(int i = 0; i< out.size();i++) std::cout<<"REDUCTION ["<<i<<"] = "<<out[i]<<std::endl;
 }

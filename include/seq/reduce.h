@@ -22,40 +22,24 @@
 #define GRPPI_REDUCE_SEQ_H
 
 namespace grppi{
-//typename std::enable_if<!is_iterator<Output>::value, bool>::type,
 
-template < typename InputIt, typename Output, typename ReduceOperator>
- typename std::enable_if<!is_iterator<Output>::value, void>::type 
-reduce(sequential_execution &s, InputIt first, InputIt last, Output & firstOut, ReduceOperator op) {
-    typename ReduceOperator::result_type identityVal = !op(false,true);
-    while( first != last ) {
-       identityVal = op(identityVal, *first);
-       first++;
-    }
-    firstOut = op( firstOut, identityVal);
-}
 
-template < typename InputIt, typename ReduceOperator>
- typename ReduceOperator::result_type reduce(sequential_execution &s, InputIt first, InputIt last, ReduceOperator op) {
-    typename ReduceOperator::result_type identityVal = !op(false,true);
-    auto firstOut = identityVal;
+template < typename InputIt, typename Combiner>
+typename std::iterator_traits<InputIt>::value_type
+reduce(sequential_execution &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner &&combine_op){
+    auto firstOut = init;
     while( first != last ) {
-       firstOut = op( firstOut, *first );
+       firstOut = combine_op( firstOut, *first );
        first++;
     }
     return firstOut;
 }
 
-
-template < typename InputIt, typename OutputIt, typename RedFunc>
- typename  std::enable_if<is_iterator<OutputIt>::value, void>::type 
-reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, RedFunc && reduce) {
-
-    while( first != last ) {
-       reduce(*first, *firstOut);
-       first++;
-       firstOut++;
-    }
+template < typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce(sequential_execution &p, InputIt first, InputIt last, Combiner &&combine_op){
+   auto identityVal = !combine_op(false,true);
+   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
 }
 
 }
