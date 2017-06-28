@@ -827,4 +827,4 @@ TYPED_TEST(farm_test, poly_multiple_composed)
   );
   this->check_multiple_sink();
 }
-/*
+*/
