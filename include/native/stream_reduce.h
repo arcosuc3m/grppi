@@ -26,67 +26,9 @@
 #include <thread>
 
 namespace grppi{
-template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
- void stream_reduce(parallel_execution_native &p, GenFunc &&in, Operation &&op, ReduceFunc &&red, OutputType &reduce_value ){
-
-    mpmc_queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE,p.lockfree);
-    mpmc_queue<optional<OutputType>> end_queue(DEFAULT_SIZE,p.lockfree);
-    std::atomic<int> nend (0);
-    std::vector<std::thread> tasks;
-    //Create threads
-    for( int i = 0; i < p.num_threads; i++ ) {
-        tasks.push_back(
-            std::thread(
-                [&]() {
-                    // Register the thread in the execution model
-                    p.register_thread();
-
-                    typename std::result_of<GenFunc()>::type item;
-                    item = queue.pop();
-                    while( item ) {
-                        OutputType out = op( item.value() );
-                        end_queue.push( optional<OutputType>(out) ) ;
-                        item = queue.pop();
-                    }
-                    nend++;
-                    if(nend == p.num_threads)
-                        end_queue.push(optional<OutputType>()); 
-                    
-                    // Deregister the thread in the execution model
-                    p.deregister_thread();
-                }
-            )
-        );
-    }
-    std::thread merge([&](){	
-        optional<OutputType> item;
-        while( (item = end_queue.pop( )) )
-            red( item.value(), reduce_value  );
-    });
-    //Generate elements
-    while( 1 ) {
-        auto k = in();
-        queue.push( k ) ;
-        if( k.end ) {
-            for( int i = 0; i < p.num_threads; i++ )
-                queue.push( k ) ;
-            break;
-        }
-    }
-
-
-    //Join threads
-    for( int i = 0; i < p.num_threads; i++ ) {
-        tasks[ i ].join();
-    }
-    merge.join();
-    //Reduce
-
-}
-
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
- void stream_reduce(parallel_execution_native &p, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
+void stream_reduce(parallel_execution_native &p, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
 {
      
      std::vector<typename std::result_of<GenFunc()>::type::value_type> buffer;
@@ -116,11 +58,10 @@ template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
 
 }
 
-
-
 template <typename Operation, typename RedFunc>
 reduction_info<parallel_execution_native,Operation, RedFunc> stream_reduce(parallel_execution_native p, Operation && op, RedFunc && red){
    return reduction_info<parallel_execution_native, Operation, RedFunc>(p,op, red);
 }
+
 }
 #endif

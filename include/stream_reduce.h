@@ -26,6 +26,8 @@
 #include "native/stream_reduce.h"
 #include "omp/stream_reduce.h"
 #include "tbb/stream_reduce.h"
+#include "poly/stream_reduce.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /* @defgroup StreamReduce

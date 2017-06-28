@@ -27,54 +27,6 @@
 #include <tbb/tbb.h>
 
 namespace grppi{
-template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
- void stream_reduce(parallel_execution_tbb &p, GenFunc &&in, Operation &&op, ReduceFunc &&red, OutputType &reduce_value ){
-
-    mpmc_queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
-    mpmc_queue<optional<OutputType>> end_queue (DEFAULT_SIZE, p.lockfree);
-    tbb::task_group g;
-
-    std::atomic<int> nend(0);
-
-    //Create threads
-    for( int i = 0; i < p.num_threads; i++ ) {
-            g.run(
-                [&]() {
-                    typename std::result_of<GenFunc()>::type item;
-                    item = queue.pop( ) ;
-                    while( item ) {
-                        OutputType out = op( item.value() );
-                        end_queue.push( optional<OutputType>(out) );
-                        item = queue.pop(  );
-                    }
-                    nend++;
-                    if(nend == p.num_threads)
-                        end_queue.push( optional<OutputType>() );
-                }
-            );
-    }
-    g.run([&](){ 
-       //Reduce
-        optional<OutputType> item;
-        while( (item = end_queue.pop( )) )
-           red( item.value(), reduce_value  );
-	});
-    //Generate elements
-    while( 1 ) {
-        auto k = in();
-        queue.push( k );
-        if( k.end ) {
-            for( int i = 1; i < p.num_threads; i++ )
-                queue.push( k );
-            break;
-        }
-    }
-
-    //Join threads
-    g.wait();
-
-
-}
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
  void stream_reduce(parallel_execution_tbb &s, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)

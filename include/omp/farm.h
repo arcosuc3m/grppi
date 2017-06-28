@@ -26,10 +26,70 @@
 namespace grppi
 {
 
-template <typename GenFunc, typename Operation>
-void farm(parallel_execution_omp &p, GenFunc &&in, Operation &&op) {
+template <typename Generator, typename Operation, typename Consumer>
+void farm(parallel_execution_omp &p, Generator &&gen, Operation && op , Consumer &&cons) {
+
+    mpmc_queue< typename std::result_of<Generator()>::type > queue (p.queue_size,p.lockfree);
+    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
+    std::atomic<int> nend(0);
+    #pragma omp parallel
+    {
+        #pragma omp single nowait
+        {
+        //Create threads
+        for( int i = 0; i < p.num_threads; i++ ) {
+             #pragma omp task shared(queue, queueout, op)
+             {
+                    typename std::result_of<Generator()>::type item;
+                    item = queue.pop( ) ;
+                    //auto item = queue.pop( );
+                    while( item ) {
+                       auto out = op( item.value() );
+                       queueout.push( optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
+                       // item = queue.pop( );
+                       item = queue.pop( ) ;
+                    }
+                    queue.push(item);
+                    nend++;
+                    if(nend == p.num_threads)
+                        queueout.push( optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
+             }
+       }
+
+        //SINK
+       #pragma omp task shared(queueout,cons)
+       { 
+             optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
+             item = queueout.pop( ) ;
+             // auto item = queueout.pop(  ) ;
+             while( item ) {
+                 cons( item.value() );
+//               item = queueout.pop(  ) ;
+                 item = queueout.pop( );
+             }
+       }
+
+       //Generate elements
+        while( 1 ) {
+           auto k = gen();
+           queue.push( k );
+           if( !k ) {
+               break;
+            }
+        }
+
+        #pragma omp taskwait
+        }
+    }
+
+}
+
+
+
+template <typename Generator, typename Operation>
+void farm(parallel_execution_omp &p, Generator &&gen, Operation &&op) {
 	
-    mpmc_queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue<typename std::result_of<Generator()>::type> queue(p.queue_size, p.lockfree);
     #pragma omp parallel
     {
 	#pragma omp single nowait
@@ -38,7 +98,7 @@ void farm(parallel_execution_omp &p, GenFunc &&in, Operation &&op) {
             for( int i = 0; i < p.num_threads; i++ ) {
                 #pragma omp task shared(queue)
 		{
-                    typename std::result_of<GenFunc()>::type item;
+                    typename std::result_of<Generator()>::type item;
                     item = queue.pop() ;
                     while( item ) {
                         op( item.value() );
@@ -49,7 +109,7 @@ void farm(parallel_execution_omp &p, GenFunc &&in, Operation &&op) {
 		
             //Generate elements
             while( 1 ) {
-                auto k = in();
+                auto k = gen();
                 queue.push( k ) ;
                 if( !k ) {
                     for( int i = 1; i < p.num_threads; i++ )
@@ -65,7 +125,7 @@ void farm(parallel_execution_omp &p, GenFunc &&in, Operation &&op) {
 
 template <typename Operation>
 farm_info<parallel_execution_omp,Operation> farm(parallel_execution_omp &p, Operation && op){
-   return farm_info<parallel_execution_omp, Operation>(p,op);
+   return farm_info<parallel_execution_omp, Operation>(p,std::forward<Operation>(op) );
 }
 }
 #endif
