@@ -38,33 +38,33 @@ int output; // Output value
     for(int v=0;v<40;v++){
       int find = 1;
       int out = 0;
-      divide_and_conquer(p, v, out,
-          [&](auto & v){
-             std::vector< int > subproblem;
-      	   if(v<2) subproblem.push_back(v);
-             else{
-                subproblem.push_back(v-1);
-                 subproblem.push_back(v-2);
+      out = divide_and_conquer(p, v,
+        [&](auto & v){
+           std::vector< int > subproblem;
+           if(v<2) subproblem.push_back(v);
+           else{
+              subproblem.push_back(v-1);
+               subproblem.push_back(v-2);
+           }
+           return subproblem;
+        },
+        [&](auto problem){
+           int partial = 0;
+           if(problem!=0){
+              int a=1, b=1;
+              for(int i = 3; i <= problem; i++){
+                 int c = a + b;
+                 a = b;
+                 b = c;
              }
-             return subproblem;
-          },
-          [&](auto & problem, auto & partial){
-             if(problem==0) partial = 0;
-             else{
-                int a=1, b=1;
-                for(int i = 3; i <= problem; i++){
-                   int c = a + b;
-                   a = b;
-                   b = c;
-               }
-               partial = b;
-             }
-          },
-          [&](auto & partial, auto & out){
-             out += partial;
-          }
-      );    
-      
+             partial = b;
+           }
+           return partial;
+        },
+        [&](auto & partial, auto & out){
+           out += partial;
+        }
+    );
       output = out; 
    }
 

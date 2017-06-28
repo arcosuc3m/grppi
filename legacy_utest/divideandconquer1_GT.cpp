@@ -40,7 +40,7 @@ int dividec_example1(auto &p) {
     }
     int out = 0;
     
-    divide_and_conquer(p,v, out,
+    out = divide_and_conquer(p,v,
                      [&](auto & v){
         std::vector<std::vector<int>> subproblem;
         if(v.size() <= 2){ subproblem.push_back(v);return subproblem; }
@@ -63,15 +63,17 @@ int dividec_example1(auto &p) {
         return subproblem;
     },
     // base case management: vector<int> ->int
-    [&](const vector<int> & problem, int & out){
-        //                out = 0;
+    [&](const vector<int> & problem){
+        int  out = 0;
         //std::cout << "Base case problem size " << problem.size() << "\n";
         for(int i= 0; i< problem.size(); i++) out += problem[i];
+        return out;
     },
     // Merge: vector<T> -> T
         [&](auto & partial, auto & out){
         //std::cout<<"MERGE " << partial << "IN " << out<<"\n";
         out += partial;
+        return out;
     }
     );
 
