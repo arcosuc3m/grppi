@@ -202,7 +202,7 @@ template <typename Operation, typename Stream,typename... Stages>
         st.push(item);
         nend++;
         if(nend == se.exectype.num_threads)
-          q.push(make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+          q.push(std::make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }
     stages(p, q, std::forward<Stages>(sgs) ... );

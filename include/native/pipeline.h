@@ -301,7 +301,7 @@ void stages(parallel_execution_native &p, Stream& st,
                  st.push(item);
                  nend++;
                  if(nend == se.exectype.num_threads) 
-                      q.push(make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+                      q.push(std::make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
                 
                  //Deregister the thread in the execution model
                  se.exectype.deregister_thread();
