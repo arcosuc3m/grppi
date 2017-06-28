@@ -25,30 +25,6 @@
 #include <vector>
 
 namespace grppi{
-template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
- void stream_reduce(sequential_execution &s, GenFunc &&in, Operation && op, ReduceFunc &&red, OutputType &reduce_value ) {
-
-    while( 1 ) {
-        auto k = in();
-        if( !k ) 
-            break;
-        auto u = op(k.value());
-        red(u, reduce_value);
-    }
-}
-
-
-template <typename GenFunc, typename Operation, typename ReduceFunc>
- void stream_reduce(sequential_execution &s, GenFunc &&in, Operation && op, ReduceFunc &&red) {
-    while( 1 ) {
-        auto k = in();
-        if( !k )
-            break;
-        auto u = op(k.value());
-        red(u);
-    }
-}
-
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
  void stream_reduce(sequential_execution &s, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
@@ -80,5 +56,12 @@ template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
     } 
 
 }
+
+template <typename Operation, typename RedFunc>
+reduction_info<sequential_execution,Operation, RedFunc> stream_reduce(sequential_execution p, Operation && op, RedFunc && red){
+   return reduction_info<sequential_execution, Operation, RedFunc>(p,op, red);
+}
+
+
 }
 #endif
