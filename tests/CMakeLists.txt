@@ -8,13 +8,8 @@ set( TESTS_CPU_SEQ
      pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
      stencil1               mapreduce1             divideandconquer1
-<<<<<<< HEAD
-     divideandconquer-fibonacci stream_reduce_new
+     divideandconquer-fibonacci 
      stream_iteration1      farm_sink
-=======
-     divideandconquer-fibonacci stream_reduce_example
-     stream_iteration1
->>>>>>> latest
      stream_iteration_pipe
 #     PPATtest               PPATfarm
 # Examples in the Deliverable
@@ -27,13 +22,8 @@ set( TESTS_CPU_OMP
      farm2                  farm3                  
      pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
-<<<<<<< HEAD
-     stencil1               divideandconquer1      stream_reduce_new
+     stencil1               divideandconquer1     
       farm_sink 
-=======
-     stencil1               divideandconquer1      
- 
->>>>>>> latest
      divideandconquer-fibonacci
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example         
@@ -58,13 +48,8 @@ set( TESTS_CPU_THR
      pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
      stencil1               divideandconquer1      mapreduce1
-<<<<<<< HEAD
-     divideandconquer-fibonacci stream_reduce_new
+     divideandconquer-fibonacci 
      stream_iteration1      farm_sink
-=======
-     divideandconquer-fibonacci
-     stream_iteration1
->>>>>>> latest
      stream_iteration_pipe
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example
