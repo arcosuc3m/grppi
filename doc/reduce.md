@@ -4,7 +4,7 @@ The **reduce** pattern is a data pattern that combines all the values in a data 
 
 The interface to the **reduce** pattern is provided by function `grppi::reduce()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
-~~~c++
+~~~{.cpp}
 grppi::reduce(exec, other_arguments...);
 ~~~
 
@@ -31,7 +31,7 @@ The reduction result is returned by the pattern interface.
 
 ---
 **Example**
-~~~c++
+~~~{.cpp}
 vector<double> v = get_the_vector();
 auto result = reduce(exec,
   begin(v), end(ve),

@@ -31,8 +31,8 @@ template <typename GenFunc, typename FilterFunc, typename OutFunc>
 
     tbb::task_group g;
 
-    mpmc_queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(DEFAULT_SIZE,p.lockfree);
-    mpmc_queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue< std::pair< typename std::result_of<GenFunc()>::type, long> > queue(p.queue_size,p.lockfree);
+    mpmc_queue< std::pair< typename std::result_of<GenFunc()>::type, long> > outqueue(p.queue_size, p.lockfree);
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
     for(int i=1; i< p.num_threads - 1; i++){
