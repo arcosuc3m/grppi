@@ -4,7 +4,7 @@ The **pipeline** pattern receives a data stream that is processed in several sta
 
 The interface to the **pipeline** pattern is provided by function `grppi::pipeline()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
-~~~c++
+~~~{.cpp}
 grppi::pipeline(exec, other_arguments...);
 ~~~
 
@@ -28,7 +28,7 @@ The data in each stage is processed in parallel but there are dependencies betwe
 
 ---
 **Example**
-~~~c++
+~~~{.cpp}
     std::vector<int> output;
     p.ordering=true;
     int a = initial_value;

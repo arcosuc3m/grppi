@@ -55,7 +55,7 @@ template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Sta
        if(!k) break; 
        auto val = k.value();
        do{
-             val = composed_pipeline<typename std::result_of<GenFunc()>::type::value_type,0,Stages...>(val,f);
+             val = composed_pipeline<typename std::result_of<GenFunc()>::type::value_type,0,Stages...>(val,std::forward<pipeline_info<sequential_execution, Stages...>>(f) );
        }while(condition(val));
        out(val);
    }

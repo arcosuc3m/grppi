@@ -29,13 +29,11 @@
 namespace grppi{
 
 template <typename GenFunc, typename Operation, typename SinkFunc>
- void farm(parallel_execution_native &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
+void farm(parallel_execution_native &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
 
     std::vector<std::thread> tasks;
-//    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
-//    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE);
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue (DEFAULT_SIZE,p.lockfree);
-    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue< typename std::result_of<GenFunc()>::type > queue (p.queue_size,p.lockfree);
+    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
     std::atomic<int> nend(0);
     //Create threads
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -112,8 +110,8 @@ template <typename GenFunc, typename Operation>
  void farm(parallel_execution_native &p, GenFunc &&in, Operation && op ) {
 
     std::vector<std::thread> tasks;
-//    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE);
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
+//    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size);
+    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
     //Create threads
 //    std::atomic<int> nend(0);
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -157,7 +155,7 @@ template <typename GenFunc, typename Operation>
 template <typename Operation>
 farm_info<parallel_execution_native,Operation> farm(parallel_execution_native &p, Operation && op){
    
-   return farm_info<parallel_execution_native, Operation>(p, op);
+   return farm_info<parallel_execution_native, Operation>(p, std::forward<Operation>(op) );
 }
 
 }

@@ -28,7 +28,7 @@ namespace grppi{
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
  typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, pipeline_info<parallel_execution_native, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
 {
-      composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), qout, tasks);
+      composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), qout, tasks);
 }
 
 
@@ -39,9 +39,9 @@ template <typename InStream, typename OutStream, int currentStage, typename ...S
       typedef typename std::remove_reference<decltype(*lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static mpmc_queue<optional<queueType>> queueOut(DEFAULT_SIZE,(pipe.exectype)->lockfree); 
+      static mpmc_queue<optional<queueType>> queueOut(pipe.exectype.queue_size,pipe.exectype.lockfree); 
 
-      composed_pipeline((*pipe.exectype), qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
+      composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
       composed_pipeline<mpmc_queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
        
 }
@@ -129,7 +129,7 @@ template <typename Operation, typename Red, typename Stream>
 void stages(parallel_execution_native & p, Stream & st,
 reduction_info<parallel_execution_native, Operation, Red> & se) {
     std::vector<std::thread> tasks;
-    mpmc_queue<typename std::result_of<Operation(typename Stream::value_type) >::type > queueOut(DEFAULT_SIZE,p.lockfree);
+    mpmc_queue<typename std::result_of<Operation(typename Stream::value_type) >::type > queueOut(p.queue_size,p.lockfree);
 
     for( int th = 0; th < se.exectype.num_threads; th++){
         tasks.push_back(
@@ -156,14 +156,14 @@ void stages(parallel_execution_native &p, Stream& st,
     
     std::vector<std::thread> tasks;
     if(p.ordering){
-       mpmc_queue< typename Stream::value_type > q(DEFAULT_SIZE,p.lockfree);
+       mpmc_queue< typename Stream::value_type > q(p.queue_size,p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
               std::thread([&](){
                  //Register the thread in the execution model
-                 se.exectype->register_thread();
+                 se.exectype.register_thread();
                  typename Stream::value_type item;
                  item = st.pop( ) ;
                  while( item.first ) {
@@ -176,18 +176,18 @@ void stages(parallel_execution_native &p, Stream& st,
                      item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
                  }
                  //MODIFIED from se->exectype.deregister_thread();
                  //Deregister the thread in the execution model
-                 se.exectype->deregister_thread();
+                 se.exectype.deregister_thread();
 
           }));
        } 
-       mpmc_queue< typename Stream::value_type > qOut(DEFAULT_SIZE,p.lockfree);
+       mpmc_queue< typename Stream::value_type > qOut(p.queue_size,p.lockfree);
        auto orderingthr = std::thread([&](){
           p.register_thread();
           typename Stream::value_type item;
@@ -240,14 +240,14 @@ void stages(parallel_execution_native &p, Stream& st,
        stages(p, qOut, std::forward<Stages>(sgs) ... );
        orderingthr.join();
     }else{
-       mpmc_queue< typename Stream::value_type > q(DEFAULT_SIZE, p.lockfree);
+       mpmc_queue< typename Stream::value_type > q(p.queue_size, p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
               std::thread([&](){
                   //Register the thread in the execution model
-                  se.exectype->register_thread();
+                  se.exectype.register_thread();
                  typename Stream::value_type item;
                  item = st.pop( ) ;
                  while( item.first ) {
@@ -259,13 +259,13 @@ void stages(parallel_execution_native &p, Stream& st,
                       item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
                  }
                  //Deregister the thread in the execution model
-                 se.exectype->deregister_thread();
+                 se.exectype.deregister_thread();
                
           }));
        }
@@ -281,14 +281,14 @@ template <typename Operation, typename Stream, typename... Stages>
 void stages(parallel_execution_native &p, Stream& st, 
             farm_info<parallel_execution_native,Operation> se, Stages && ... sgs ) {
     std::vector<std::thread> tasks;
-    //mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(DEFAULT_SIZE);
-    mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE,p.lockfree);
+    //mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(p.queue_size);
+    mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
-    for( int th = 0; th < se.exectype->num_threads; th++){
+    for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
               std::thread([&](){
                   //Register the thread in the execution model
-                  se.exectype->register_thread();
+                  se.exectype.register_thread();
 
                   long order = 0;
                   auto item = st.pop(); 
@@ -300,11 +300,11 @@ void stages(parallel_execution_native &p, Stream& st,
                  }
                  st.push(item);
                  nend++;
-                 if(nend == se.exectype->num_threads) 
-                      q.push(make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+                 if(nend == se.exectype.num_threads) 
+                      q.push(std::make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
                 
                  //Deregister the thread in the execution model
-                 se.exectype->deregister_thread();
+                 se.exectype.deregister_thread();
              })
           );
     }
@@ -320,7 +320,7 @@ template <typename Stage, typename Stream,typename... Stages>
 
     //Create new queue
 
-    mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(DEFAULT_SIZE,p.lockfree);
+    mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
 
     //Start task
     std::thread task( 
@@ -356,7 +356,7 @@ template <typename FuncIn, typename ...Stages,
 void pipeline( parallel_execution_native& p, FuncIn && in, Stages && ... sts ) {
 
     //Create first queue
-    mpmc_queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE,p.lockfree);
+    mpmc_queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(p.queue_size,p.lockfree);
     //Create stream generator stage
     std::thread task(
         [&](){

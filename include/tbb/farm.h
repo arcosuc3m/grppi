@@ -29,8 +29,8 @@ template <typename GenFunc, typename Operation, typename SinkFunc>
  void farm(parallel_execution_tbb &p, GenFunc &&in, Operation && op , SinkFunc &&sink) {
 
     tbb::task_group g;
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(DEFAULT_SIZE,p.lockfree);
+    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
+    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<GenFunc()>::type::value_type)>::type > > queueout(p.queue_size,p.lockfree);
     //Create threads
     std::atomic<int>nend(0);
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -88,7 +88,7 @@ template <typename GenFunc, typename Operation>
  void farm(parallel_execution_tbb &p, GenFunc &&in, Operation && op ) {
 
     tbb::task_group g;
-    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE, p.lockfree);
+    mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size, p.lockfree);
     //Create threads
     for( int i = 0; i < p.num_threads; i++ ) {
        g.run(
@@ -123,7 +123,7 @@ template <typename GenFunc, typename Operation>
 
 template <typename Operation>
 farm_info<parallel_execution_tbb,Operation> farm(parallel_execution_tbb &p, Operation && op){
-   return farm_info<parallel_execution_tbb, Operation>(p,op);
+   return farm_info<parallel_execution_tbb, Operation>(p, std::forward<Operation>(op) );
 }
 }
 #endif

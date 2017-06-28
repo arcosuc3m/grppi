@@ -74,12 +74,12 @@ void stages( parallel_execution_omp &p, Stream& st, Stage && s ){
 }
 
 template <typename Operation, typename Stream,typename... Stages>
- void stages( parallel_execution_omp &p, Stream& st, filter_info<parallel_execution_omp, Operation>& se, Stages && ... sgs ) {
+ void stages( parallel_execution_omp &p, Stream& st, filter_info<parallel_execution_omp, Operation> se, Stages && ... sgs ) {
     if(p.ordering){
-       mpmc_queue< typename Stream::value_type > q(DEFAULT_SIZE);
+       mpmc_queue< typename Stream::value_type > q(p.queue_size,p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
            #pragma omp task shared(q,se,st,nend)
            {
                  typename Stream::value_type item;
@@ -93,14 +93,14 @@ template <typename Operation, typename Stream,typename... Stages>
                      item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
                  }
            }
        }
-       mpmc_queue< typename Stream::value_type > qOut(DEFAULT_SIZE);
+       mpmc_queue< typename Stream::value_type > qOut(p.queue_size,p.lockfree);
        #pragma omp task shared (qOut,q)
        {
           typename Stream::value_type item;
@@ -152,10 +152,10 @@ template <typename Operation, typename Stream,typename... Stages>
        stages(p, qOut, std::forward<Stages>(sgs) ... );
        #pragma omp taskwait
       }else{
-       mpmc_queue< typename Stream::value_type > q(DEFAULT_SIZE);
+       mpmc_queue< typename Stream::value_type > q(p.queue_size,p.lockfree);
 
        std::atomic<int> nend ( 0 );
-       for( int th = 0; th < se.exectype->num_threads; th++){
+       for( int th = 0; th < se.exectype.num_threads; th++){
              #pragma omp task shared(q,se,st,nend)
              {
                  typename Stream::value_type item;
@@ -169,7 +169,7 @@ template <typename Operation, typename Stream,typename... Stages>
                       item = st.pop();
                  }
                  nend++;
-                 if(nend == se.exectype->num_threads){
+                 if(nend == se.exectype.num_threads){
                     q.push( std::make_pair(typename Stream::value_type::first_type(), -1) );
                  }else{
                     st.push(item);
@@ -187,9 +187,9 @@ template <typename Operation, typename Stream,typename... Stages>
 template <typename Operation, typename Stream,typename... Stages>
  void stages( parallel_execution_omp &p, Stream& st, farm_info<parallel_execution_omp, Operation> se, Stages && ... sgs ) {
    
-    mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(DEFAULT_SIZE);
+    mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
-    for( int th = 0; th < se.exectype->num_threads; th++){
+    for( int th = 0; th < se.exectype.num_threads; th++){
       #pragma omp task shared(nend,q,se,st)
       {
          auto item = st.pop();
@@ -201,8 +201,8 @@ template <typename Operation, typename Stream,typename... Stages>
         }
         st.push(item);
         nend++;
-        if(nend == se.exectype->num_threads)
-          q.push(make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+        if(nend == se.exectype.num_threads)
+          q.push(std::make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }
     stages(p, q, std::forward<Stages>(sgs) ... );
@@ -218,7 +218,7 @@ void stages(parallel_execution_omp &p, Stream& st, Stage && se, Stages && ... sg
 
     //Create new queue
 //    boost::lockfree::spsc_queue< optional< typename std::result_of< Stage(typename Stream::value_type::value_type) > ::type>, boost::lockfree::capacity<BOOST_QUEUE_SIZE>> q;
-    mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(DEFAULT_SIZE);
+    mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
     //Start task
     #pragma omp task shared( se, st, q )
     {
@@ -245,7 +245,7 @@ template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
 void pipeline(parallel_execution_omp &p, FuncIn && in, Stages && ... sts ) {
 
     //Create first queue
-    mpmc_queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(DEFAULT_SIZE);
+    mpmc_queue<std::pair< typename std::result_of<FuncIn()>::type, long>> q(p.queue_size,p.lockfree);
 
     //Create stream generator stage
     #pragma omp parallel
@@ -264,8 +264,8 @@ void pipeline(parallel_execution_omp &p, FuncIn && in, Stages && ... sts ) {
                 }
             }
             //Create next stage
-            //stages(p, q, std::forward<Stages>(sts) ... );
-            stages(p, q, sts ... );
+            stages(p, q, std::forward<Stages>(sts) ... );
+//            stages(p, q, sts ... );
             #pragma omp taskwait
         }
     }

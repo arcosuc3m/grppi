@@ -48,7 +48,7 @@ void farm(sequential_execution , GenFunc &&in, Operation && op, SinkFunc &&sink 
 
 template <typename Operation>
 farm_info<sequential_execution,Operation> farm(sequential_execution &s, Operation && op){
-   return farm_info<sequential_execution, Operation>(s ,op);
+   return farm_info<sequential_execution, Operation>(s , std::forward<Operation>(op) );
 }
 }
 #endif

@@ -28,9 +28,9 @@
 namespace grppi{ 
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
+void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
+   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
+   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
    std::atomic<int> nend (0);
    std::atomic<int> nelem (0);
    std::atomic<bool> sendFinish( false );
@@ -52,7 +52,7 @@ template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Sta
 
    std::vector<std::thread> pipeThreads;
    composed_pipeline< mpmc_queue< typename std::result_of<GenFunc()>::type >, mpmc_queue< typename std::result_of<GenFunc()>::type >, 0, Stages ...>
-      (queue, se, queueOut, pipeThreads); 
+      (queue, std::forward<pipeline_info<parallel_execution_native , Stages...> >(se) , queueOut, pipeThreads); 
  
    while(1){
       //If every element has been processed
@@ -80,13 +80,13 @@ template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Sta
 template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
  void stream_iteration(parallel_execution_native &p, GenFunc && in, farm_info<parallel_execution_native,Operation> && se, Predicate && condition, OutFunc && out){
    std::vector<std::thread> tasks;
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(DEFAULT_SIZE,p.lockfree);
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(DEFAULT_SIZE,p.lockfree);
+   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
+   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
    std::atomic<int> nend (0);
    //Stream generator
    std::thread gen([&](){
       // Register the thread in the execution model
-      se.exectype->register_thread();
+      se.exectype.register_thread();
 
       while(1){
          auto k = in();
@@ -104,20 +104,20 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
          item = queue.pop();
       }
       nend++;
-      if(nend == se.exectype->num_threads)
+      if(nend == se.exectype.num_threads)
          queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
       else queue.push(item);
 
       // Deregister the thread in the execution model
-      se.exectype->deregister_thread();
+      se.exectype.deregister_thread();
 
    });
    //Farm workers
-   for(int th = 1; th < se.exectype->num_threads; th++) {
+   for(int th = 1; th < se.exectype.num_threads; th++) {
       tasks.push_back(
           std::thread([&](){
               // Register the thread in the execution model
-              se.exectype->register_thread();
+              se.exectype.register_thread();
 
               auto item = queue.pop();
               while(item){
@@ -129,12 +129,12 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
                   item = queue.pop();
               }
               nend++;
-              if(nend == se.exectype->num_threads)
+              if(nend == se.exectype.num_threads)
                   queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
               else queue.push(item);
 
               // Deregister the thread in the execution model
-              se.exectype->deregister_thread();
+              se.exectype.deregister_thread();
           }
       ));
    }
