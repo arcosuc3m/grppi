@@ -39,7 +39,6 @@ template < typename InputIt, typename ReduceOperator>
  typename ReduceOperator::result_type reduce(sequential_execution &s, InputIt first, InputIt last, ReduceOperator op) {
     typename ReduceOperator::result_type identityVal = !op(false,true);
     auto firstOut = identityVal;
-//  first++;
     while( first != last ) {
        firstOut = op( firstOut, *first );
        first++;
@@ -59,33 +58,5 @@ reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut,
     }
 }
 
-/*
-template < typename InputIt, typename Output, typename RedFunc, typename FinalReduce>
- typename std::enable_if<!is_iterator<Output>::value, void>::type
-<<<<<<< HEAD
-Reduce(sequential_execution const &s, InputIt first, InputIt last, Output & firstOut, RedFunc const & reduce, FinalReduce const & freduce) {
-=======
-Reduce(sequential_execution s, InputIt first, InputIt last, Output & firstOut, RedFunc && reduce, FinalReduce && freduce) {
->>>>>>> latest
-    while( first != last ) {
-       reduce(*first, firstOut);
-       first++;
-    }
-}
-*/
-
-
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 }
 #endif
