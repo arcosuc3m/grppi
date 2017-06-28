@@ -39,7 +39,6 @@ template < typename InputIt, typename ReduceOperator>
  typename ReduceOperator::result_type reduce(sequential_execution &s, InputIt first, InputIt last, ReduceOperator op) {
     typename ReduceOperator::result_type identityVal = !op(false,true);
     auto firstOut = identityVal;
-//  first++;
     while( first != last ) {
        firstOut = op( firstOut, *first );
        first++;
