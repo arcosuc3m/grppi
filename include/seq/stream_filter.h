@@ -27,7 +27,7 @@ void stream_filter(sequential_execution, Generator && gen, Predicate && pred, Co
 
     while( 1 ) {
         auto k = gen();
-        if( k )
+        if( !k )
             break;
         if(pred(k.value()))
             cons(k.value());
