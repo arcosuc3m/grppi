@@ -27,7 +27,7 @@ set(NEW_TESTS_CPU
     pipeline2             pipeline_example              pipeline+farm 
     pipeline+filter_test_ppi_example                     
     reduce1               reduce2                       stencil1 
-    stream_reduce1        stream_reduce_example         stream_reduce_new
+    stream_reduce_example   
 )
 
 

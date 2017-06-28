@@ -22,28 +22,12 @@
 #include <fstream>
 #include <chrono>
 #include <stream_reduce.h>
-#include <string>
-#include <sstream>
+
+using namespace std;
 using namespace grppi;
 
-std::vector<int> read_list(std::istream & is){
-  using namespace std;
-  std::vector<int> result;
-  string line;
-  is >> ws;
-  if(!getline(is,line)) return result;
-  istringstream iline{line};
-  int x;
-  while(iline >> x){
-    result.push_back(x);
-  }
-  return result;
-}
+void reduce_example1(){
 
-
-
-void stream_reduce_example() {
- using namespace std;
 #ifndef NTHREADS
 #define NTHREADS 6
 #endif
@@ -55,43 +39,41 @@ void stream_reduce_example() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_native p{NTHREADS};
+    parallel_execution_native p(NTHREADS);
 #else
     sequential_execution p{};
 #endif
-
-    ifstream is("txt/file.txt");
-    if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
-
-    int reduce_var = 0;
-    
+    int total = 0;
+    int reduce_var=0;
+    std::vector<int> stream( 10000, 1 );
+    int index = 0;
+    int n=0;
     stream_reduce( p,
-        // GenFunc: stream consumer
-        [&]() {
-            auto r = read_list(is);
-            return ( r.size() == 0 ) ? optional<vector<int>>{} : optional<vector<int>>(r);
-        },  	
-        // TaskFunc: reduce kernel 
-        [&]( vector<int> v ) {
-            int loc_red = 0;
-            for( int i = 0; i < v.size(); i++ )
-                loc_red += v[i];
-            return loc_red;
+        // Reduce generator as lambda
+        [&]() { 
+            n++;
+            if(n != 1000000000) 
+              return (optional<int> ( 1 ));
+            else
+              return (optional<int> ());
         },
-        // RedFunc: final reduce
-        [&]( int loc_red ,int &reduce_var ) {
-            reduce_var += loc_red;
-    }, reduce_var
-);
-
-    std::cout<<"Result: " << reduce_var << std::endl;
+        //Window size
+        1000000,
+        1000000,
+        // Reduce kernel as lambda
+        std::plus<int>(),
+        // Reduce join as lambda
+        [&]( int a) {
+            total += a;
+            std::cout<<"PARTIAL REDUCE : "<<a<<" TOTAL " <<total<< std::endl;
+        } 
+    );
 }
-
 
 int main() {
 
     //$ auto start = std::chrono::high_resolution_clock::now();
-    stream_reduce_example();
+    reduce_example1();
     //$ auto elapsed = std::chrono::high_resolution_clock::now() - start;
 
     //$ long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>( elapsed ).count();
