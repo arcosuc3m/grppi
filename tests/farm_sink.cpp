@@ -21,13 +21,12 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include "divideandconquer.h"
-#include <random>
+#include <farm.h>
 
 using namespace std;
 using namespace grppi;
 
-void dividec_example1() {
+void farm_example1() {
 
 #ifndef NTHREADS
 #define NTHREADS 6
@@ -45,62 +44,38 @@ void dividec_example1() {
     sequential_execution p{};
 #endif
 
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::uniform_int_distribution<int> uni(0,5000000);
+    int a = 20000;
 
-    std::vector<int> v(100000000);
-    for( int i= 0 ; i< v.size(); i++){
-        v[i] = uni(rng);
-    }
-    std::vector<int> out;
-    
-    out = divide_and_conquer(p,v,
-                     [&](vector<int> & v){
-        std::vector<std::vector<int>> subproblem;
-        if(v.size() == 1){ subproblem.push_back(v);return subproblem; }
-
-        std::vector<int> biggers;
-        std::vector<int> smallers;
-
-
-        int first = v[0];
-        for(int i=1; i<v.size(); i++) {
-            if (v[i] < first)
-                smallers.push_back(v[i]); 
+    std::atomic<int> output;
+    output = 0;
+    farm(p,
+        // farm generator as lambda
+        [&]() {
+            a--; 
+            if ( a == 0 ) 
+                return optional<int>(); 
             else
-                biggers.push_back(v[i]);  
-        }
-
-        if(smallers.size() > 0) subproblem.push_back(smallers);
-        subproblem.push_back(vector<int> (1,first));
-        if(biggers.size() > 0) subproblem.push_back(biggers);
-
-        return subproblem;
+                return optional<int>( a );
         },
-        [&](const vector<int> & problem){
-            vector<int> out ();
-            out.push_back(problem[0]);
-            return out;
-              
+        [](int l){
+            return l*2;
         },
-        [&](auto & partial, auto & out){
-          for(int i = 0; i < partial.size(); i++)
-              out.push_back(partial[i]);
+        // farm kernel as lambda
+        [&]( int l ) {
+            output += l;
         }
     );
+
+    std::cout << output << std::endl;
 }
-
-
 
 int main() {
 
     //$ auto start = std::chrono::high_resolution_clock::now();
-    dividec_example1();
+    farm_example1();
     //$ auto elapsed = std::chrono::high_resolution_clock::now() - start;
 
     //$ long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>( elapsed ).count();
     //$ std::cout << "Execution time : " << microseconds << " us" << std::endl;
-
     return 0;
 }
