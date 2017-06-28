@@ -266,7 +266,7 @@ TYPED_TEST(farm_test, static_multiple_ary)
   this->check_multiple_ary();
 }
 
-/*
+
 TYPED_TEST(farm_test, static_empty_sink)
 {
   this->setup_empty();
@@ -410,7 +410,7 @@ TYPED_TEST(farm_test, static_multiple_ary_sink)
   );
   this->check_multiple_ary_sink();
 }
-*/
+
 
 TYPED_TEST(farm_test, static_empty_composed)
 {
