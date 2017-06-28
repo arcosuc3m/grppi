@@ -25,6 +25,7 @@
 #include "farm.h"
 
 #include "supported_executions.h"
+#include "common/polymorphic_execution.h"
 
 #include <iostream>
 #include <numeric>
@@ -36,6 +37,8 @@ template <typename T>
 class pipeline_test : public ::testing::Test {
 public:
   T execution_;
+  polymorphic_execution poly_execution_ = 
+    make_polymorphic_execution<T>();
 
   // Variables
   int out;
@@ -116,6 +119,22 @@ TYPED_TEST(pipeline_test, static_two_stages_empty)
   this->check_two_stages_empty();
 }
 
+TYPED_TEST(pipeline_test, poly_two_stages_empty)
+{
+  this->setup_two_stages_empty();
+    grppi::pipeline( this->poly_execution_,
+    [this]() { 
+        this->invocations_init++;
+        return optional<int>(); 
+    },
+    [this]( auto x ) {
+      this->invocations_last++;
+    }
+  );
+
+  this->check_two_stages_empty();
+}
+
 
 
 TYPED_TEST(pipeline_test, static_two_stages)
@@ -139,12 +158,58 @@ TYPED_TEST(pipeline_test, static_two_stages)
   this->check_two_stages();
 }
 
+TYPED_TEST(pipeline_test, poly_two_stages)
+{
+  this->setup_two_stages();
+    grppi::pipeline( this->poly_execution_,
+    [this]() { 
+        this->invocations_init++;
+        this->counter--;
+        if(this->counter  == 0){
+          return optional<int>(); 
+        }else{
+          return optional<int>(this->counter);
+        }
+    },
+    [this]( auto x ) {
+      this->invocations_last++;
+      this->out += x;
+    }
+  );
+  this->check_two_stages();
+}
+
 
 
 TYPED_TEST(pipeline_test, static_three_stages)
 {
   this->setup_three_stages();
     grppi::pipeline( this->execution_,
+    [this]() { 
+        this->invocations_init++;
+        this->counter--;
+        if(this->counter  == 0){
+          return optional<int>(); 
+        }else{
+          return optional<int>(this->counter);
+        }
+    },
+    [this]( auto x ) {
+      this->invocations_intermediate++;
+      return x*2;
+    },
+    [this]( auto y ) {
+      this->invocations_last++;
+      this->out += y;
+    }
+  );
+  this->check_three_stages();
+}
+
+TYPED_TEST(pipeline_test, poly_three_stages)
+{
+  this->setup_three_stages();
+    grppi::pipeline( this->poly_execution_,
     [this]() { 
         this->invocations_init++;
         this->counter--;
