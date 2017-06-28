@@ -50,6 +50,22 @@ void pipeline_farm_example() {
     std::vector<string> output;
     p.ordering=true;
 
+    auto f_obj = farm(f,
+         [&](std::vector<int> v) {
+  //      std::cout<<"FARM THREAD ID : "<<f.get_threadID()<<std::endl;
+        //std::cout << "Worker del farm\n";
+        std::vector<long> acumm( v.size() );
+        for(unsigned i = 0; i < acumm.size(); i++ ){
+            acumm[i] = 0;
+            for(auto j : v){
+                acumm[i] += j;
+            }
+        }
+        return (acumm);
+    }
+    );
+
+
     pipeline(p,
              // Pipeline stage 0
         [&]() {
@@ -77,6 +93,7 @@ void pipeline_farm_example() {
         return (acumm);
     }
     ),
+//    f_obj,
             // Pipeline stage 2
             [&]( std::vector<long> acc ) {
     //    std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;

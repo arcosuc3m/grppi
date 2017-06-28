@@ -137,7 +137,7 @@ reduction_info<parallel_execution_native, Operation, Red> & se) {
               typename Stream::value_type item;
               item = st.pop( );
               while( item ) {
-                 auto local =  (*se.task)(item) ;
+                 auto local =  se.task(item) ;
                  queueOut.push( local ) ;
                  item = st.pop( );
               }
@@ -152,7 +152,7 @@ reduction_info<parallel_execution_native, Operation, Red> & se) {
 //Filtering stage
 template <typename Operation, typename Stream, typename... Stages>
 void stages(parallel_execution_native &p, Stream& st,
-            filter_info<parallel_execution_native,Operation> se, Stages && ... sgs ) {
+            filter_info<parallel_execution_native,Operation> & se, Stages && ... sgs ) {
     
     std::vector<std::thread> tasks;
     if(p.ordering){
@@ -168,7 +168,7 @@ void stages(parallel_execution_native &p, Stream& st,
                  item = st.pop( ) ;
                  while( item.first ) {
                   //MODIFIED from *se->task
-                     if( (*se.task)(item.first.value()) )
+                     if( se.task(item.first.value()) )
                         q.push( item );
                      else{
                         q.push( std::make_pair( typename Stream::value_type::first_type()  ,item.second) );
@@ -251,7 +251,7 @@ void stages(parallel_execution_native &p, Stream& st,
                  typename Stream::value_type item;
                  item = st.pop( ) ;
                  while( item.first ) {
-                     if( (*se.task)(item.first.value()) ) 
+                     if( se.task(item.first.value()) ) 
                         q.push( item );
 //                     else{
 //                        q.push( std::make_pair( typename Stream::value_type::first_type()  ,item.second) );
@@ -279,7 +279,7 @@ void stages(parallel_execution_native &p, Stream& st,
 //Farm stage
 template <typename Operation, typename Stream, typename... Stages>
 void stages(parallel_execution_native &p, Stream& st, 
-            farm_info<parallel_execution_native,Operation> se, Stages && ... sgs ) {
+            farm_info<parallel_execution_native,Operation> & se, Stages && ... sgs ) {
     std::vector<std::thread> tasks;
     //mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(p.queue_size);
     mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
@@ -293,7 +293,7 @@ void stages(parallel_execution_native &p, Stream& st,
                   long order = 0;
                   auto item = st.pop(); 
                   while( item.first ) {
-                      auto out = optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >( (*se.task)(item.first.value()) );
+                      auto out = optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >( se.task(item.first.value()) );
                       
                       q.push( std::make_pair(out,item.second)) ;
                       item = st.pop( ); 

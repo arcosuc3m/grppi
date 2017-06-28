@@ -90,7 +90,7 @@ public:
   void check_composed() {
     ASSERT_EQ(5, invocations_init); 
     ASSERT_EQ(4, invocations_last); 
-    //ASSERT_EQ(4, invocations_intermediate);
+    ASSERT_EQ(4, invocations_intermediate);
     EXPECT_EQ(40, this->out);
   }
 
@@ -171,6 +171,17 @@ TYPED_TEST(pipeline_test, static_three_stages)
 TYPED_TEST(pipeline_test, static_three_stages_composed)
 {
   this->setup_composed();
+  auto f_object =     grppi::farm(this->execution_,
+        [this](std::vector<int> v) {
+          this->invocations_intermediate++;
+          int acumm = 0; 
+          for(int i = 0; i < v.size(); i++ ){
+            acumm += v[i];
+          }
+          return acumm;
+        }
+    );
+
     grppi::pipeline( this->execution_,
     [this]() { 
         this->invocations_init++;
@@ -184,16 +195,7 @@ TYPED_TEST(pipeline_test, static_three_stages_composed)
           return optional<std::vector<int>>(v);
         }
     },
-    grppi::farm(this->execution_,
-        [this](std::vector<int> v) {
-          //this->invocations_intermediate++;
-          int acumm = 0;
-          for(int i = 0; i < v.size(); i++ ){
-            acumm += v[i];
-          }
-          return acumm;
-        }
-    ),
+    f_object,
     [this]( auto y ) {
       this->invocations_last++;
       this->out += y;
