@@ -422,7 +422,7 @@ TYPED_TEST(farm_test, static_empty_composed)
     },
     grppi::farm(this->execution_,
     [this](int x) {
-      //this->invocations_op++;
+      this->invocations_op++;
       return x;
     }
     ),
@@ -447,7 +447,7 @@ TYPED_TEST(farm_test, static_single_composed)
     },
     grppi::farm(this->execution_,
     [this](int x) {
-      //this->invocations_op++;
+      this->invocations_op++;
       return x*2;
     }
     ),
@@ -474,7 +474,7 @@ TYPED_TEST(farm_test, static_multiple_composed)
     },
     grppi::farm(this->execution_,
     [this](int x) {
-      //this->invocations_op++;
+      this->invocations_op++;
       return x*2;
     }
     ),
