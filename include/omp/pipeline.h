@@ -74,7 +74,12 @@ void stages( parallel_execution_omp &p, Stream& st, Stage && s ){
 }
 
 template <typename Operation, typename Stream,typename... Stages>
- void stages( parallel_execution_omp &p, Stream& st, filter_info<parallel_execution_omp, Operation> & se, Stages && ... sgs ) {
+void stages( parallel_execution_omp &p, Stream& st, filter_info<parallel_execution_omp, Operation> & se, Stages && ... sgs ) {
+  stages(p,st,std::forward<filter_info<parallel_execution_omp, Operation> &&>( se), std::forward<Stages>( sgs )...) ;
+}
+
+template <typename Operation, typename Stream,typename... Stages>
+ void stages( parallel_execution_omp &p, Stream& st, filter_info<parallel_execution_omp, Operation> && se, Stages && ... sgs ) {
     if(p.ordering){
        mpmc_queue< typename Stream::value_type > q(p.queue_size,p.lockfree);
 
@@ -183,9 +188,13 @@ template <typename Operation, typename Stream,typename... Stages>
 }
 
 
-
 template <typename Operation, typename Stream,typename... Stages>
  void stages( parallel_execution_omp &p, Stream& st, farm_info<parallel_execution_omp, Operation> & se, Stages && ... sgs ) {
+ stages(p,st, std::forward< farm_info<parallel_execution_omp, Operation> && >(se), std::forward<Stages>( sgs )...) ;
+}
+
+template <typename Operation, typename Stream,typename... Stages>
+ void stages( parallel_execution_omp &p, Stream& st, farm_info<parallel_execution_omp, Operation> && se, Stages && ... sgs ) {
    
     mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );

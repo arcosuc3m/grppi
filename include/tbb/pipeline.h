@@ -33,10 +33,18 @@ template <typename Stream, typename Stage>
     return tbb::make_filter<Stream, void>( tbb::filter::serial_in_order, s );
 }
 
+
+template <typename Operation, typename Stream, typename ... Stages>
+ const tbb::interface6::filter_t<Stream, void> 
+stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> & se, Stages && ... sgs ) {
+   return stages(p,st, std::forward< farm_info<parallel_execution_tbb, Operation> &&>( se), std::forward<Stages>( sgs )... );
+}
+
+
 //Intermediate stages
 template <typename Operation, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> se, Stages && ... sgs ) {
+stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> && se, Stages && ... sgs ) {
     typedef typename std::result_of<Operation(Stream)>::type outputType;
     outputType k;
     return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, se.task ) & stages(p, k, std::forward<Stages>(sgs) ... );

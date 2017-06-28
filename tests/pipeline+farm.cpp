@@ -65,10 +65,18 @@ void pipeline_farm_example() {
     }
     );
 
+     auto gen = [&]() {
+//        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
+          std::vector<int> v(5);
+          for ( int i = 0; i < 5; i++ )
+             v[ i ] = i + n;
 
-    pipeline(p,
-             // Pipeline stage 0
-        [&]() {
+          if ( n < 0 )
+               return optional< std::vector<int> >();
+           n--;
+           return optional<std::vector<int>>(v);
+    };
+    pipeline(p, [&]() {
 //        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
           std::vector<int> v(5);
           for ( int i = 0; i < 5; i++ )
@@ -113,6 +121,39 @@ void pipeline_farm_example() {
         output.push_back("Stadio3 " + std::to_string(v) );
     }
     );
+
+pipeline(p, [&]() {
+//        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
+          std::vector<int> v(5);
+          for ( int i = 0; i < 5; i++ )
+             v[ i ] = i + n;
+
+          if ( n < 0 )
+               return optional< std::vector<int> >();
+           n--;
+           return optional<std::vector<int>>(v);
+    },
+    f_obj,
+            // Pipeline stage 2
+            [&]( std::vector<long> acc ) {
+    //    std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
+        //std::cout << "Stadio2\n";
+        double acumm = 0;
+        for ( int i = 0; i < acc.size(); i++ )
+            acumm += acc[ i ];
+
+        return acumm;
+    },
+
+    // Pipeline stage 3
+    [&]( double v ) {
+     //   std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
+        //std::cout << "Stadio3\n";
+        //std::cout << v << std::endl;
+        output.push_back("Stadio3 " + std::to_string(v) );
+    }
+    ); 
+
     // Sort to constant result
     std::sort(output.begin(), output.end());
     // Print results
