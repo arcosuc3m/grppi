@@ -55,7 +55,7 @@ void fibonacci_example() {
     for(int v=0;v<40;v++){
     int find = 1;
     int out = 0;
-    divide_and_conquer(p, v, out,
+    out = divide_and_conquer(p, v, 
         [&](auto & v){
            std::vector< int > subproblem;
     	   if(v<2) subproblem.push_back(v);
@@ -65,9 +65,9 @@ void fibonacci_example() {
            }
            return subproblem;
         },
-        [&](auto & problem, auto & partial){
-           if(problem==0) partial = 0;
-           else{
+        [&](auto problem){
+           int partial = 0;
+           if(problem!=0){
               int a=1, b=1;
               for(int i = 3; i <= problem; i++){
                  int c = a + b;
@@ -76,6 +76,7 @@ void fibonacci_example() {
              }
              partial = b;
            }
+           return partial;
         },
         [&](auto & partial, auto & out){
            out += partial;

@@ -27,58 +27,6 @@
 #include "../reduce.h"
 
 namespace grppi{
-template <typename GenFunc, typename Operation, typename ReduceFunc, typename OutputType>
- void stream_reduce(parallel_execution_omp &p, GenFunc &&in, Operation && op, ReduceFunc &&red, OutputType &reduce_value ){
-	
-    mpmc_queue<typename std::result_of<GenFunc()>::type> queue(DEFAULT_SIZE, p.lockfree);
-    mpmc_queue<optional<OutputType>> end_queue(DEFAULT_SIZE, p.lockfree);
-    std::atomic<int> nend(0);
-    std::vector<std::thread> tasks;
-    #pragma omp parallel
-    {
-        #pragma omp single nowait
-        {
-            //Create threads
-            for( int i = 0; i < p.num_threads; i++ ) {
-                #pragma omp task shared(queue, end_queue)
-                {
-                     typename std::result_of<GenFunc()>::type item;
-        	         item = queue.pop( ) ;
-                     while( item ) {
-                         auto out = op( item.value() );
-                         end_queue.push( optional<OutputType>(out) );
-                         item = queue.pop( );
-                     }
-                     nend++;
-                     if(nend == p.num_threads)
-                        end_queue.push( optional<OutputType>() );
-
-                }
-            } 
-            #pragma omp task shared(end_queue)            
-            {
-                optional<OutputType> item;
-                while((item = end_queue.pop( )) )
-                    red( item.value(), reduce_value  );
-            }
-	
-            //Generate elements
-            while( 1 ) {
-                 auto k = in();
-                 queue.push( k );
-                 if( k.end ) {
-                    for( int i = 1; i < p.num_threads; i++ )
-                        queue.push( k );
-                    break;
-                }
-            }
-            #pragma omp taskwait
-        }
-    }
-
-    
-}
-
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
  void stream_reduce(parallel_execution_omp &p, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)

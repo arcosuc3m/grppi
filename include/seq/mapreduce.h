@@ -24,42 +24,42 @@
 #include "../reduce.h"
 
 namespace grppi{
-template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >
-void map_reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs) {
+template < typename InputIt, typename OutputIt, typename Transformer, typename Combiner, typename ... MoreIn >
+void map_reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Transformer && transform_op, Combiner && combine_op, MoreIn ... inputs) {
 
     while( first != last ) {
-       auto mapresult = map(*first, inputs ... );
-       reduce(s, mapresult.begin(), mapresult.end(), *firstOut, op);
+       auto mapresult = transform_op(*first, inputs ... );
+       reduce(s, mapresult.begin(), mapresult.end(), *firstOut, std::forward<Combiner>(combine_op));
        first++;
        firstOut++;
     }
 }
 
 //Parallel STL like function
-template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc &&  map, T init, ReduceOperator op){
+template <typename InputIt, typename Transformer, class T, typename Combiner>
+ T map_reduce ( sequential_execution, InputIt first, InputIt last, Transformer &&  transform_op, T init, Combiner && combine_op){
     T out = init;
 
     while(first != last){
-       auto mappedValue = map(*first);
-       out = op(out, mappedValue);
+       auto mappedValue = transform_op(*first);
+       out = combine_op(out, mappedValue);
        first++;
     }
 
     return out;
 }
 
-template <typename InputIt, typename MapFunc, class T, typename ReduceOperator>
- T map_reduce ( sequential_execution, InputIt first, InputIt last, MapFunc &&  map, ReduceOperator op){
+template <typename InputIt, typename Transformer, class T, typename Combiner>
+ T map_reduce ( sequential_execution, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
     T out;  
     bool firstElement = true;
     while(first != last){
-       auto mappedValue = map(*first);
+       auto mappedValue = transform_op(*first);
        if(firstElement) {
           firstElement = false;
           out = mappedValue;
        }else{
-          out = op(out, mappedValue);
+          out = combine_op(out, mappedValue);
        }
        first++;
     }

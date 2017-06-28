@@ -4,7 +4,7 @@ The **map/reduce** pattern combines a **map** and **reduce** operation in a sing
 
 The interface to the **mapreduce** pattern is provided by function `grppi::map_reduce()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
 
-~~~c++
+~~~{.cpp}
 grppi::map_reduce(exec, other_arguments...);
 ~~~
 
@@ -37,7 +37,7 @@ The only interface currently offered for this pattern is based in iterators (fol
 
 ---
 **Example**
-~~~c++
+~~~{.cpp}
 auto res = map(exec,
   begin(v), end(v),
   [](string s) { return stod(s); },
@@ -58,7 +58,7 @@ The only interface currently offered for this pattern is based in iterators (fol
 
 ---
 **Example**
-~~~c++
+~~~{.cpp}
 auto res = map(exec,
   begin(v), end(v),
   [](double x, double y) { return x*y; },

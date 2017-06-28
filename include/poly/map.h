@@ -96,27 +96,56 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
   }
 }
 
-/// Runs a map pattern with an input sequence, an output sequence and a task
-/// function.
-/// InputIt: Iterator for the input sequence.
-/// OutputIt: Iterator for the output sequence.
-/// Operation: Operation functor type
+/**
+\addtogroup map_pattern
+@{
+\addtogroup map_pattern_poly Polymorphic execution map pattern.
+Implementation of map pattern for polymorphic execution back-end.
+@{
+*/
+
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with
+polymorphic execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+*/
 template <typename InputIt, typename OutputIt, typename Operation>
-void map(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op) 
+void map(polymorphic_execution & ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Operation && op) 
 {
   map_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, first, last, first_out, std::forward<Operation>(op));
+  >(ex, first, last, first_out, std::forward<Operation>(op));
 }
 
-
-template <typename InputIt, typename OutputIt, typename InputIt2, typename ... OtherInputIts,
+/**
+\brief Invoke [map pattern](@ref map-pattern) on a data sequence with
+polymorphic parallel execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Operation Callable type for the transformation operation.
+\param ex Sequential execution policy object
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param op Transformation operation.
+\param more_firsts Additional iterators with first elements of additional sequences.
+*/
+template <typename InputIt, typename OutputIt, typename InputIt2, 
+          typename ... OtherInputIts,
           typename Operation>
-void map(polymorphic_execution & e, InputIt first, InputIt last, 
+void map(polymorphic_execution & ex, InputIt first, InputIt last, 
          OutputIt first_out, Operation && op, InputIt2 first2, OtherInputIts ... other_its) 
 {
   map_multi_impl<
@@ -124,9 +153,8 @@ void map(polymorphic_execution & e, InputIt first, InputIt last,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, first, last, first_out, std::forward<Operation>(op), first2, other_its...);
+  >(ex, first, last, first_out, std::forward<Operation>(op), first2, other_its...);
 }
-
 
 } // end namespace grppi
 
