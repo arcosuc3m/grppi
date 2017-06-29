@@ -25,7 +25,6 @@
 
 namespace grppi{
 
-
 //Parallel STL like function
 template <typename InputIt, typename Transformer, class T, typename Combiner>
 T map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op, T init){

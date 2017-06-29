@@ -39,25 +39,25 @@ Implementation of map pattern for TBB parallel back-end.
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\param ex Parallel TBB execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 */
-template <typename InputIt, typename OutputIt, typename Operation>
-void map(parallel_execution_tbb &ex, 
+template <typename InputIt, typename OutputIt, typename Transformer>
+void map(parallel_execution_tbb & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Operation && op)
+         Transformer && transf_op)
 {
   tbb::parallel_for(
     static_cast<std::size_t>(0), 
     static_cast<std::size_t>((last-first)), 
     [&] (std::size_t index){
       auto current = (first_out+index);
-      *current = op(*(first+index));
+      *current = transf_op(*(first+index));
     }
   );   
 }
@@ -67,28 +67,29 @@ void map(parallel_execution_tbb &ex,
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\tparam OtherInputIts Iterator types used for additional input sequences.
+\param ex Parallel TBB execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
 */
 template <typename InputIt, typename OutputIt, 
-          typename ... MoreIn, 
-          typename Operation>
+          typename Transformer,
+          typename ... OtherInputIts>
 void map(parallel_execution_tbb & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Operation && op, 
-         MoreIn ... inputs)
+         Transformer && transf_op, 
+         OtherInputIts ... more_firsts)
 {
   tbb::parallel_for(
     static_cast<std::size_t>(0),
     static_cast<std::size_t>((last-first)), 
     [&] (std::size_t index){
       auto current = (first_out+index);
-      *current = op(*(first+index), *(inputs+index)...);
+      *current = transf_op(*(first+index), *(more_firsts+index)...);
     }
  );   
 
