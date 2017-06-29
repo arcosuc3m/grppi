@@ -73,7 +73,7 @@ template <typename Generator, typename Predicate, typename Consumer>
     while(1){
         auto k = gen();
         queue.push(k);
-        if( k ){
+        if( !k ){
            for(int i = 0; i< p.num_threads-1; i++){
               queue.push(k);
            }

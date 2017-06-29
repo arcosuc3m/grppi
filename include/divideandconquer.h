@@ -25,6 +25,7 @@
 #include "native/divideandconquer.h"
 #include "omp/divideandconquer.h"
 #include "tbb/divideandconquer.h"
+#include "poly/divideandconquer.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

@@ -52,7 +52,7 @@ template <typename Generator, typename Predicate, typename Consumer>
                    item = queue.pop();
                }
                //If is the last element
-               outqueue.push(std::make_pair(item.first,0));
+               outqueue.push(std::make_pair(item.first,-1));
             }
          );
      }
@@ -68,7 +68,7 @@ template <typename Generator, typename Predicate, typename Consumer>
            item = outqueue.pop();
            while(nend != p.num_threads - 1){
               //If is an end of stream element
-              if(!item.first&&item.second==0){
+              if(!item.first&&item.second==-1){
                   nend++;
                   if(nend == p.num_threads -2 ) break;
               }
@@ -113,11 +113,11 @@ template <typename Generator, typename Predicate, typename Consumer>
     long order = 0;
     while(1){
         auto k = gen();
-        queue.push(make_pair(k,order));
+        queue.push(std::make_pair(k,order));
         order++;
-        if( k){
+        if( !k ){
            for(int i = 0; i< p.num_threads -2; i++){
-              queue.push(make_pair(k,0));
+              queue.push(std::make_pair(k,-1));
            }
            break;
         }

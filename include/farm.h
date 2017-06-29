@@ -26,6 +26,7 @@
 #include "native/farm.h"
 #include "omp/farm.h"
 #include "tbb/farm.h"
+#include "poly/farm.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

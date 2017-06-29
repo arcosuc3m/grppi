@@ -23,7 +23,7 @@
 
 namespace grppi{
 
-
+// Empty sequences are currently not supported.
 template < typename InputIt, typename Combiner>
 typename std::iterator_traits<InputIt>::value_type
 reduce(sequential_execution &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner &&combine_op){

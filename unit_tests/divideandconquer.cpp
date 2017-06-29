@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include "divideandconquer.h"
+#include "common/polymorphic_execution.h"
 
 #include "supported_executions.h"
 
@@ -32,6 +33,8 @@ template <typename T>
 class divideandconquer_test : public ::testing::Test {
 public:
   T execution_;
+  polymorphic_execution poly_execution_ = 
+    make_polymorphic_execution<T>();
 
   // Variables
   int out;
@@ -116,6 +119,29 @@ TYPED_TEST(divideandconquer_test, static_empty)
   this->check_empty();
 }
 
+TYPED_TEST(divideandconquer_test, poly_empty)
+{
+  this->setup_empty();
+  this->out = grppi::divide_and_conquer(this->poly_execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      return std::vector<std::vector<int> >{}; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++;
+      return 0; 
+    }, 
+    // Combine
+    [this](auto partial, auto out) { 
+      this->invocations_merge++; 
+    }
+  );
+  this->check_empty();
+}
+
+
 
 TYPED_TEST(divideandconquer_test, static_single)
 {
@@ -138,6 +164,30 @@ TYPED_TEST(divideandconquer_test, static_single)
   );
   this->check_single();
 }
+
+TYPED_TEST(divideandconquer_test, poly_single)
+{
+  this->setup_single();
+  this->out = grppi::divide_and_conquer(this->poly_execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      return std::vector<std::vector<int>>{v}; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++; 
+      return problem[0];
+    }, 
+    // Combine
+    [this](auto partial, auto out) { 
+      this->invocations_merge++; 
+    }
+  );
+  this->check_single();
+}
+
+
 
 TYPED_TEST(divideandconquer_test, static_multiple)
 {
@@ -179,6 +229,49 @@ TYPED_TEST(divideandconquer_test, static_multiple)
   );
   this->check_multiple();
 }
+
+TYPED_TEST(divideandconquer_test, poly_multiple)
+{
+  this->setup_multiple();
+  
+  this->out = grppi::divide_and_conquer(this->poly_execution_, this->v,
+    // Divide
+    [this](auto & v) { 
+      this->invocations_divide++; 
+      std::vector<std::vector<int>> subproblem;
+      if(v.size() > 2){
+          std::vector<int> p1;
+          std::vector<int> p2;
+          int i=0;
+          for(i; i < v.size()/2; i++){
+              p1.push_back(v[i]);
+          }
+          for(i; i < v.size(); i++){
+              p2.push_back(v[i]);
+          }
+          subproblem.push_back( p1);
+          subproblem.push_back( p2);
+      }
+      return subproblem; 
+    },
+    // Solve base case
+    [this](auto problem) { 
+      this->invocations_base++; 
+      int acumm = 0;
+      for(int i=0; i < problem.size(); i++)
+        acumm += problem[i];
+      return acumm;
+    }, 
+    // Combine
+    [this](auto & partial, auto & out) { 
+      this->invocations_merge++; 
+      out += partial;
+    }
+  );
+  this->check_multiple();
+}
+
+
 
 TYPED_TEST(divideandconquer_test, static_multiple_single_thread)
 {
@@ -222,6 +315,7 @@ TYPED_TEST(divideandconquer_test, static_multiple_single_thread)
 }
 
 
+
 TYPED_TEST(divideandconquer_test, static_multiple_five_threads)
 {
   this->setup_multiple();
@@ -262,6 +356,7 @@ TYPED_TEST(divideandconquer_test, static_multiple_five_threads)
   );
   this->check_multiple();
 }
+
 
 
 TYPED_TEST(divideandconquer_test, static_multiple_triple_div_2_threads)
@@ -309,6 +404,7 @@ TYPED_TEST(divideandconquer_test, static_multiple_triple_div_2_threads)
   );
   this->check_multiple_triple_div();
 }
+
 
 TYPED_TEST(divideandconquer_test, static_multiple_triple_div_4_threads)
 {

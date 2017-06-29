@@ -25,6 +25,29 @@
 
 namespace grppi{
 
+template <typename InputIt, typename OutputIt, typename Transformer,
+          typename ... OtherInputIts>
+void internal_map(parallel_execution_omp & ex, 
+                  InputIt first, InputIt last, 
+                  OutputIt first_out,
+                  Transformer && transf_op, 
+                  int i, 
+                  int elemperthr, OtherInputIts ... more_firsts)
+{
+  //Calculate local input and output iterator 
+  auto begin = first + (elemperthr * i);
+  auto end = first + (elemperthr * (i+1));
+  if( i == ex.num_threads-1) end = last;
+  auto out = first_out + (elemperthr * i);
+  advance_iterators(elemperthr*i, more_firsts ...);
+  while(begin!=end){
+    *out = transf_op(*begin, *more_firsts ...);
+    advance_iterators(more_firsts ...);
+    begin++;
+    out++;
+  }
+}
+
 /**
 \addtogroup map_pattern
 @{
@@ -38,18 +61,18 @@ Implementation of map pattern for OpenMP parallel back-end.
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\param ex Parallel OpenMP execution policy object
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 */
-template <typename InputIt, typename OutputIt, typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer>
 void map(parallel_execution_omp & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Operation && op)
+         Transformer && transf_op)
 {
   int numElements = last - first;
 
@@ -70,7 +93,7 @@ void map(parallel_execution_omp & ex,
         if(i == ex.num_threads -1 ) end = last;
         auto out = first_out + (elemperthr * i);
         while(begin!=end){
-          *out = op(*begin);
+          *out = transf_op(*begin);
           begin++;
           out++;
         }
@@ -81,7 +104,7 @@ void map(parallel_execution_omp & ex,
       auto out = first_out;
       auto end = first+elemperthr;
       while(beg!=end){
-            *out = op(*beg);
+            *out = transf_op(*beg);
             beg++;
             out++;
       }
@@ -90,48 +113,27 @@ void map(parallel_execution_omp & ex,
   }
 }
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
-void internal_map(parallel_execution_omp & ex, 
-                  InputIt first, InputIt last, 
-                  OutputIt first_out,
-                  Operation &&op, 
-                  int i, 
-                  int elemperthr, MoreIn ... inputs)
-{
-  //Calculate local input and output iterator 
-  auto begin = first + (elemperthr * i);
-  auto end = first + (elemperthr * (i+1));
-  if( i == ex.num_threads-1) end = last;
-  auto out = first_out + (elemperthr * i);
-  advance_iterators(elemperthr*i, inputs ...);
-  while(begin!=end){
-    *out = op(*begin, *inputs ...);
-    advance_iterators(inputs ...);
-    begin++;
-    out++;
-  }
-}
-
 /**
 \brief Invoke [map pattern](@ref map-pattern) on a data sequence with OpenMP
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\tparam OtherInputIts Iterator types used for additional input sequences.
+\param ex Parallel OpenMP execution policy object
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
 \param op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
 */
-template <typename InputIt, typename OutputIt, 
-          typename ... MoreIn, typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer,
+          typename ... OtherInputIts>
 void map(parallel_execution_omp & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Operation && op, 
-         MoreIn ... inputs)
+         Transformer && transf_op, 
+         OtherInputIts ... more_firsts)
 {
   //Calculate number of elements per thread
   int numElements = last - first;
@@ -146,13 +148,17 @@ void map(parallel_execution_omp & ex,
 
       #pragma omp task firstprivate(i)
       {
-        internal_map(ex, first, last, first_out, std::forward<Operation>(op) , i, elemperthr, inputs ...);
+        internal_map(ex, first, last, first_out,
+                     std::forward<Transformer>(transf_op) , i, elemperthr, 
+                     more_firsts ...);
       }
       //End task
      }
 
      //Map main thread
-     internal_map(ex, first,last, first_out, std::forward<Operation>(op), 0, elemperthr, inputs ...);
+     internal_map(ex, first,last, first_out, 
+                  std::forward<Transformer>(transf_op), 0, elemperthr, 
+                  more_firsts ...);
 
     //Join threads
     #pragma omp taskwait
