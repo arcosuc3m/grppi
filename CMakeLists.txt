@@ -128,8 +128,3 @@ if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
 
-# Legacy Tests
-option( GRPPI_LEGACY_UTEST_ENABLE "Legacy unit tests" OFF )
-if( GRPPI_LEGACY_UTEST_ENABLE )
-    add_subdirectory(legacy_utest)
-endif( GRPPI_LEGACY_UTEST_ENABLE )

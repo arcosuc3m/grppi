@@ -29,7 +29,7 @@ void map_reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt 
 
     while( first != last ) {
        auto mapresult = transform_op(*first, inputs ... );
-       reduce(s, mapresult.begin(), mapresult.end(), *firstOut, std::forward<Combiner>(combine_op));
+       *firstOut = reduce(s, mapresult.begin(), mapresult.end(), *firstOut, std::forward<Combiner>(combine_op));
        first++;
        firstOut++;
     }
