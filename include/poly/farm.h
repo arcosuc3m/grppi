@@ -1,3 +1,4 @@
+
 /**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
@@ -26,87 +27,87 @@
 
 namespace grppi{
 
-template <typename GF, typename Operation>
-void farm_multi_impl(polymorphic_execution & e, GF &&in, Operation && op) 
+template <typename Generator, typename Operation>
+void farm_multi_impl(polymorphic_execution & e, Generator &&in, Operation && op) 
 {
 }
 
 
-template <typename GF, typename Operation, typename SinkF>
-void farm_multi_impl(polymorphic_execution & e, GF && in, Operation && op, SinkF &&sink) 
+template <typename Generator, typename Operation, typename Consumer>
+void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op, Consumer &&cons) 
 {
 }
 
 
-template <typename E, typename ... O, typename GF, typename Operation,
+template <typename E, typename ... O, typename Generator, typename Operation,
           internal::requires_execution_not_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, GF && in, Operation && op)
+void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op)
 {
-  farm_multi_impl<O...>(e, std::forward<GF>(in), std::forward<Operation>(op));
+  farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op));
 }
 
-template <typename E, typename ... O, typename GF, typename Operation, typename SinkF,
+template <typename E, typename ... O, typename Generator, typename Operation, typename Consumer,
           internal::requires_execution_not_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, GF && in, Operation && op, SinkF && sink)
+void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op, Consumer && cons)
 {
-  farm_multi_impl<O...>(e, std::forward<GF>(in), std::forward<Operation>(op), std::forward<SinkF>(sink));
+  farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
 }
 
 
 
-template <typename E, typename ... O, typename GF, typename Operation,
+template <typename E, typename ... O, typename Generator, typename Operation,
           internal::requires_execution_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, GF && in, Operation && op)
+void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op)
 {
   if (typeid(E) == e.type()) {
     farm(*e.execution_ptr<E>(), 
-        std::forward<GF>(in), std::forward<Operation>(op));
+        std::forward<Generator>(in), std::forward<Operation>(op));
   }
   else {
-    farm_multi_impl<O...>(e, std::forward<GF>(in), std::forward<Operation>(op));
+    farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op));
   }
 }
 
 
-template <typename E, typename ... O, typename GF, typename Operation, typename SinkF,
+template <typename E, typename ... O, typename Generator, typename Operation, typename Consumer,
           internal::requires_execution_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, GF && in, Operation && op, SinkF && sink)
+void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op, Consumer && cons)
 {
   if (typeid(E) == e.type()) {
     farm(*e.execution_ptr<E>(), 
-        std::forward<GF>(in), std::forward<Operation>(op), std::forward<SinkF>(sink));
+        std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
   }
   else {
-    farm_multi_impl<O...>(e, std::forward<GF>(in), std::forward<Operation>(op), std::forward<SinkF>(sink));
+    farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
   }
 }
 
 
 
 /// Runs a farm pattern with a generator function and an operation function
-/// GF: Generator functor type.
+/// Generator: Generator functor type.
 /// Operation: Operation functor type.
-/// SinkF: Sink functor type.
-template <typename GF, typename Operation>
-void farm(polymorphic_execution & e, GF && in, Operation && op)
+/// Consumer: cons functor type.
+template <typename Generator, typename Operation>
+void farm(polymorphic_execution & e, Generator && in, Operation && op)
 {
   farm_multi_impl<
     sequential_execution,
-    parallel_execution_thr,
+    parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<GF>(in), std::forward<Operation>(op));
+  >(e, std::forward<Generator>(in), std::forward<Operation>(op));
 }
 
-template <typename GF, typename Operation, typename SinkF>
-void farm(polymorphic_execution & e, GF && in, Operation && op, SinkF && sink)
+template <typename Generator, typename Operation, typename Consumer>
+void farm(polymorphic_execution & e, Generator && in, Operation && op, Consumer && cons)
 {
   farm_multi_impl<
     sequential_execution,
-    parallel_execution_thr,
+    parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<GF>(in), std::forward<Operation>(op), std::forward<SinkF>(sink));
+  >(e, std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
 }
 
 

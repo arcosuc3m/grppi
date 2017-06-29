@@ -39,20 +39,20 @@ Sequential implementation of the \ref map-pattern
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\param ex Sequential execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 */
-template <typename InputIt, typename OutputIt, typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer>
 void map(sequential_execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Operation && op) 
+         Transformer && transf_op) 
 {
   while(first != last) {
-    *first_out = op(*first);
+    *first_out = transf_op(*first);
     first++;
     first_out++;
   }
@@ -63,23 +63,25 @@ void map(sequential_execution & ex,
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\tparam OtherInputIts Iterator types used for additional input sequences.
+\param ex Sequential execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
 */
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void map(sequential_execution & ex, 
-          InputIt first, InputIt last, OutputIt first_out, 
-          Operation && op, 
-          MoreIn ... more_firsts) 
+template <typename InputIt, typename OutputIt, typename Transformer,
+          typename ... OtherInputIts>
+void map(sequential_execution & ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Transformer && transf_op, 
+         OtherInputIts ... other_firsts) 
 {
   while( first != last ) {
-    *first_out = op(*first, *more_firsts...);
-    advance_iterators(more_firsts...);
+    *first_out = transf_op(*first, *other_firsts...);
+    advance_iterators(other_firsts...);
     first++;
     first_out++;
   }
