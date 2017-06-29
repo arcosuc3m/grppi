@@ -106,7 +106,6 @@ template <typename Generator, typename Predicate, typename Consumer>
               item = outqueue.pop();
            }
            while(aux_vector.size()>0){
-               std::cout << "hola" << std::endl;
                for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
                   if((*it).second == order){
                        if((*it).first)
