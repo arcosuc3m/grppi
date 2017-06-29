@@ -38,6 +38,7 @@ public:
 
   // Variables
   int out;
+  int initial_value;
 
   // Vectors
   vector<int> v{};
@@ -76,26 +77,62 @@ TYPED_TEST_CASE(reduce_test, executions);
 TYPED_TEST(reduce_test, static_empty)
 {
   this->setup_empty();
-  grppi::reduce(this->execution_, begin(this->v), end(this->v), this->out,
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
    std::plus<int>()
   );
   this->check_empty();
 }
 
+TYPED_TEST(reduce_test, poly_empty)
+{
+  this->setup_empty();
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+   std::plus<int>()
+  );
+  this->check_empty();
+}
+
+
+
 TYPED_TEST(reduce_test, static_single)
 {
   this->setup_single();
-  grppi::reduce(this->execution_, begin(this->v), end(this->v), this->out,
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
    std::plus<int>()
   );
   this->check_single();
 }
 
+TYPED_TEST(reduce_test, poly_single)
+{
+  this->setup_single();
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+   std::plus<int>()
+  );
+  this->check_single();
+}
+
+
+
 TYPED_TEST(reduce_test, static_multiple)
 {
   this->setup_multiple();
-  grppi::reduce(this->execution_, begin(this->v), end(this->v), this->out,
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
    std::plus<int>()
   );
   this->check_multiple();
 }
+
+TYPED_TEST(reduce_test, poly_multiple)
+{
+  this->setup_multiple();
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+   std::plus<int>()
+  );
+  this->check_multiple();
+}
+
+
+
+
+
