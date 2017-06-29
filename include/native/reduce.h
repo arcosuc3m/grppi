@@ -116,5 +116,10 @@ auto reduce(parallel_execution_native & ex,
     std::forward<Combiner>(combine_op));
 }
 
+/**
+@}
+@}
+*/
+
 }
 #endif

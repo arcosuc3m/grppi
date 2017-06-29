@@ -27,8 +27,9 @@
 namespace grppi{
 
 template <typename InputIt, typename Combiner>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
+auto reduce_multi_impl(polymorphic_execution & ex, 
+                       InputIt first, InputIt last, 
+                       Combiner &&combine_op) -> decltype(combine_op(*first,*first))
 {
   return {};
 }
@@ -38,10 +39,11 @@ reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combine
 template <typename E, typename ... O,
           typename InputIt, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
+auto reduce_multi_impl(polymorphic_execution & ex, 
+                       InputIt first, InputIt last, 
+                       Combiner && combine_op)
 {
-  return reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
+  return reduce_multi_impl<O...>(ex, first, last, std::forward<Combiner>(combine_op));
 }
 
 
@@ -49,26 +51,41 @@ reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combine
 template <typename E, typename ... O,
           typename InputIt, typename Combiner,
           internal::requires_execution_supported<E> = 0>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
+auto reduce_multi_impl(polymorphic_execution & ex, 
+                       InputIt first, InputIt last, 
+                       Combiner &&combine_op)
 {
-  if (typeid(E) == e.type()) {
-    return reduce(*e.execution_ptr<E>(), 
+  if (typeid(E) == ex.type()) {
+    return reduce(*ex.execution_ptr<E>(), 
         first, last, std::forward<Combiner>(combine_op));
   }
   else {
-    return reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
+    return reduce_multi_impl<O...>(ex, first, last, std::forward<Combiner>(combine_op));
   }
 }
 
+/**
+\addtogroup reduce_pattern
+@{
+\addtogroup reduce_pattern_poly Polymorphic execution reduce pattern.
+\brief Implementation of reduce pattern for polymorphic execution back-end.
+@{
+*/
 
 
-/// Runs a reduce pattern with an input sequence, and a combination operation
-/// InputIt: Iterator for the input sequence.
-/// Combiner: Combiner functor type
+/**
+\brief Invoke [reduce pattern](@ref md_reduce) with no identity value
+on a data sequence with sequential execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param combiner_op Combiner operation for the reduction.
+\pre distance(first,last) >= 1
+*/
 template <typename InputIt, typename Combiner>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
- reduce(polymorphic_execution & e, InputIt first, InputIt last, Combiner &&combine_op)
+auto reduce(polymorphic_execution & e, InputIt first, InputIt last, Combiner &&combine_op)
 {
   return reduce_multi_impl<
     sequential_execution,
@@ -77,6 +94,11 @@ typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_
     parallel_execution_tbb
   >(e, first, last, std::forward<Combiner>(combine_op));
 }
+
+/**
+@}
+@}
+*/
 
 } // end namespace grppi
 

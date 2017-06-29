@@ -27,12 +27,36 @@
 
 namespace grppi{
 
-// Empty sequences are currently not supported.
-template < typename InputIt, typename Combiner>
-typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner && combine_op){
+/**
+\addtogroup reduce_pattern
+@{
+*/
 
-    auto identityVal = init;
+/**
+\addtogroup reduce_pattern_tbb TBB parallel reduce pattern
+\brief TBB parallel implementation of the \ref md_reduce pattern
+@{
+*/
+
+/**
+\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+on a data sequence with parallel TBB execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Identity Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Parallel native execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+*/
+template < typename InputIt, typename Identity, typename Combiner>
+auto reduce(parallel_execution_tbb & ex, 
+            InputIt first, InputIt last, 
+            Identity identity,
+            Combiner && combine_op)
+{
+   auto identityVal = identity;
    return tbb::parallel_reduce(tbb::blocked_range<InputIt>( first, last ), identityVal,
               [&](const tbb::blocked_range<InputIt> &r,typename std::iterator_traits<InputIt>::value_type  temp){
                  for(InputIt i=r.begin(); i!= r.end(); ++i){
@@ -49,14 +73,35 @@ reduce(parallel_execution_tbb &p, InputIt first, InputIt last, typename std::ite
    
 }
 
+/**
+\brief Invoke [reduce pattern](@ref md_reduce) with no identity value
+on a data sequence with parallel TBB execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Parallel native execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param combiner_op Combiner operation for the reduction.
+\pre distance(first,last) >= 1
+*/
 template < typename InputIt, typename Combiner>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_tbb &p, InputIt first, InputIt last, Combiner &&combine_op){
-   auto identityVal = !combine_op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
+auto reduce(parallel_execution_tbb & ex, 
+            InputIt first, InputIt last, 
+            Combiner && combine_op)
+{
+  if (std::distance(first,last)<=1) return *first;
+  auto init = combine_op(*first, *(first+1));
+  return reduce(ex, first+2, last, init,
+    std::forward<Combiner>(combine_op));
 }
 
+/**
+@}
+@}
+*/
+
 }
+
 #endif
 
 #endif
