@@ -26,73 +26,73 @@
 
 namespace grppi{
 
-template <typename InputIt, typename OutputIt, typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op) 
+         OutputIt first_out, Transformer && op) 
 {
 }
 
-template <typename InputIt, typename OutputIt, typename Operation,
+template <typename InputIt, typename OutputIt, typename Transformer,
           typename InputIt2, typename ... OtherInputIts>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op, InputIt2 first2, 
-         OtherInputIts ... other_its) 
+         OutputIt first_out, Transformer && op, InputIt2 first2, 
+         OtherInputIts ... more_firsts) 
 {
 }
 
 template <typename E, typename ... O,
-          typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt, typename OutputIt, typename Transformer,
           internal::requires_execution_not_supported<E> = 0>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op) 
+         OutputIt first_out, Transformer && op) 
 {
-  map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
+  map_multi_impl<O...>(e, first, last, first_out, std::forward<Transformer>(op));
 }
 
 template <typename E, typename ... O,
-          typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt, typename OutputIt, typename Transformer,
           typename InputIt2, typename ... OtherInputIts,
           internal::requires_execution_not_supported<E> = 0>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op, InputIt2 first2, 
-         OtherInputIts ... other_its) 
+         OutputIt first_out, Transformer && op, InputIt2 first2, 
+         OtherInputIts ... more_firsts) 
 {
-  map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op),
-                       first2, other_its...);
+  map_multi_impl<O...>(e, first, last, first_out, std::forward<Transformer>(op),
+                       first2, more_firsts...);
 }
 
 
 template <typename E, typename ... O,
-          typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt, typename OutputIt, typename Transformer,
           internal::requires_execution_supported<E> = 0>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op) 
+         OutputIt first_out, Transformer && op) 
 {
   if (typeid(E) == e.type()) {
     map(*e.execution_ptr<E>(), 
-        first, last, first_out, std::forward<Operation>(op));
+        first, last, first_out, std::forward<Transformer>(op));
   }
   else {
-    map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op));
+    map_multi_impl<O...>(e, first, last, first_out, std::forward<Transformer>(op));
   }
 }
 
 template <typename E, typename ... O,
-          typename InputIt, typename OutputIt, typename Operation,
+          typename InputIt, typename OutputIt, typename Transformer,
           typename InputIt2, typename ... OtherInputIts,
           internal::requires_execution_supported<E> = 0>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op, InputIt2 first2, 
-         OtherInputIts ... other_its) 
+         OutputIt first_out, Transformer && op, InputIt2 first2, 
+         OtherInputIts ... more_firsts) 
 {
   if (typeid(E) == e.type()) {
     map(*e.execution_ptr<E>(), 
-        first, last, first_out, std::forward<Operation>(op), first2,
-        other_its...);
+        first, last, first_out, std::forward<Transformer>(op), first2,
+        more_firsts...);
   }
   else {
-    map_multi_impl<O...>(e, first, last, first_out, std::forward<Operation>(op), 
-                         first2, other_its...);
+    map_multi_impl<O...>(e, first, last, first_out, std::forward<Transformer>(op), 
+                         first2, more_firsts...);
   }
 }
 
@@ -109,24 +109,24 @@ Implementation of map pattern for polymorphic execution back-end.
 polymorphic execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\param ex Polymorphic execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 */
-template <typename InputIt, typename OutputIt, typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer>
 void map(polymorphic_execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Operation && op) 
+         Transformer && transf_op) 
 {
   map_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(ex, first, last, first_out, std::forward<Operation>(op));
+  >(ex, first, last, first_out, std::forward<Transformer>(transf_op));
 }
 
 /**
@@ -134,8 +134,9 @@ void map(polymorphic_execution & ex,
 polymorphic parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\tparam OtherInputIts Iterator types used for additional input sequences.
+\param ex Polymorphic execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
@@ -143,17 +144,17 @@ polymorphic parallel execution.
 \param more_firsts Additional iterators with first elements of additional sequences.
 */
 template <typename InputIt, typename OutputIt, typename InputIt2, 
-          typename ... OtherInputIts,
-          typename Operation>
+          typename Transformer,
+          typename ... OtherInputIts>
 void map(polymorphic_execution & ex, InputIt first, InputIt last, 
-         OutputIt first_out, Operation && op, InputIt2 first2, OtherInputIts ... other_its) 
+         OutputIt first_out, Transformer && op, InputIt2 first2, OtherInputIts ... more_firsts) 
 {
   map_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(ex, first, last, first_out, std::forward<Operation>(op), first2, other_its...);
+  >(ex, first, last, first_out, std::forward<Transformer>(op), first2, more_firsts...);
 }
 
 } // end namespace grppi

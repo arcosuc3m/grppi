@@ -36,17 +36,17 @@ Implementation of map pattern for native parallel back-end.
 paralell execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\param ex Native parallel execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
+\param transf_op Transformation operation.
 */
-template <typename InputIt, typename OutputIt, typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer>
 void map(parallel_execution_native & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Operation && op)
+         Transformer && transf_op)
 {
   std::vector<std::thread> tasks;
   int numElements = last - first; 
@@ -65,7 +65,7 @@ void map(parallel_execution_native & ex,
         ex.register_thread();
           
         while(begin!=end){
-          *out = op(*begin);
+          *out = transf_op(*begin);
           begin++;
           out++;
         }
@@ -79,7 +79,7 @@ void map(parallel_execution_native & ex,
   //Map main threads
   auto end = first+elemperthr;
   while(first!=end) {
-    *first_out = op(*first);
+    *first_out = transf_op(*first);
     first++;
     first_out++;
   }
@@ -95,20 +95,21 @@ void map(parallel_execution_native & ex,
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
-\tparam Operation Callable type for the transformation operation.
-\param ex Sequential execution policy object
+\tparam Transformer Callable type for the transformation operation.
+\tparam OtherInputIts Iterator types used for additional input sequences.
+\param ex Native parallel execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param op Transformation operation.
-\param inputs Additional iterators with first elements of additional sequences.
+\param transf_op Transformation operation.
+\param more_firsts Additional iterators with first elements of additional sequences.
 */
-template <typename InputIt, typename OutputIt, typename ... MoreIn, 
-          typename Operation>
+template <typename InputIt, typename OutputIt, typename Transformer,
+          typename ... OtherInputIts> 
 void map(parallel_execution_native& ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Operation && op, 
-         MoreIn ... inputs)
+         Transformer && transf_op, 
+         OtherInputIts ... more_inputs)
 {
   std::vector<std::thread> tasks;
 
@@ -125,23 +126,26 @@ void map(parallel_execution_native& ex,
     auto out = first_out + (elemperthr * i);
     //Begin task
     tasks.push_back(
-      std::thread( [&](InputIt begin, InputIt end, OutputIt out, int tid, int nelem, MoreIn ... inputs){
+      std::thread{
+        [&](InputIt begin, InputIt end, OutputIt out, 
+            int tid, int
+            nelem, OtherInputIts ... more_inputs) {
 
-        // Register the thread in the execution model
-        ex.register_thread();
+          // Register the thread in the execution model
+          ex.register_thread();
 
-        advance_iterators(nelem*tid, inputs ...);
-        while(begin!=end) {
-          *out = op(*begin, *inputs ...);
-          advance_iterators(inputs ...);
-          begin++;
-          out++;
-        }
+          advance_iterators(nelem*tid, more_inputs ...);
+          while(begin!=end) {
+            *out = transf_op(*begin, *more_inputs ...);
+            advance_iterators(more_inputs ...);
+            begin++;
+            out++;
+          }
 
-        // Deregister the thread in the execution model
-        ex.deregister_thread();
-      },
-      begin, end, out, i, elemperthr, inputs...)
+          // Deregister the thread in the execution model
+          ex.deregister_thread();
+        },
+        begin, end, out, i, elemperthr, more_inputs...}
     );
     //End task
   }
@@ -149,8 +153,8 @@ void map(parallel_execution_native& ex,
   //Map main thread
   auto end = first + elemperthr;
   while(first!=end) {
-    *first_out = op(*first, *inputs ...);
-    advance_iterators(inputs ...);
+    *first_out = transf_op(*first, *more_inputs ...);
+    advance_iterators(more_inputs ...);
     first++;
     first_out++;
   }
@@ -166,4 +170,5 @@ void map(parallel_execution_native& ex,
 @}
 */
 }
+
 #endif
