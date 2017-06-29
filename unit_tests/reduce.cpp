@@ -42,14 +42,6 @@ public:
   // Vectors
   vector<int> v{};
 
-  void setup_empty() {
-    out = 0;
-  }
-
-  void check_empty() {
-    EXPECT_EQ(0, this->out);
-  }
-
   void setup_single() {
     out = 0;
     v = vector<int>{1};
@@ -73,23 +65,49 @@ public:
 // Test for execution policies defined in supported_executions.h
 TYPED_TEST_CASE(reduce_test, executions);
 
-TYPED_TEST(reduce_test, static_empty)
-{
-  this->setup_empty();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), std::plus<int>());
-  this->check_empty();
-}
-
 TYPED_TEST(reduce_test, static_single)
 {
   this->setup_single();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), std::plus<int>());
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
+   [](int x, int y){
+      return x + y;
+   }
+  );
   this->check_single();
 }
+
+TYPED_TEST(reduce_test, poly_single)
+{
+  this->setup_single();
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+   [](int x, int y){
+      return x + y;
+   }
+  );
+  this->check_single();
+}
+
+
 
 TYPED_TEST(reduce_test, static_multiple)
 {
   this->setup_multiple();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), std::plus<int>());
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
+   [](int x, int y){
+      return x + y;
+   }
+  );
   this->check_multiple();
 }
+
+TYPED_TEST(reduce_test, poly_multiple)
+{
+  this->setup_multiple();
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+   [](int x, int y){
+      return x + y;
+   }
+  );
+  this->check_multiple();
+}
+

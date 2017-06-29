@@ -33,6 +33,8 @@
 
 #include "tbb/reduce.h"
 
+#include "poly/reduce.h"
+
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
