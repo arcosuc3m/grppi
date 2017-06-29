@@ -24,20 +24,11 @@
 #include "../reduce.h"
 
 namespace grppi{
-template < typename InputIt, typename OutputIt, typename Transformer, typename Combiner, typename ... MoreIn >
-void map_reduce (sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Transformer && transform_op, Combiner && combine_op, MoreIn ... inputs) {
 
-    while( first != last ) {
-       auto mapresult = transform_op(*first, inputs ... );
-       reduce(s, mapresult.begin(), mapresult.end(), *firstOut, std::forward<Combiner>(combine_op));
-       first++;
-       firstOut++;
-    }
-}
 
 //Parallel STL like function
 template <typename InputIt, typename Transformer, class T, typename Combiner>
- T map_reduce ( sequential_execution, InputIt first, InputIt last, Transformer &&  transform_op, T init, Combiner && combine_op){
+T map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op, T init){
     T out = init;
 
     while(first != last){
@@ -49,9 +40,16 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
     return out;
 }
 
-template <typename InputIt, typename Transformer, class T, typename Combiner>
- T map_reduce ( sequential_execution, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
-    T out;  
+template <typename InputIt, typename Transformer,typename Combiner>
+typename std::result_of<Combiner(
+typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
+typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)
+>::type
+map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
+
+   typename std::result_of<Combiner(
+   typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
+   typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type out;  
     bool firstElement = true;
     while(first != last){
        auto mappedValue = transform_op(*first);
@@ -63,19 +61,8 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
        }
        first++;
     }
+    return out;
 
 }
-/*
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
-}
-*/
 }
 #endif

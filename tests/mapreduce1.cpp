@@ -36,42 +36,37 @@ void mapreduce_example1() {
 #ifdef SEQ
     sequential_execution p{};
 #elif OMP
-    #error Not yet implemented!
+    parallel_execution_omp p{NTHREADS};
 #elif TBB
-    #error Not yet implemented!
+    parallel_execution_tbb p{NTHREADS};
 #elif THR
     parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
 
-    std::vector<std::vector<int>> mat(10000);
-    for(int i=0;i<mat.size();i++) {
-        mat[i] = std::vector<int> (10000);
-        for(int j=0;j<mat[i].size();j++){
-            mat[i][j] = 1;
-        }
-    }
-    std::vector<int> v(10000);
-    for( int i= 0 ; i< v.size(); i++){
-         v[i] = 2;
-    }
-    std::vector<int> out(10000);
-    int aux;
-    map_reduce(p, mat.begin(), mat.end(), out.begin(),
-           [&](auto & in, auto & v){ 
-                  std::vector<int> mult(in.size()); 
-                  for(auto col = 0; col!= in.size(); col++){
-                       mult[col] = in[col] * v[col];    
-                  }     
-                  return mult;  
-           },
-           std::plus<int> (),
-           v
+   std::vector<std::string> words{"a","b","a","c","d","e","c","c","a","b"};
+   auto result = map_reduce(
+      p,
+      words.begin(),
+      words.end(),
+      [](std::string word){
+         std::map<string,int> key_value;
+         key_value[word]=1;
+         return key_value;
+      },
+      [](auto map1,auto map2){
+          for(auto & i : map2) {
+             map1[i.first] += i.second;
+          }
+          return map1;
+
+      }
    );
-
-
-   for(int i = 0; i< out.size();i++) std::cout<<"REDUCTION ["<<i<<"] = "<<out[i]<<std::endl;
+   std::cout<<"Word : count "<<std::endl;
+   for(auto & i : result) {
+     std::cout<< i.first << " : " << i.second<<std::endl;
+   }
 }
 
 int main() {

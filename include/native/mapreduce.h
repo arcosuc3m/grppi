@@ -24,24 +24,9 @@
 #include "../reduce.h"
 
 namespace grppi{
-template < typename InputIt, typename OutputIt, typename Transformer, typename Combiner,typename ... MoreIn >
- void map_reduce (parallel_execution_native & p, InputIt first, InputIt last, OutputIt firstOut, Transformer && transform_op, Combiner && combine_op, MoreIn ... inputs) {
-
-    // Register the thread in the execution model
-    p.register_thread();
-    while( first != last ) {
-       auto mapresult = transform_op(*first, inputs ... );
-       *firstOut = reduce( p, mapresult.begin(), mapresult.end(), std::forward<Combiner>(combine_op) );
-       first++;
-       firstOut++;
-    }
-    // Deregister the thread in the execution model
-    p.deregister_thread();
-}
-
 
 template <typename InputIt, typename Transformer, class T, typename Combiner>
- T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op, T init, Combiner &&combine_op){
+ T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, T init){
 
     using namespace std;
     T out = init;
@@ -49,6 +34,7 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
     std::vector<std::thread> tasks;
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
+    sequential_execution s {};
 
     for(int i=1;i<p.num_threads;i++){    
        auto begin = first + (elemperthr * i);
@@ -56,38 +42,41 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
        if(i == p.num_threads -1 ) end= last;
        tasks.push_back(
         std::thread( 
-         [&](InputIt begin, InputIt end, T out){
+         [&](InputIt beg, InputIt en, int id){
             // Register thread
             p.register_thread();
-
-            partialOuts[i] = MapReduce(sequential_execution{}, begin, last, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
-
+            partialOuts[id] = map_reduce(s, beg, en, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op),partialOuts[id]);
             // Deregister thread
             p.deregister_thread();
          },
-         begin, end, out)
+         begin, end, i)
        );
     }
-    partialOuts[0] = MapReduce(sequential_execution{}, begin, last, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
+
+    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
+
     for(auto task = tasks.begin();task != tasks.end();task++){    
        (*task).join();
     }
-    Reduce(sequential_execution{}, partialOuts.begin(), partialOuts.end(), out, std::forward<Combiner>(combine_op));
-
+    for(auto & map : partialOuts){
+       out = combine_op(out, map);
+    } 
     return out;
 }
 
-/*
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation>
- void Reduce( InputIt first, InputIt last, OutputIt firstOut, Operation && op, MoreIn ... inputs ) {
-    while( first != last ) {
-        *firstOut = op( *first, *inputs ... );
-        NextInputs( inputs... );
-        first++;
-        firstOut++;
-    }
+template <typename InputIt, typename Transformer, typename Combiner>
+typename std::result_of<Combiner(
+typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
+typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type
+map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
+
+    typename std::result_of<Combiner(
+    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
+    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type init;
+
+    return map_reduce ( p, first, last, std::forward<Transformer>( transform_op ),  std::forward<Combiner>( combine_op ), init);
+
 }
-*/
 }
 #endif
