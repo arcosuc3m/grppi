@@ -106,9 +106,14 @@ on a data sequence with parallel native execution.
 \pre distance(first,last) >= 1
 */
 template < typename InputIt, typename Combiner>
-auto reduce(parallel_execution_native &p, InputIt first, InputIt last, Combiner && combine_op){
-   auto identityVal = !combine_op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
+auto reduce(parallel_execution_native & ex, 
+            InputIt first, InputIt last, 
+            Combiner && combine_op)
+{
+  if (std::distance(first,last)<=1) return *first;
+  auto init = combine_op(*first, *(first+1));
+  return reduce(ex, first+2, last, init,
+    std::forward<Combiner>(combine_op));
 }
 
 }
