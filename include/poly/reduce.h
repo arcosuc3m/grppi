@@ -26,154 +26,57 @@
 
 namespace grppi{
 
-template <typename InputIt, typename Output, typename ReduceOperator>
-typename std::enable_if<!is_iterator<Output>::value, void>::type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         Output & out, ReduceOperator op) 
+template <typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
 {
-}
-
-template <typename InputIt, typename ReduceOperator>
-typename ReduceOperator::result_type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-        ReduceOperator op) 
-{
-}
-
-template <typename InputIt, typename OutputIt, typename RedFunc>
-typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, RedFunc && op) 
-{
+  return {};
 }
 
 
 
 template <typename E, typename ... O,
-          typename InputIt, typename Output, typename ReduceOperator,
+          typename InputIt, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
-typename std::enable_if<!is_iterator<Output>::value, void>::type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         Output & out, ReduceOperator op) 
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
 {
-  reduce_multi_impl<O...>(e, first, last, out, op);
-}
-
-template <typename E, typename ... O,
-          typename InputIt, typename ReduceOperator,
-          internal::requires_execution_not_supported<E> = 0>
-typename ReduceOperator::result_type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         ReduceOperator op) 
-{
-  reduce_multi_impl<O...>(e, first, last, op);
-}
-
-template <typename E, typename ... O,
-          typename InputIt, typename OutputIt, typename RedFunc,
-          internal::requires_execution_not_supported<E> = 0>
-typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, RedFunc && reduce) 
-{
-  reduce_multi_impl<O...>(e, first, last, first_out, std::forward<RedFunc>(reduce));
+  return reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
 }
 
 
 
 template <typename E, typename ... O,
-          typename InputIt, typename Output, typename ReduceOperator,
+          typename InputIt, typename Combiner,
           internal::requires_execution_supported<E> = 0>
-typename std::enable_if<!is_iterator<Output>::value, void>::type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         Output & out, ReduceOperator op) 
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
 {
   if (typeid(E) == e.type()) {
-    reduce(*e.execution_ptr<E>(), 
-        first, last, out, op);
+    return reduce(*e.execution_ptr<E>(), 
+        first, last, std::forward<Combiner>(combine_op));
   }
   else {
-    reduce_multi_impl<O...>(e, first, last, out, op);
-  }
-}
-
-template <typename E, typename ... O,
-          typename InputIt, typename ReduceOperator,
-          internal::requires_execution_supported<E> = 0>
-typename ReduceOperator::result_type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         ReduceOperator op) 
-{
-  if (typeid(E) == e.type()) {
-    reduce(*e.execution_ptr<E>(), 
-        first, last, op);
-  }
-  else {
-    reduce_multi_impl<O...>(e, first, last, op);
-  }
-}
-
-template <typename E, typename ... O,
-          typename InputIt, typename OutputIt, typename RedFunc,
-          internal::requires_execution_supported<E> = 0>
-typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
- reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, RedFunc && reduce) 
-{
-  if (typeid(E) == e.type()) {
-    reduce(*e.execution_ptr<E>(), 
-        first, last, first_out, std::forward<RedFunc>(reduce));
-  }
-  else {
-    reduce_multi_impl<O...>(e, first, last, first_out, std::forward<RedFunc>(reduce));
+    return reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
   }
 }
 
 
-/// Runs a reduce pattern with an input sequence, an output sequence and a 
-/// reduce operation.
+
+/// Runs a reduce pattern with an input sequence, and a combination operation
 /// InputIt: Iterator for the input sequence.
-/// OutputIt: Iterator for the output sequence.
-/// ReduceOperator: Reduction functor type
-template <typename InputIt, typename Output, typename ReduceOperator>
-typename std::enable_if<!is_iterator<Output>::value, void>::type
- reduce(polymorphic_execution & e, InputIt first, InputIt last, 
-         Output & out, ReduceOperator op) 
+/// Combiner: Combiner functor type
+template <typename InputIt, typename Combiner>
+typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
+ reduce(polymorphic_execution & e, InputIt first, InputIt last, Combiner &&combine_op)
 {
-  reduce_multi_impl<
+  return reduce_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, first, last, out, op);
+  >(e, first, last, std::forward<Combiner>(combine_op));
 }
-
-template <typename InputIt, typename ReduceOperator>
-typename ReduceOperator::result_type
- reduce(polymorphic_execution & e, InputIt first, InputIt last, 
-         ReduceOperator op) 
-{
-  reduce_multi_impl<
-    sequential_execution,
-    parallel_execution_native,
-    parallel_execution_omp,
-    parallel_execution_tbb
-  >(e, first, last, op);
-}
-
-template <typename InputIt, typename OutputIt, typename RedFunc>
-typename  std::enable_if<is_iterator<OutputIt>::value, void>::type
- reduce(polymorphic_execution & e, InputIt first, InputIt last, 
-         OutputIt first_out, RedFunc && reduce) 
-{
-  reduce_multi_impl<
-    sequential_execution,
-    parallel_execution_native,
-    parallel_execution_omp,
-    parallel_execution_tbb
-  >(e, first, last, first_out, std::forward<RedFunc>(reduce));
-}
-
 
 } // end namespace grppi
 

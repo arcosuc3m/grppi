@@ -29,49 +29,73 @@
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
- const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb &p, Stream st, Stage && s ) {
-    return tbb::make_filter<Stream, void>( tbb::filter::serial_in_order, s );
-}
-
-
-template <typename Operation, typename Stream, typename ... Stages>
- const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> & se, Stages && ... sgs ) {
-   return stages(p,st, std::forward< farm_info<parallel_execution_tbb, Operation> &&>( se), std::forward<Stages>( sgs )... );
+ const tbb::interface6::filter_t<optional<Stream>, void> stages(parallel_execution_tbb &p, Stream st, Stage && se ) {
+    return tbb::make_filter<optional<Stream>, void>( tbb::filter::serial_in_order,[&](optional<Stream> s){ if(s) se(s.value());} );
 }
 
 
 //Intermediate stages
 template <typename Operation, typename Stream, typename ... Stages>
- const tbb::interface6::filter_t<Stream, void> 
+ const tbb::interface6::filter_t< optional<Stream>, void> 
+stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> & se, Stages && ... sgs ) {
+   return stages(p,st, std::forward< farm_info<parallel_execution_tbb, Operation> &&>( se), std::forward<Stages>( sgs )... );
+}
+
+
+template <typename Operation, typename Stream, typename... Stages>
+const tbb::interface6::filter_t< optional<Stream>, void> stages(parallel_execution_tbb &p, Stream& st,
+            filter_info<parallel_execution_tbb,Operation> & se, Stages && ... sgs ) {
+     return stages(p,st,std::forward<filter_info<parallel_execution_tbb,Operation> &&>( se ), std::forward<Stages>( sgs )... );
+
+}
+
+
+
+template <typename Operation, typename Stream, typename... Stages>
+const tbb::interface6::filter_t< optional<Stream>, void> stages(parallel_execution_tbb &p, Stream& st,
+            filter_info<parallel_execution_tbb,Operation> && se, Stages && ... sgs ) {
+    Stream k;
+    return tbb::make_filter< optional<Stream>, optional<Stream> >( tbb::filter::parallel,
+       [&](optional<Stream> s)
+            { return (s && se.task(s.value())) ? s : optional<Stream>();} ) & stages(p, k, std::forward<Stages>(sgs) ... );
+
+}
+
+
+template <typename Operation, typename Stream, typename ... Stages>
+ const tbb::interface6::filter_t<optional<Stream>, void> 
 stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> && se, Stages && ... sgs ) {
     typedef typename std::result_of<Operation(Stream)>::type outputType;
     outputType k;
-    return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, se.task ) & stages(p, k, std::forward<Stages>(sgs) ... );
+    return tbb::make_filter< optional<Stream>, optional<outputType> >( tbb::filter::parallel,
+       [&](optional<Stream> s)
+            {return (s) ? optional<outputType>(se.task( s.value() )) : optional<outputType>();} ) & stages(p, k, std::forward<Stages>(sgs) ... );
 }
 
 template <typename Stage, typename Stream, typename ... Stages>
- const tbb::interface6::filter_t<Stream, void> 
+ const tbb::interface6::filter_t<optional<Stream>, void> 
 stages(parallel_execution_tbb &p, Stream st, Stage &&  se, Stages && ... sgs ) {
     typedef typename std::result_of<Stage(Stream)>::type outputType;
     outputType k;
-    return tbb::make_filter<Stream, outputType>( tbb::filter::serial_in_order, se ) & stages(p, k, std::forward<Stages>(sgs) ... );
+    return tbb::make_filter< optional<Stream>, optional<outputType> >( tbb::filter::serial_in_order,
+       [&](optional<Stream> s)
+            {return (s) ? optional<outputType>( se( s.value() ) ): optional<outputType>();} ) & stages(p, k, std::forward<Stages>(sgs) ... );
 }
 
 //First stage
-template <typename FuncIn, typename = typename std::result_of<FuncIn()>::type,
+template <typename FuncIn, 
           typename ...Stages,
           requires_no_arguments<FuncIn> = 0>
 void pipeline(parallel_execution_tbb &p, FuncIn in, Stages && ... sts ) {
     typedef typename std::result_of<FuncIn()>::type::value_type outputType;
     outputType k;
-    const auto stage = tbb::make_filter<void, outputType>(
+    const auto stage = tbb::make_filter<void, optional<outputType> >(
         tbb::filter::serial_in_order, 
         [&]( tbb::flow_control& fc ) {
-            auto k =  in();
-            if( !k ) 
+            auto item =  in();
+            if( !item ) 
                 fc.stop();
-            return k.value();
+            return optional<outputType>{item.value()};
         }
     );
     tbb::task_group_context context;
