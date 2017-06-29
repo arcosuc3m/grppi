@@ -21,12 +21,12 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <stream_reduce.h>
+#include <farm.h>
 
 using namespace std;
 using namespace grppi;
 
-void reduce_example1(){
+void farm_example1() {
 
 #ifndef NTHREADS
 #define NTHREADS 6
@@ -44,50 +44,38 @@ void reduce_example1(){
     sequential_execution p{};
 #endif
 
-    int reduce_var=0;
-    std::vector<int> stream( 10000, 1 );
-    int index = 0;
+    int a = 20000;
 
-    stream_reduce( p,
-        // Reduce generator as lambda
-        [&]() { 
-            int n = ( stream.size() - index ) < 100 ? (stream.size() - index) : 100;
-            if( n <= 0 ) 
-                 return optional<std::vector<int>> ();
-
-            std::vector<int> v(n);
-            for ( int i = 0; i < n; i++ ) {
-                 v[ i ] = stream[ index + i ];
-            } 
-            index += 100;
-            return optional<std::vector<int>> ( v );
+    std::atomic<int> output;
+    output = 0;
+    farm(p,
+        // farm generator as lambda
+        [&]() {
+            a--; 
+            if ( a == 0 ) 
+                return optional<int>(); 
+            else
+                return optional<int>( a );
         },
-        // Reduce kernel as lambda
-        []( std::vector<int> v ) {
-            int local_red = 0;
-            for( int i = 0; i < v.size(); i++ ) 
-                local_red += v[ i ];
-            return local_red;
+        [](int l){
+            return l*2;
         },
-        // Reduce join as lambda
-        []( int a , int &reduce_var) {
-            reduce_var += a;
-        }, 
-        reduce_var
+        // farm kernel as lambda
+        [&]( int l ) {
+            output += l;
+        }
     );
-    std::cout<<"OUTPUT : " << reduce_var << std::endl;
+
+    std::cout << output << std::endl;
 }
 
 int main() {
 
     //$ auto start = std::chrono::high_resolution_clock::now();
-    reduce_example1();
+    farm_example1();
     //$ auto elapsed = std::chrono::high_resolution_clock::now() - start;
 
     //$ long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>( elapsed ).count();
     //$ std::cout << "Execution time : " << microseconds << " us" << std::endl;
-
     return 0;
 }
-
-

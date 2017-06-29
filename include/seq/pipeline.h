@@ -45,23 +45,34 @@ void stages(sequential_execution &s, Stream st, Stage && se ) {
     se( st );
 }
 
+
+
+
 //Filter stage
 template <typename task, typename Stream, typename... Stages>
-void stages(sequential_execution &s, Stream st, filter_info<sequential_execution, task> && se, Stages && ... sgs ) {
+void stages(sequential_execution &s, Stream st, filter_info<sequential_execution, task> & se, Stages && ... sgs ) {
+      stages(s, st, std::forward<filter_info<sequential_execution, task>&&>(se), std::forward<Stages>(sgs)... );
+}
 
-//   auto out = se.run(st);
-     if((*se.task)(st))
+template <typename task, typename Stream, typename... Stages>
+void stages(sequential_execution &s, Stream st, filter_info<sequential_execution, task> && se, Stages && ... sgs ) {
+     if(se.task(st))
         stages(s, st, std::forward<Stages>(sgs) ... );
 }
 
+//Farm stage
+template <typename task, typename Stream, typename... Stages>
+void stages(sequential_execution &s, Stream st, farm_info<sequential_execution, task> & se, Stages && ... sgs ) {
+     stages(s, st, std::forward<farm_info<sequential_execution, task>&&>(se), std::forward<Stages>(sgs) ... );
+}
 
-template <typename task, template <typename,typename> class Stage, typename Stream, typename... Stages>
-void stages(sequential_execution &s, Stream st, Stage<sequential_execution, task> && se, Stages && ... sgs ) {
-
-//   auto out = se.run(st);
-     auto out = (*se.task)(st);
+template <typename task, typename Stream, typename... Stages>
+void stages(sequential_execution &s, Stream st, farm_info<sequential_execution, task> && se, Stages && ... sgs ) {
+     auto out = se.task(st);
      stages(s, out, std::forward<Stages>(sgs) ... );
 }
+
+
 
 //Intermediate stages
 template <typename Stage, typename Stream, typename... Stages>

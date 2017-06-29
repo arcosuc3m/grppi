@@ -22,26 +22,26 @@
 #define GRPPI_FARM_SEQ_H
 
 namespace grppi{
-template <typename GenFunc, typename Operation>
-void farm(sequential_execution , GenFunc &&in, Operation && op ) {
+template <typename Generator, typename Operation>
+void farm(sequential_execution , Generator &&gen, Operation && op ) {
 
     while( 1 ) {
-        auto k = in();
+        auto k = gen();
         if( !k ) 
             break;
         op( k.value() );
     }
 }
 
-template <typename GenFunc, typename Operation, typename SinkFunc>
-void farm(sequential_execution , GenFunc &&in, Operation && op, SinkFunc &&sink ) {
+template <typename Generator, typename Operation, typename Consumer>
+void farm(sequential_execution , Generator &&gen, Operation && op, Consumer &&cons ) {
 
     while( 1 ) {
-        auto k = in();
+        auto k = gen();
         if( !k ) 
             break;
         auto r = op( k.value() );
-        sink(r);
+        cons(r);
     }
 }
 

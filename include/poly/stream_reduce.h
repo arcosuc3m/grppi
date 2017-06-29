@@ -1,7 +1,7 @@
 /**
-* @version		GrPPI v0.2
-* @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
+* @version    GrPPI v0.2
+* @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+* @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -25,30 +25,11 @@
 #include "common/support.h"
 
 namespace grppi{
-template <typename GenFunc, typename Operation, typename ReduceFunc, 
-          typename OutputType>
-void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
-      Operation && op, ReduceFunc && red, OutputType & reduce_value )
-{
-}
 
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
  void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
       int windowsize, int offset, ReduceOperator && op, SinkFunc && sink)
 {
-}
-
-
-
-template <typename E, typename ... O,
-          typename GenFunc, typename Operation, typename ReduceFunc, 
-          typename OutputType,
-          internal::requires_execution_not_supported<E> = 0>
-void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
-      Operation && op, ReduceFunc && red, OutputType & reduce_value )
-{
-  stream_reduce_multi_impl<O...>(e, std::forward<GenFunc>(in),
-    std::forward<Operationc>(op), std::forward<ReduceFunc>(red), reduce_value);
 }
 
 template <typename E, typename ... O,
@@ -58,29 +39,11 @@ void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in,
       int windowsize, int offset, ReduceOperator && op, SinkFunc && sink) 
 {
   stream_reduce_multi_impl<O...>(e, std::forward<GenFunc>(in),
-      int windowsize, int offset, std::forward<ReduceOperator>(op), 
+      windowsize, offset, std::forward<ReduceOperator>(op), 
       std::forward<SinkFunc>(sink));
 }
 
 
-
-template <typename E, typename ... O,
-          typename GenFunc, typename Operation, typename ReduceFunc, 
-          typename OutputType,
-          internal::requires_execution_supported<E> = 0>
-void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
-         Operation && op, ReduceFunc && red, OutputType & reduce_value ) 
-{
-  if (typeid(E) == e.type()) {
-    stream_reduce(*e.execution_ptr<E>(), 
-      std::forward<GenFunc>(in), std::forward<Operationc>(op), 
-      std::forward<ReduceFunc>(red), reduce_value );
-  }
-  else {
-    stream_reduce_multi_impl<O...>(e, std::forward<GenFunc>(in), 
-      std::forward<Operationc>(op), std::forward<ReduceFunc>(red), reduce_value);
-  }
-}
 
 template <typename E, typename ... O,
           typename GenFunc, typename ReduceOperator, typename SinkFunc,
@@ -90,12 +53,12 @@ void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in,
 {
   if (typeid(E) == e.type()) {
     stream_reduce(*e.execution_ptr<E>(), std::forward<GenFunc>(in),
-      int windowsize, int offset, std::forward<ReduceOperator>(op), 
+      windowsize, offset, std::forward<ReduceOperator>(op), 
       std::forward<SinkFunc>(sink));
   }
   else {
     stream_reduce_multi_impl<O...>(e, std::forward<GenFunc>(in),
-      int windowsize, int offset, std::forward<ReduceOperator>(op), 
+      windowsize, offset, std::forward<ReduceOperator>(op), 
       std::forward<SinkFunc>(sink));
   }
 }
@@ -106,21 +69,6 @@ void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in,
 /// Operation: Operation functor type
 /// ReduceFunc: Reductor functor type.
 /// OutputType: Output type.
-template <typename GenFunc, typename Operation, typename ReduceFunc, 
-          typename OutputType>
-void stream_reduce(polymorphic_execution & e, GenFunc && in, 
-         Operation && op, ReduceFunc && red, OutputType & reduce_value) 
-{
-  stream_reduce_multi_impl<
-    sequential_execution,
-    parallel_execution_native,
-    parallel_execution_omp,
-    parallel_execution_tbb
-  >(e, std::forward<GenFunc>(in), std::forward<Operationc>(op), 
-       std::forward<ReduceFunc>(red), reduce_value);
-}
-
-
 template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
 void stream_reduce(polymorphic_execution & e, GenFunc && in, 
       int windowsize, int offset, ReduceOperator && op, SinkFunc && sink) 
@@ -131,7 +79,7 @@ void stream_reduce(polymorphic_execution & e, GenFunc && in,
     parallel_execution_omp,
     parallel_execution_tbb
   >(e, std::forward<GenFunc>(in),
-      int windowsize, int offset, std::forward<ReduceOperator>(op), 
+      windowsize, offset, std::forward<ReduceOperator>(op), 
       std::forward<SinkFunc>(sink));
 }
 
