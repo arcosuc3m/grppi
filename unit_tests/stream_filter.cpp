@@ -313,6 +313,7 @@ TYPED_TEST(stream_filter_test, static_single_unfiltered_composed)
     grppi::stream_filter(this->execution_,
       [this](int x) {
         this->invocations_op++;
+         
         return x % 2 != 0;
       }
     ),

@@ -76,26 +76,20 @@ TYPED_TEST_CASE(reduce_test, executions);
 TYPED_TEST(reduce_test, static_empty)
 {
   this->setup_empty();
-  grppi::reduce(this->execution_, begin(this->v), end(this->v), this->out,
-   std::plus<int>()
-  );
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), std::plus<int>());
   this->check_empty();
 }
 
 TYPED_TEST(reduce_test, static_single)
 {
   this->setup_single();
-  grppi::reduce(this->execution_, begin(this->v), end(this->v), this->out,
-   std::plus<int>()
-  );
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), std::plus<int>());
   this->check_single();
 }
 
 TYPED_TEST(reduce_test, static_multiple)
 {
   this->setup_multiple();
-  grppi::reduce(this->execution_, begin(this->v), end(this->v), this->out,
-   std::plus<int>()
-  );
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), std::plus<int>());
   this->check_multiple();
 }
