@@ -38,7 +38,6 @@ public:
 
   // Variables
   int out;
-  int initial_value;
 
   // Vectors
   vector<int> v{};
@@ -131,8 +130,4 @@ TYPED_TEST(reduce_test, poly_multiple)
   );
   this->check_multiple();
 }
-
-
-
-
 

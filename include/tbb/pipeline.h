@@ -29,22 +29,30 @@
 namespace grppi{
 //Last stage
 template <typename Stream, typename Stage>
- const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb &p, Stream st, Stage s ) {
+ const tbb::interface6::filter_t<Stream, void> stages(parallel_execution_tbb &p, Stream st, Stage && s ) {
     return tbb::make_filter<Stream, void>( tbb::filter::serial_in_order, s );
 }
 
-//Intermediate stages
-template <typename Operation, template<typename, typename> class Stage, typename Stream, typename ... Stages>
+
+template <typename Operation, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb &p, Stream st, Stage<parallel_execution_tbb, Operation> se, Stages && ... sgs ) {
+stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> & se, Stages && ... sgs ) {
+   return stages(p,st, std::forward< farm_info<parallel_execution_tbb, Operation> &&>( se), std::forward<Stages>( sgs )... );
+}
+
+
+//Intermediate stages
+template <typename Operation, typename Stream, typename ... Stages>
+ const tbb::interface6::filter_t<Stream, void> 
+stages(parallel_execution_tbb &p, Stream st, farm_info<parallel_execution_tbb, Operation> && se, Stages && ... sgs ) {
     typedef typename std::result_of<Operation(Stream)>::type outputType;
     outputType k;
-    return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, (*se.task) ) & stages(p, k, std::forward<Stages>(sgs) ... );
+    return tbb::make_filter<Stream, outputType>( tbb::filter::parallel, se.task ) & stages(p, k, std::forward<Stages>(sgs) ... );
 }
 
 template <typename Stage, typename Stream, typename ... Stages>
  const tbb::interface6::filter_t<Stream, void> 
-stages(parallel_execution_tbb &p, Stream st, Stage se, Stages && ... sgs ) {
+stages(parallel_execution_tbb &p, Stream st, Stage &&  se, Stages && ... sgs ) {
     typedef typename std::result_of<Stage(Stream)>::type outputType;
     outputType k;
     return tbb::make_filter<Stream, outputType>( tbb::filter::serial_in_order, se ) & stages(p, k, std::forward<Stages>(sgs) ... );
