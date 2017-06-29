@@ -177,7 +177,7 @@ TYPED_TEST(stream_filter_test, static_multiple)
   this->check_multiple();
 }
 
-/*
+
 TYPED_TEST(stream_filter_test, poly_empty)
 {
   this->setup_empty();
@@ -257,7 +257,7 @@ TYPED_TEST(stream_filter_test, poly_multiple)
   );
   this->check_multiple();
 }
-*/
+
 
 TYPED_TEST(stream_filter_test, static_empty_composed)
 {
@@ -347,91 +347,3 @@ TYPED_TEST(stream_filter_test, static_multiple_composed)
   this->check_multiple();
 }
 
-/*
-TYPED_TEST(stream_filter_test, poly_empty_composed)
-{
-  this->setup_empty();
-  grppi::pipeline(this->poly_execution_,
-    [this]() {
-      this->invocations_in++;
-      return optional<int>{};
-    },
-    grppi::stream_filter(this->poly_execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return true;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-    }
-  );
-  this->check_empty();
-}
-
-TYPED_TEST(stream_filter_test, poly_single_filtered_composed)
-{
-  this->setup_single();
-  grppi::pipeline(this->poly_execution_,
-    [this]() {
-      this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
-    },
-    grppi::stream_filter(this->poly_execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 == 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_filtered();
-}
-
-TYPED_TEST(stream_filter_test, poly_single_unfiltered_composed)
-{
-  this->setup_single();
-  grppi::pipeline(this->poly_execution_,
-    [this]() {
-      this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
-    },
-    grppi::stream_filter(this->poly_execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 != 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_unfiltered();
-}
-
-TYPED_TEST(stream_filter_test, poly_multiple_composed)
-{
-  this->setup_multiple();
-  grppi::pipeline(this->poly_execution_,
-    [this]() {
-      this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
-    },
-    grppi::stream_filter(this->poly_execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 == 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple();
-}
-*/
