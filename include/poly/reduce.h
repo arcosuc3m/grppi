@@ -30,6 +30,7 @@ template <typename InputIt, typename Combiner>
 typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
 reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
 {
+  return {};
 }
 
 
@@ -40,7 +41,7 @@ template <typename E, typename ... O,
 typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
 reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
 {
-  reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
+  return reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
 }
 
 
@@ -52,11 +53,11 @@ typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_
 reduce_multi_impl(polymorphic_execution &e, InputIt first, InputIt last, Combiner &&combine_op)
 {
   if (typeid(E) == e.type()) {
-    reduce(*e.execution_ptr<E>(), 
+    return reduce(*e.execution_ptr<E>(), 
         first, last, std::forward<Combiner>(combine_op));
   }
   else {
-    reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
+    return reduce_multi_impl<O...>(e, first, last, std::forward<Combiner>(combine_op));
   }
 }
 
@@ -69,7 +70,7 @@ template <typename InputIt, typename Combiner>
 typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
  reduce(polymorphic_execution & e, InputIt first, InputIt last, Combiner &&combine_op)
 {
-  reduce_multi_impl<
+  return reduce_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
