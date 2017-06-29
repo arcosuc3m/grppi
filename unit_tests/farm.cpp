@@ -21,6 +21,7 @@
 #include <utility>
 
 #include <gtest/gtest.h>
+#include <iostream>
 
 #include "farm.h"
 #include "pipeline.h"
@@ -38,12 +39,14 @@ public:
   polymorphic_execution poly_execution_ = 
     make_polymorphic_execution<T>();
 
+  // Variables
+  int output;
+
   // Vectors
   vector<int> v{};
   vector<int> v2{};
   vector<int> v3{};
   vector<int> w{};
-  vector<int> expected{};
 
   // entry counter
   int idx_in = 0;
@@ -102,44 +105,41 @@ public:
 
   void setup_multiple() {
     v = vector<int>{1,2,3,4,5};
-    w = vector<int>(5);
-    expected = vector<int>{2,4,6,8,10};
+    output = 0;
   }
 
   void check_multiple() {
     EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(30, this->output);
   }
   
     void check_multiple_sink() {
     EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
     EXPECT_EQ(5, this->invocations_sk); // five invocations of function sk
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(30, this->output);
   }
 
   void setup_multiple_ary() {
     v = vector<int>{1,2,3,4,5};
     v2 = vector<int>{2,4,6,8,10};
     v3 = vector<int>{10,10,10,10,10};
-    w = vector<int>(5);
-    expected = vector<int>{13,16,19,22,25};
+    output = 0;
   }
 
   void check_multiple_ary() {
     EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(95, this->output);
   }
   
   void check_multiple_ary_sink() {
     EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
     EXPECT_EQ(5, this->invocations_sk); // five invocations of function sk
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(95, this->output);
   }
-
 
 };
 
@@ -235,8 +235,7 @@ TYPED_TEST(farm_test, static_multiple)
     },
     [this](int x) {
       this->invocations_op++;
-      this->w[this->idx_out] = x * 2;
-      this->idx_out++;
+      this->output += x * 2;
     }
   );
   this->check_multiple();
@@ -259,8 +258,7 @@ TYPED_TEST(farm_test, static_multiple_ary)
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
-      this->w[this->idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
-      this->idx_out++;
+      this->output += get<0>(x) + get<1>(x) + get<2>(x);
     }
   );
   this->check_multiple_ary();
@@ -376,8 +374,7 @@ TYPED_TEST(farm_test, static_multiple_sink)
     },
     [this](int x) {
       this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
+      this->output += x;
     }
   );
   this->check_multiple_sink();
@@ -404,8 +401,7 @@ TYPED_TEST(farm_test, static_multiple_ary_sink)
     },
     [this](int x) {
       this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
+      this->output += x;
     }
   );
   this->check_multiple_ary_sink();
@@ -480,14 +476,13 @@ TYPED_TEST(farm_test, static_multiple_composed)
     ),
     [this](auto x ) {
       this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
+      this->output += x;
     }
   );
   this->check_multiple_sink();
 }
 
-/*
+
 TYPED_TEST(farm_test, poly_empty)
 {
   this->setup_empty();
@@ -502,6 +497,8 @@ TYPED_TEST(farm_test, poly_empty)
   );
   this->check_empty();
 }
+
+
 
 TYPED_TEST(farm_test, poly_empty_sink)
 {
@@ -669,8 +666,7 @@ TYPED_TEST(farm_test, poly_multiple)
     },
     [this](int x) {
       this->invocations_op++;
-      this->w[this->idx_out] = x * 2;
-      this->idx_out++;
+      this->output += x * 2;
     }
   );
   this->check_multiple();
@@ -694,8 +690,7 @@ TYPED_TEST(farm_test, poly_multiple_sink)
     },
     [this](int x) {
       this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
+      this->output += x;
     }
   );
   this->check_multiple_sink();
@@ -718,8 +713,7 @@ TYPED_TEST(farm_test, poly_multiple_ary)
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
-      this->w[this->idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
-      this->idx_out++;
+      this->output += get<0>(x) + get<1>(x) + get<2>(x);
     }
   );
   this->check_multiple_ary();
@@ -746,85 +740,8 @@ TYPED_TEST(farm_test, poly_multiple_ary_sink)
     },
     [this](int x) {
       this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
+      this->output += x;
     }
   );
   this->check_multiple_ary_sink();
 }
-
-TYPED_TEST(farm_test, poly_empty_composed)
-{
-  this->setup_empty();
-    grppi::pipeline( this->poly_execution_,
-    [this]() { 
-      this->invocations_in++;
-      return optional<int>();
-    },
-    grppi::farm(this->poly_execution_,
-    [this](int x) {
-      //this->invocations_op++;
-      return x;
-    }
-    ),
-    [this](auto y ) {
-      this->invocations_sk++;
-    }
-  );
-  this->check_empty();
-}
-
-TYPED_TEST(farm_test, poly_single_composed)
-{
-  this->setup_single();
-    grppi::pipeline( this->poly_execution_,
-    [this]() {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) {
-        this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
-      } else
-        return optional<int>();
-    },
-    grppi::farm(this->poly_execution_,
-    [this](int x) {
-      //this->invocations_op++;
-      return x*2;
-    }
-    ),
-    [this](auto x ) {
-      this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
-    }
-  );
-  this->check_single_sink();
-}
-
-TYPED_TEST(farm_test, poly_multiple_composed)
-{
-  this->setup_multiple();
-    grppi::pipeline( this->poly_execution_,
-    [this]() {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) {
-        this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
-      } else
-        return optional<int>();
-    },
-    grppi::farm(this->poly_execution_,
-    [this](int x) {
-      //this->invocations_op++;
-      return x*2;
-    }
-    ),
-    [this](auto x ) {
-      this->invocations_sk++;
-      this->w[this->idx_out] = x;
-      this->idx_out++;
-    }
-  );
-  this->check_multiple_sink();
-}
-*/
