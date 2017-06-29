@@ -22,6 +22,8 @@ if (DOXYGEN_FOUND)
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_stream-filter.html ${CMAKE_BINARY_DIR}/doc/html/stream-filter_8md.html
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_stream-iteration.html ${CMAKE_BINARY_DIR}/doc/html/stream-iteration_8md.html
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_stream-reduce.html ${CMAKE_BINARY_DIR}/doc/html/stream-reduce_8md.html
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_install-notes.html
+${CMAKE_BINARY_DIR}/doc/html/install-notes_8md.html
       DEPENDS doxy_generation)
 
 else (DOXYGEN_FOUND)

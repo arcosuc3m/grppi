@@ -23,7 +23,7 @@ Currently, **GrPPI** supports the following patterns:
 
 ## Install and compile instructions
 
-See the [install and compile notes](INSTALL.md).
+See the [install and compile notes](doc/install-notes.md).
 
 ## Publications describing GrPPI
 
