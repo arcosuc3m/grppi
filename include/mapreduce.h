@@ -24,6 +24,7 @@
 #include "common/common.h"
 #include "seq/mapreduce.h"
 #include "native/mapreduce.h"
+#include "omp/mapreduce.h"
 #include "tbb/mapreduce.h"
 #include "poly/mapreduce.h"
 
