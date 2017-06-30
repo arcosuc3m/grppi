@@ -21,24 +21,11 @@ an initial value.
 
 ## Key elements in a reduction
 
-The key element of a reduction is the **Combiner** operation. The **Combiner**
-may be an **HeterogeneousCombiner** or an **HomogeneousCombiner**.
+The key element of a reduction is the **Combiner** operation. 
 
 A **Combiner** is any C++ callable entity, that is able to combine two values
-into a single value. The requirements for the **Combiner** are different
-depending on whether the reduction uses an initial value
-(**HeterogeneousCombiner**) or not (**HomogeneousCombiner**).
-
-An **HomogeneousCombiner** `cmb` is any operatingo taking two values `x`and `y`
-of type `T` and returning a combined value of type `T`, making valid the
-following.
-
-~~~{.cpp}
-T x, y;
-T res = cmb(x,y);
-~~~
-
-An **HeterogeneousCombiner** `cmb` is any operations taking two values `x` and
+into a single value. 
+A **Combiner** `cmb` is any operation taking two values `x` and
 `y` of types `T` and `U` and returning a combined value of type `T`, making valid
 the following:
 
@@ -50,39 +37,10 @@ T res = cmb(x,y);
 
 ## Details on reduction variants
 
-### Sequence reducction without identity
-
-This kind of sequence reduction performs a reduction of a sequence of values
-`x1, x2, ..., xN` by combining them with an **HomogeneousCombiner** `cmb`. The
-combinations assume that `cmb` is *associative*, but not commutative.
-Consequently, different associative orders may be used:
-
-* `cmb(cmb(cmb(cmb(x1,x2),x3), ...), xN)`
-* `cmb(x1,cmb(x2,cmb(x3,...cmb(xN-1,xN))))`
-* `cmb(cmb(cmb(x1,x2),cmb(x3,x4)),cmb(...))`
-* ...
-
-The only interface currently offered for this pattern is based in iterators
-(following the C++ standard library conventions):
-
-* The input data set is specified by two iterators.
-* The result of the reduction is returned.
-
----
-**Example**: Add values in a sequence of integers
-~~~{.cpp}
-vector<int> v = get_the_vector();
-auto sum = reduce(exec, begin(v), end(v), 
-  [](int x, int y) { return x+y; }
-);
-~~~
-
-**Note**: Reducing without identity value an empty sequence is undefined.
-
 ### Sequence reduction with identity
 
-This kind of sequence reduction performs a reduction of a sequence of values
-`x1, x2, ..., xN` by combining them with an **HeterogeneousCombiner** `cmb` that
+Performs a reduction of a sequence of values
+`x1, x2, ..., xN` by combining them with a **Combiner** `cmb` that
 has an identity value `id`. The first argument of a combination may be either
 the identity value or the result of another combination.
 The combinations assume that `cmb` is *associative*, but not commutative.
