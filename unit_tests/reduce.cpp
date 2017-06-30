@@ -68,7 +68,7 @@ TYPED_TEST_CASE(reduce_test, executions);
 TYPED_TEST(reduce_test, static_single)
 {
   this->setup_single();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), 0,
    [](int x, int y){
       return x + y;
    }
@@ -79,7 +79,8 @@ TYPED_TEST(reduce_test, static_single)
 TYPED_TEST(reduce_test, poly_single)
 {
   this->setup_single();
-  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), 
+    end(this->v), 0,
    [](int x, int y){
       return x + y;
    }
@@ -92,7 +93,7 @@ TYPED_TEST(reduce_test, poly_single)
 TYPED_TEST(reduce_test, static_multiple)
 {
   this->setup_multiple();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v),
+  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), 0,
    [](int x, int y){
       return x + y;
    }
@@ -103,7 +104,8 @@ TYPED_TEST(reduce_test, static_multiple)
 TYPED_TEST(reduce_test, poly_multiple)
 {
   this->setup_multiple();
-  this->out = grppi::reduce(this->poly_execution_, begin(this->v), end(this->v),
+  this->out = grppi::reduce(this->poly_execution_, begin(this->v), 
+    end(this->v), 0,
    [](int x, int y){
       return x + y;
    }

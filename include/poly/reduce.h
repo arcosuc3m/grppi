@@ -26,9 +26,10 @@
 
 namespace grppi{
 
-template <typename InputIt, typename Combiner>
+template <typename InputIt, typename Identity, typename Combiner>
 auto reduce_multi_impl(polymorphic_execution & ex, 
                        InputIt first, InputIt last, 
+                       Identity identity,
                        Combiner &&combine_op) -> decltype(combine_op(*first,*first))
 {
   return {};
@@ -37,30 +38,32 @@ auto reduce_multi_impl(polymorphic_execution & ex,
 
 
 template <typename E, typename ... O,
-          typename InputIt, typename Combiner,
+          typename InputIt, typename Identity, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
 auto reduce_multi_impl(polymorphic_execution & ex, 
                        InputIt first, InputIt last, 
+                       Identity identity,
                        Combiner && combine_op)
 {
-  return reduce_multi_impl<O...>(ex, first, last, std::forward<Combiner>(combine_op));
+  return reduce_multi_impl<O...>(ex, first, last, identity, std::forward<Combiner>(combine_op));
 }
 
 
 
 template <typename E, typename ... O,
-          typename InputIt, typename Combiner,
+          typename InputIt, typename Identity, typename Combiner,
           internal::requires_execution_supported<E> = 0>
 auto reduce_multi_impl(polymorphic_execution & ex, 
                        InputIt first, InputIt last, 
+                       Identity identity,
                        Combiner &&combine_op)
 {
   if (typeid(E) == ex.type()) {
     return reduce(*ex.execution_ptr<E>(), 
-        first, last, std::forward<Combiner>(combine_op));
+        first, last, identity, std::forward<Combiner>(combine_op));
   }
   else {
-    return reduce_multi_impl<O...>(ex, first, last, std::forward<Combiner>(combine_op));
+    return reduce_multi_impl<O...>(ex, first, last, identity, std::forward<Combiner>(combine_op));
   }
 }
 
@@ -77,22 +80,26 @@ auto reduce_multi_impl(polymorphic_execution & ex,
 \brief Invoke [reduce pattern](@ref md_reduce) with no identity value
 on a data sequence with sequential execution.
 \tparam InputIt Iterator type used for input sequence.
+\tparam Identity Type for the identity value.
 \tparam Combiner Callable type for the combiner operation.
 \param ex Sequential execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
 \param combiner_op Combiner operation for the reduction.
-\pre distance(first,last) >= 1
 */
-template <typename InputIt, typename Combiner>
-auto reduce(polymorphic_execution & e, InputIt first, InputIt last, Combiner &&combine_op)
+template <typename InputIt, typename Identity, typename Combiner>
+auto reduce(polymorphic_execution & e, 
+            InputIt first, InputIt last, 
+            Identity identity, 
+            Combiner &&combine_op)
 {
   return reduce_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, first, last, std::forward<Combiner>(combine_op));
+  >(e, first, last, identity, std::forward<Combiner>(combine_op));
 }
 
 /**

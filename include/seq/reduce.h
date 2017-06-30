@@ -60,28 +60,7 @@ auto reduce(sequential_execution & ex, InputIt first, InputIt last,
 }
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with no identity value
-on a data sequence with sequential execution.
-\tparam InputIt Iterator type used for input sequence.
-\tparam Combiner Callable type for the combiner operation.
-\param ex Sequential execution policy object.
-\param first Iterator to the first element in the input sequence.
-\param last Iterator to one past the end of the input sequence.
-\param combiner_op Combiner operation for the reduction.
-\pre distance(first,last) >= 1
-*/
-template < typename InputIt, typename Combiner>
-auto reduce(sequential_execution & ex, 
-            InputIt first, InputIt last, 
-            Combiner && combine_op)
-{
-  if (std::distance(first,last)<=1) return *first;
-  auto init = combine_op(*first, *(first+1));
-  return reduce(ex, first+2, last, init,
-    std::forward<Combiner>(combine_op));
-}
-
-/**
+@}
 @}
 */
 
