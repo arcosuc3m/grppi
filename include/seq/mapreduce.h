@@ -40,11 +40,7 @@ T map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer 
 }
 
 template <typename InputIt, typename Transformer,typename Combiner>
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)
->::type
-map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
+auto map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
 
    typename std::result_of<Combiner(
    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
