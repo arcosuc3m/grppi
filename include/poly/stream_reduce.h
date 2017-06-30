@@ -26,40 +26,40 @@
 
 namespace grppi{
 
-template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
- void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
-      int windowsize, int offset, ReduceOperator && op, SinkFunc && sink)
+template <typename Generator, typename Combiner, typename Consumer , typename IdentityType>
+ void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init)
 {
 }
 
-template <typename E, typename ... O,
-          typename GenFunc, typename ReduceOperator, typename SinkFunc,
+template <typename E, typename ... O, typename Generator, 
+          typename Combiner, typename Consumer, typename IdentityType,
           internal::requires_execution_not_supported<E> = 0>
-void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
-      int windowsize, int offset, ReduceOperator && op, SinkFunc && sink) 
+void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
 {
-  stream_reduce_multi_impl<O...>(e, std::forward<GenFunc>(in),
-      windowsize, offset, std::forward<ReduceOperator>(op), 
-      std::forward<SinkFunc>(sink));
+  stream_reduce_multi_impl<O...>(e, std::forward<Generator>(gen),
+      windowsize, offset, std::forward<Combiner>(cons), 
+      std::forward<Consumer>(cons), init);
 }
 
 
 
 template <typename E, typename ... O,
-          typename GenFunc, typename ReduceOperator, typename SinkFunc,
+          typename Generator, typename Combiner, typename Consumer, typename IdentityType,
           internal::requires_execution_supported<E> = 0>
-void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in, 
-      int windowsize, int offset, ReduceOperator && op, SinkFunc && sink) 
+void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
 {
   if (typeid(E) == e.type()) {
-    stream_reduce(*e.execution_ptr<E>(), std::forward<GenFunc>(in),
-      windowsize, offset, std::forward<ReduceOperator>(op), 
-      std::forward<SinkFunc>(sink));
+    stream_reduce(*e.execution_ptr<E>(), std::forward<Generator>(gen),
+      windowsize, offset, std::forward<Combiner>(comb), 
+      std::forward<Consumer>(cons),init);
   }
   else {
-    stream_reduce_multi_impl<O...>(e, std::forward<GenFunc>(in),
-      windowsize, offset, std::forward<ReduceOperator>(op), 
-      std::forward<SinkFunc>(sink));
+    stream_reduce_multi_impl<O...>(e, std::forward<Generator>(gen),
+      windowsize, offset, std::forward<Combiner>(comb), 
+      std::forward<Consumer>(cons), init);
   }
 }
 
@@ -69,18 +69,18 @@ void stream_reduce_multi_impl(polymorphic_execution & e, GenFunc && in,
 /// Operation: Operation functor type
 /// ReduceFunc: Reductor functor type.
 /// OutputType: Output type.
-template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
-void stream_reduce(polymorphic_execution & e, GenFunc && in, 
-      int windowsize, int offset, ReduceOperator && op, SinkFunc && sink) 
+template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
+void stream_reduce(polymorphic_execution & e, Generator && gen, 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
 {
   stream_reduce_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<GenFunc>(in),
-      windowsize, offset, std::forward<ReduceOperator>(op), 
-      std::forward<SinkFunc>(sink));
+  >(e, std::forward<Generator>(gen),
+      windowsize, offset, std::forward<Combiner>(comb), 
+      std::forward<Consumer>(cons),init);
 }
 
 
