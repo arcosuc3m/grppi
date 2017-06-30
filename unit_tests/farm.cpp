@@ -40,7 +40,8 @@ public:
     make_polymorphic_execution<T>();
 
   // Variables
-  int output;
+  std::atomic<int> output;
+
 
   // Vectors
   vector<int> v{};
