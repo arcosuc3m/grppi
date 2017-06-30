@@ -27,12 +27,12 @@
 
 namespace grppi{
 
-template <typename InputIt, typename Transformer, class T, typename Combiner>
- T map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, T init){
+template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
+IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, IdentityType init){
 
     using namespace std;
-    T out = init;
-    std::vector<T> partialOuts(p.num_threads);
+    IdentityType out = init;
+    std::vector<IdentityType> partialOuts(p.num_threads);
     #pragma omp parallel
     {
     #pragma omp single nowait
@@ -64,10 +64,7 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
 
 
 template <typename InputIt, typename Transformer, typename Combiner>
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type
-map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
+auto map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
 
     typename std::result_of<Combiner(
     typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
