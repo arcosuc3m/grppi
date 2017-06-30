@@ -66,7 +66,8 @@ void reduce_example1(){
         [&]( int a) {
             total += a;
             std::cout<<"PARTIAL REDUCE : "<<a<<" TOTAL " <<total<< std::endl;
-        } 
+        },
+        0 
     );
 }
 

@@ -43,7 +43,7 @@ template <typename Generator, typename Combiner, typename Consumer, typename Ide
         }
         if(buffer.size()>0){
            //Apply the reduce function to the elements on the window
-           auto reduceVal = reduce(p, buffer.begin(), buffer.end(), std::forward<Combiner>(comb), identity );
+           auto reduceVal = reduce(p, buffer.begin(), buffer.end(), identity, std::forward<Combiner>(comb) );
            //Call to sink function
            cons(reduceVal);
            //Remove elements
