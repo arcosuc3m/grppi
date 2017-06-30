@@ -26,6 +26,7 @@
 #include "native/mapreduce.h"
 #include "omp/mapreduce.h"
 #include "tbb/mapreduce.h"
+#include "poly/mapreduce.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern

@@ -45,13 +45,13 @@ template <typename InputIt, typename Transformer, typename T, typename Combiner>
        if(i == p.num_threads -1 ) end= last;
        g.run(
          [&, begin, end, i](){
-            partialOuts[i] = map_reduce(s, begin, end, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op) );
+            partialOuts[i] = map_reduce(s, begin, end, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[i] );
          }
          
        );
     }
 
-    partialOuts[0] = map_reduce(s, first, (first+elemperthr), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op) );
+    partialOuts[0] = map_reduce(s, first, (first+elemperthr), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
     g.wait();
     
     for( auto & res : partialOuts){
@@ -61,17 +61,13 @@ template <typename InputIt, typename Transformer, typename T, typename Combiner>
 }
 
 template <typename InputIt, typename Transformer, typename Combiner>
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type
-map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
+auto map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
 
     typename std::result_of<Combiner(
     typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
     typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type init;
 
     return map_reduce ( p, first, last, std::forward<Transformer>( transform_op ),  std::forward<Combiner>( combine_op ), init);
-
 }
 
 
