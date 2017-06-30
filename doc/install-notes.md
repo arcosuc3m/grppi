@@ -1,5 +1,4 @@
-# Generic Reusable Parallel Pattern Interface - GrPPI
-
+# Install Notes
 
 ## Fully Supported Compilers ##
 

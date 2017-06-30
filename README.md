@@ -6,27 +6,24 @@
 
 Currently, **GrPPI** supports the following patterns:
 
-  * Divide-and-conquer
+  * Data parallel patterns
+    * [Map](doc/map.md)
+    * [Reduce](doc/reduce.md)
+    * [Map/Reduce](doc/map-reduce.md)
+    * [Stencil](doc/stencil.md)
 
-  * Farm
+  * Task parallel patterns
+    * [Divide-and-conquer](doc/divide-conquer.md)
 
-  * Map
-
-  * Map-reduce
-
-  * Pipeline
-
-  * Reduce
-
-  * Stencil
-
-  * Stream-filter
-
-  * Stream-reduce
+  * Streaming patterns
+    * [Pipeline](doc/pipeline.md)
+    * [Farm](doc/farm.md)
+    * [Stream-filter](doc/stream-filter.md)
+    * [Stream-reduce](doc/stream-reduce.md)
 
 ## Install and compile instructions
 
-See the [install and compile notes](INSTALL.md).
+See the [install and compile notes](doc/install-notes.md).
 
 ## Publications describing GrPPI
 
