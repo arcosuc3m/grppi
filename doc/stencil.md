@@ -1,8 +1,12 @@
 # Stencil pattern
 
-The **stencil** pattern applies an operation to a set of neighbor elements in one data set, generating a new data set as an output.
+The **stencil** pattern applies a transformation to every element in one or
+multiple data sets, generating a new data set as an output. The transformation
+also takes as an input a neighborhood of the transformed data item.
 
-The interface to the **map** pattern is provided by function `grppi::stencil()`. As all functions in *GrPPI*, this function takes as its first argument an execution policy.
+The interface to the **stencil** pattern is provided by function
+`grppi::stencil()`. As all functions in *GrPPI*, this function takes as its
+first argument an execution policy.
 
 ~~~{.cpp}
 grppi::stencil(exec, other_arguments...);
@@ -10,11 +14,18 @@ grppi::stencil(exec, other_arguments...);
 
 ## Stencil variants
 
-TODO
+There are several variants:
+
+* *Unary stencil*: A stencil taking a single input sequence.
+* *N-ary stencil*: A stencil taking multiple input sequences.
 
 ## Key elements in stencil
 
-TODO
+The key elements in a **stencil** are: a **Transformer** operation and a
+**NeighborMapping** operation.
+
+
+
 
 ## Details on stencil variants
 
