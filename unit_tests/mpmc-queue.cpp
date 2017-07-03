@@ -28,13 +28,28 @@
 using namespace std;
 using namespace grppi;
 
-TEST(mpmc_queue, constructor){
-  mpmc_queue<int> queue(10, queue_mode::lockfree);
+TEST(mpmc_queue_blocking, constructor){
+  mpmc_queue<int> queue(10, queue_mode::blocking);
   EXPECT_EQ(true,queue.is_empty());
 }
 
 
-TEST(mpmc_queue, lockfree_push_pop){
+TEST(mpmc_queue_lockfree, constructor){
+  mpmc_queue<int> queue(10, queue_mode::lockfree);
+  EXPECT_EQ(true,queue.is_empty());
+}
+
+TEST(mpmc_queue_blocking, push_pop){
+  mpmc_queue<int> queue(10, queue_mode::blocking);
+  auto inserted = queue.push(1);
+  EXPECT_EQ(true, inserted);
+  EXPECT_EQ(false, queue.is_empty());
+  auto value = queue.pop();
+  EXPECT_EQ(true, queue.is_empty());
+  EXPECT_EQ(1,value);
+}
+
+TEST(mpmc_queue_lockfree, push_pop){
   mpmc_queue<int> queue(10, queue_mode::lockfree);
   auto inserted = queue.push(1);
   EXPECT_EQ(true, inserted);
@@ -44,7 +59,23 @@ TEST(mpmc_queue, lockfree_push_pop){
   EXPECT_EQ(1,value);
 }
 
-TEST(mpmc_queue, concurrent_push_pop){
+TEST(mpmc_queue_blocking, concurrent_push_pop){
+mpmc_queue<int> queue(3, queue_mode::blocking);
+ std::vector<std::thread> thrs;
+ for(auto i = 0; i<6; i++){
+   thrs.push_back(std::thread([&,i](){queue.push(i);} ));
+ }
+ auto val = 0;
+ for(auto i = 0;i<6; i++){
+   val += queue.pop();
+ }
+ for(auto & t : thrs) t.join();
+ EXPECT_EQ(15, val);
+ EXPECT_EQ(true, queue.is_empty());
+}
+
+
+TEST(mpmc_queue_lockfree, concurrent_push_pop){
 mpmc_queue<int> queue(3, queue_mode::lockfree);
  std::vector<std::thread> thrs;
  for(auto i = 0; i<6; i++){
@@ -59,6 +90,47 @@ mpmc_queue<int> queue(3, queue_mode::lockfree);
  EXPECT_EQ(true, queue.is_empty());
 }
 
+TEST(mpmc_queue_blocking, concurrent_pop_push){
+mpmc_queue<int> queue(3, queue_mode::blocking);
+ std::vector<std::thread> thrs;
+ std::vector<int> values(6);
+
+ for(auto i = 0; i<6; i++){
+   thrs.push_back(std::thread([&,i](){values[i] = queue.pop();} ));
+ }
+ for(auto i = 0;i<6; i++){
+   queue.push(i);
+ }
+
+ for(auto & t : thrs) t.join();
+ auto val = 0;
+ for( auto &v : values) val+=v;
+
+ EXPECT_EQ(15, val);
+ EXPECT_EQ(true, queue.is_empty());
+}
+
+
+
+TEST(mpmc_queue_lockfree, concurrent_pop_push){
+mpmc_queue<int> queue(3, queue_mode::lockfree);
+ std::vector<std::thread> thrs;
+ std::vector<int> values(6);
+
+ for(auto i = 0; i<6; i++){
+   thrs.push_back(std::thread([&,i](){values[i] = queue.pop();} ));
+ }
+ for(auto i = 0;i<6; i++){
+   queue.push(i);
+ }
+
+ for(auto & t : thrs) t.join();
+ auto val = 0;
+ for( auto &v : values) val+=v;
+
+ EXPECT_EQ(15, val);
+ EXPECT_EQ(true, queue.is_empty());
+}
 
 
 
