@@ -20,6 +20,8 @@
 
 #ifndef GRPPI_COMMON_H
 #define GRPPI_COMMON_H
+//Include standard experimental optional
+#include <experimental/optional>
 
 // Includes for execution policies
 #include "sequential_execution.h"
@@ -28,7 +30,6 @@
 #include "parallel_execution_tbb.h"
 
 // Includes with GRPPI internals
-#include "optional.h"
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"

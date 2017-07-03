@@ -25,7 +25,9 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
+#include <experimental/optional>
 #include <stream_filter.h>
+
 
 using namespace std;
 using namespace grppi;
@@ -69,7 +71,7 @@ void filter_example() {
     stream_filter(p,
         [&]() {
             auto v = read_list(is);
-            return (v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v); 
+            return (v.size() == 0) ? std::experimental::optional<std::vector<int>>() : std::experimental::optional<std::vector<int>>(v); 
         },
         [&](const std::vector<int> v){
            std::cout<<"FILTERING\n";

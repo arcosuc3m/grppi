@@ -150,12 +150,12 @@ TYPED_TEST(stream_reduce_test, static_single)
       
       if(this->v.size() > 0){
         
-        optional<int> problem(this->v.back());
+        std::experimental::optional<int> problem(this->v.back());
         this->v.pop_back();
         return problem;
 
       }else{
-        return optional<int> ();
+        return std::experimental::optional<int> ();
       }
     },
     this->window, 
@@ -178,12 +178,12 @@ TYPED_TEST(stream_reduce_test, poly_single)
       
       if(this->v.size() > 0){
         
-        optional<int> problem(this->v.back());
+        std::experimental::optional<int> problem(this->v.back());
         this->v.pop_back();
         return problem;
 
       }else{
-        return optional<int> ();
+        return std::experimental::optional<int> ();
       }
     },
     this->window, 
@@ -207,12 +207,12 @@ TYPED_TEST(stream_reduce_test, static_multiple)
       
       if(this->v.size() > 0){
         
-        optional<int> problem(this->v.back());
+        std::experimental::optional<int> problem(this->v.back());
         this->v.pop_back();
         return problem;
 
       }else{
-        return optional<int> ();
+        return std::experimental::optional<int> ();
       }
     },
     this->window, 
@@ -235,12 +235,12 @@ TYPED_TEST(stream_reduce_test, poly_multiple)
       
       if(this->v.size() > 0){
         
-        optional<int> problem(this->v.back());
+        std::experimental::optional<int> problem(this->v.back());
         this->v.pop_back();
         return problem;
 
       }else{
-        return optional<int> ();
+        return std::experimental::optional<int> ();
       }
     },
     this->window, 
@@ -265,12 +265,12 @@ TYPED_TEST(stream_reduce_test, static_window_offset)
       
       if(this->v.size() > 0){
         
-        optional<int> problem(this->v.back());
+        std::experimental::optional<int> problem(this->v.back());
         this->v.pop_back();
         return problem;
 
       }else{
-        return optional<int> ();
+        return std::experimental::optional<int> ();
       }
     },
     this->window, 
@@ -293,12 +293,12 @@ TYPED_TEST(stream_reduce_test, poly_window_offset)
       
       if(this->v.size() > 0){
         
-        optional<int> problem(this->v.back());
+        std::experimental::optional<int> problem(this->v.back());
         this->v.pop_back();
         return problem;
 
       }else{
-        return optional<int> ();
+        return std::experimental::optional<int> ();
       }
     },
     this->window, 

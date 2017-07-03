@@ -21,6 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <stream_reduce.h>
 
 using namespace std;
@@ -53,9 +55,9 @@ void reduce_example1(){
         [&]() { 
             n++;
             if(n != 1000000000) 
-              return (optional<int> ( 1 ));
+              return (std::experimental::optional<int> ( 1 ));
             else
-              return (optional<int> ());
+              return (std::experimental::optional<int> ());
         },
         //Window size
         1000000,

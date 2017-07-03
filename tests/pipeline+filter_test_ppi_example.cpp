@@ -21,6 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 #include <stream_filter.h>
 using namespace std;
@@ -53,9 +55,9 @@ p.ordering=true;
             a--; 
             //std::cout << "Stage 0\n";
             if (a == 0) 
-                return optional<int>(); 
+                return std::experimental::optional<int>(); 
             else 
-                return optional<int>(a); 
+                return std::experimental::optional<int>(a); 
         },
 
         // Pipeline stage 1

@@ -21,6 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 
 using namespace std;
@@ -50,7 +52,7 @@ void pipeline_example1() {
     pipeline( p,
         // Pipeline stage 0
         [&]() { 
-            return optional<int>(); 
+            return std::experimental::optional<int>(); 
         },
 
         // Pipeline stage 1

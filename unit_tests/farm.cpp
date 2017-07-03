@@ -19,6 +19,8 @@
 */
 #include <atomic>
 #include <utility>
+#include <experimental/optional>
+
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -153,7 +155,7 @@ TYPED_TEST(farm_test, static_empty)
   grppi::farm(this->execution_,
     [this]() {
       this->invocations_in++;
-      return optional<int>();
+      return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -168,7 +170,7 @@ TYPED_TEST(farm_test, static_empty_ary)
   grppi::farm(this->execution_,
     [this]() {
       this->invocations_in++;
-      return optional<tuple<int,int,int>>();
+      return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -185,9 +187,9 @@ TYPED_TEST(farm_test, static_single)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -206,12 +208,12 @@ TYPED_TEST(farm_test, static_single_ary)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -230,9 +232,9 @@ TYPED_TEST(farm_test, static_multiple)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -250,12 +252,12 @@ TYPED_TEST(farm_test, static_multiple_ary)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -272,7 +274,7 @@ TYPED_TEST(farm_test, static_empty_sink)
   grppi::farm(this->execution_,
     [this]() {
       this->invocations_in++;
-      return optional<int>();
+      return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -291,7 +293,7 @@ TYPED_TEST(farm_test, static_empty_ary_sink)
   grppi::farm(this->execution_,
     [this]() {
       this->invocations_in++;
-      return optional<tuple<int,int,int>>();
+      return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -312,9 +314,9 @@ TYPED_TEST(farm_test, static_single_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -337,12 +339,12 @@ TYPED_TEST(farm_test, static_single_ary_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -365,9 +367,9 @@ TYPED_TEST(farm_test, static_multiple_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -389,12 +391,12 @@ TYPED_TEST(farm_test, static_multiple_ary_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -415,7 +417,7 @@ TYPED_TEST(farm_test, static_empty_composed)
     grppi::pipeline( this->execution_,
     [this]() { 
       this->invocations_in++;
-      return optional<int>();
+      return std::experimental::optional<int>();
     },
     grppi::farm(this->execution_,
     [this](int x) {
@@ -438,9 +440,9 @@ TYPED_TEST(farm_test, static_single_composed)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     grppi::farm(this->execution_,
     [this](int x) {
@@ -465,9 +467,9 @@ TYPED_TEST(farm_test, static_multiple_composed)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     grppi::farm(this->execution_,
     [this](int x) {
@@ -490,7 +492,7 @@ TYPED_TEST(farm_test, poly_empty)
   grppi::farm(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return optional<int>();
+      return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -507,7 +509,7 @@ TYPED_TEST(farm_test, poly_empty_sink)
   grppi::farm(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return optional<int>();
+      return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -527,7 +529,7 @@ TYPED_TEST(farm_test, poly_empty_ary)
   grppi::farm(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return optional<tuple<int,int,int>>();
+      return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -542,7 +544,7 @@ TYPED_TEST(farm_test, poly_empty_ary_sink)
   grppi::farm(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return optional<tuple<int,int,int>>();
+      return std::experimental::optional<tuple<int,int,int>>();
     },
   [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -563,9 +565,9 @@ TYPED_TEST(farm_test, poly_single)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -584,9 +586,9 @@ TYPED_TEST(farm_test, poly_single_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -609,12 +611,12 @@ TYPED_TEST(farm_test, poly_single_ary)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -633,12 +635,12 @@ TYPED_TEST(farm_test, poly_single_ary_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -661,9 +663,9 @@ TYPED_TEST(farm_test, poly_multiple)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -681,9 +683,9 @@ TYPED_TEST(farm_test, poly_multiple_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<int>(this->v[this->idx_in-1]);
+        return std::experimental::optional<int>(this->v[this->idx_in-1]);
       } else
-        return optional<int>();
+        return std::experimental::optional<int>();
     },
     [this](int x) {
       this->invocations_op++;
@@ -705,12 +707,12 @@ TYPED_TEST(farm_test, poly_multiple_ary)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;
@@ -728,12 +730,12 @@ TYPED_TEST(farm_test, poly_multiple_ary_sink)
       this->invocations_in++;
       if ( this->idx_in < this->v.size() ) {
         this->idx_in++;
-        return optional<tuple<int,int,int>>(
+        return std::experimental::optional<tuple<int,int,int>>(
             make_tuple(this->v[this->idx_in-1],
                        this->v2[this->idx_in-1],
                        this->v3[this->idx_in-1]));
       } else
-        return optional<tuple<int,int,int>>();
+        return std::experimental::optional<tuple<int,int,int>>();
     },
     [this](tuple<int,int,int> x) {
       this->invocations_op++;

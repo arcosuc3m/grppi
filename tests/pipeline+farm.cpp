@@ -21,6 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 #include <farm.h>
 #include <algorithm>
@@ -72,9 +74,9 @@ void pipeline_farm_example() {
              v[ i ] = i + n;
 
           if ( n < 0 )
-               return optional< std::vector<int> >();
+               return std::experimental::optional< std::vector<int> >();
            n--;
-           return optional<std::vector<int>>(v);
+           return std::experimental::optional<std::vector<int>>(v);
     };
     pipeline(p, [&]() {
 //        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
@@ -83,9 +85,9 @@ void pipeline_farm_example() {
              v[ i ] = i + n;
 
           if ( n < 0 )
-               return optional< std::vector<int> >();
+               return std::experimental::optional< std::vector<int> >();
            n--;
-           return optional<std::vector<int>>(v);
+           return std::experimental::optional<std::vector<int>>(v);
     },
     farm(f,
          [&](std::vector<int> v) {
@@ -129,9 +131,9 @@ pipeline(p, [&]() {
              v[ i ] = i + n;
 
           if ( n < 0 )
-               return optional< std::vector<int> >();
+               return std::experimental::optional< std::vector<int> >();
            n--;
-           return optional<std::vector<int>>(v);
+           return std::experimental::optional<std::vector<int>>(v);
     },
     f_obj,
             // Pipeline stage 2

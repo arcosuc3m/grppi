@@ -22,7 +22,9 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
 #include <farm.h>
+
 
 using namespace std;
 using namespace grppi;
@@ -54,9 +56,9 @@ void farm_example1() {
         [&]() {
             a--; 
             if ( a == 0 ) 
-                return optional<int>(); 
+                return std::experimental::optional<int>(); 
             else
-                return optional<int>( a );
+                return std::experimental::optional<int>( a );
         },
 
         // farm kernel as lambda

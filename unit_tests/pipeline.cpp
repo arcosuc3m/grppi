@@ -18,6 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 #include <atomic>
+#include <experimental/optional>
+
 
 #include <gtest/gtest.h>
 
@@ -109,7 +111,7 @@ TYPED_TEST(pipeline_test, static_two_stages_empty)
     grppi::pipeline( this->execution_,
     [this]() { 
         this->invocations_init++;
-        return optional<int>(); 
+        return std::experimental::optional<int>(); 
     },
     [this]( auto x ) {
       this->invocations_last++;
@@ -125,7 +127,7 @@ TYPED_TEST(pipeline_test, poly_two_stages_empty)
     grppi::pipeline( this->poly_execution_,
     [this]() { 
         this->invocations_init++;
-        return optional<int>(); 
+        return std::experimental::optional<int>(); 
     },
     [this]( auto x ) {
       this->invocations_last++;
@@ -145,9 +147,9 @@ TYPED_TEST(pipeline_test, static_two_stages)
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return optional<int>(); 
+          return std::experimental::optional<int>(); 
         }else{
-          return optional<int>(this->counter);
+          return std::experimental::optional<int>(this->counter);
         }
     },
     [this]( auto x ) {
@@ -166,9 +168,9 @@ TYPED_TEST(pipeline_test, poly_two_stages)
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return optional<int>(); 
+          return std::experimental::optional<int>(); 
         }else{
-          return optional<int>(this->counter);
+          return std::experimental::optional<int>(this->counter);
         }
     },
     [this]( auto x ) {
@@ -189,9 +191,9 @@ TYPED_TEST(pipeline_test, static_three_stages)
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return optional<int>(); 
+          return std::experimental::optional<int>(); 
         }else{
-          return optional<int>(this->counter);
+          return std::experimental::optional<int>(this->counter);
         }
     },
     [this]( auto x ) {
@@ -214,9 +216,9 @@ TYPED_TEST(pipeline_test, poly_three_stages)
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return optional<int>(); 
+          return std::experimental::optional<int>(); 
         }else{
-          return optional<int>(this->counter);
+          return std::experimental::optional<int>(this->counter);
         }
     },
     [this]( auto x ) {
@@ -255,9 +257,9 @@ TYPED_TEST(pipeline_test, static_three_stages_composed)
         std::iota(begin(v), end(v), 0);
 
         if(this->counter  <= 0){
-          return optional< std::vector<int> >();
+          return std::experimental::optional< std::vector<int> >();
         }else{
-          return optional<std::vector<int>>(v);
+          return std::experimental::optional<std::vector<int>>(v);
         }
     },
     f_object,

@@ -21,6 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <farm.h>
 #include <pipeline.h>
 #include <stream_iteration.h>
@@ -56,9 +58,9 @@ void iteration_example1() {
         [&]() {
             a--; 
             if ( a == 0 ) 
-                return optional<int>(); 
+                return std::experimental::optional<int>(); 
             else
-                return optional<int>( a );
+                return std::experimental::optional<int>( a );
         },
 
         // farm kernel as lambda

@@ -21,6 +21,8 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <map.h>
 
 using namespace std;
@@ -53,11 +55,11 @@ void map_example1() {
         [&](){
             
              if( i < in.size()) {
-                  optional<int> element(i);
+                  std::experimental::optional<int> element(i);
                   i++;
                   return element;
              }else{
-               return optional<int>();
+               return std::experimental::optional<int>();
             }
         },
         [&](int index){

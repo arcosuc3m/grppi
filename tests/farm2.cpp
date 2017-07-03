@@ -21,6 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
 #include <farm.h>
 
 using namespace std;
@@ -58,9 +59,9 @@ void farm_example2() {
         [&]() { 
              if ( idx < v.size() ) {
                  idx++;
-                 return optional<int>( (idx-1) );
+                 return std::experimental::optional<int>( (idx-1) );
            } else 
-                 return optional<int>();
+                 return std::experimental::optional<int>();
         },
 
         // farm kernel as lambda

@@ -18,6 +18,7 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 #include <atomic>
+#include <experimental/optional>
 
 #include <gtest/gtest.h>
 
@@ -103,7 +104,7 @@ TYPED_TEST(stream_filter_test, static_empty)
   grppi::stream_filter(this->execution_,
     [this]() { 
       this->invocations_in++;
-      return optional<int>{}; 
+      return std::experimental::optional<int>{}; 
     },
     [this](int x) { 
       this->invocations_op++; 
@@ -122,7 +123,7 @@ TYPED_TEST(stream_filter_test, static_single_filtered)
   grppi::stream_filter(this->execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     [this](int x) {
       this->invocations_op++;
@@ -142,7 +143,7 @@ TYPED_TEST(stream_filter_test, static_single_unfiltered)
   grppi::stream_filter(this->execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     [this](int x) {
       this->invocations_op++;
@@ -163,7 +164,7 @@ TYPED_TEST(stream_filter_test, static_multiple)
   grppi::stream_filter(this->execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     [this](int x) {
       this->invocations_op++;
@@ -182,7 +183,7 @@ TYPED_TEST(stream_filter_test, poly_empty)
 {
   this->setup_empty();
   grppi::stream_filter(this->poly_execution_,
-    [this]() -> optional<int> {
+    [this]() -> std::experimental::optional<int> {
       this->invocations_in++;
       return {};
     },
@@ -203,7 +204,7 @@ TYPED_TEST(stream_filter_test, poly_single_filtered)
   grppi::stream_filter(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     [this](int x) {
       this->invocations_op++;
@@ -223,7 +224,7 @@ TYPED_TEST(stream_filter_test, poly_single_unfiltered)
   grppi::stream_filter(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     [this](int x) {
       this->invocations_op++;
@@ -244,7 +245,7 @@ TYPED_TEST(stream_filter_test, poly_multiple)
   grppi::stream_filter(this->poly_execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     [this](int x) {
       this->invocations_op++;
@@ -265,7 +266,7 @@ TYPED_TEST(stream_filter_test, static_empty_composed)
   grppi::pipeline(this->execution_,
     [this]() {
       this->invocations_in++;
-      return optional<int>{};
+      return std::experimental::optional<int>{};
     },
     grppi::stream_filter(this->execution_,
       [this](int x) {
@@ -286,7 +287,7 @@ TYPED_TEST(stream_filter_test, static_single_filtered_composed)
   grppi::pipeline(this->execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     grppi::stream_filter(this->execution_,
       [this](int x) {
@@ -308,7 +309,7 @@ TYPED_TEST(stream_filter_test, static_single_unfiltered_composed)
   grppi::pipeline(this->execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     grppi::stream_filter(this->execution_,
       [this](int x) {
@@ -331,7 +332,7 @@ TYPED_TEST(stream_filter_test, static_multiple_composed)
   grppi::pipeline(this->execution_,
     [this]() {
       this->invocations_in++;
-      return ( this->idx_in < this->v.size() ) ? optional<int>{this->v[this->idx_in++]} : optional<int>{};
+      return ( this->idx_in < this->v.size() ) ? std::experimental::optional<int>{this->v[this->idx_in++]} : std::experimental::optional<int>{};
     },
     grppi::stream_filter(this->execution_,
       [this](int x) {

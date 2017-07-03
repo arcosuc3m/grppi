@@ -24,6 +24,8 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 
 using namespace std;
@@ -68,7 +70,7 @@ void pipeline_example() {
         // Pipeline stage 0
         [&]() {
              auto v = read_list(is);
-             return ( v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v);
+             return ( v.size() == 0) ? std::experimental::optional<std::vector<int>>() : std::experimental::optional<std::vector<int>>(v);
         },
 
         // Pipeline stage 1

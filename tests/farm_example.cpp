@@ -23,6 +23,8 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <experimental/optional>
+
 
 #include <chrono>
 #include <farm.h>
@@ -78,7 +80,7 @@ void farm_example1() {
         [&]() {
             auto f = read_line(is);
             
-            return ( f.empty() ) ? optional<std::string>( ) : optional<std::string>( f );
+            return ( f.empty() ) ? std::experimental::optional<std::string>( ) : std::experimental::optional<std::string>( f );
         },
 
         // farm kernel as lambda
