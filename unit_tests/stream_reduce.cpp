@@ -117,7 +117,7 @@ TYPED_TEST(stream_reduce_test, static_empty)
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++; 
-    }
+    },0
   );
   this->check_empty();
 }
@@ -135,7 +135,7 @@ TYPED_TEST(stream_reduce_test, poly_empty)
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++; 
-    }
+    },0
   );
   this->check_empty();
 }
@@ -164,7 +164,7 @@ TYPED_TEST(stream_reduce_test, static_single)
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    }
+    },0
   );
   this->check_single();
 }
@@ -192,7 +192,7 @@ TYPED_TEST(stream_reduce_test, poly_single)
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    }
+    },0
   );
   this->check_single();
 }
@@ -221,7 +221,7 @@ TYPED_TEST(stream_reduce_test, static_multiple)
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    }
+    },0
   );
   this->check_multiple();
 }
@@ -249,7 +249,7 @@ TYPED_TEST(stream_reduce_test, poly_multiple)
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    }
+    },0
   );
   this->check_multiple();
 }
@@ -279,7 +279,7 @@ TYPED_TEST(stream_reduce_test, static_window_offset)
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    }
+    },0
   );
   this->check_window_offset();
 }
@@ -307,7 +307,7 @@ TYPED_TEST(stream_reduce_test, poly_window_offset)
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    }
+    },0
   );
   this->check_window_offset();
 }

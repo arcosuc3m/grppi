@@ -27,24 +27,24 @@
 
 namespace grppi{
 
-template <typename GenFunc, typename ReduceOperator, typename SinkFunc>
-void stream_reduce(parallel_execution_native &p, GenFunc &&in, int windowsize, int offset, ReduceOperator && op, SinkFunc &&sink)
+template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
+void stream_reduce(parallel_execution_native &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, IdentityType identity)
 {
      
-     std::vector<typename std::result_of<GenFunc()>::type::value_type> buffer;
-     auto k = in();
+     std::vector<typename std::result_of<Generator()>::type::value_type> buffer;
+     auto k = gen();
      while(1){
         //Create a vector as a buffer 
         //If its not the las element and the window is not complete keep getting more elements
         while( k && buffer.size() != windowsize){
            buffer.push_back(k.value());
-           k = in();
+           k = gen();
         }
         if(buffer.size()>0){
            //Apply the reduce function to the elements on the window
-           auto reduceVal = reduce(p, buffer.begin(), buffer.end(), op);
+           auto reduceVal = reduce(p, buffer.begin(), buffer.end(), identity, std::forward<Combiner>(comb));
            //Call to sink function
-           sink(reduceVal);
+           cons(reduceVal);
            //Remove elements
            if(k){
               buffer.erase(buffer.begin(), buffer.begin() + offset);

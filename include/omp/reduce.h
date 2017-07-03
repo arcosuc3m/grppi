@@ -27,25 +27,50 @@
 
 namespace grppi{
 
-// Empty sequences are currently not supported.
-template < typename InputIt, typename Combiner>
-typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner &&combine_op){
+/**
+\addtogroup reduce_pattern
+@{
+*/
+
+/**
+\addtogroup reduce_pattern_omp OpenMP parallel reduce pattern
+\brief OpenMP parallel implementation of the \ref md_reduce pattern
+@{
+*/
+
+/**
+\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+on a data sequence with parallel OpenMP execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Identity Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Parallel native execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+*/
+template < typename InputIt, typename Identity, typename Combiner>
+auto reduce(parallel_execution_omp & ex, 
+            InputIt first, InputIt last, 
+            Identity identity,
+            Combiner && combine_op)
+{
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-    auto identityVal = init;
+    int elemperthr = numElements/ex.num_threads;
+    auto identityVal = identity;
     //local output
-    std::vector<typename std::iterator_traits<InputIt>::value_type> out(p.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.num_threads);
     //Create threads
     #pragma omp parallel
     {
     #pragma omp single nowait
     {
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<ex.num_threads;i++){
 
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
+      if(i == ex.num_threads -1) end = last;
 
          #pragma omp task firstprivate (begin, end,i)
          {
@@ -77,14 +102,10 @@ reduce(parallel_execution_omp &p, InputIt first, InputIt last, typename std::ite
     return outVal;
 }
 
-template < typename InputIt, typename Combiner>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_omp &p, InputIt first, InputIt last, Combiner &&combine_op){
-   auto identityVal = !combine_op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
-}
-
-
+/**
+@}
+@}
+*/
 
 }
 

@@ -157,6 +157,11 @@ void map(polymorphic_execution & ex, InputIt first, InputIt last,
   >(ex, first, last, first_out, std::forward<Transformer>(op), first2, more_firsts...);
 }
 
+/**
+@}
+@}
+*/
+
 } // end namespace grppi
 
 #endif

@@ -23,24 +23,46 @@
 
 namespace grppi{
 
-// Empty sequences are currently not supported.
-template < typename InputIt, typename Combiner>
-typename std::iterator_traits<InputIt>::value_type
-reduce(sequential_execution &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner &&combine_op){
-    auto firstOut = init;
-    while( first != last ) {
-       firstOut = combine_op( firstOut, *first );
-       first++;
-    }
-    return firstOut;
+/**
+\addtogroup reduce_pattern
+@{
+*/
+
+/**
+\addtogroup reduce_pattern_seq Sequential reduce pattern
+\brief Sequential implementation of the \ref md_reduce pattern
+@{
+*/
+
+/**
+\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+on a data sequence with sequential execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Identity Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+*/
+template <typename InputIt, typename Identity, typename Combiner>
+auto reduce(sequential_execution & ex, InputIt first, InputIt last, 
+            Identity identity,
+            Combiner && combine_op)
+{
+  auto result = identity;
+  while (first != last) {
+    result = combine_op(result, *first);
+    first++;
+  }
+  return result;
 }
 
-template < typename InputIt, typename Combiner>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(sequential_execution &p, InputIt first, InputIt last, Combiner &&combine_op){
-   auto identityVal = !combine_op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
-}
+/**
+@}
+@}
+*/
 
 }
 #endif
