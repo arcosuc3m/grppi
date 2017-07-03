@@ -33,17 +33,5 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
     }
     
 }
-
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
-    while( first != last ) {
-        auto neighbors = neighbor(first);
-        *firstOut = op(*first, neighbors, *inputs ...);
-        advance_iterators( inputs... );
-        first++;
-        firstOut++;
-    }
-}
 }
 #endif
