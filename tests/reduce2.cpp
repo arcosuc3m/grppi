@@ -67,7 +67,7 @@ void reduce_example1() {
          return val; 
     });
 
-    out2 += reduce(p, out.begin(), out.end(), std::plus<int>() );
+    out2 += reduce(p, out.begin(), out.end(),0, std::plus<int>() );
 
 //    for(int i = 0; i< out.size();i++) std::cout<<"REDUCTION ["<<i<<"] = "<<out[i]<<std::endl;
 }
