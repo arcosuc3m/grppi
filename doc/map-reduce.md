@@ -66,38 +66,55 @@ T res = cmb(x,y);
 
 ### Unary map_reduce
 
-An unary **map/reduce** takes a single data set and performs consecutively the **map** and the **reduce** stages, returning the reduced value.
+An unary **map/reduce** takes a single data set and performs consecutively the
+**map** and the **reduce** stages, returning the reduced value.
 
-The only interface currently offered for this pattern is based in iterators (following the C++ standard library conventions):
+The only interface currently offered for this pattern is based in iterators
+(following the C++ standard library conventions):
 
   * The input data set is specified by two iterators.
 
+A unary **map/reduce** also requires an identity value for the **Combiner**.
+
 ---
-**Example**
+**Example**: Transforms a sequence of strings to its corresponding double values
+and computes the addition of those values.
 ~~~{.cpp}
+vector<string> v { "1.0", "2.0", "3.5", "0.25" };
 auto res = map(exec,
   begin(v), end(v),
+  0.0,
   [](string s) { return stod(s); },
   [](double x, double y) { return x+y; }
 );
+// res == 6.75
 ~~~
 ---
 
 
-### N-ary map_reduce
+### N-ary map/reduce
 
-A n-ary **map/reduce** takes multiple data sets and performs consecutively the **map** and **reduce** stage, returning the reduced value.
+A n-ary **map/reduce** takes multiple data sets and performs consecutively the
+**map** and **reduce** stage, returning the reduced value.
 
-The only interface currently offered for this pattern is based in iterators (following the C++ standard library conventions):
+The only interface currently offered for this pattern is based in iterators
+(following the C++ standard library conventions):
 
   * The first data set is specified by two iterators.
-  * All the other input data sets are specified by iterators to the start of the input data sequences, assuming that the size of all sequences are at least as large as the first sequence.
+  * All the other input data sets are specified by iterators to the start of the
+    input data sequences, assuming that the size of all sequences are at least
+    as large as the first sequence.
+
+A n-ary **map/reduce** also requires an identity value for the **Combiner**.
 
 ---
-**Example**
+**Example**: Compute scalar vector between two vectors of doubles.
 ~~~{.cpp}
+v = get_first_vector();
+w = get_second_vector();
 auto res = map(exec,
   begin(v), end(v),
+  0.0,
   [](double x, double y) { return x*y; },
   [](double x, double y) { return x+y; },
   begin(w)
