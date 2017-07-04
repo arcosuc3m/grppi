@@ -14,17 +14,18 @@ grppi::stencil(exec, other_arguments...);
 
 ## Stencil variants
 
-There are several variants:
+There is a single variant:
 
 * *Unary stencil*: A stencil taking a single input sequence.
-* *N-ary stencil*: A stencil taking multiple input sequences.
 
 ## Key elements in stencil
 
-The key elements in a **stencil** are: a **Transformer** operation and a
-**NeighborMapping** operation.
+The key elements in a **stencil** are: a **StencilTransformer** operation and a
+**NeighbourMapping** operation.
 
-
+The **StencilTransformer** is any C++ callable entity that takes a data item and
+transforms it. Additionally it takes a number of neighbours. The output type may
+differ. Thus, a **StencilTransformer** is any 
 
 
 ## Details on stencil variants
