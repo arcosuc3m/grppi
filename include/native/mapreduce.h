@@ -25,12 +25,12 @@
 
 namespace grppi{
 
-template <typename InputIt, typename Transformer, class T, typename Combiner>
- T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, T init){
+template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
+IdentityType map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, IdentityType init, Transformer && transform_op,  Combiner &&combine_op){
 
     using namespace std;
-    T out = init;
-    std::vector<T> partialOuts(p.num_threads);
+    IdentityType out = init;
+    std::vector<IdentityType> partialOuts(p.num_threads);
     std::vector<std::thread> tasks;
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
@@ -45,7 +45,7 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
          [&](InputIt beg, InputIt en, int id){
             // Register thread
             p.register_thread();
-            partialOuts[id] = map_reduce(s, beg, en, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op),partialOuts[id]);
+            partialOuts[id] = map_reduce(s, beg, en, partialOuts[id], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
             // Deregister thread
             p.deregister_thread();
          },
@@ -53,7 +53,7 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
        );
     }
 
-    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
+    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
 
     for(auto task = tasks.begin();task != tasks.end();task++){    
        (*task).join();

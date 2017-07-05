@@ -28,14 +28,14 @@
 #include "../reduce.h"
 
 namespace grppi{
-template <typename InputIt, typename Transformer, typename T, typename Combiner>
- T map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Transformer && transform_op, Combiner && combine_op, T init){
+template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
+IdentityType map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, IdentityType init, Transformer && transform_op, Combiner && combine_op){
 
     using namespace std;
     tbb::task_group g;
 
-    T out = init;
-    std::vector<T> partialOuts(p.num_threads);
+    IdentityType out = init;
+    std::vector<IdentityType> partialOuts(p.num_threads);
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
     sequential_execution s{};
@@ -45,13 +45,13 @@ template <typename InputIt, typename Transformer, typename T, typename Combiner>
        if(i == p.num_threads -1 ) end= last;
        g.run(
          [&, begin, end, i](){
-            partialOuts[i] = map_reduce(s, begin, end, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[i] );
+            partialOuts[i] = map_reduce(s, begin, end, partialOuts[i], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
          }
          
        );
     }
 
-    partialOuts[0] = map_reduce(s, first, (first+elemperthr), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
+    partialOuts[0] = map_reduce(s, first, (first+elemperthr), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
     g.wait();
     
     for( auto & res : partialOuts){

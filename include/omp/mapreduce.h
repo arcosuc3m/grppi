@@ -28,7 +28,7 @@
 namespace grppi{
 
 template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
-IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, IdentityType init){
+IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, IdentityType init, Transformer &&  transform_op,  Combiner &&combine_op){
 
     using namespace std;
     IdentityType out = init;
@@ -47,11 +47,11 @@ IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last
           auto begin = first + (elemperthr * i);
           auto end = first + (elemperthr * (i+1));
           if(i == p.num_threads -1 ) end= last;
-          partialOuts[i] = map_reduce(s, begin, end, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op),partialOuts[i]);
+          partialOuts[i] = map_reduce(s, begin, end, partialOuts[i], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
        }
     }
 
-    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
+    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
     #pragma omp taskwait
     }
     }

@@ -51,6 +51,7 @@ void mapreduce_example1() {
       p,
       words.begin(),
       words.end(),
+      init,
       [](std::string word){
          std::map<string,int> key_value;
          key_value[word]=1;
@@ -62,8 +63,7 @@ void mapreduce_example1() {
           }
           return map1;
 
-      },
-      init
+      }
    );
    std::cout<<"Word : count "<<std::endl;
    for(auto & i : result) {

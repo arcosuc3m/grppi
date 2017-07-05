@@ -74,15 +74,14 @@ TYPED_TEST_CASE(map_reduce_test, executions);
 TYPED_TEST(map_reduce_test, static_single)
 {
   this->setup_single();
-  this->output = grppi::map_reduce(this->execution_, begin(this->v), end(this->v), 
+  this->output = grppi::map_reduce(this->execution_, begin(this->v), end(this->v), 0, 
     [this](int x) { 
       this->invocations_transformer++; 
       return x*2; 
     },
     [this](int x, int y) { 
       return x + y; 
-    },
-    0
+    }
   );
   this->check_single();
 }
@@ -90,15 +89,14 @@ TYPED_TEST(map_reduce_test, static_single)
 TYPED_TEST(map_reduce_test, poly_single)
 {
   this->setup_single();
-  this->output = grppi::map_reduce(this->poly_execution_, begin(this->v), end(this->v), 
+  this->output = grppi::map_reduce(this->poly_execution_, begin(this->v), end(this->v), 0,  
     [this](int x) { 
       this->invocations_transformer++; 
       return x*2; 
     },
     [this](int x, int y) { 
       return x + y; 
-    },
-    0
+    }
   );
   this->check_single();
 }
@@ -108,15 +106,14 @@ TYPED_TEST(map_reduce_test, poly_single)
 TYPED_TEST(map_reduce_test, static_multiple)
 {
   this->setup_multiple();
-  this->output = grppi::map_reduce(this->execution_, begin(this->v), end(this->v), 
+  this->output = grppi::map_reduce(this->execution_, begin(this->v), end(this->v), 0, 
     [this](int x) { 
       this->invocations_transformer++; 
       return x*2; 
     },
     [this](int x, int y) { 
       return x + y; 
-    },
-    0
+    }
   );
   this->check_multiple();
 }
@@ -124,15 +121,14 @@ TYPED_TEST(map_reduce_test, static_multiple)
 TYPED_TEST(map_reduce_test, poly_multiple)
 {
   this->setup_multiple();
-  this->output = grppi::map_reduce(this->poly_execution_, begin(this->v), end(this->v), 
+  this->output = grppi::map_reduce(this->poly_execution_, begin(this->v), end(this->v), 0, 
     [this](int x) { 
       this->invocations_transformer++; 
       return x*2; 
     },
     [this](int x, int y) { 
       return x + y; 
-    },
-    0
+    }
   );
   this->check_multiple();
 }
