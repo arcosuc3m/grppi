@@ -29,7 +29,6 @@
 
 namespace grppi{
 
-
 //Last stage
 template <typename Stream, typename Stage>
 void stages( parallel_execution_omp &p, Stream& st, Stage && s ){

@@ -19,14 +19,14 @@
 */
 
 #ifndef GRPPI_PIPELINE_THR_H
-#define GRPPI_PIPELINE_THR_Hi
+#define GRPPI_PIPELINE_THR_H
 
 #include <experimental/optional>
 
 #include <thread>
 
-namespace grppi{
 
+namespace grppi{
 
 template <typename InStream, typename OutStream, int currentStage, typename ...Stages>
  typename std::enable_if<(currentStage == (sizeof...(Stages)-1)), void>::type composed_pipeline(InStream& qin, pipeline_info<parallel_execution_native, Stages...> const & pipe, OutStream &qout,std::vector<std::thread> & tasks)
