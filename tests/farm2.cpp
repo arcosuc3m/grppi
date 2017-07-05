@@ -26,6 +26,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void farm_example2() {
 
@@ -56,12 +58,12 @@ void farm_example2() {
 
     farm(p,
         // farm generator as lambda
-        [&]() { 
+        [&]() -> optional<int> { 
              if ( idx < v.size() ) {
                  idx++;
-                 return std::experimental::optional<int>( (idx-1) );
+                 return (idx-1);
            } else 
-                 return std::experimental::optional<int>();
+                 return {};
         },
 
         // farm kernel as lambda

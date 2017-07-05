@@ -29,6 +29,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void pipeline_farm_example() {
 
@@ -54,8 +56,6 @@ void pipeline_farm_example() {
 
     auto f_obj = farm(f,
          [&](std::vector<int> v) {
-  //      std::cout<<"FARM THREAD ID : "<<f.get_threadID()<<std::endl;
-        //std::cout << "Worker del farm\n";
         std::vector<long> acumm( v.size() );
         for(unsigned i = 0; i < acumm.size(); i++ ){
             acumm[i] = 0;
@@ -67,94 +67,30 @@ void pipeline_farm_example() {
     }
     );
 
-     auto gen = [&]() {
-//        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
+    auto gen = [&]()->optional<std::vector<int>> {
           std::vector<int> v(5);
           for ( int i = 0; i < 5; i++ )
              v[ i ] = i + n;
 
           if ( n < 0 )
-               return std::experimental::optional< std::vector<int> >();
+               return {};
            n--;
-           return std::experimental::optional<std::vector<int>>(v);
+           return v;
     };
-    pipeline(p, [&]() {
-//        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-          std::vector<int> v(5);
-          for ( int i = 0; i < 5; i++ )
-             v[ i ] = i + n;
-
-          if ( n < 0 )
-               return std::experimental::optional< std::vector<int> >();
-           n--;
-           return std::experimental::optional<std::vector<int>>(v);
-    },
-    farm(f,
-         [&](std::vector<int> v) {
-  //      std::cout<<"FARM THREAD ID : "<<f.get_threadID()<<std::endl;
-        //std::cout << "Worker del farm\n";
-        std::vector<long> acumm( v.size() );
-        for(unsigned i = 0; i < acumm.size(); i++ ){
-            acumm[i] = 0;
-            for(auto j : v){
-                acumm[i] += j;
-            }
-        }
-        return (acumm);
-    }
-    ),
-//    f_obj,
+    pipeline(p, std::forward<decltype(gen)>(gen), f_obj,
             // Pipeline stage 2
             [&]( std::vector<long> acc ) {
-    //    std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-        //std::cout << "Stadio2\n";
         double acumm = 0;
         for ( int i = 0; i < acc.size(); i++ )
             acumm += acc[ i ];
 
         return acumm;
     },
-
     // Pipeline stage 3
     [&]( double v ) {
-     //   std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-        //std::cout << "Stadio3\n";
-        //std::cout << v << std::endl;
         output.push_back("Stadio3 " + std::to_string(v) );
     }
     );
-
-pipeline(p, [&]() {
-//        std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-          std::vector<int> v(5);
-          for ( int i = 0; i < 5; i++ )
-             v[ i ] = i + n;
-
-          if ( n < 0 )
-               return std::experimental::optional< std::vector<int> >();
-           n--;
-           return std::experimental::optional<std::vector<int>>(v);
-    },
-    f_obj,
-            // Pipeline stage 2
-            [&]( std::vector<long> acc ) {
-    //    std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-        //std::cout << "Stadio2\n";
-        double acumm = 0;
-        for ( int i = 0; i < acc.size(); i++ )
-            acumm += acc[ i ];
-
-        return acumm;
-    },
-
-    // Pipeline stage 3
-    [&]( double v ) {
-     //   std::cout<<"PIPE THREAD ID : "<<p.get_threadID()<<std::endl;
-        //std::cout << "Stadio3\n";
-        //std::cout << v << std::endl;
-        output.push_back("Stadio3 " + std::to_string(v) );
-    }
-    ); 
 
     // Sort to constant result
     std::sort(output.begin(), output.end());

@@ -22,6 +22,8 @@
 #define GRPPI_FARM_OMP_H
 
 #ifdef GRPPI_OMP
+#include <experimental/optional>
+
 
 namespace grppi
 {

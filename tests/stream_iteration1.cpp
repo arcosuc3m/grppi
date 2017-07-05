@@ -29,6 +29,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void iteration_example1() {
 
@@ -55,12 +57,12 @@ void iteration_example1() {
 
     stream_iteration(p,
         // farm generator as lambda
-        [&]() {
+        [&]() -> optional<int>{
             a--; 
             if ( a == 0 ) 
-                return std::experimental::optional<int>(); 
+                return {}; 
             else
-                return std::experimental::optional<int>( a );
+                return  a;
         },
 
         // farm kernel as lambda

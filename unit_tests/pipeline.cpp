@@ -34,6 +34,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 template <typename T>
 class pipeline_test : public ::testing::Test {
@@ -109,9 +111,9 @@ TYPED_TEST(pipeline_test, static_two_stages_empty)
 {
   this->setup_two_stages_empty();
     grppi::pipeline( this->execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
         this->invocations_init++;
-        return std::experimental::optional<int>(); 
+        return {}; 
     },
     [this]( auto x ) {
       this->invocations_last++;
@@ -125,9 +127,9 @@ TYPED_TEST(pipeline_test, poly_two_stages_empty)
 {
   this->setup_two_stages_empty();
     grppi::pipeline( this->poly_execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
         this->invocations_init++;
-        return std::experimental::optional<int>(); 
+        return {}; 
     },
     [this]( auto x ) {
       this->invocations_last++;
@@ -143,13 +145,13 @@ TYPED_TEST(pipeline_test, static_two_stages)
 {
   this->setup_two_stages();
     grppi::pipeline( this->execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return std::experimental::optional<int>(); 
+          return {}; 
         }else{
-          return std::experimental::optional<int>(this->counter);
+          return this->counter;
         }
     },
     [this]( auto x ) {
@@ -164,13 +166,13 @@ TYPED_TEST(pipeline_test, poly_two_stages)
 {
   this->setup_two_stages();
     grppi::pipeline( this->poly_execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return std::experimental::optional<int>(); 
+          return {}; 
         }else{
-          return std::experimental::optional<int>(this->counter);
+          return this->counter;
         }
     },
     [this]( auto x ) {
@@ -187,13 +189,13 @@ TYPED_TEST(pipeline_test, static_three_stages)
 {
   this->setup_three_stages();
     grppi::pipeline( this->execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return std::experimental::optional<int>(); 
+          return {}; 
         }else{
-          return std::experimental::optional<int>(this->counter);
+          return this->counter;
         }
     },
     [this]( auto x ) {
@@ -212,13 +214,13 @@ TYPED_TEST(pipeline_test, poly_three_stages)
 {
   this->setup_three_stages();
     grppi::pipeline( this->poly_execution_,
-    [this]() { 
+    [this]()->optional<int> { 
         this->invocations_init++;
         this->counter--;
         if(this->counter  == 0){
-          return std::experimental::optional<int>(); 
+          return {}; 
         }else{
-          return std::experimental::optional<int>(this->counter);
+          return this->counter;
         }
     },
     [this]( auto x ) {
@@ -250,16 +252,16 @@ TYPED_TEST(pipeline_test, static_three_stages_composed)
     );
 
     grppi::pipeline( this->execution_,
-    [this]() { 
+    [this]() ->optional<std::vector<int>> { 
         this->invocations_init++;
         this->counter--;
         std::vector<int> v(5);
         std::iota(begin(v), end(v), 0);
 
         if(this->counter  <= 0){
-          return std::experimental::optional< std::vector<int> >();
+          return {};
         }else{
-          return std::experimental::optional<std::vector<int>>(v);
+          return v;
         }
     },
     f_object,

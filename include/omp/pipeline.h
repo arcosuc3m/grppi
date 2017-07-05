@@ -23,9 +23,13 @@
 
 #ifdef GRPPI_OMP
 
+#include <experimental/optional>
+
 #include <boost/lockfree/spsc_queue.hpp>
 
 namespace grppi{
+
+
 //Last stage
 template <typename Stream, typename Stage>
 void stages( parallel_execution_omp &p, Stream& st, Stage && s ){
@@ -195,7 +199,8 @@ template <typename Operation, typename Stream,typename... Stages>
 
 template <typename Operation, typename Stream,typename... Stages>
  void stages( parallel_execution_omp &p, Stream& st, farm_info<parallel_execution_omp, Operation> && se, Stages && ... sgs ) {
-   
+  
+ 
     mpmc_queue< std::pair < std::experimental::optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
     for( int th = 0; th < se.exectype.num_threads; th++){
@@ -226,7 +231,6 @@ template <typename Stage, typename Stream,typename ... Stages>
 void stages(parallel_execution_omp &p, Stream& st, Stage && se, Stages && ... sgs ) {
 
     //Create new queue
-//    boost::lockfree::spsc_queue< std::experimental::optional< typename std::result_of< Stage(typename Stream::value_type::value_type) > ::type>, boost::lockfree::capacity<BOOST_QUEUE_SIZE>> q;
     mpmc_queue<std::pair< std::experimental::optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
     //Start task
     #pragma omp task shared( se, st, q )

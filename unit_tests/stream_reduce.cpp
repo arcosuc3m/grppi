@@ -29,6 +29,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 template <typename T>
 class stream_reduce_test : public ::testing::Test {
@@ -108,7 +110,7 @@ TYPED_TEST(stream_reduce_test, static_empty)
 { 
   this->setup_empty();
   grppi::stream_reduce(this->execution_,
-    [this]() -> std::experimental::optional<int> { 
+    [this]() -> optional<int> { 
       this->invocations_gen++; 
       return {};
     },
@@ -126,7 +128,7 @@ TYPED_TEST(stream_reduce_test, poly_empty)
 { 
   this->setup_empty();
   grppi::stream_reduce(this->poly_execution_,
-    [this]() -> std::experimental::optional<int> { 
+    [this]() -> optional<int> { 
       this->invocations_gen++; 
       return {};
     },
@@ -145,17 +147,17 @@ TYPED_TEST(stream_reduce_test, static_single)
 { 
   this->setup_single();
   grppi::stream_reduce(this->execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
       if(this->v.size() > 0){
         
-        std::experimental::optional<int> problem(this->v.back());
+        auto problem = this->v.back();
         this->v.pop_back();
         return problem;
 
       }else{
-        return std::experimental::optional<int> ();
+        return {};
       }
     },
     this->window, 
@@ -173,17 +175,17 @@ TYPED_TEST(stream_reduce_test, poly_single)
 { 
   this->setup_single();
   grppi::stream_reduce(this->poly_execution_,
-    [this]() { 
+    [this]() -> optional<int> { 
       this->invocations_gen++; 
       
       if(this->v.size() > 0){
         
-        std::experimental::optional<int> problem(this->v.back());
+        auto problem = this->v.back();
         this->v.pop_back();
         return problem;
 
       }else{
-        return std::experimental::optional<int> ();
+        return {};
       }
     },
     this->window, 
@@ -202,17 +204,17 @@ TYPED_TEST(stream_reduce_test, static_multiple)
 { 
   this->setup_multiple();
   grppi::stream_reduce(this->execution_,
-    [this]() { 
+    [this]() ->optional<int> { 
       this->invocations_gen++; 
       
       if(this->v.size() > 0){
         
-        std::experimental::optional<int> problem(this->v.back());
+        auto problem = this->v.back();
         this->v.pop_back();
         return problem;
 
       }else{
-        return std::experimental::optional<int> ();
+        return {};
       }
     },
     this->window, 
@@ -230,17 +232,17 @@ TYPED_TEST(stream_reduce_test, poly_multiple)
 { 
   this->setup_multiple();
   grppi::stream_reduce(this->poly_execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
       if(this->v.size() > 0){
         
-        std::experimental::optional<int> problem(this->v.back());
+        auto problem = this->v.back();
         this->v.pop_back();
         return problem;
 
       }else{
-        return std::experimental::optional<int> ();
+        return {};
       }
     },
     this->window, 
@@ -260,17 +262,17 @@ TYPED_TEST(stream_reduce_test, static_window_offset)
 { 
   this->setup_window_offset();
   grppi::stream_reduce(this->execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
       if(this->v.size() > 0){
         
-        std::experimental::optional<int> problem(this->v.back());
+        auto problem = this->v.back();
         this->v.pop_back();
         return problem;
 
       }else{
-        return std::experimental::optional<int> ();
+        return {};
       }
     },
     this->window, 
@@ -288,17 +290,17 @@ TYPED_TEST(stream_reduce_test, poly_window_offset)
 { 
   this->setup_window_offset();
   grppi::stream_reduce(this->poly_execution_,
-    [this]() { 
+    [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
       if(this->v.size() > 0){
         
-        std::experimental::optional<int> problem(this->v.back());
+        auto problem = this->v.back();
         this->v.pop_back();
         return problem;
 
       }else{
-        return std::experimental::optional<int> ();
+        return {};
       }
     },
     this->window, 

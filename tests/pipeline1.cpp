@@ -27,6 +27,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void pipeline_example1() {
 
@@ -50,13 +52,13 @@ void pipeline_example1() {
     p.ordering=true;
     pipeline( p,
         // Pipeline stage 0
-        [&]() { 
+        [&]() -> optional<int> { 
             a--; 
     //        std::cout << "Stage 0\n";
             if (a == 0) 
-                return std::experimental::optional<int>(); 
+                return {}; 
             else 
-                return std::experimental::optional<int>(a); 
+                return a; 
         },
 
         // Pipeline stage 1

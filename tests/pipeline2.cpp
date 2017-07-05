@@ -28,6 +28,8 @@
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void pipeline_example2() {
 
@@ -55,15 +57,15 @@ void pipeline_example2() {
 
     pipeline( p,
         // Pipeline stage 0
-        [&]() {
+        [&]() -> optional<char>{
             char r; 
             fe >> r;
             if ( fe.eof() ) {
-                return std::experimental::optional<char>(); 
+                return {}; 
             }
             else { 
 		        //cout << r;
-                return std::experimental::optional<char>(r);
+                return r;
             }
         },
 

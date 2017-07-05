@@ -23,6 +23,8 @@
 
 #ifdef GRPPI_TBB
 
+#include <experimental/optional>
+
 #include <tbb/pipeline.h>
 #include <tbb/tbb.h>
 
@@ -95,7 +97,7 @@ void pipeline(parallel_execution_tbb &p, FuncIn in, Stages && ... sts ) {
             auto item =  in();
             if( !item ) 
                 fc.stop();
-            return std::experimental::optional<outputType>{item.value()};
+            return (item) ? std::experimental::optional<outputType>{item.value()} :std::experimental::optional<outputType>{};
         }
     );
     tbb::task_group_context context;

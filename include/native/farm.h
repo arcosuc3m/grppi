@@ -21,6 +21,7 @@
 #ifndef GRPPI_FARM_THR_H
 #define GRPPI_FARM_THR_H
 
+#include <experimental/optional>
 
 #include <thread>
 #include <utility>
