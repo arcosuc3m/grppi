@@ -21,10 +21,14 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void pipeline_example1() {
 
@@ -49,8 +53,8 @@ void pipeline_example1() {
     /* Test exit inmediately in the first stage */
     pipeline( p,
         // Pipeline stage 0
-        [&]() { 
-            return optional<int>(); 
+        [&]() ->optional<int>{ 
+            return {}; 
         },
 
         // Pipeline stage 1
