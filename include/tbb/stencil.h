@@ -63,6 +63,51 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
 }
 
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+
+     int numElements = last - first;
+     int elemperthr = numElements/p.num_threads;
+     tbb::task_group g;
+
+     for(int i=1;i<p.num_threads;i++){
+
+        
+        g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( )mutable{
+        auto begin = first + (elemperthr * i);
+        auto end = first + (elemperthr * (i+1));
+
+               if(i==p.num_threads-1) end = last;
+
+               auto out = firstOut + (elemperthr * i);
+        
+               advance_iterators((elemperthr* i), inputs ...);
+               while(begin!=end){
+                 auto neighbors = neighbor(begin,inputs ...);
+                 *out = op(begin, neighbors);
+                 begin++;
+                 advance_iterators( inputs ... );
+                 out++;
+               }
+            });
+    }
+
+   //MAIN 
+   auto end = first + elemperthr;
+   while(first!=end){
+      auto neighbors = neighbor(first,inputs ...);
+      *firstOut = op(first, neighbors);
+      first++;
+      advance_iterators( inputs ... );
+      firstOut++;
+   }
+
+
+   //Join threads
+   g.wait();
+}
+
+
 
 }
 #endif

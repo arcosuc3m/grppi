@@ -66,7 +66,67 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
    }
 }
 
+
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+void internal_stencil(parallel_execution_omp & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, int i, int elemperthr, MoreIn ... inputs ){
+   auto begin = first + (elemperthr * i);
+   auto end = first + (elemperthr * (i+1));
+   if(i==p.num_threads-1) end = last;
+
+   auto out = firstOut + (elemperthr * i);
+
+   advance_iterators((elemperthr*i), inputs ...);
+   while(begin!=end){
+      auto neighbors = neighbor(begin,inputs ... );
+      *out = op(begin, neighbors);
+      begin++;
+      advance_iterators( inputs ... );
+      out++;
+   }
+}
+
+
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+void stencil(parallel_execution_omp & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+
+   int numElements = last - first;
+   int elemperthr = numElements/p.num_threads;
+   #pragma omp parallel 
+   {
+   #pragma omp single nowait
+   {
+
+   for(int i=1;i<p.num_threads;i++){
+       #pragma omp task firstprivate(i)// firstprivate(inputs...)
+       {
+          internal_stencil(p,first,last,firstOut,std::forward<Operation>(op),std::forward<NFunc>(neighbor),i,elemperthr, inputs...);
+       }
+    }
+
+   //MAIN
+   auto begin = first;
+   auto out = firstOut; 
+   auto end = first + elemperthr;
+   while(begin!=end){
+      auto neighbors = neighbor(begin,inputs...);
+      *out = op(*begin, neighbors);
+      begin++;
+      advance_iterators( inputs ... );
+      out++;
+   }
+
+   #pragma omp taskwait
+   }
+   }
+
+
+}
+
+
 }
 #endif
+
+
+
 
 #endif
