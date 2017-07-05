@@ -54,28 +54,24 @@ divide_and_conquer(sequential_execution & ex,
                    Divider && divider_op, Solver && solver_op, 
                    Combiner && combiner_op) 
 {
-  using Output = typename std::result_of<Solver(Input)>::type;
   auto subproblems = divider_op(input);
-  Output out;
-  if(subproblems.size()>1) {
-    // We could build with zero size and them emplace_back/push_back
-    std::vector<Output> partials(subproblems.size());
-    int division = 0;
-    for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
-      //THREAD
-      partials[division] = divide_and_conquer(ex, *i, 
-          std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
-          std::forward<Combiner>(combiner_op));
-      //END THREAD
-    }
-    out = partials[0] ;
-    //JOIN
-    for(int i = 1; i<partials.size();i++){
-      combiner_op(partials[i], out);
-    }
+
+  if (subproblems.size()<=1) return solver_op(input);
+
+  using Output = typename std::result_of<Solver(Input)>::type;
+  std::vector<Output> partials;
+  // FORK
+  for (auto && item : subproblems) {
+    //THREAD
+    partials.push_back(divide_and_conquer(ex, item, 
+        std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
+        std::forward<Combiner>(combiner_op)));
+    //END THREAD
   }
-  else {
-    out = solver_op(input);
+  Output out = partials[0] ;
+  //JOIN
+  for(int i = 1; i<partials.size();i++){
+    combiner_op(partials[i], out);
   }
   return out;
 }
