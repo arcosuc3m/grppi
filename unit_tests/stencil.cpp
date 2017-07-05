@@ -91,20 +91,6 @@ public:
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
 
   }
-
-  void setup_multiple_ary() {
-    v = vector<int>{1,2,3,4,5};
-    v2 = vector<int>{2,4,6,8,10};
-    w = vector<int>{0,0,0,0,0};
-    expected = vector<int>{5,9,13,17,15};
-  }
-
-  void check_multiple_ary() {
-    EXPECT_EQ(5, invocations_operation); 
-    EXPECT_EQ(5, invocations_neighbour); 
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
-  }
-
 };
 
 // Test for execution policies defined in supported_executions.h
@@ -138,42 +124,6 @@ TYPED_TEST(stencil_test, poly_empty)
       this->invocations_neighbour++; 
       return 0; 
     }
-  );
-  this->check_empty();
-}
-
-
-
-TYPED_TEST(stencil_test, static_empty_ary)
-{
-  this->setup_empty();
-  grppi::stencil(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](auto it, auto x, auto y ) { 
-      this->invocations_operation++; 
-      return 0; 
-    },
-    [this](auto it) { 
-      this->invocations_neighbour++; 
-      return 0; 
-    },
-    begin(this->v2)
-  );
-  this->check_empty();
-}
-
-TYPED_TEST(stencil_test, poly_empty_ary)
-{
-  this->setup_empty();
-  grppi::stencil(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](auto it, auto x, auto y ) { 
-      this->invocations_operation++; 
-      return 0; 
-    },
-    [this](auto it) { 
-      this->invocations_neighbour++; 
-      return 0; 
-    },
-    begin(this->v2)
   );
   this->check_empty();
 }
@@ -222,50 +172,6 @@ TYPED_TEST(stencil_test, poly_single)
 
 
 
-TYPED_TEST(stencil_test, static_single_ary)
-{
-  this->setup_single_ary();
-  grppi::stencil(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](auto it, auto x, auto y ) { 
-      this->invocations_operation++;
-      return it + x + y;
-    },
-    [this](auto it) { 
-      this->invocations_neighbour++; 
-      if( it+1 != this->v.end() ){
-        return *(it+1);
-      }else{
-        return 0; 
-      }
-    },
-    begin(this->v2)
-  );
-  this->check_single_ary();
-}
-
-TYPED_TEST(stencil_test, poly_single_ary)
-{
-  this->setup_single_ary();
-  grppi::stencil(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](auto it, auto x, auto y ) { 
-      this->invocations_operation++;
-      return it + x + y;
-    },
-    [this](auto it) { 
-      this->invocations_neighbour++; 
-      if( it+1 != this->v.end() ){
-        return *(it+1);
-      }else{
-        return 0; 
-      }
-    },
-    begin(this->v2)
-  );
-  this->check_single_ary();
-}
-
-
-
 TYPED_TEST(stencil_test, static_multiple)
 {
   this->setup_multiple();
@@ -304,48 +210,4 @@ TYPED_TEST(stencil_test, poly_multiple)
     }
   );
   this->check_multiple();
-}
-
-
-
-TYPED_TEST(stencil_test, static_multiple_ary)
-{
-  this->setup_multiple_ary();
-  grppi::stencil(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](auto it, auto x, auto y ) { 
-      this->invocations_operation++;
-      return it + x + y;
-    },
-    [this](auto it) { 
-      this->invocations_neighbour++; 
-      if( it+1 != this->v.end() ){
-        return *(it+1);
-      }else{
-        return 0; 
-      }
-    },
-    begin(this->v2)
-  );
-  this->check_multiple_ary();
-}
-
-TYPED_TEST(stencil_test, poly_multiple_ary)
-{
-  this->setup_multiple_ary();
-  grppi::stencil(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](auto it, auto x, auto y ) { 
-      this->invocations_operation++;
-      return it + x + y;
-    },
-    [this](auto it) { 
-      this->invocations_neighbour++; 
-      if( it+1 != this->v.end() ){
-        return *(it+1);
-      }else{
-        return 0; 
-      }
-    },
-    begin(this->v2)
-  );
-  this->check_multiple_ary();
 }
