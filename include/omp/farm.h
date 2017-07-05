@@ -22,6 +22,8 @@
 #define GRPPI_FARM_OMP_H
 
 #ifdef GRPPI_OMP
+#include <experimental/optional>
+
 
 namespace grppi
 {
@@ -30,7 +32,7 @@ template <typename Generator, typename Operation, typename Consumer>
 void farm(parallel_execution_omp &p, Generator &&gen, Operation && op , Consumer &&cons) {
 
     mpmc_queue< typename std::result_of<Generator()>::type > queue (p.queue_size,p.lockfree);
-    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
+    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
     std::atomic<int> nend(0);
     #pragma omp parallel
     {
@@ -45,21 +47,21 @@ void farm(parallel_execution_omp &p, Generator &&gen, Operation && op , Consumer
                     //auto item = queue.pop( );
                     while( item ) {
                        auto out = op( item.value() );
-                       queueout.push( optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
+                       queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
                        // item = queue.pop( );
                        item = queue.pop( ) ;
                     }
                     queue.push(item);
                     nend++;
                     if(nend == p.num_threads)
-                        queueout.push( optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
+                        queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
              }
        }
 
         //SINK
        #pragma omp task shared(queueout,cons)
        { 
-             optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
+             std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
              item = queueout.pop( ) ;
              // auto item = queueout.pop(  ) ;
              while( item ) {

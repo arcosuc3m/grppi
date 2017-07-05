@@ -24,10 +24,14 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 std::vector<int> read_list(std::istream & is){
   std::vector<int> result;
@@ -66,9 +70,10 @@ void pipeline_example() {
     p.ordering=true;
     pipeline( p,
         // Pipeline stage 0
-        [&]() {
+        [&]() -> optional<std::vector<int>>{
              auto v = read_list(is);
-             return ( v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v);
+             if( v.size() == 0) return {};
+             else return v;
         },
 
         // Pipeline stage 1
