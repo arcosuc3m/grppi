@@ -21,11 +21,15 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <pipeline.h>
+#include <experimental/optional>
+
 #include <algorithm>
+#include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void pipeline_example2() {
 
@@ -53,15 +57,15 @@ void pipeline_example2() {
 
     pipeline( p,
         // Pipeline stage 0
-        [&]() {
+        [&]() -> optional<char>{
             char r; 
             fe >> r;
             if ( fe.eof() ) {
-                return optional<char>(); 
+                return {}; 
             }
             else { 
 		        //cout << r;
-                return optional<char>(r);
+                return r;
             }
         },
 

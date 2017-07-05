@@ -21,10 +21,14 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <stream_reduce.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void reduce_example1(){
 
@@ -50,12 +54,12 @@ void reduce_example1(){
     int n=0;
     stream_reduce( p,
         // Reduce generator as lambda
-        [&]() { 
+        [&]() -> optional<int>{ 
             n++;
             if(n != 1000000000) 
-              return (optional<int> ( 1 ));
+              return  1;
             else
-              return (optional<int> ());
+              return {};
         },
         //Window size
         1000000,
