@@ -25,10 +25,16 @@
 #include <atomic>
 
 namespace grppi{
+
 template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type internal_divide_and_conquer(parallel_execution_native &p, Input &problem,
-                                        DivFunc &&divide, Operation &&op, MergeFunc &&merge,
-                                        std::atomic<int> &num_threads) {
+typename std::result_of<Operation(Input)>::type 
+internal_divide_and_conquer(parallel_execution_native &p, 
+                            Input &problem,
+                            DivFunc && divide, 
+                            Operation &&op, 
+                            MergeFunc &&merge,
+                            std::atomic<int> &num_threads) 
+{
   // Sequential execution fo internal implementation
   using Output = typename std::result_of<Operation(Input)>::type;
   sequential_execution seq;
@@ -86,14 +92,36 @@ typename std::result_of<Operation(Input)>::type internal_divide_and_conquer(para
     return out;
 }
 
+/**
+\addtogroup divide_conquer_pattern
+@{
+*/
 
+/**
+\addtogroup divide_conquer_pattern_seq Sequential divide/conquer pattern
+\brief Sequential implementation of the \ref md_divide-conquer pattern.
+@{
+*/
 
-
-
-
+/**
+\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with native
+parallel execution.
+\tparam Input Type used for the input problem.
+\tparam Divider Callable type for the divider operation.
+\tparam Solver Callable type for the solver operation.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param input Input problem to be solved.
+\param divider_op Divider operation.
+\param solver_op Solver operation.
+\param combiner_op Combiner operation.
+*/
 template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_and_conquer(parallel_execution_native& p, Input & problem,
-            DivFunc && divide, Operation && op, MergeFunc && merge) {
+typename std::result_of<Operation(Input)>::type 
+divide_and_conquer(parallel_execution_native & ex, 
+                   Input & problem,
+                   DivFunc && divide, Operation && op, MergeFunc && merge) 
+{
     using Output = typename std::result_of<Operation(Input)>::type;
     Output out;
     // Sequential execution fo internal implementation
@@ -152,6 +180,11 @@ typename std::result_of<Operation(Input)>::type divide_and_conquer(parallel_exec
     }
     return out;
 }
+
+/**
+@}
+@}
+*/
 
 }
 #endif
