@@ -23,12 +23,16 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <experimental/optional>
+
 
 #include <chrono>
 #include <farm.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 std::vector<int> read_list(std::istream & is){
   std::vector<int> result;
@@ -75,10 +79,10 @@ void farm_example1() {
 
     farm(p,
         // farm generator as lambda
-        [&]() {
+        [&]() -> optional<std::string>{
             auto f = read_line(is);
-            
-            return ( f.empty() ) ? optional<std::string>( ) : optional<std::string>( f );
+            if( f.empty() ) return {};
+            else return f;
         },
 
         // farm kernel as lambda

@@ -54,8 +54,7 @@ void reduce_example1() {
     std::vector<int> out(100,0);
 
 
-    int out2 =0 ;
-    
+    int out2 =0 ; 
     out = reduce(p, in.begin(), in.end(), out ,[&p](auto val, auto vec){
          auto it = val.begin();
          auto it2= vec.begin();

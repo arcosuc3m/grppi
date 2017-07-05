@@ -21,6 +21,7 @@
 #ifndef GRPPI_FARM_THR_H
 #define GRPPI_FARM_THR_H
 
+#include <experimental/optional>
 
 #include <thread>
 #include <utility>
@@ -33,7 +34,7 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
 
     std::vector<std::thread> tasks;
     mpmc_queue< typename std::result_of<Generator()>::type > queue (p.queue_size,p.lockfree);
-    mpmc_queue< optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
+    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
     std::atomic<int> nend(0);
     //Create threads
     for( int i = 0; i < p.num_threads; i++ ) {
@@ -48,14 +49,14 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
                     //auto item = queue.pop( );
                     while( item ) {
                        auto out = op( item.value() );
-                       queueout.push( optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
+                       queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
                        // item = queue.pop( );
                        item = queue.pop( ) ;
                     }
                     queue.push(item);
                     nend++;
                     if(nend == p.num_threads)
-                        queueout.push( optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
+                        queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
 
                     // Deregister the thread in the execution model
                     p.deregister_thread();
@@ -71,7 +72,7 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
                 // Register the thread in the execution model
                 p.register_thread();
 
-                optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
+                std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
                 item = queueout.pop( ) ;
                 // auto item = queueout.pop(  ) ;
                  while( item ) {

@@ -22,10 +22,14 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
 #include <farm.h>
+
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void farm_example1() {
 
@@ -51,12 +55,12 @@ void farm_example1() {
 
     farm(p,
         // farm generator as lambda
-        [&]() {
+        [&]() -> optional<int> {
             a--; 
             if ( a == 0 ) 
-                return optional<int>(); 
+                return {}; 
             else
-                return optional<int>( a );
+                return a;
         },
 
         // farm kernel as lambda

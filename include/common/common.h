@@ -28,7 +28,6 @@
 #include "parallel_execution_tbb.h"
 
 // Includes with GRPPI internals
-#include "optional.h"
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"
