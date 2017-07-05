@@ -39,25 +39,5 @@ T map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer 
     return out;
 }
 
-template <typename InputIt, typename Transformer,typename Combiner>
-auto map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
-
-   typename std::result_of<Combiner(
-   typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-   typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type out;  
-    bool firstElement = true;
-    while(first != last){
-       auto mappedValue = transform_op(*first);
-       if(firstElement) {
-          firstElement = false;
-          out = mappedValue;
-       }else{
-          out = combine_op(out, mappedValue);
-       }
-       first++;
-    }
-    return out;
-
-}
 }
 #endif

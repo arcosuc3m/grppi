@@ -62,17 +62,6 @@ IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last
     return out;
 }
 
-
-template <typename InputIt, typename Transformer, typename Combiner>
-auto map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
-
-    typename std::result_of<Combiner(
-    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type init;
-
-    return map_reduce ( p, first, last, std::forward<Transformer>( transform_op ),  std::forward<Combiner>( combine_op ), init);
-}
-
 }
 #endif
 #endif

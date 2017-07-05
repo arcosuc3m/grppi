@@ -46,6 +46,7 @@ void mapreduce_example1() {
 #endif
 
    std::vector<std::string> words{"a","b","a","c","d","e","c","c","a","b"};
+   std::map<std::string,int> init;
    auto result = map_reduce(
       p,
       words.begin(),
@@ -61,7 +62,8 @@ void mapreduce_example1() {
           }
           return map1;
 
-      }
+      },
+      init
    );
    std::cout<<"Word : count "<<std::endl;
    for(auto & i : result) {

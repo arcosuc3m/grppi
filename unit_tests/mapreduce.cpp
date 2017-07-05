@@ -81,7 +81,8 @@ TYPED_TEST(map_reduce_test, static_single)
     },
     [this](int x, int y) { 
       return x + y; 
-    }
+    },
+    0
   );
   this->check_single();
 }
@@ -96,7 +97,8 @@ TYPED_TEST(map_reduce_test, poly_single)
     },
     [this](int x, int y) { 
       return x + y; 
-    }
+    },
+    0
   );
   this->check_single();
 }
@@ -113,7 +115,8 @@ TYPED_TEST(map_reduce_test, static_multiple)
     },
     [this](int x, int y) { 
       return x + y; 
-    }
+    },
+    0
   );
   this->check_multiple();
 }
@@ -128,7 +131,8 @@ TYPED_TEST(map_reduce_test, poly_multiple)
     },
     [this](int x, int y) { 
       return x + y; 
-    }
+    },
+    0
   );
   this->check_multiple();
 }
