@@ -134,81 +134,74 @@ divide_and_conquer(parallel_execution_native & ex,
                    Divider && divide_op, Solver && solve_op, 
                    Combiner && combine_op) 
 {
-  using Output = typename std::result_of<Solver(Input)>::type;
-  Output out;
 
   // Sequential execution fo internal implementation
   sequential_execution seq;
+  std::atomic<int> num_threads{ex.num_threads-1};
     
-  std::atomic<int> num_threads (ex.num_threads-1);
-    
-  if(num_threads.load()>0) {
-    auto subproblems = divide_op(problem);
-
-    if(subproblems.size()>1) {
-      std::vector<Output> partials(subproblems.size()-1);
-      int division = 0;
-      std::vector<std::thread> tasks;
-      auto i = subproblems.begin();
-      for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0; i++, division++) {
-        //THREAD
-	tasks.push_back(
-          std::thread(
-            [&](auto i,int division){ 
-              // Register the thread in the execution model
-              ex.register_thread();
-
-              partials[division] = internal_divide_and_conquer(ex, *i, 
-                  std::forward<Divider>(divide_op), 
-                  std::forward<Solver>(solve_op), 
-                  std::forward<Combiner>(combine_op), 
-                  num_threads);
-                   
-              // Deregister the thread in the execution model
-              ex.deregister_thread();
-            },
-            i, division
-	  )
-        );
-        num_threads --;
-        //END TRHEAD
-      }
-      for(i; i != subproblems.end(); i++) {
-        partials[division] = divide_and_conquer(seq, *i, 
-            std::forward<Divider>(divide_op), 
-            std::forward<Solver>(solve_op), 
-            std::forward<Combiner>(combine_op));
-      }
-        
-      //Main thread works on the first subproblem.
-      out = internal_divide_and_conquer(ex, *subproblems.begin(), 
-          std::forward<Divider>(divide_op), 
-          std::forward<Solver>(solve_op), 
-          std::forward<Combiner>(combine_op), 
-          num_threads);
-       
-
-      //JOIN
-      for(int i=0; i< tasks.size(); i++) {
-        tasks[i].join();
-      }
-
-      for(int i = 0; i<partials.size();i++){ // MarcoA - this is moved to the user code
-        combine_op(partials[i], out);
-      }
-    }
-    else {
-      out = solve_op(problem);
-    }
-  }
-  else {
+  if (num_threads.load()>0) {
     return divide_and_conquer(seq, problem, 
         std::forward<Divider>(divide_op), 
         std::forward<Solver>(solve_op), 
         std::forward<Combiner>(combine_op));
   }
 
-  return out;
+  auto subproblems = divide_op(problem);
+
+  if(subproblems.size()>1) {
+    using Output = typename std::result_of<Solver(Input)>::type;
+    std::vector<Output> partials(subproblems.size()-1);
+    int division = 0;
+    std::vector<std::thread> tasks;
+    auto i = subproblems.begin();
+    for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0; i++, division++) {
+      //THREAD
+      tasks.push_back(
+        std::thread{
+          [&](auto i,int division){ 
+            // Register the thread in the execution model
+            ex.register_thread();
+
+            partials[division] = internal_divide_and_conquer(ex, *i, 
+                std::forward<Divider>(divide_op), 
+                std::forward<Solver>(solve_op), 
+                std::forward<Combiner>(combine_op), 
+                num_threads);
+                   
+            // Deregister the thread in the execution model
+            ex.deregister_thread();
+          },
+          i, division
+	}
+      );
+      num_threads --;
+      //END TRHEAD
+    }
+    for(i; i != subproblems.end(); i++) {
+      partials[division] = divide_and_conquer(seq, *i, 
+          std::forward<Divider>(divide_op), 
+          std::forward<Solver>(solve_op), 
+          std::forward<Combiner>(combine_op));
+    }
+        
+    //Main thread works on the first subproblem.
+    Output out = internal_divide_and_conquer(ex, *subproblems.begin(), 
+        std::forward<Divider>(divide_op), 
+        std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op), 
+        num_threads);
+       
+
+    //JOIN
+    for (auto && t : tasks) { t.join(); }
+
+    for (auto && p : partials) { combine_op(p,out); }
+
+    return out;
+  }
+  else {
+    return solve_op(problem);
+  }
 }
 
 /**
