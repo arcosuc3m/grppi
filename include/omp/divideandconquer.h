@@ -27,115 +27,178 @@
 
 namespace grppi{
 
-template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type internal_divide_and_conquer(parallel_execution_omp &p, Input & problem, 
-            DivFunc && divide, Operation && op, MergeFunc && merge, std::atomic<int> & num_threads) {
-   
-    // Sequential execution fo internal implementation
-    using  Output = typename std::result_of<Operation(Input)>::type;
-    sequential_execution seq;
-    Output out;
-    if(num_threads.load()>0){
-       auto subproblems = divide(problem);
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+internal_divide_and_conquer(parallel_execution_omp & ex, 
+                            Input & input, 
+                            Divider && divide_op, Solver && solve_op, 
+                            Combiner && combine_op, 
+                            std::atomic<int> & num_threads) 
+{
+  // Sequential execution fo internal implementation
+  using  Output = typename std::result_of<Solver(Input)>::type;
+  sequential_execution seq;
+  Output out;
+  if(num_threads.load()>0) {
+    auto subproblems = divide_op(input);
 
 
-    if(subproblems.size()>1){
-         std::vector<Output> partials(subproblems.size()-1);
-         int division = 0;
-         auto i = subproblems.begin()+1;
-         for(i; i != subproblems.end()&& num_threads.load()>0; i++, division++){
-            //THREAD
-             #pragma omp task firstprivate(i, division) shared(divide, op, merge, partials, num_threads)
-             {
-                 partials[division] = internal_divide_and_conquer(p, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-              //END TRHEAD
-             }
-             num_threads --;
+    if(subproblems.size()>1) {
+      std::vector<Output> partials(subproblems.size()-1);
+      int division = 0;
+      auto i = subproblems.begin()+1;
+      for(i; i!=subproblems.end() && num_threads.load()>0; i++, division++){
+        //THREAD
+        #pragma omp task firstprivate(i, division) shared(divide_op, solve_op, \
+                combine_op, partials, num_threads)
+        {
+          partials[division] = internal_divide_and_conquer(ex, *i, 
+              std::forward<Divider>(divide_op), 
+              std::forward<Solver>(solve_op), 
+              std::forward<Combiner>(combine_op), num_threads);
+         //END TRHEAD
+         }
+         num_threads --;
              
-          }
-          for(i; i != subproblems.end(); i++){
-              partials[division] = divide_and_conquer(seq,*i, divide, op, merge);
-          }
+      }
+      for(i; i != subproblems.end(); i++){
+        partials[division] = divide_and_conquer(seq, *i, 
+            std::forward<Divider>(divide_op), 
+            std::forward<Solver>(solve_op), 
+            std::forward<Combiner>(combine_op));
+      }
           
-          //Main thread works on the first subproblem.
-          out = internal_divide_and_conquer(p, *subproblems.begin(), std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
+      //Main thread works on the first subproblem.
+      out = internal_divide_and_conquer(ex, *subproblems.begin(), 
+          std::forward<Divider>(divide_op), 
+          std::forward<Solver>(solve_op), 
+          std::forward<Combiner>(combine_op), num_threads);
 
-          #pragma omp taskwait
+      #pragma omp taskwait
 
-          for(int i = 0; i<partials.size();i++){ 
-              merge(partials[i], out);
-          }
-        }else{
-          out = op(problem);
-        }
-     }else{
-        return divide_and_conquer(seq, problem, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-     }
-     return out;
-
-
-
-}
-
-template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_and_conquer(parallel_execution_omp &p, Input & problem, 
-            DivFunc && divide, Operation && op, MergeFunc && merge) {
-
-    // Sequential execution fo internal implementation
-    sequential_execution seq;
-    using Output = typename std::result_of<Operation(Input)>::type;
-    std::atomic<int> num_threads( p.num_threads -1 );
-    Output out;
-    if(num_threads.load()>0){
-       auto subproblems = divide(problem);
-
-      if(subproblems.size()>1){
-          std::vector<Output> partials(subproblems.size()-1);
-    	  int division = 0;
-  
-          #pragma omp parallel
-          {
-          #pragma omp single nowait
-          { 
-          auto i = subproblems.begin()+1;
-          for(i; i != subproblems.end()&& num_threads.load()>0; i++, division++){
-              //THREAD
-              #pragma omp task firstprivate(i,division) shared(partials,divide,op,merge, num_threads)
-              {
-                  partials[division] = internal_divide_and_conquer(p, *i,  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-              //END TRHEAD
-              }
-                  num_threads --;
-
-          }
-          for(i; i != subproblems.end(); i++){
-              partials[division] = divide_and_conquer(seq,*i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-          }
-
-    	  //Main thread works on the first subproblem.
-        
-         if(num_threads.load()>0){
-            out = internal_divide_and_conquer(p, *subproblems.begin(),  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-        }else{
-            out = divide_and_conquer(seq, *subproblems.begin(),  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-        }
-          #pragma omp taskwait
-          }
-          }
-          for(int i = 0; i<partials.size();i++){ 
-              merge(partials[i], out);
-          }
-        }else{
-          out = op(problem);
-        }
-    }else{
-        return divide_and_conquer(seq, problem, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
+      for(int i = 0; i<partials.size();i++){ 
+        combine_op(partials[i], out);
+      }
     }
-    return out;
+    else {
+      out = solve_op(input);
+    }
+  }
+  else {
+    return divide_and_conquer(seq, input, std::forward<Divider>(divide_op), 
+        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+  }
+  return out;
 }
 
+/**
+\addtogroup divide_conquer_pattern
+@{
+*/
+
+/**
+\addtogroup divide_conquer_pattern_omp OpenMP parallel divide/conquer pattern.
+\brief OpenMP parallel implementation of the \ref md_divide-conquer pattern.
+@{
+*/
+
+/**
+\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with OpenMP
+parallel execution.
+\tparam Input Type used for the input problem.
+\tparam Divider Callable type for the divider operation.
+\tparam Solver Callable type for the solver operation.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param input Input problem to be solved.
+\param divider_op Divider operation.
+\param solver_op Solver operation.
+\param combiner_op Combiner operation.
+*/
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+divide_and_conquer(parallel_execution_omp & ex, 
+                   Input & input, 
+                   Divider && divide_op, Solver && solve_op, 
+                   Combiner && combine_op) 
+{
+  std::atomic<int> num_threads{ex.num_threads-1};
+
+  sequential_execution seq;
+
+  using Output = typename std::result_of<Solver(Input)>::type;
+
+  if (num_threads.load()<=0) {
+    return divide_and_conquer(seq, input, 
+        std::forward<Divider>(divide_op), 
+        std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
+  }
+
+  auto subproblems = divide_op(input);
+  if (subproblems.size()<=1) {
+    return solve_op(input);
+  }
+
+  std::vector<Output> partials(subproblems.size()-1);
+  int division = 0;
+  
+  Output out;
+
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
+    { 
+      auto i = subproblems.begin() + 1;
+      for (i; i!=subproblems.end() && num_threads.load()>0; i++, division++) {
+        //THREAD
+        #pragma omp task firstprivate(i,division) \
+                shared(partials,divide_op,solve_op,combine_op,num_threads)
+        {
+          partials[division] = internal_divide_and_conquer(ex, *i,
+              std::forward<Divider>(divide_op), 
+              std::forward<Solver>(solve_op), 
+              std::forward<Combiner>(combine_op), num_threads);
+          //END TRHEAD
+        }
+        num_threads --;
+      }
+
+      for (i; i!=subproblems.end(); i++) {
+        partials[division] = divide_and_conquer(seq, *i, 
+            std::forward<Divider>(divide_op), 
+            std::forward<Solver>(solve_op), 
+            std::forward<Combiner>(combine_op));
+      }
+
+      //Main thread works on the first subproblem.
+      if (num_threads.load()>0) {
+        out = internal_divide_and_conquer(ex, *subproblems.begin(),
+            std::forward<Divider>(divide_op), 
+            std::forward<Solver>(solve_op), 
+            std::forward<Combiner>(combine_op), num_threads);
+      }
+      else {
+        out = divide_and_conquer(seq, *subproblems.begin(),
+            std::forward<Divider>(divide_op), 
+            std::forward<Solver>(solve_op), 
+            std::forward<Combiner>(combine_op));
+      }
+      #pragma omp taskwait
+    }
+  }
+
+  for (auto && p : partials) { combine_op(p,out); }
+  return out;
+}
+
+/**
+@}
+@}
+*/
 
 }
+
 #endif
 
 #endif
