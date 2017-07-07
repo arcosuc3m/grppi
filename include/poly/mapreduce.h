@@ -26,27 +26,27 @@
 
 namespace grppi{
 
-template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
-IdentityType map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  IdentityType init, Transformer && transform_op, Combiner && combine_op) 
+template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
+Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+  Identity init, Transformer && transform_op, Combiner && combine_op) 
 {
   return {};
 }
 
 template <typename E, typename ... O,
-          typename InputIt, typename Transformer, typename IdentityType, typename Combiner,
+          typename InputIt, typename Transformer, typename Identity, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
-IdentityType map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  IdentityType init, Transformer && transform_op, Combiner && combine_op) 
+Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+  Identity init, Transformer && transform_op, Combiner && combine_op) 
 {
   return map_reduce_multi_impl<O...>(e, first, last, init, std::forward<Transformer>(transform_op), 
     std::forward<Combiner>(combine_op));
 }
 
 template <typename E, typename ... O,
-          typename InputIt, typename Transformer, typename IdentityType, typename Combiner,
+          typename InputIt, typename Transformer, typename Identity, typename Combiner,
           internal::requires_execution_supported<E> = 0>
-IdentityType map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, IdentityType init,
+Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, Identity init,
   Transformer && transform_op, Combiner && combine_op) 
 {
   if (typeid(E) == e.type()) {
@@ -60,8 +60,8 @@ IdentityType map_reduce_multi_impl(polymorphic_execution & e, InputIt first, Inp
   }
 }
 
-template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
-IdentityType map_reduce(polymorphic_execution & e, InputIt first, InputIt last, IdentityType init,
+template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
+Identity map_reduce(polymorphic_execution & e, InputIt first, InputIt last, Identity init,
   Transformer && transform_op, Combiner && combine_op) 
 {
   return map_reduce_multi_impl<

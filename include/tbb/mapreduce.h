@@ -28,14 +28,14 @@
 #include "../reduce.h"
 
 namespace grppi{
-template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
-IdentityType map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, IdentityType init, Transformer && transform_op, Combiner && combine_op){
+template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
+Identity map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Identity init, Transformer && transform_op, Combiner && combine_op){
 
     using namespace std;
     tbb::task_group g;
 
-    IdentityType out = init;
-    std::vector<IdentityType> partialOuts(p.num_threads);
+    Identity out = init;
+    std::vector<Identity> partialOuts(p.num_threads);
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;
     sequential_execution s{};

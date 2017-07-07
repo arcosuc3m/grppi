@@ -26,17 +26,17 @@
 
 namespace grppi{
 
-template <typename Generator, typename Combiner, typename Consumer , typename IdentityType>
+template <typename Generator, typename Combiner, typename Consumer , typename Identity>
  void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init)
+      int windowsize, int offset, Combiner && comb, Consumer && cons, Identity init)
 {
 }
 
 template <typename E, typename ... O, typename Generator, 
-          typename Combiner, typename Consumer, typename IdentityType,
+          typename Combiner, typename Consumer, typename Identity,
           internal::requires_execution_not_supported<E> = 0>
 void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, Identity init) 
 {
   stream_reduce_multi_impl<O...>(e, std::forward<Generator>(gen),
       windowsize, offset, std::forward<Combiner>(cons), 
@@ -46,10 +46,10 @@ void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen,
 
 
 template <typename E, typename ... O,
-          typename Generator, typename Combiner, typename Consumer, typename IdentityType,
+          typename Generator, typename Combiner, typename Consumer, typename Identity,
           internal::requires_execution_supported<E> = 0>
 void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, Identity init) 
 {
   if (typeid(E) == e.type()) {
     stream_reduce(*e.execution_ptr<E>(), std::forward<Generator>(gen),
@@ -69,9 +69,9 @@ void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen,
 /// Operation: Operation functor type
 /// ReduceFunc: Reductor functor type.
 /// OutputType: Output type.
-template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
+template <typename Generator, typename Combiner, typename Consumer, typename Identity>
 void stream_reduce(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
+      int windowsize, int offset, Combiner && comb, Consumer && cons, Identity init) 
 {
   stream_reduce_multi_impl<
     sequential_execution,

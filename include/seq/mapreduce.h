@@ -26,9 +26,9 @@
 namespace grppi{
 
 //Parallel STL like function
-template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
-IdentityType map_reduce ( sequential_execution &, InputIt first, InputIt last, IdentityType init, Transformer &&  transform_op, Combiner && combine_op){
-    IdentityType out = init;
+template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
+Identity map_reduce ( sequential_execution &, InputIt first, InputIt last, Identity init, Transformer &&  transform_op, Combiner && combine_op){
+    Identity out = init;
 
     while(first != last){
        auto mappedValue = transform_op(*first);
