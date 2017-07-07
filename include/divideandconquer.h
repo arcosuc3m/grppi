@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,18 +21,11 @@
 #define GRPPI_DIVIDEANDCONQUER_H
 
 #include "common/common.h"
-
-#include "ppi_seq/divideandconquer_seq.h"
-#include "ppi_thr/divideandconquer_thr.h"
-
-#ifdef GRPPI_OMP
-	#include "ppi_omp/divideandconquer_omp.h"
-#endif
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/divideandconquer_tbb.h"
-#endif
-
+#include "seq/divideandconquer.h"
+#include "native/divideandconquer.h"
+#include "omp/divideandconquer.h"
+#include "tbb/divideandconquer.h"
+#include "poly/divideandconquer.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
@@ -61,8 +54,8 @@
  *  @param merge    Merge function: will join the the result of the 'task' 
  *    function
  */
-template <typename Input, typename Output, typename DivFunc, typename TaskFunc, typename MergeFunc>
-inline void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc const & divide, TaskFunc const & task, MergeFunc const & merge);
+template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
+ void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc && divide, Operation && task, MergeFunc && merge);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

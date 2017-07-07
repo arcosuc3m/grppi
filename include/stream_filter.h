@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,17 +22,11 @@
 #define GRPPI_STREAMFILTER_H
 
 #include "common/common.h"
-
-#include "ppi_seq/stream_filter_seq.h"
-#include "ppi_thr/stream_filter_thr.h"
-
-#ifdef GRPPI_OMP
-	#include "ppi_omp/stream_filter_omp.h"
-#endif
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/stream_filter_tbb.h"
-#endif 
+#include "seq/stream_filter.h"
+#include "native/stream_filter.h"
+#include "omp/stream_filter.h"
+#include "tbb/stream_filter.h"
+#include "poly/stream_filter.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
@@ -63,7 +57,7 @@
  *    the filter output
  */
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc const & in, FilterFunc const & filter, OutFunc const & out );
+void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

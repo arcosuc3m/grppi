@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,21 +22,12 @@
 #define GRPPI_STREAMREDUCE_H
 
 #include "common/common.h"
+#include "seq/stream_reduce.h"
+#include "native/stream_reduce.h"
+#include "omp/stream_reduce.h"
+#include "tbb/stream_reduce.h"
+#include "poly/stream_reduce.h"
 
-#include "ppi_seq/stream_reduce_seq.hpp"
-#include "ppi_thr/stream_reduce_thr.h"
-
-#ifdef GRPPI_OMP
-   #include "ppi_omp/stream_reduce_omp.h"
-#endif
-
-#ifdef GRPPI_THRUST
-   #include "ppi_thrust/stream_reduce_thrust.hpp"
-#endif
-
-#ifdef GRPPI_TBB
-   #include "ppi_tbb/stream_reduce_tbb.h"
-#endif
 
 #if 0 /* START DOCUMENTATION */
 /* @defgroup StreamReduce
@@ -64,7 +55,7 @@
  *    the filter output
  */
 template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc const & in, FilterFunc const & filter, OutFunc const & out );
+void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
 /* @} */
 #endif  /* END DOCUMENTATION */
 #endif

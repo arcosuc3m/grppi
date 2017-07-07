@@ -1,5 +1,5 @@
-/**
-* @version		GrPPI v0.1
+/*
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,72 +22,19 @@
 #define GRPPI_REDUCE_H
 
 #include "common/common.h"
+#include "common/iterator_traits.h"
 
-namespace grppi{
-  template<typename T, typename = void>
-  struct is_iterator
-  {
-    static constexpr bool value = false;
-  };
+#include "seq/reduce.h"
+#include "native/reduce.h"
+#include "omp/reduce.h"
+#include "tbb/reduce.h"
+#include "poly/reduce.h"
 
-  template<typename T>
-  struct is_iterator<T, typename std::enable_if<!std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
-  {
-    static constexpr bool value = true;
-  };
-}
+/** 
+\defgroup reduce_pattern Reduce pattern
 
-#include "ppi_seq/reduce_seq.h"
-#include "ppi_thr/reduce_thr.h"
+\brief Interface for applyinng the \ref md_reduce.
+*/
 
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/reduce_thrust.hpp"
-#endif
-
-#ifdef GRPPI_OMP
-	#include "ppi_omp/reduce_omp.h"
-#endif
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/reduce_tbb.h"
-#endif
-
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BDataPattern
- *  @{
- */
-/** @defgroup Reduce
- *
- *  @brief Apply the reduce pattern for parallelizing the code section.
- *
- *	The Reduce pattern is based on the application of elemental associative
- *  operation between the elements of a data structure.
- *
- *  In the Reduce the input data structure is divided in as many data sections
- *  as threads are available to use.
- *  Each thread apply the elemental associative operation in all the elements 
- *  of its data section.
- *  Finally the result of all the threads will be merged in in an output
- *  variable using the elemental associative operation 'op'.
- *
- *  @{
- */
-/** @param exec 		Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework and number of
- *		threads.
- *  @param first  	Iterator pointing to the first element of the input data
- *		structure. 
- *  @param last	  	Iterator pointing to the last element of the input data
- *		structure.
- *	@param firstOut	Iterator pointing to the first elements of the output data
- *		structure.
- *	@param op				Reduction elementary operation: this is a elemental
- *		binary operator. std::plus, std::minuns, std::multiplies, std::divides...
- */
-template < typename InputIt, typename Output, typename ReduceOperator>
-void Reduce(execution_model exec, InputIt first, InputIt last, Output & firstOut, ReduceOperator op);
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
 
 #endif

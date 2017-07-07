@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,21 +22,11 @@
 #define GRPPI_PIPELINE_H
 
 #include "common/common.h"
-
-#include "ppi_seq/pipeline_seq.h"
-#include "ppi_thr/pipeline_thr.h"
-
-#ifdef GRPPI_OMP
-	#include "ppi_omp/pipeline_omp.h"
-#endif
-
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/pipeline_thrust.hpp"
-#endif 
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/pipeline_tbb.h"
-#endif 
+#include "seq/pipeline.h"
+#include "native/pipeline.h"
+#include "omp/pipeline.h"
+#include "tbb/pipeline.h"
+#include "poly/pipeline.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

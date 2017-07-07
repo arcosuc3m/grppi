@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,43 +25,41 @@
 namespace grppi{
 
 template <typename E,typename Stage, typename ... Stages>
-class PipelineObj{
+class pipeline_info{
    public:
-      E * exectype;
-      std::tuple<Stage *, Stages *...> stages;
-      PipelineObj(E &p, Stage s, Stages ... sts):stages(std::make_tuple(&s, &sts...)) { exectype = &p;}
+      E & exectype;
+      std::tuple<Stage , Stages ...> stages;
+      pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages{std::make_tuple(s, sts...)} {}
 };
 
-template <typename E,class TaskFunc, class RedFunc>
-class ReduceObj
+template <typename E,class Operation, class RedFunc>
+class reduction_info
 {
    public:
-      TaskFunc * task;
-      RedFunc * red;
-      E exectype;
-      ReduceObj(E s, TaskFunc farm, RedFunc r){exectype=s; task = &farm; red= &r;}
+      Operation task;
+      RedFunc red;
+      E & exectype;
+      reduction_info(E &s, Operation farm, RedFunc r) : task{farm}, red{r}, exectype{s} {}
 };
 
-template <typename E,class TaskFunc>
-class FarmObj
+template <typename E,class Operation>
+class farm_info
 {
    public:
-      TaskFunc * task;
-      E * exectype;
+      Operation  task;
+      E & exectype;
       int farmtype;
-      FarmObj(E &s,TaskFunc f){exectype=&s; task = &f;};
-
-
+      farm_info(E &s,Operation  f) : task{f}, exectype{s}, farmtype{} {};
 };
 
-template <typename E,class TaskFunc>
-class FilterObj
+template <typename E,class Operation>
+class filter_info
 {
    public:
-      TaskFunc * task;
-      E *exectype;
+      Operation task;
+      E & exectype;
       int filtertype;
-      FilterObj(E& s,TaskFunc f){exectype=&s; task = &f;};
+      filter_info(E &s,Operation f) : task{f}, exectype{s}, filtertype{} {};
 };
 
 } // end namespace grppi

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,12 +21,16 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <pipeline.h>
 #include <farm.h>
 #include <stream_iteration.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void iteration_example1() {
 
@@ -41,7 +45,7 @@ void iteration_example1() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -53,12 +57,12 @@ void iteration_example1() {
 
     stream_iteration(p,
         // farm generator as lambda
-        [&]() {
+        [&]() -> optional<int>{
             a--; 
             if ( a == 0 ) 
-                return optional<int>(); 
+                return {}; 
             else
-                return optional<int>( a );
+                return  a;
         },
 
         // farm kernel as lambda

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,13 +22,11 @@
 #define GRPPI_MAPREDUCE_H
 
 #include "common/common.h"
-
-#include "ppi_seq/mapreduce_seq.h"
-#include "ppi_thr/mapreduce_thr.h"
-
-#ifdef GRPPI_THRUST
-  #include "ppi_thrust/mapreduce_thrust.hpp"
-#endif
+#include "seq/mapreduce.h"
+#include "native/mapreduce.h"
+#include "omp/mapreduce.h"
+#include "tbb/mapreduce.h"
+#include "poly/mapreduce.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
@@ -64,7 +62,7 @@
  *	@param inputs		Extra inputs to be applied to the function 'map'
  */
 template < typename InputIt, typename OutputIt, typename MapFunc, typename ReduceOperator, typename ... MoreIn >
-void MapReduce (execution_model exec, InputIt first, InputIt last, OutputIt firstOut, MapFunc const & map, ReduceOperator op, MoreIn ... inputs);
+void MapReduce (execution_model exec, InputIt first, InputIt last, OutputIt firstOut, MapFunc && map, ReduceOperator op, MoreIn ... inputs);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

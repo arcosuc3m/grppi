@@ -1,5 +1,5 @@
-/**
-* @version		GrPPI v0.1
+/*
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,72 +22,16 @@
 #define GRPPI_MAP_H
 
 #include "common/common.h"
+#include "seq/map.h"
+#include "native/map.h"
+#include "omp/map.h"
+#include "tbb/map.h"
+#include "poly/map.h"
 
-#include "ppi_seq/map_seq.h"
-#include "ppi_thr/map_thr.h"
+/** 
+\defgroup map_pattern Map pattern
 
-#if GRPPI_THRUST
-  #include "ppi_thrust/map_thrust.hpp"
-#endif
-
-#ifdef GRPPI_OMP
-	#include "ppi_omp/map_omp.h"
-
-#endif
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/map_tbb.h"
-#endif
-
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BDataPattern
- *  @{
- */
-/** @defgroup Map
- *
- *  @brief Apply the map pattern for parallelizing the code section
- *
- *  The Map pattern is applied to iterable data structures in which all the
- *  the elements are processed the same way, with the same 'taskf' function.
- *  This function parallelize the execution of the 'taskf' function in different
- *  elements of the input data structure.
- *
- *  @{
- */
-/** @param exec     Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param first    Iterator to the first element we want to modify in the
- *    iterable datastructure
- *  @param last     Iterator to the last element we want to modify in the 
- *    iterable datastructure
- *  @param firstOut Iterator to the first element where we want to store the
- *    result of the operations
- *  @param tasf     Task function: function that will contain the section of
- *    code that will be applied to each elements of the input data structure.
- *    This section of code will be parallelize.
- */
-template <typename InputIt, typename OutputIt, typename TaskFunc>
-inline void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf );
-
-
-/**  @param exec     Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param first    Iterator to the first element we want to modify in the
- *    iterable datastructure
- *  @param last     Iterator to the last element we want to modify in the 
- *    iterable datastructure
- *  @param firstOut Iterator to the first element where we want to store the
- *    result of the operations
- *  @param tasf     Task function: function that will contain the section of
- *    code that will be applied to each elements of the input data structure.
- *    This section of code will be parallelize.
- *  @param inputs   List of additional inputs to the function 'taskf'
- *  
- */
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename TaskFunc>
-inline void Map(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, MoreIn ... inputs ) {
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+\brief Interface for applyinng the \ref map-pattern.
+*/
 
 #endif

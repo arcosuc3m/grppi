@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,10 +25,14 @@
 #include <algorithm>
 #include <iterator>
 #include <chrono>
+#include <experimental/optional>
 #include <stream_filter.h>
+
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 std::vector<int> read_list(std::istream & is){
   std::vector<int> result;
@@ -57,7 +61,7 @@ void filter_example() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -67,9 +71,10 @@ void filter_example() {
     std::ofstream os{"txt/out.txt"};
 
     stream_filter(p,
-        [&]() {
+        [&]() -> optional<std::vector<int>> {
             auto v = read_list(is);
-            return (v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v); 
+            if (v.size() == 0) return {};
+	    else return v; 
         },
         [&](const std::vector<int> v){
            std::cout<<"FILTERING\n";

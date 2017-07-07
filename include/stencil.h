@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,17 +22,11 @@
 #define GRPPI_STENCIL_H
 
 #include "common/common.h"
-
-#include "ppi_seq/stencil_seq.h"
-#include "ppi_thr/stencil_thr.h"
-
-#ifdef GRPPI_OMP
-	#include "ppi_omp/stencil_omp.h"
-#endif
-
-#ifdef GRPPI_TBB
-	#include "ppi_tbb/stencil_tbb.h"
-#endif
+#include "seq/stencil.h"
+#include "native/stencil.h"
+#include "omp/stencil.h"
+#include "tbb/stencil.h"
+#include "poly/stencil.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
@@ -47,7 +41,7 @@
  *  The Stencil divide the data structure in as many parts as threads are 
  *  available to be used. Then each threads perform the computation needed for
  *  each neighbor of that element using the 'neighbor' function and perform 
- *  the code section 'taskf' with the data computed with the neighbors.
+ *  the code section 'op' with the data computed with the neighbors.
  *  @{
  */
 /** @param exec     Execution_model flag to indicates the type of execution
@@ -59,14 +53,14 @@
  *    structure.
  *  @param firstOut Iterator pointing to the first elements of the output data
  *    structure.
- *  @param taskf    Task function: function that contains the code section that 
+ *  @param op    Task function: function that contains the code section that 
  *    will be parallelized.
  *  @param neighbor Support function: function that handle how to get the needed
  *    data from the neighbors. This functions serves as support for getting data
- *    to 'taskf'.
+ *    to 'op'.
  */
-template <typename InputIt, typename OutputIt, typename TaskFunc, typename NFunc>
-inline void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, TaskFunc const & taskf, NFunc const & neighbor );
+template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
+ void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor );
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

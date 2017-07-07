@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,26 +22,15 @@
 #define GRPPI_COMMON_H
 
 // Includes for execution policies
-#include "seq_policy.h"
-#include "thread_policy.h"
-
-#ifdef GRPPI_OMP
-#include "omp_policy.h"
-#endif
-
-#ifdef GRPPI_THRUST
-#include "thrust_policy.h"
-#endif
-
-#ifdef GRPPI_TBB
-#include "tbb_policy.h"
-#endif
+#include "sequential_execution.h"
+#include "parallel_execution_native.h"
+#include "parallel_execution_omp.h"
+#include "parallel_execution_tbb.h"
 
 // Includes with GRPPI internals
-#include "optional.h"
-#include "mpmc_queue.h"
 #include "callable_traits.h"
 #include "iterator.h"
 #include "patterns.h"
+#include "common/support.h"
 
 #endif

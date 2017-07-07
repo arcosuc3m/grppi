@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
+#ifndef GRPPI_MPMC_QUEUE_H
+#define GRPPI_MPMC_QUEUE_H
+
+
 #include <vector>
 #include <atomic>
 #include <iostream>
@@ -26,122 +30,94 @@
 
 namespace grppi{
 
-constexpr int DEFAULT_SIZE = 100;
+
+
+enum class queue_mode {lockfree = true, blocking = false};
 
 template <typename T>
-class Queue{
+class mpmc_queue{
+
+   public:
+      using value_type = T;
+
+      mpmc_queue<T>(int q_size, queue_mode q_mode ):
+           size{q_size}, buffer{std::vector<T>(q_size)}, mode{q_mode}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
+      
+     
+      bool is_empty () const noexcept;
+      T pop () ;
+      bool push (T item) ;
+
    private:
+      bool is_full (unsigned long long current) const noexcept;
+      bool is_empty (unsigned long long current) const noexcept;
+
       int size;
       std::vector<T> buffer;
+      queue_mode mode;
+
       std::atomic<unsigned long long> pread;
       std::atomic<unsigned long long> pwrite;
-      std::atomic<unsigned long long> internal_pwrite;
       std::atomic<unsigned long long> internal_pread;
+      std::atomic<unsigned long long> internal_pwrite;
 
-      bool lockfree = false;
-    /*int pread;
-      int pwrite;
-      condition_variable;
-      ...
-      */
-      std::mutex mutex;
-      std::condition_variable emptycv;
-      std::condition_variable fullcv;
 
-      bool full(unsigned long long current);
-      bool empty(unsigned long long current);
-   public:  
-      typedef T value_type;
-      T pop();
-      bool push(T item);
-      bool empty();
-      
-      Queue<T>(int _size, bool active){
-         size = _size;
-         buffer = std::vector<T>(size);
-         pread = 0;
-         pwrite = 0;
-         internal_pread = 0;
-         internal_pwrite = 0;
-         lockfree = active;
-      }
-      
+      std::mutex m;
+      std::condition_variable empty;
+      std::condition_variable full;
 
-      Queue<T>(int _size){
-         size = _size;
-         buffer = std::vector<T>(size);
-         pread = 0;
-         pwrite = 0;
-         internal_pread = 0;
-         internal_pwrite = 0;
-      }
 };
 
 
 template <typename T>
-bool Queue<T>::empty(){
+bool mpmc_queue<T>::is_empty() const noexcept {
     return pread.load()==pwrite.load();
 }
 
-
 template <typename T>
-bool Queue<T>::empty(unsigned long long current){
-  if(current >= pwrite.load()) return true;  
-  return false;
-}
-
-template <typename T>
-bool Queue<T>::full(unsigned long long current){
-  if(current >= (pread.load()+size)) return true;
-  return false;
-
-}
-template <typename T>
-T Queue<T>::pop(){
-  if(lockfree){
-     //Extrae_event(6000000,1);
-
+T mpmc_queue<T>::pop(){
+  if(mode == queue_mode::lockfree){
+    
      unsigned long long current;
 
      do{
         current = internal_pread.load();
      }while(!internal_pread.compare_exchange_weak(current, current+1));
           
-     while(empty(current));
+     while(is_empty(current));
 
      auto item = std::move(buffer[current%size]); 
      auto aux = current;
      do{
         current = aux;
      }while(!pread.compare_exchange_weak(current, current+1));
-     //Extrae_event(6000000,0);
+     
      return std::move(item);
   }else{
-     //Extrae_event(6000000,1);
-     std::unique_lock<std::mutex> lk(mutex);
-     while(empty(pread)){
-        emptycv.wait(lk);
+     
+     std::unique_lock<std::mutex> lk(m);
+     while(is_empty(pread)){
+        empty.wait(lk);
      }  
      auto item = std::move(buffer[pread%size]);
      pread++;    
      lk.unlock();
-     fullcv.notify_one();
-     //Extrae_event(6000000,0);
+     full.notify_one();
+     
      return std::move(item);
   }
 
 }
 
 template <typename T>
-bool Queue<T>::push(T item){
-  if(lockfree){
-     //Extrae_event(6000000,2);
+bool mpmc_queue<T>::push(T item){
+  if(mode == queue_mode::lockfree){
      unsigned long long current;
      do{
          current = internal_pwrite.load();
      }while(!internal_pwrite.compare_exchange_weak(current, current+1));
 
-     while(full(current));
+     while(is_full(current));
 
      buffer[current%size] = std::move(item);
   
@@ -149,23 +125,37 @@ bool Queue<T>::push(T item){
      do{
         current = aux;
      }while(!pwrite.compare_exchange_weak(current, current+1));
-     //Extrae_event(6000000,0);
+
      return true;
   }else{
-    //Extrae_event(6000000,2);
-    std::unique_lock<std::mutex> lk(mutex);
-    while(full(pwrite)){
-        fullcv.wait(lk);
+
+    std::unique_lock<std::mutex> lk(m);
+    while(is_full(pwrite)){
+        full.wait(lk);
     }
     buffer[pwrite%size] = std::move(item);
-    //buffer[pwrite%size] = item;
+
     pwrite++;
     lk.unlock();
-    emptycv.notify_one();
-    //Extrae_event(6000000,0);
+    empty.notify_one();
+
     return true;
   }
+}
+
+template <typename T>
+bool mpmc_queue<T>::is_empty(unsigned long long current) const noexcept {
+  if(current >= pwrite.load()) return true;
+  return false;
+}
+
+template <typename T>
+bool mpmc_queue<T>::is_full(unsigned long long current) const noexcept{
+  if(current >= (pread.load()+size)) return true;
+  return false;
 
 }
 
 }
+
+#endif

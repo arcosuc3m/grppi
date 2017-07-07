@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -23,16 +23,15 @@
 
 #include "common/common.h"
 
-#include "ppi_seq/stream_iteration_seq.h"
-#include "ppi_thr/stream_iteration_thr.h"
-//#include "ppi_thrust/farm_thrust.hpp"
+#include "seq/stream_iteration.h"
+#include "native/stream_iteration.h"
 
 #ifdef OMP_ENABLE
-//	#include "ppi_omp/farm_omp.hpp"
+//	#include "omp/farm_omp.hpp"
 #endif
 
 #ifdef TBB_ENABLE
-//	#include "ppi_tbb/farm_tbb.hpp"
+//	#include "tbb/farm_tbb.hpp"
 #endif
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
@@ -42,9 +41,9 @@
  *
  *  @brief Apply the farm pattern for parallelizing the code section
  *
- *  The Farm pattern apply a function 'taskf' to every independent element 
+ *  The Farm pattern apply a function 'op' to every independent element 
  *  returned by the generator function 'in'. The 'in' function read a data
- *	stream and forwards the result to the 'taskf' function. The task function
+ *	stream and forwards the result to the 'op' function. The task function
  *	is executed in parallel for as many thread as the user indicates in the
  *	'exec' variable.
  *  @{
@@ -53,11 +52,11 @@
  *    (sequential or parallel) and the implementation framework
  *  @param in   Generator function: This function determine how to read the data
  *    before start the parallel stage
- *  @param taskf Task function: Function that contains the code section that 
+ *  @param op Task function: Function that contains the code section that 
  *    should be parallelize
  */
-template <typename GenFunc, typename TaskFunc>
-void Farm(execution_model exec, GenFunc const &in, TaskFunc const & taskf);
+template <typename GenFunc, typename Operation>
+void Farm(execution_model exec, GenFunc &&in, Operation && op);
 /** @} */
 /** @} */
 #endif /* END DOCUMENTATION */

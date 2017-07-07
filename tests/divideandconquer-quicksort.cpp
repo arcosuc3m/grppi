@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -40,7 +40,7 @@ void dividec_example1() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -55,7 +55,7 @@ void dividec_example1() {
     }
     std::vector<int> out;
     
-    divide_and_conquer(p,v, out,
+    out = divide_and_conquer(p,v,
                      [&](vector<int> & v){
         std::vector<std::vector<int>> subproblem;
         if(v.size() == 1){ subproblem.push_back(v);return subproblem; }
@@ -78,8 +78,10 @@ void dividec_example1() {
 
         return subproblem;
         },
-        [&](const vector<int> & problem, vector<int> & out){
+        [&](const vector<int> & problem){
+            vector<int> out ();
             out.push_back(problem[0]);
+            return out;
               
         },
         [&](auto & partial, auto & out){
