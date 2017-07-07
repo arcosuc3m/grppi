@@ -66,22 +66,64 @@ stages.
 ---
 **Example**
 ~~~{.cpp}
-    pipeline(exec,
-      [&input]() -> optional<int> {
-        int n;
-        input >> n;
-        if (!input) return {};
-        else return n;
-      },
-      [](int x) { return x*x; },
-      [](int x) { return 1.0/x; }.
-      [&output]() {
-        output << x;
-      }
-    );
+pipeline(ex,
+  [&input]() -> optional<int> {
+    int n;
+    input >> n;
+    if (!input) return {};
+    else return n;
+  },
+  [](int x) { return x*x; },
+  [](int x) { return 1.0/x; },
+  [&output]() {
+    output << x;
+  }
+);
 ~~~
 ---
 
 ### Composable pipeline
 
-TODO
+A *composable pipeline* returns a representation of the pipeline that can be
+used to perform declarative composition of streaming patterns.
+
+~~~{.cpp}
+farm(ex1,
+  [&input]() -> optional<int> {
+    int n;
+    input >> n;
+    if (!input) return {};
+    else return n;
+  },
+  pipeline(ex2,
+    [](int x) { return x*x; },
+    [](int x) { return 1.0/x; },
+  ),
+  [&output]() {
+    output << x;
+  }
+);  
+~~~
+
+This *composable pipeline* can also be used to build complex composed patterns
+in a non-declarative way.
+
+~~~{.cpp}
+auto reader = [&input]() -> optional<int> {
+  int n;
+  input >> n;
+  if (!input) return {};
+  else return n;
+};
+
+auto processor = pipeline(ex2,
+  [](int x) { return x*x; },
+  [](int x) { return 1.0/x; },
+);
+
+auto writer = [&output]() {
+  output << x;
+};
+
+farm(ex1, reader, processor, writer);
+~~~
