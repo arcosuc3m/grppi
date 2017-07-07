@@ -28,10 +28,47 @@
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
 
-/** 
+/**
+\addtogroup stream_patterns
+@{
 \defgroup pipeline_pattern Pipeline pattern
-
 \brief Interface for applyinng the \ref md_pipeline
+@}
 */
+
+namespace grppi {
+
+/**
+\addtogroup pipeline_pattern
+@{
+*/
+
+/**
+\brief Build a composable [pipeline pattern](@ref md_pipeline) representation
+that can be inserted into another streaming pattern.
+\tparam Execution Execution policy type.
+\tparam Transformer Callable type for first transformation stage.
+\tparam MoreTransformers Callable type for each additional transformation stage.
+\param ex Execution policy object.
+\param tranform_op First stage transformation operation
+\param more_trasnform_ops Transformation operations for each additional stage.
+*/
+template <typename Execution, typename Transformer, 
+          typename ... MoreTransformers,
+          requires_arguments<Transformer> = 0>
+pipeline_info<Execution,Transformer,MoreTransformers...> 
+pipeline(Execution & ex, Transformer && transform_op, 
+         MoreTransformers && ... more_transform_ops)
+{
+    return pipeline_info<Execution,Transformer, MoreTransformers...> (ex, 
+        std::forward<Transformer>(transform_op), 
+        std::forward<MoreTransformers>(more_transform_ops)...);
+}
+
+/**
+@}
+*/
+
+}
 
 #endif
