@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_POLY_DIVIDEANDCONQUER_H
-#define GRPPI_POLY_DIVIDEANDCONQUER_H
+#ifndef GRPPI_POLY_DIVIDECONQUER_H
+#define GRPPI_POLY_DIVIDECONQUER_H
 
 #include "common/polymorphic_execution.h"
 #include "common/support.h"
@@ -28,7 +28,7 @@ namespace grppi{
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
-divide_and_conquer_multi_impl(polymorphic_execution & ex, 
+divide_conquer_multi_impl(polymorphic_execution & ex, 
                               Input & input, 
                               Divider && divide_op, Solver && solve_op, 
                               Combiner && combine_op)
@@ -40,12 +40,12 @@ template <typename E, typename ... O,
           typename Input, typename Divider, typename Solver, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
 typename std::result_of<Solver(Input)>::type 
-divide_and_conquer_multi_impl(polymorphic_execution & ex, 
+divide_conquer_multi_impl(polymorphic_execution & ex, 
                               Input & input, 
                               Divider && divide_op, Solver && solve_op, 
                               Combiner && combine_op) 
 {
-  return divide_and_conquer_multi_impl<O...>(ex, input,  
+  return divide_conquer_multi_impl<O...>(ex, input,  
       std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op) );
 }
@@ -54,19 +54,19 @@ template <typename E, typename ... O,
           typename Input, typename Divider, typename Solver, typename Combiner,
           internal::requires_execution_supported<E> = 0>
 typename std::result_of<Solver(Input)>::type 
-divide_and_conquer_multi_impl(polymorphic_execution & ex, 
+divide_conquer_multi_impl(polymorphic_execution & ex, 
                               Input & input, 
                               Divider && divide_op, Solver && solve_op, 
                               Combiner && combine_op) 
 {
   if (typeid(E) == ex.type()) {
-    return divide_and_conquer(*ex.execution_ptr<E>(), 
+    return divide_conquer(*ex.execution_ptr<E>(), 
         input, 
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
         std::forward<Combiner>(combine_op));
   }
   else {
-    return divide_and_conquer_multi_impl<O...>(ex, input,  
+    return divide_conquer_multi_impl<O...>(ex, input,  
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
         std::forward<Combiner>(combine_op));
   }
@@ -99,12 +99,12 @@ execution.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
-divide_and_conquer(polymorphic_execution & ex, 
+divide_conquer(polymorphic_execution & ex, 
                    Input & input, 
                    Divider && divide_op, Solver && solve_op, 
                    Combiner && combine_op) 
 {
-  return divide_and_conquer_multi_impl<
+  return divide_conquer_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,

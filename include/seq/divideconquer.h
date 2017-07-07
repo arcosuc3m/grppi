@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_DIVIDEANDCONQUER_SEQ_H
-#define GRPPI_DIVIDEANDCONQUER_SEQ_H
+#ifndef GRPPI_DIVIDECONQUER_SEQ_H
+#define GRPPI_DIVIDECONQUER_SEQ_H
 
 namespace grppi{
 
@@ -49,7 +49,7 @@ execution.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
-divide_and_conquer(sequential_execution & ex, 
+divide_conquer(sequential_execution & ex, 
                    Input & input, 
                    Divider && divider_op, Solver && solver_op, 
                    Combiner && combiner_op) 
@@ -63,7 +63,7 @@ divide_and_conquer(sequential_execution & ex,
   // FORK
   for (auto && item : subproblems) {
     //THREAD
-    partials.push_back(divide_and_conquer(ex, item, 
+    partials.push_back(divide_conquer(ex, item, 
         std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
         std::forward<Combiner>(combiner_op)));
     //END THREAD

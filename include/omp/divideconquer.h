@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_DIVIDEANDCONQUER_OMP_H
-#define GRPPI_DIVIDEANDCONQUER_OMP_H
+#ifndef GRPPI_DIVIDECONQUER_OMP_H
+#define GRPPI_DIVIDECONQUER_OMP_H
 
 #ifdef GRPPI_OMP
 
@@ -29,7 +29,7 @@ namespace grppi{
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
-internal_divide_and_conquer(parallel_execution_omp & ex, 
+internal_divide_conquer(parallel_execution_omp & ex, 
                             Input & input, 
                             Divider && divide_op, Solver && solve_op, 
                             Combiner && combine_op, 
@@ -52,7 +52,7 @@ internal_divide_and_conquer(parallel_execution_omp & ex,
         #pragma omp task firstprivate(i, division) shared(divide_op, solve_op, \
                 combine_op, partials, num_threads)
         {
-          partials[division] = internal_divide_and_conquer(ex, *i, 
+          partials[division] = internal_divide_conquer(ex, *i, 
               std::forward<Divider>(divide_op), 
               std::forward<Solver>(solve_op), 
               std::forward<Combiner>(combine_op), num_threads);
@@ -62,14 +62,14 @@ internal_divide_and_conquer(parallel_execution_omp & ex,
              
       }
       for(i; i != subproblems.end(); i++){
-        partials[division] = divide_and_conquer(seq, *i, 
+        partials[division] = divide_conquer(seq, *i, 
             std::forward<Divider>(divide_op), 
             std::forward<Solver>(solve_op), 
             std::forward<Combiner>(combine_op));
       }
           
       //Main thread works on the first subproblem.
-      out = internal_divide_and_conquer(ex, *subproblems.begin(), 
+      out = internal_divide_conquer(ex, *subproblems.begin(), 
           std::forward<Divider>(divide_op), 
           std::forward<Solver>(solve_op), 
           std::forward<Combiner>(combine_op), num_threads);
@@ -85,7 +85,7 @@ internal_divide_and_conquer(parallel_execution_omp & ex,
     }
   }
   else {
-    return divide_and_conquer(seq, input, std::forward<Divider>(divide_op), 
+    return divide_conquer(seq, input, std::forward<Divider>(divide_op), 
         std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
   }
   return out;
@@ -117,7 +117,7 @@ parallel execution.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
-divide_and_conquer(parallel_execution_omp & ex, 
+divide_conquer(parallel_execution_omp & ex, 
                    Input & input, 
                    Divider && divide_op, Solver && solve_op, 
                    Combiner && combine_op) 
@@ -129,7 +129,7 @@ divide_and_conquer(parallel_execution_omp & ex,
   using Output = typename std::result_of<Solver(Input)>::type;
 
   if (num_threads.load()<=0) {
-    return divide_and_conquer(seq, input, 
+    return divide_conquer(seq, input, 
         std::forward<Divider>(divide_op), 
         std::forward<Solver>(solve_op), 
         std::forward<Combiner>(combine_op));
@@ -155,7 +155,7 @@ divide_and_conquer(parallel_execution_omp & ex,
         #pragma omp task firstprivate(i,division) \
                 shared(partials,divide_op,solve_op,combine_op,num_threads)
         {
-          partials[division] = internal_divide_and_conquer(ex, *i,
+          partials[division] = internal_divide_conquer(ex, *i,
               std::forward<Divider>(divide_op), 
               std::forward<Solver>(solve_op), 
               std::forward<Combiner>(combine_op), num_threads);
@@ -165,7 +165,7 @@ divide_and_conquer(parallel_execution_omp & ex,
       }
 
       for (i; i!=subproblems.end(); i++) {
-        partials[division] = divide_and_conquer(seq, *i, 
+        partials[division] = divide_conquer(seq, *i, 
             std::forward<Divider>(divide_op), 
             std::forward<Solver>(solve_op), 
             std::forward<Combiner>(combine_op));
@@ -173,13 +173,13 @@ divide_and_conquer(parallel_execution_omp & ex,
 
       //Main thread works on the first subproblem.
       if (num_threads.load()>0) {
-        out = internal_divide_and_conquer(ex, *subproblems.begin(),
+        out = internal_divide_conquer(ex, *subproblems.begin(),
             std::forward<Divider>(divide_op), 
             std::forward<Solver>(solve_op), 
             std::forward<Combiner>(combine_op), num_threads);
       }
       else {
-        out = divide_and_conquer(seq, *subproblems.begin(),
+        out = divide_conquer(seq, *subproblems.begin(),
             std::forward<Divider>(divide_op), 
             std::forward<Solver>(solve_op), 
             std::forward<Combiner>(combine_op));
