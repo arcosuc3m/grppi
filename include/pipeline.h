@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -28,32 +28,10 @@
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BStreamPattern
- *  @{
- */
-/** @defgroup Pipeline
- *	@brief Apply the pipeline pattern for parallelizing the code section.
- *
- *	The Pipeline pattern is applied to data that is processed during 
- *	several steps.
- *  In a Pipeline each step is delegate to a different thread, each thread
- *  perform the function related with that step and forward the result to 
- *  the next step.
- *  @{
- */
+/** 
+\defgroup pipeline_pattern Pipeline pattern
 
-/** @param exec Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param in   Generator function: This function determine how to read the data
- *    before start the parallel stage.
- *  @param sts  Task functions: one or more task functions sorted by the order
- *    of execution. Each task function will be executed in a different thread.
- */
-template <typename FuncIn, typename ... Arguments>
-void Pipeline(execution_model exec, FuncIn in, Arguments ... sts ) {
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+\brief Interface for applyinng the \ref md_pipeline
+*/
 
 #endif
