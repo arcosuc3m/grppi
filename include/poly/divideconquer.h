@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_POLY_DIVIDEANDCONQUER_H
-#define GRPPI_POLY_DIVIDEANDCONQUER_H
+#ifndef GRPPI_POLY_DIVIDECONQUER_H
+#define GRPPI_POLY_DIVIDECONQUER_H
 
 #include "common/polymorphic_execution.h"
 #include "common/support.h"
@@ -28,7 +28,7 @@ namespace grppi{
 
 template <typename Input, typename DivFunc,
           typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_and_conquer_multi_impl(polymorphic_execution & e, 
+typename std::result_of<Operation(Input)>::type divide_conquer_multi_impl(polymorphic_execution & e, 
           Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge)
 {
   return {};
@@ -40,10 +40,10 @@ template <typename E, typename ... O,
           typename Input, typename DivFunc,
           typename Operation, typename MergeFunc,
           internal::requires_execution_not_supported<E> = 0>
-typename std::result_of<Operation(Input)>::type divide_and_conquer_multi_impl(polymorphic_execution & e, 
+typename std::result_of<Operation(Input)>::type divide_conquer_multi_impl(polymorphic_execution & e, 
           Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge) 
 {
-  return divide_and_conquer_multi_impl<O...>(e, problem,  
+  return divide_conquer_multi_impl<O...>(e, problem,  
       std::forward<DivFunc>(divide), std::forward<Operation>(op),
       std::forward<MergeFunc>(merge) );
 }
@@ -54,24 +54,24 @@ template <typename E, typename ... O,
           typename Input, typename DivFunc,
           typename Operation, typename MergeFunc,
           internal::requires_execution_supported<E> = 0>
-typename std::result_of<Operation(Input)>::type divide_and_conquer_multi_impl(polymorphic_execution & e, 
+typename std::result_of<Operation(Input)>::type divide_conquer_multi_impl(polymorphic_execution & e, 
           Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge) 
 {
   if (typeid(E) == e.type()) {
-    return divide_and_conquer(*e.execution_ptr<E>(), 
+    return divide_conquer(*e.execution_ptr<E>(), 
         problem, 
         std::forward<DivFunc>(divide), std::forward<Operation>(op),
         std::forward<MergeFunc>(merge));
   }
   else {
-    return divide_and_conquer_multi_impl<O...>(e, problem,  
+    return divide_conquer_multi_impl<O...>(e, problem,  
         std::forward<DivFunc>(divide), std::forward<Operation>(op),
         std::forward<MergeFunc>(merge));
   }
 }
 
 
-/// Runs a divide_and_conquer pattern with an initial problem, 
+/// Runs a divide_conquer pattern with an initial problem, 
 /// a divide function, an operation function and a merge function.
 /// Input: input problem.
 /// DivFunc: Division functor type.
@@ -79,10 +79,10 @@ typename std::result_of<Operation(Input)>::type divide_and_conquer_multi_impl(po
 /// MergeFunc: Merge functor type.
 template <typename Input, typename DivFunc,
           typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_and_conquer(polymorphic_execution & e, 
+typename std::result_of<Operation(Input)>::type divide_conquer(polymorphic_execution & e, 
           Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge) 
 {
-  return divide_and_conquer_multi_impl<
+  return divide_conquer_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
