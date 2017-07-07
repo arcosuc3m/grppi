@@ -29,12 +29,12 @@
 
 namespace grppi{
 template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
-Identity map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Identity init, Transformer && transform_op, Combiner && combine_op){
+Identity map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Identity identity, Transformer && transform_op, Combiner && combine_op){
 
     using namespace std;
     tbb::task_group g;
 
-    Identity out = init;
+    Identity out = identity;
     std::vector<Identity> partialOuts(p.num_threads);
     int numElements = last - first;
     int elemperthr = numElements/p.num_threads;

@@ -26,10 +26,10 @@
 namespace grppi{
 
 template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
-Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Identity init, Transformer && transform_op,  Combiner &&combine_op){
+Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Identity identity, Transformer && transform_op,  Combiner &&combine_op){
 
     using namespace std;
-    Identity out = init;
+    Identity out = identity;
     std::vector<Identity> partialOuts(p.num_threads);
     std::vector<std::thread> tasks;
     int numElements = last - first;
