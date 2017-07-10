@@ -18,12 +18,12 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_DIVIDEANDCONQUER_SEQ_H
-#define GRPPI_DIVIDEANDCONQUER_SEQ_H
+#ifndef GRPPI_DIVIDECONQUER_SEQ_H
+#define GRPPI_DIVIDECONQUER_SEQ_H
 namespace grppi{
 
 template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_and_conquer(sequential_execution &s, Input &problem, DivFunc &&divide,
+typename std::result_of<Operation(Input)>::type divide_conquer(sequential_execution &s, Input &problem, DivFunc &&divide,
                                Operation &&op, MergeFunc &&merge) {
      
     using Output = typename std::result_of<Operation(Input)>::type;
@@ -34,7 +34,7 @@ typename std::result_of<Operation(Input)>::type divide_and_conquer(sequential_ex
 	int division = 0;
         for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
             //THREAD
-            partials[division] = divide_and_conquer(s, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
+            partials[division] = divide_conquer(s, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
             //END THREAD
         }
         out = partials[0] ;

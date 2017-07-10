@@ -17,15 +17,15 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
-#ifndef GRPPI_DIVIDEANDCONQUER_H
-#define GRPPI_DIVIDEANDCONQUER_H
+#ifndef GRPPI_DIVIDECONQUER_H
+#define GRPPI_DIVIDECONQUER_H
 
 #include "common/common.h"
-#include "seq/divideandconquer.h"
-#include "native/divideandconquer.h"
-#include "omp/divideandconquer.h"
-#include "tbb/divideandconquer.h"
-#include "poly/divideandconquer.h"
+#include "seq/divideconquer.h"
+#include "native/divideconquer.h"
+#include "omp/divideconquer.h"
+#include "tbb/divideconquer.h"
+#include "poly/divideconquer.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BDataPattern
