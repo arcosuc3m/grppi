@@ -21,25 +21,19 @@
 #ifndef GRPPI_PIPELINE_SEQ_H
 #define GRPPI_PIPELINE_SEQ_H
 
+#include "common/pack_traits.h"
+
 namespace grppi {
 
-template <int Index, typename ... T>
-using requires_index_last =
-  std::enable_if_t<(Index == sizeof...(T) - 1), int>;
-
-template <int Index, typename ... T>
-using requires_index_not_last =
-  std::enable_if_t<(Index < sizeof...(T) - 1), int>;
-
 template <typename Input, int Index, typename ... Stages,
-          requires_index_last<Index,Stages...> = 0>
+          internal::requires_index_last<Index,Stages...> = 0>
 auto composed_pipeline(Input in, pipeline_info<sequential_execution, Stages...> const & pipe)
 {
   return (*std::get<Index>(pipe.stages))(in);
 }
 
 template <typename Input, int Index, typename ... MoreTransformers,
-          requires_index_not_last<Index,MoreTransformers...> = 0>
+          internal::requires_index_not_last<Index,MoreTransformers...> = 0>
 auto composed_pipeline(Input in, pipeline_info<sequential_execution, MoreTransformers...> const & pipe)
 {
   auto val = (*std::get<Index>(pipe.stages))(in);
