@@ -34,8 +34,8 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
 
     p.register_thread();
     std::vector<std::thread> tasks;
-    mpmc_queue< typename std::result_of<Generator()>::type > queue (p.queue_size,p.lockfree);
-    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
+    mpmc_queue< typename std::result_of<Generator()>::type > queue (p.get_queue_size(),p.is_lockfree());
+    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.get_queue_size(), p.is_lockfree());
     std::atomic<int> nend(0);
     //Create threads
     for( int i = 0; i < p.get_num_threads(); i++ ) {
@@ -56,7 +56,7 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
                     }
                     queue.push(item);
                     nend++;
-                    if(nend == p.num_threads)
+                    if(nend == p.get_num_threads())
                         queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
 
                     // Deregister the thread in the execution model
@@ -115,7 +115,7 @@ template <typename Generator, typename Operation>
     p.register_thread();
 
     std::vector<std::thread> tasks;
-    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.queue_size,p.lockfree);
+    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.get_queue_size(),p.is_lockfree());
     //Create threads
 //    std::atomic<int> nend(0);
     for( int i = 0; i < p.get_num_threads(); i++ ) {

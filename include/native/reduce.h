@@ -58,16 +58,16 @@ auto reduce(parallel_execution_native & ex,
     auto identityVal = identity;
 
     int numElements = last - first;
-    int elemperthr = numElements/ex.num_threads;
+    int elemperthr = numElements/ex.get_num_threads();
     std::atomic<int> finishedTask(1);
     //local output
-    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.get_num_threads());
     //Create threads
-    for(int i=1;i<ex.num_threads;i++){
+    for(int i=1;i<ex.get_num_threads();i++){
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == ex.num_threads -1) end = last;
-      ex.pool.create_task(boost::bind<void>(
+      if(i == ex.get_num_threads() -1) end = last;
+      ex.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
                for( ; begin != end; begin++ ) {
@@ -85,7 +85,7 @@ auto reduce(parallel_execution_native & ex,
          out[0] = combine_op( out[0], *first);
     }
 
-    while(finishedTask.load()!=ex.num_threads);
+    while(finishedTask.load()!=ex.get_num_threads());
 
     auto outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){

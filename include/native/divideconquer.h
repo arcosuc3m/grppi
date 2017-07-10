@@ -99,7 +99,7 @@ typename std::result_of<Operation(Input)>::type divide_conquer(parallel_executio
     // Sequential execution fo internal implementation
     sequential_execution seq;
     
-    std::atomic<int> num_threads (p.num_threads-1);
+    std::atomic<int> num_threads (p.get_num_threads()-1);
     
     if(num_threads.load()>0){
       auto subproblems = divide(problem);

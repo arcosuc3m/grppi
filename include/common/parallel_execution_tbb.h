@@ -53,7 +53,9 @@ struct parallel_execution_tbb{
      queue_size = new_size;
   }
   
-
+  void set_num_threads(int nthreads){
+     num_threads = nthreads;
+  }
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */

@@ -28,8 +28,8 @@ template <typename Generator, typename Predicate, typename Consumer>
     p.register_thread();
     std::vector<std::thread> tasks;
 
-    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > queue(p.queue_size,p.lockfree);
-    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > outqueue(p.queue_size,p.lockfree);
+    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > queue(p.get_queue_size(),p.is_lockfree());
+    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > outqueue(p.get_queue_size(),p.is_lockfree());
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
     for(int i=0; i< p.get_num_threads() - 1; i++){
@@ -130,7 +130,7 @@ template <typename Generator, typename Predicate, typename Consumer>
         queue.push(std::make_pair(k,order));
         order++;
         if( !k ){
-           for(int i = 0; i< p.num_threads -1; i++){
+           for(int i = 0; i< p.get_num_threads() -1; i++){
               queue.push(std::make_pair(k,-1));
            }
            break;

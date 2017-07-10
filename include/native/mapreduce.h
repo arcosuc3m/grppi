@@ -33,7 +33,7 @@ template <typename InputIt, typename Transformer, class T, typename Combiner>
     std::vector<T> partialOuts(p.get_num_threads());
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.get_num_threads();
     sequential_execution s {};
 
     for(int i=1;i<p.get_num_threads();i++){    
