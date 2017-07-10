@@ -132,7 +132,7 @@ struct parallel_execution_native {
   }
    /** @brief returns the ID of the current thread 
   */
-  int get_threadID(){
+  int get_thread_id(){
     while (lock.test_and_set(std::memory_order_acquire));
     auto it = std::find(thid_table.begin(), thid_table.end(), std::this_thread::get_id());
     auto id = std::distance(thid_table.begin(), it);
