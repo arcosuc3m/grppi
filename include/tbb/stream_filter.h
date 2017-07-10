@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_FILTER_TBB_H
-#define GRPPI_STREAM_FILTER_TBB_H
+#ifndef GRPPI_TBB_STREAM_FILTER_H
+#define GRPPI_TBB_STREAM_FILTER_H
 
 #ifdef GRPPI_TBB
 

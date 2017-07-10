@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_THR_H
-#define GRPPI_REDUCE_THR_H
+#ifndef GRPPI_NATIVE_REDUCE_H
+#define GRPPI_NATIVE_REDUCE_H
 
 #include <thread>
 #include <functional>

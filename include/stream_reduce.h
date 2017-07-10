@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAMREDUCE_H
-#define GRPPI_STREAMREDUCE_H
+#ifndef GRPPI_STREAM_REDUCE_H
+#define GRPPI_STREAM_REDUCE_H
 
 
 #include "common/sequential_execution.h"

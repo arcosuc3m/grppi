@@ -28,17 +28,9 @@
 #include "common/patterns.h"
 #include "common/support.h"
 
-
 #include "seq/stream_iteration.h"
 #include "native/stream_iteration.h"
 
-#ifdef OMP_ENABLE
-//	#include "omp/farm_omp.hpp"
-#endif
-
-#ifdef TBB_ENABLE
-//	#include "tbb/farm_tbb.hpp"
-#endif
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
  *  @{

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_DIVIDECONQUER_TBB_H
-#define GRPPI_DIVIDECONQUER_TBB_H
+#ifndef GRPPI_TBB_DIVIDECONQUER_H
+#define GRPPI_TBB_DIVIDECONQUER_H
 
 #ifdef GRPPI_TBB
 
