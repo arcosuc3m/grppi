@@ -21,6 +21,8 @@
 #ifndef GRPPI_PIPELINE_THR_H
 #define GRPPI_PIPELINE_THR_H
 
+#include "common/pack_traits.h"
+
 #include <experimental/optional>
 
 #include <thread>
@@ -28,18 +30,9 @@
 
 namespace grppi{
 
-template <int Index, typename ... T>
-using requires_index_last =
-  std::enable_if_t<(Index == sizeof...(T) - 1), int>;
-
-template <int Index, typename ... T>
-using requires_index_not_last =
-  std::enable_if_t<(Index < sizeof...(T) - 1), int>;
-
-
 template <typename InQueue, typename OutQueue, int Index, 
           typename ... MoreTransformers,
-          requires_index_last<Index,MoreTransformers...> = 0>
+          internal::requires_index_last<Index,MoreTransformers...> = 0>
 void composed_pipeline(InQueue & input_queue, 
                        const pipeline_info<parallel_execution_native, MoreTransformers...> & pipe, 
                        OutQueue & output_queue, std::vector<std::thread> & tasks)
@@ -51,7 +44,7 @@ void composed_pipeline(InQueue & input_queue,
 
 template <typename InQueue, typename OutQueue, int Index, 
           typename ... MoreTransformers,
-          requires_index_not_last<Index,MoreTransformers...> = 0>
+          internal::requires_index_not_last<Index,MoreTransformers...> = 0>
 void composed_pipeline(InQueue & input_queue, 
                        const pipeline_info<parallel_execution_native,MoreTransformers...> & pipeline_obj, 
                        OutQueue & output_queue, std::vector<std::thread> & tasks)
@@ -479,8 +472,27 @@ void pipeline_impl(parallel_execution_native & ex, Queue & input_queue,
   task.join();
 }
 
+/**
+\addtogroup pipeline_pattern
+@{
+*/
 
-//First stage
+/**
+\addtogroup pipeline_pattern_native Native parallel pipeline pattern
+\brief Native parallel implementation of the \ref md_pipeline pattern
+@{
+*/
+
+/**
+\brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
+with native parallel execution.
+\tparam Generator Callable type for the stream generator.
+\tparam MoreTransformers Callable type for each transformation stage.
+\param ex Sequential execution policy object.
+\param generate_op Generator operation.
+\param trasnform_ops Transformation operations for each stage.
+\remark Generator shall be a zero argument callable type.
+*/
 template <typename Generator, typename ... MoreTransformers,
           requires_no_arguments<Generator> = 0>
 void pipeline(parallel_execution_native & ex, Generator && generate_op, 
@@ -488,15 +500,13 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
 {
   using namespace std;
 
-  //Create first queue
-  using generator_result = typename result_of<Generator()>::type;
-  using queue_item = pair<generator_result,long>;
-  mpmc_queue<queue_item> first_queue{ex.queue_size,ex.lockfree};
+  using result_type = typename result_of<Generator()>::type;
+  using output_type = pair<result_type,long>;
+  mpmc_queue<output_type> first_queue{ex.queue_size,ex.lockfree};
 
   //Create stream generator stage
   thread task(
     [&]() {
-      //Register the thread in the execution model
       ex.register_thread();
 
       long order = 0;
@@ -507,12 +517,10 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
         if (!item) break;
       }
 
-      //Deregister the thread in the execution model
       ex.deregister_thread();
     }
   );
 
-  //Create next stage
   pipeline_impl(ex, first_queue, forward<MoreTransformers>(more_transform_ops)...);
   task.join();
 }
