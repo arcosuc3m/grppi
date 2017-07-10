@@ -21,7 +21,13 @@
 #ifndef GRPPI_MAP_H
 #define GRPPI_MAP_H
 
-#include "common/common.h"
+
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
+#include "common/iterator.h"
+
 #include "seq/map.h"
 #include "native/map.h"
 #include "omp/map.h"
