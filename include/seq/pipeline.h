@@ -25,75 +25,78 @@
 
 namespace grppi {
 
-template <typename Input, int Index, typename ... Transformers,
-          internal::requires_index_last<Index,Transformers...> = 0>
+template <typename Input, int Index, typename ... MoreTransformers,
+          internal::requires_index_last<Index,MoreTransformers...> = 0>
 auto composed_pipeline(Input in, 
-                       const pipeline_info<sequential_execution,Transformers...> & pipe)
+                       const pipeline_info<
+                           sequential_execution,
+                           MoreTransformers...> & pipeline_obj)
 {
-  return (*std::get<Index>(pipe.stages))(in);
+  return (*std::get<Index>(pipeline_obj.stages))(in);
 }
 
-template <typename Input, int Index, typename ... Transformers,
-          internal::requires_index_not_last<Index,Transformers...> = 0>
-auto composed_pipeline(Input in, const pipeline_info<sequential_execution,Transformers...> & pipe)
+template <typename Input, int Index, typename ... MoreTransformers,
+          internal::requires_index_not_last<Index,MoreTransformers...> = 0>
+auto composed_pipeline(Input in, 
+                       const pipeline_info<
+                           sequential_execution, 
+                           MoreTransformers...> & pipeline_obj)
 {
-  return composed_pipeline<Input, Index+1, Transformers...>(
-      (*std::get<Index>(pipe.stages))(in), pipe);
+  return composed_pipeline<Input, Index+1, MoreTransformers...>(
+      (*std::get<Index>(pipeline_obj.stages))(in),
+      pipeline_obj);
 }
 
 //Last stage
-template <typename Item, typename Consumer>
+template <typename Item, typename Transformer>
 void pipeline_impl(sequential_execution &s, Item && item, 
-                   Consumer && consume_op) 
+                   Transformer && transform_op) 
 {
-  consume_op(std::forward<Item>(item));
+  transform_op(std::forward<Item>(item));
 }
 
 //Filter stage
-template <typename Item, typename Predicate, typename... MoreTransformers,
-          typename FilterInfo = filter_info<sequential_execution,Predicate> >
+template <typename Item, typename Filter, typename... MoreTransformers>
 void pipeline_impl(sequential_execution & ex, Item && item, 
-                   FilterInfo & filter_obj, 
+                   const filter_info<sequential_execution,Filter> & filter_obj, 
                    MoreTransformers && ... more_transform_ops)
 {
   pipeline_impl(ex, std::forward<Item>(item), 
-      std::forward<FilterInfo>(filter_obj), 
+      std::forward<filter_info<sequential_execution,Filter>>(filter_obj), 
       std::forward<MoreTransformers>(more_transform_ops)...);
 }
 
-template <typename Item, typename Transformer, typename... MoreTransformers,
-          typename FilterInfo = filter_info<sequential_execution,Predicate> >
+template <typename Item, typename Transformer, typename... MoreTransformers>
 void pipeline_impl(sequential_execution & ex, Item && item, 
-                   FilterInfo && filter_obj, 
+                   filter_info<sequential_execution, Transformer> && transf_filter, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  if(filter_obj.task(item)) {
+  if(transf_filter.task(item))
     pipeline_impl(ex, std::forward<Item>(item),
         std::forward<MoreTransformers>(more_transform_ops)...);
-  }
 }
 
 //Farm stage
-template <typename Item, typename Transformer, typename... MoreTransformers,
-          typename FarmInfo = farm_info<sequential_execution,Transformer> >
+template <typename Item, typename Transformer, typename... MoreTransformers>
 void pipeline_impl(sequential_execution & ex, Item && item, 
-                   FarmInfo & farm_obj, 
+                   farm_info<sequential_execution, Transformer> & transf_farm, 
                    MoreTransformers && ... more_transform_ops) 
 {
   pipeline_impl(ex, std::forward<Item>(item), 
-      std::forward<FarmInfo>(farm_obj), 
+      std::forward<farm_info<sequential_execution,Transformer>>(transf_farm), 
       std::forward<MoreTransformers>(more_transform_ops)... );
 }
 
-template <typename Item, typename Transformer, typename... MoreTransformers,
-          typename FarmInfo = farm_info<sequential_execution,Transformer> >
+template <typename Item, typename Transformer, typename... MoreTransformers>
 void pipeline_impl(sequential_execution & ex, Item && item, 
-                   FarmInfo && farm_obj, 
+                   farm_info<sequential_execution, Transformer> && transform_farm, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  pipeline_impl(ex, farm_obj.task(item), 
+  pipeline_impl(ex, transform_farm.task(item), 
       std::forward<MoreTransformers>(more_transform_ops)...);
 }
+
+
 
 //Intermediate stages
 template <typename Item, typename Transformer, typename ... MoreTransformers>
