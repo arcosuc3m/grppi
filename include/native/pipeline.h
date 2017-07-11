@@ -504,8 +504,7 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
   using output_type = pair<result_type,long>;
   mpmc_queue<output_type> first_queue{ex.queue_size,ex.lockfree};
 
-  //Create stream generator stage
-  thread task(
+  thread generator_task(
     [&]() {
       ex.register_thread();
 
@@ -522,7 +521,7 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
   );
 
   pipeline_impl(ex, first_queue, forward<MoreTransformers>(more_transform_ops)...);
-  task.join();
+  generator_task.join();
 }
 
 /**
