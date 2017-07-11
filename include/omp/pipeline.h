@@ -317,16 +317,16 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
 \brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
 with OpenMP parallel execution.
 \tparam Generator Callable type for the stream generator.
-\tparam MoreTransformers Callable type for each transformation stage.
-\param ex Sequential execution policy object.
+\tparam Transformers Callable type for each transformation stage.
+\param ex OpenMP parallel execution policy object.
 \param generate_op Generator operation.
 \param trasnform_ops Transformation operations for each stage.
 \remark Generator shall be a zero argument callable type.
 */
-template <typename Generator, typename ... MoreTransformers,
+template <typename Generator, typename ... Transformers,
           requires_no_arguments<Generator> = 0>
 void pipeline(parallel_execution_omp & ex, Generator && generate_op, 
-              MoreTransformers && ... more_transform_ops) 
+              Transformers && ... transform_ops) 
 {
   using namespace std;
 
@@ -347,7 +347,7 @@ void pipeline(parallel_execution_omp & ex, Generator && generate_op,
         }
       }
       pipeline_impl(ex, output_queue,
-          forward<MoreTransformers>(more_transform_ops)...);
+          forward<Transformers>(transform_ops)...);
       #pragma omp taskwait
     }
   }

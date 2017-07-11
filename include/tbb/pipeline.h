@@ -153,8 +153,8 @@ auto pipeline_impl(parallel_execution_tbb & ex,
 \brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
 with TBB parallel execution.
 \tparam Generator Callable type for the stream generator.
-\tparam MoreTransformers Callable type for each transformation stage.
-\param ex Sequential execution policy object.
+\tparam Transformers Callable type for each transformation stage.
+\param ex OpenMP parallel execution policy object.
 \param generate_op Generator operation.
 \param trasnform_ops Transformation operations for each stage.
 \remark Generator shall be a zero argument callable type.
