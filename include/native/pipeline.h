@@ -121,8 +121,8 @@ void pipeline_impl(parallel_execution_native & ex, Queue& input_queue,
       }
       // TODO: Probably find_if() + erase 
       for (auto it=elements.begin(); it!=elements.end(); it++) {
-        if((*it).second == current) {
-          consume((*it).first.value());
+        if(it->second == current) {
+          consume(it->first.value());
           elements.erase(it);
           current++;
           break;
@@ -133,8 +133,8 @@ void pipeline_impl(parallel_execution_native & ex, Queue& input_queue,
     while (elements.size()>0) {
       // TODO: Probably find_if() + erase
       for (auto it = elements.begin(); it != elements.end(); it++) {
-        if((*it).second == current) {
-          consume((*it).first.value());
+        if(it->second == current) {
+          consume(it->first.value());
           elements.erase(it);
           current++;
           break;
@@ -269,9 +269,9 @@ void pipeline_impl_ordered(parallel_execution_native & ex, Queue& input_queue,
       }
       // TODO: Probably find_if() + erase 
       for (auto it=elements.begin(); it<elements.end(); it++) {
-        if ((*it).second == current) {
-          if ((*it).first) {
-            output_queue.push(make_pair((*it).first,order));
+        if (it->second == current) {
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
             order++;
           }
           elements.erase(it);
@@ -284,9 +284,9 @@ void pipeline_impl_ordered(parallel_execution_native & ex, Queue& input_queue,
     while (elements.size()>0) {
       // TODO: Probably find_if() + erase 
       for (auto it=elements.begin(); it<elements.end(); it++) {
-        if ((*it).second == current) {
-          if((*it).first) { 
-            output_queue.push(make_pair((*it).first,order));
+        if (it->second == current) {
+          if(it->first) { 
+            output_queue.push(make_pair(it->first,order));
             order++;
           }
           elements.erase(it);
@@ -524,6 +524,11 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
   pipeline_impl(ex, first_queue, forward<MoreTransformers>(more_transform_ops)...);
   task.join();
 }
+
+/**
+@}
+@}
+*/
 
 }
 
