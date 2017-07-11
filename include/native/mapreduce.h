@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_THR_H
-#define GRPPI_MAPREDUCE_THR_H
+#ifndef GRPPI_NATIVE_MAPREDUCE_H
+#define GRPPI_NATIVE_MAPREDUCE_H
 
 #include "../reduce.h"
 

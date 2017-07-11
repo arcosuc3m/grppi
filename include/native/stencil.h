@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_THR_H
-#define GRPPI_STENCIL_THR_H
+#ifndef GRPPI_NATIVE_STENCIL_H
+#define GRPPI_NATIVE_STENCIL_H
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>

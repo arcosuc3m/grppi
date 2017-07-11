@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_TBB_H
-#define GRPPI_MAPREDUCE_TBB_H
+#ifndef GRPPI_TBB_MAPREDUCE_H
+#define GRPPI_TBB_MAPREDUCE_H
 
 #ifdef GRPPI_TBB
 

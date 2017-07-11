@@ -21,7 +21,15 @@
 #ifndef GRPPI_PIPELINE_H
 #define GRPPI_PIPELINE_H
 
-#include "common/common.h"
+
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
+#include "common/callable_traits.h"
+#include "common/support.h"
+
+#include "common/patterns.h"
 #include "seq/pipeline.h"
 #include "native/pipeline.h"
 #include "omp/pipeline.h"

@@ -18,10 +18,17 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAMFILTER_H
-#define GRPPI_STREAMFILTER_H
+#ifndef GRPPI_STREAM_FILTER_H
+#define GRPPI_STREAM_FILTER_H
 
-#include "common/common.h"
+
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
+#include "common/patterns.h"
+#include "common/support.h"
+
 #include "seq/stream_filter.h"
 #include "native/stream_filter.h"
 #include "omp/stream_filter.h"

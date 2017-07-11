@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_PIPELINE_OMP_H
-#define GRPPI_PIPELINE_OMP_H
+#ifndef GRPPI_OMP_PIPELINE_H
+#define GRPPI_OMP_PIPELINE_H
 
 #ifdef GRPPI_OMP
 

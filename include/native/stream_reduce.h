@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_REDUCE_THR_H
-#define GRPPI_STREAM_REDUCE_THR_H
+#ifndef GRPPI_NATIVE_STREAM_REDUCE_H
+#define GRPPI_NATIVE_STREAM_REDUCE_H
 
 #include "../reduce.h"
 
