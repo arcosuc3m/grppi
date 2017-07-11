@@ -6,6 +6,7 @@ project(${PROJECT_NAME_STR})
 set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake.modules)
 
 include(${CMAKE_MODULE_PATH}/build-external.cmake)
+include(${CMAKE_MODULE_PATH}/FindHWLOC.cmake)
 
 # Print processor and compiler 
 message( STATUS "Detected processor is " ${CMAKE_SYSTEM_PROCESSOR} )
@@ -73,12 +74,22 @@ else()
 	message( FATAL_ERROR "Boost library is not installed in your system" )    
 endif()
 
-find_package(HWLOC)
+find_package( HWLOC )
+message("DETECTING HWLOC")
 if(HWLOC_FOUND)
-    add_definitions( "-DGRPPI_HWLOC" )
-else()
-     message( WARNING "hwloc library is not installed in your system" )    
-endif()
+  message("DETECTED HWLOC")
+  option( GRPPI_HWLOC_ENABLE "Require TBB library" ON )
+else( HWLOC_FOUND )
+  message("NO DETECTED HWLOC")
+  option( GRPPI_HWLOC_ENABLE "Require TBB library" OFF )
+endif( HWLOC_FOUND )
+
+if( GRPPI_HWLOC_ENABLE )
+  add_definitions( -DGRPPI_HWLOC)
+  include_directories(${HWLOC_INCLUDE_DIRS})
+  set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lhwloc" )
+endif( GRPPI_HWLOC_ENABLE )
+
 # TBB Library
 find_package( TBB ) 
 if( TBB_FOUND )

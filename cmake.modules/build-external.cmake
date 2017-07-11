@@ -17,4 +17,4 @@ endif()
 # Build packages if required version not found
 include(${CMAKE_MODULE_PATH}/build-googletest.cmake)
 
-#include(${CMAKE_MODULE_PATH}/build-hwloc.cmake)
+include(${CMAKE_MODULE_PATH}/build-hwloc.cmake)
