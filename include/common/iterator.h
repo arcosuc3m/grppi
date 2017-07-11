@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_ITERATOR_H
-#define GRPPI_ITERATOR_H
+#ifndef GRPPI_COMMON_ITERATOR_H
+#define GRPPI_COMMON_ITERATOR_H
 
 namespace grppi{
 

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef PPI_POOL
-#define PPI_POOL
+#ifndef GRPPI_NATIVE_POOL_H
+#define GRPPI_NATIVE_POOL_H
 
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>

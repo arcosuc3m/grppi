@@ -18,10 +18,17 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAMREDUCE_H
-#define GRPPI_STREAMREDUCE_H
+#ifndef GRPPI_STREAM_REDUCE_H
+#define GRPPI_STREAM_REDUCE_H
 
-#include "common/common.h"
+
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
+#include "common/patterns.h"
+#include "common/support.h"
+
 #include "seq/stream_reduce.h"
 #include "native/stream_reduce.h"
 #include "omp/stream_reduce.h"

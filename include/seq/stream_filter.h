@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_FILTER_SEQ_H
-#define GRPPI_STREAM_FILTER_SEQ_H
+#ifndef GRPPI_SEQ_STREAM_FILTER_H
+#define GRPPI_SEQ_STREAM_FILTER_H
 
 namespace grppi{
 template <typename Generator, typename Predicate, typename Consumer>

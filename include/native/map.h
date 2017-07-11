@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAP_THR_H
-#define GRPPI_MAP_THR_H
+#ifndef GRPPI_NATIVE_MAP_H
+#define GRPPI_NATIVE_MAP_H
 
 namespace grppi{
 

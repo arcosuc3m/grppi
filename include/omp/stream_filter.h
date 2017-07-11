@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_FILTER_OMP_H
-#define GRPPI_STREAM_FILTER_OMP_H
+#ifndef GRPPI_OMP_STREAM_FILTER_H
+#define GRPPI_OMP_STREAM_FILTER_H
 
 #ifdef GRPPI_OMP
 

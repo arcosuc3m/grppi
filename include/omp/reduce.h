@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_OMP_H
-#define GRPPI_REDUCE_OMP_H
+#ifndef GRPPI_OMP_REDUCE_H
+#define GRPPI_OMP_REDUCE_H
 
 #ifdef GRPPI_OMP
 
