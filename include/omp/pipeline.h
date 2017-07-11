@@ -81,12 +81,13 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
 }
 
 template <typename Transformer, typename InQueue, typename... MoreTransformers>
-void pipeline_impl(parallel_execution_omp & ex, InQueue& input_queue, 
+void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue, 
                    filter_info<parallel_execution_omp,Transformer> & filter_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  pipeline_impl(ex,input_queue,
-      std::forward<filter_info<parallel_execution_omp, Transformer>>(filter_obj), 
+  using filter_type = filter_info<parallel_execution_omp, Transformer>;
+
+  pipeline_impl(ex,input_queue, std::forward<filter_type>(filter_obj), 
       std::forward<MoreTransformers>(more_transform_ops)...) ;
 }
 
@@ -214,14 +215,16 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
                    filter_info<parallel_execution_omp, Transformer> && filter_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
+  using filter_type = filter_info<parallel_execution_omp, Transformer>;
+
   if (ex.ordering) {
-    pipeline_impl_ordered(ex, input_queue,
-        std::forward<filter_info<parallel_execution_omp, Transformer>>(filter_obj),
+    pipeline_impl_ordered(ex, input_queue, 
+        std::forward<filter_type>(filter_obj),
         std::forward<MoreTransformers>(more_transform_ops)...);
   }
   else {
     pipeline_impl_unordered(ex, input_queue,
-        std::forward<filter_info<parallel_execution_omp, Transformer>>(filter_obj),
+        std::forward<filter_type>(filter_obj),
         std::forward<MoreTransformers>(more_transform_ops)...);
   }
 }
@@ -232,8 +235,8 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
                    farm_info<parallel_execution_omp, Transformer> & farm_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  pipeline_impl(ex, input_queue, 
-      std::forward< farm_info<parallel_execution_omp,Transformer>>(farm_obj), 
+  using farm_type = farm_info<parallel_execution_omp,Transformer>;
+  pipeline_impl(ex, input_queue, std::forward<farm_type>(farm_obj), 
       std::forward<MoreTransformers>(more_transform_ops)...) ;
 }
 

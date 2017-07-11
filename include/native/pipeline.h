@@ -98,16 +98,16 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
 }
 
 //Last stage
-template <typename Queue, typename Consumer>
-void pipeline_impl(parallel_execution_native & ex, Queue& input_queue, 
+template <typename InQueue, typename Consumer>
+void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue, 
                    Consumer && consume) 
 {
   using namespace std;
-  using input_type = typename Queue::value_type;
+  using input_type = typename InQueue::value_type;
 
   ex.register_thread();
 
-  vector<typename Queue::value_type> elements;
+  vector<input_type> elements;
   long current = 0;
   if (ex.ordering){
     auto item = input_queue.pop();
@@ -154,26 +154,25 @@ void pipeline_impl(parallel_execution_native & ex, Queue& input_queue,
 }
 
 //Item reduce stage
-template <typename Transformer, typename Reducer, typename Queue>
-void pipeline_impl(parallel_execution_native & ex, Queue & input_queue,
+template <typename Transformer, typename Reducer, typename InQueue>
+void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
                    reduction_info<parallel_execution_native, Transformer, Reducer> & reduction_obj) 
 {
-  pipeline_impl(ex, input_queue,
-                std::forward<
-                  reduction_info<parallel_execution_native,Transformer, 
-                    Reducer>
-                >(reduction_obj) );
+  using reduction_type = 
+      reduction_info<parallel_execution_native,Transformer,Reducer>;
+
+  pipeline_impl(ex, input_queue, std::forward<reduction_type>(reduction_obj));
 }
 
 
 
-template <typename Transformer, typename Reducer, typename Queue>
-void pipeline_impl(parallel_execution_native & ex, Queue & input_queue,
+template <typename Transformer, typename Reducer, typename InQueue>
+void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
                    reduction_info<parallel_execution_native,Transformer,Reducer> && reduction_obj) 
 {
   using namespace std;
   vector<thread> tasks;
-  using input_type = typename Queue::value_type;
+  using input_type = typename InQueue::value_type;
   using result_type = typename result_of<Transformer(input_type)>::type;
   mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
 
@@ -197,25 +196,26 @@ void pipeline_impl(parallel_execution_native & ex, Queue & input_queue,
 }
 
 //Filtering stage
-template <typename Transformer, typename Queue, typename... MoreTransformers>
-void pipeline_impl(parallel_execution_native & ex, Queue & input_queue,
+template <typename Transformer, typename InQueue, typename... MoreTransformers>
+void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
                    filter_info<parallel_execution_native,Transformer> & filter_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  pipeline_impl(ex,input_queue,
-    std::forward<filter_info<parallel_execution_native,Transformer>>(filter_obj), 
+  using filter_type = filter_info<parallel_execution_native,Transformer>;
+
+  pipeline_impl(ex,input_queue, std::forward<filter_type>(filter_obj), 
     std::forward<MoreTransformers>(more_transform_ops)... );
 }
 
-template <typename Transformer, typename Queue, typename... MoreTransformers>
-void pipeline_impl_ordered(parallel_execution_native & ex, Queue& input_queue,
+template <typename Transformer, typename InQueue, typename... MoreTransformers>
+void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
                            filter_info<parallel_execution_native,Transformer> && filter_obj, 
                            MoreTransformers && ... more_transform_ops ) 
 {
   using namespace std;
   vector<thread> tasks;
 
-  using input_type = typename Queue::value_type;
+  using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type;
   mpmc_queue<input_type> tmp_queue{ex.queue_size, ex.lockfree};
 
@@ -304,15 +304,16 @@ void pipeline_impl_ordered(parallel_execution_native & ex, Queue& input_queue,
   for (auto && t : tasks) { t.join(); }
 }
 
-template <typename Transformer, typename Queue, typename ... MoreTransformers>
-void pipeline_impl_unordered(parallel_execution_native & ex, Queue & input_queue,
+template <typename Transformer, typename InQueue, typename ... MoreTransformers>
+void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_queue,
                              filter_info<parallel_execution_native,Transformer> && filter_obj, 
                              MoreTransformers && ... more_transform_ops) 
 {
   using namespace std;
   vector<thread> tasks;
 
-  using input_type = typename Queue::value_type;
+  using input_type = typename InQueue::value_type;
+  using input_value_type = typename input_type::first_type;
   mpmc_queue<input_type> output_queue{ex.queue_size, ex.lockfree};
 
   atomic<int> nend{0}; // TODO: Find better name?
@@ -335,7 +336,7 @@ void pipeline_impl_unordered(parallel_execution_native & ex, Queue & input_queue
         }
         nend++;
         if (nend==filter_obj.exectype.num_threads) {
-          output_queue.push( make_pair(typename Queue::value_type::first_type(), -1) );
+          output_queue.push( make_pair(input_value_type{}, -1) );
         }
         else {
           input_queue.push(item);
@@ -352,8 +353,8 @@ void pipeline_impl_unordered(parallel_execution_native & ex, Queue & input_queue
   for (auto && t : tasks) { t.join(); }
 }
 
-template <typename Transformer, typename Queue, typename ... MoreTransformers>
-void pipeline_impl(parallel_execution_native & ex, Queue& input_queue,
+template <typename Transformer, typename InQueue, typename ... MoreTransformers>
+void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
                    filter_info<parallel_execution_native,Transformer> && filter_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
@@ -370,27 +371,26 @@ void pipeline_impl(parallel_execution_native & ex, Queue& input_queue,
   }
 }
 
-// TODO: This needs to be reviewed
-template <typename Transformer, typename Queue, typename... MoreTransformers>
-void pipeline_impl(parallel_execution_native & ex, Queue & input_queue,
+template <typename Transformer, typename InQueue, typename... MoreTransformers>
+void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
                    farm_info<parallel_execution_native, Transformer> & farm_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
-     pipeline_impl(ex, input_queue, 
-         std::forward<farm_info<parallel_execution_native,Transformer>>(farm_obj),
+  using farm_type = farm_info<parallel_execution_native,Transformer>;
+  pipeline_impl(ex, input_queue, std::forward<farm_type>(farm_obj),
          std::forward< MoreTransformers>(more_transform_ops) ... );
 }
 
 
 //Farm stage
-template <typename Transformer, typename Queue, typename... MoreTransformers>
-void pipeline_impl(parallel_execution_native & p, Queue & input_queue, 
+template <typename Transformer, typename InQueue, typename... MoreTransformers>
+void pipeline_impl(parallel_execution_native & p, InQueue & input_queue, 
                    farm_info<parallel_execution_native,Transformer> && farm_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
   using namespace std;
 
-  using input_item_type = typename Queue::value_type;
+  using input_item_type = typename InQueue::value_type;
   using input_item_value_type = 
       typename input_item_type::first_type::value_type;
   using transform_result_type = 
@@ -432,14 +432,14 @@ void pipeline_impl(parallel_execution_native & p, Queue & input_queue,
 }
 
 //Intermediate pipeline_impl
-template <typename Transformer, typename Queue, typename... MoreTransformers>
-void pipeline_impl(parallel_execution_native & ex, Queue & input_queue, 
+template <typename Transformer, typename InQueue, typename... MoreTransformers>
+void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue, 
                    Transformer && transform_op, 
                    MoreTransformers && ... more_transform_ops) 
 {
   using namespace std;
 
-  using input_item_type = typename Queue::value_type;
+  using input_item_type = typename InQueue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
   using transform_result_type = 
       typename result_of<Transformer(input_item_value_type)>::type;

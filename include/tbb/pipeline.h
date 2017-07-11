@@ -55,8 +55,9 @@ auto pipeline_impl(parallel_execution_tbb & ex,
                    farm_info<parallel_execution_tbb, Transformer> & farm_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  return pipeline_impl(ex, in, 
-      std::forward<farm_info<parallel_execution_tbb,Transformer>>(farm_obj), 
+  using farm_type = farm_info<parallel_execution_tbb,Transformer>;
+
+  return pipeline_impl(ex, in, std::forward<farm_type>(farm_obj), 
       std::forward<MoreTransformers>(more_transform_ops)...);
 }
 
@@ -67,10 +68,10 @@ auto pipeline_impl(parallel_execution_tbb & ex,
                    filter_info<parallel_execution_tbb,Predicate> & filter_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
-  return pipeline_impl(ex, in,
-      std::forward<filter_info<parallel_execution_tbb,Predicate>>(filter_obj), 
-      std::forward<MoreTransformers>(more_transform_ops)...);
+  using filter_type = filter_info<parallel_execution_tbb,Predicate>;
 
+  return pipeline_impl(ex, in, std::forward<filter_type>(filter_obj), 
+      std::forward<MoreTransformers>(more_transform_ops)...);
 }
 
 template <typename Predicate, typename... MoreTransformers, typename Input>
@@ -79,16 +80,19 @@ auto pipeline_impl(parallel_execution_tbb & ex,
                    filter_info<parallel_execution_tbb,Predicate> && filter_obj, 
                    MoreTransformers && ... more_transform_ops) 
 {
+  using namespace std;
+  using optional_input_type = experimental::optional<Input>;
+
   return 
-      tbb::make_filter<std::experimental::optional<Input>, 
-                       std::experimental::optional<Input>>(
+      tbb::make_filter<optional_input_type,optional_input_type>(
           tbb::filter::parallel,
-          [&](std::experimental::optional<Input> val) { 
+          [&](optional_input_type val) -> optional_input_type { 
             return (val && filter_obj.task(*val)) ? 
               (val) :
-              std::experimental::optional<Input>{};
+              optional_input_type{};
           }
-      ) & 
+      ) 
+      & 
       pipeline_impl(ex, in, 
           std::forward<MoreTransformers>(more_transform_ops)...);
 }
@@ -105,15 +109,18 @@ auto pipeline_impl(parallel_execution_tbb & ex,
   using output_type = typename result_of<Transformer(Input)>::type;
   using optional_output_type = experimental::optional<output_type>;
 
-  return tbb::make_filter<optional_input_type, optional_output_type>(
-      tbb::filter::parallel,
-      [&](optional_input_type s) -> optional_output_type {
-        return (s) ? 
-          farm_obj.task(s.value()) : optional_output_type{};
-      } 
-    ) &
-    pipeline_impl(ex, output_type{}, 
-        forward<MoreTransformers>(more_transform_ops)...);
+  return 
+      tbb::make_filter<optional_input_type, optional_output_type>(
+          tbb::filter::parallel,
+          [&](optional_input_type val) -> optional_output_type {
+          return (val) ? 
+              farm_obj.task(*val) : 
+              optional_output_type{};
+          } 
+      ) 
+      &
+      pipeline_impl(ex, output_type{}, 
+          forward<MoreTransformers>(more_transform_ops)...);
 }
 
 template <typename Predicate, typename ... MoreTransformers, typename Input>
@@ -127,15 +134,17 @@ auto pipeline_impl(parallel_execution_tbb & ex,
   using output_type = typename result_of<Predicate(Input)>::type;
   using optional_output_type = experimental::optional<output_type>;
 
-  return tbb::make_filter<optional_input_type, optional_output_type>( 
-      tbb::filter::serial_in_order,
-      [&](optional_input_type s) -> optional_output_type {
-        return (s) ? predicate_op(*s) : 
-            optional_output_type{};
-      }
-    ) & 
-    pipeline_impl(ex, output_type{},      
-        forward<MoreTransformers>(more_transform_ops)...);
+  return 
+      tbb::make_filter<optional_input_type, optional_output_type>( 
+          tbb::filter::serial_in_order,
+          [&](optional_input_type val) -> optional_output_type {
+            return (val) ? predicate_op(*val) : 
+              optional_output_type{};
+          }
+      ) 
+      & 
+      pipeline_impl(ex, output_type{},      
+          forward<MoreTransformers>(more_transform_ops)...);
 }
 
 /**
@@ -154,7 +163,7 @@ auto pipeline_impl(parallel_execution_tbb & ex,
 with TBB parallel execution.
 \tparam Generator Callable type for the stream generator.
 \tparam Transformers Callable type for each transformation stage.
-\param ex OpenMP parallel execution policy object.
+\param ex TBB parallel execution policy object.
 \param generate_op Generator operation.
 \param trasnform_ops Transformation operations for each stage.
 \remark Generator shall be a zero argument callable type.
@@ -171,17 +180,19 @@ void pipeline(parallel_execution_tbb & ex, Generator generate_op,
 
   const auto this_filter = tbb::make_filter<void, output_type>(
       tbb::filter::serial_in_order, 
-      [&](tbb::flow_control& fc) {
+      [&](tbb::flow_control& fc) -> output_type {
         auto item =  generate_op();
         if (!item) { fc.stop(); }
-        return (item) ? output_type{item.value()} :output_type{};
+        return (item) ? *item :output_type{};
       }
   );
 
   tbb::task_group_context context;
   tbb::parallel_pipeline(ex.num_tokens, 
-      this_filter & 
-      pipeline_impl(ex, output_value_type{}, forward<Transformers>(transform_ops)...));
+      this_filter 
+      & 
+      pipeline_impl(ex, output_value_type{}, 
+          forward<Transformers>(transform_ops)...));
 }
 
 /**
