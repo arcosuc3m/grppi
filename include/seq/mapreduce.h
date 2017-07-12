@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_SEQ_H
-#define GRPPI_MAPREDUCE_SEQ_H
+#ifndef GRPPI_SEQ_MAPREDUCE_H
+#define GRPPI_SEQ_MAPREDUCE_H
 
 #include "../reduce.h"
 

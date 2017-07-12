@@ -21,8 +21,16 @@
 #ifndef GRPPI_REDUCE_H 
 #define GRPPI_REDUCE_H
 
-#include "common/common.h"
+
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
 #include "common/iterator_traits.h"
+#include "common/support.h"
+#include "common/iterator.h"
+
+
 
 #include "seq/reduce.h"
 #include "native/reduce.h"

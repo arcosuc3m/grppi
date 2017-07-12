@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_DIVIDECONQUER_THR_H
-#define GRPPI_DIVIDECONQUER_THR_H
+#ifndef GRPPI_NATIVE_DIVIDECONQUER_H
+#define GRPPI_NATIVE_DIVIDECONQUER_H
 
 #include <thread>
 #include <atomic>

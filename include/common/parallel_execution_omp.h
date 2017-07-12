@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_OMP_POLICY_H
-#define GRPPI_OMP_POLICY_H
+#ifndef GRPPI_COMMON_PARALLEL_EXECUTION_OMP_H
+#define GRPPI_COMMON_PARALLEL_EXECUTION_OMP_H
 
 // Only if compiled with OpenMP enabled
 #ifdef GRPPI_OMP

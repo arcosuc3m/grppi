@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_OMP_H
-#define GRPPI_MAPREDUCE_OMP_H
+#ifndef GRPPI_OMP_MAPREDUCE_H
+#define GRPPI_OMP_MAPREDUCE_H
 
 #ifdef GRPPI_OMP
 

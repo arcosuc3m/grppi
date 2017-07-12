@@ -17,8 +17,8 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
-#ifndef GRPPI_STREAM_ITERATION_SEQ_H
-#define GRPPI_STREAM_ITERATION_SEQ_H
+#ifndef GRPPI_SEQ_STREAM_ITERATION_H
+#define GRPPI_SEQ_STREAM_ITERATION_H
 
 namespace grppi{
 

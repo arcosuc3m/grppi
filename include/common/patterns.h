@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_PATTERNS_H
-#define GRPPI_PATTERNS_H
+#ifndef GRPPI_COMMON_PATTERNS_H
+#define GRPPI_COMMON_PATTERNS_H
 
 
 namespace grppi{

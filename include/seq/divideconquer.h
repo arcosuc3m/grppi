@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_DIVIDECONQUER_SEQ_H
-#define GRPPI_DIVIDECONQUER_SEQ_H
+#ifndef GRPPI_SEQ_DIVIDECONQUER_H
+#define GRPPI_SEQ_DIVIDECONQUER_H
 
 namespace grppi{
 

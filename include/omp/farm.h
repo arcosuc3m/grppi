@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FARM_OMP_H
-#define GRPPI_FARM_OMP_H
+#ifndef GRPPI_OMP_FARM_H
+#define GRPPI_OMP_FARM_H
 
 #ifdef GRPPI_OMP
 #include <experimental/optional>

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MPMC_QUEUE_H
-#define GRPPI_MPMC_QUEUE_H
+#ifndef GRPPI_COMMON_MPMC_QUEUE_H
+#define GRPPI_COMMON_MPMC_QUEUE_H
 
 
 #include <vector>

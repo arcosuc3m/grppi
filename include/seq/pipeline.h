@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_PIPELINE_SEQ_H
-#define GRPPI_PIPELINE_SEQ_H
+#ifndef GRPPI_SEQ_PIPELINE_H
+#define GRPPI_SEQ_PIPELINE_H
 
 namespace grppi {
 
