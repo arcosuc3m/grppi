@@ -114,7 +114,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
     auto item = input_queue.pop();
     while (item.first) {
       if(current == item.second){
-        consume(item.first.value());
+        consume(*item.first);
         current ++;
       }
       else {
@@ -123,7 +123,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
       // TODO: Probably find_if() + erase 
       for (auto it=elements.begin(); it!=elements.end(); it++) {
         if(it->second == current) {
-          consume(it->first.value());
+          consume(*it->first);
           elements.erase(it);
           current++;
           break;
@@ -135,7 +135,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
       // TODO: Probably find_if() + erase
       for (auto it = elements.begin(); it != elements.end(); it++) {
         if(it->second == current) {
-          consume(it->first.value());
+          consume(*it->first);
           elements.erase(it);
           current++;
           break;
@@ -146,7 +146,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
   else {
     auto item = input_queue.pop( );
     while (item.first) {
-      consume(item.first.value());
+      consume(*item.first);
       item = input_queue.pop();
     }
   }

@@ -43,7 +43,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
     auto item = input_queue.pop( );
     while (item.first) {
       if (current == item.second) {
-        consume_op( item.first.value() );
+        consume_op(*item.first);
         current ++;
       } 
       else {
@@ -191,7 +191,7 @@ void pipeline_impl_unordered(parallel_execution_omp & ex, InQueue & input_queue,
     {
       auto item = input_queue.pop( ) ;
       while (item.first) {
-        if (farm_obj.task(item.first.value())) {
+        if (farm_obj.task(*item.first)) {
           output_queue.push(item);
         }
         item = input_queue.pop();
