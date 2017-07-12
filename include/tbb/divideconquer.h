@@ -24,111 +24,166 @@
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
+
 namespace grppi{
-template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type internal_divide_conquer(parallel_execution_tbb &p, Input & problem,
-            DivFunc && divide, Operation && op, MergeFunc && merge, std::atomic<int>& num_threads) {
-   
-    // Sequential execution fo internal implementation
-    using Output = typename std::result_of<Operation(Input)>::type;
-    sequential_execution seq;
-    Output out;
-    if(num_threads.load()>0){
-       auto subproblems = divide(problem);
 
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+internal_divide_conquer(parallel_execution_tbb & ex, 
+                            Input & input,
+                            Divider && divide_op, Solver && solve_op, 
+                            Combiner && combine_op, 
+                            std::atomic<int>& num_threads) 
+{
+  // Sequential execution fo internal implementation
+  sequential_execution seq;
 
-    if(subproblems.size()>1){
-         std::vector<Output> partials(subproblems.size()-1);
-         int division = 0;
-         tbb::task_group g;
-         auto i = subproblems.begin()+1;
-         for(i ; i != subproblems.end() && num_threads.load() > 0; i++, division++){
-            //THREAD
-            g.run(
-              [&p, i, &partials, division, &divide, &op, &merge, &num_threads](){
-                 partials[division] = internal_divide_conquer(p, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-              }
-            );
-              //END TRHEAD
-            num_threads--;
-          }
-          //Main thread works on the first subproblem.
-          for(i; i != subproblems.end(); i++){
-              partials[division] = divide_conquer(seq,*i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-          }
+  if (num_threads.load()<=0) {
+    return divide_conquer(seq, input, std::forward<Divider>(divide_op), 
+        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+  }
 
-          out = internal_divide_conquer(p, *subproblems.begin(),  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
+  auto subproblems = divide_op(input);
 
-          g.wait();
+  if (subproblems.size()<=1) {
+    return solve_op(input);
+  }
 
-          for(int i = 0; i<partials.size();i++){ 
-              merge(partials[i], out);
-          }
+  using Output = typename std::result_of<Solver(Input)>::type;
+  std::vector<Output> partials(subproblems.size()-1);
+  int division = 0;
+  tbb::task_group g;
+  auto i = subproblems.begin()+1;
+  for(i; i!=subproblems.end() && num_threads.load()>0; i++, division++) {
+    //THREAD
+    g.run(
+      [&ex, i, &partials, division, &divide_op, &solve_op, &combine_op, 
+       &num_threads]() 
+      {
+        partials[division] = internal_divide_conquer(ex, *i, 
+            std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+            std::forward<Combiner>(combine_op), num_threads);
+      }
+    );
+    //END TRHEAD
+    num_threads--;
+  }
 
-        }else{
-          out = op(problem);
-        }
+  //Main thread works on the first subproblem.
+  for(i; i != subproblems.end(); i++){
+    partials[division] = divide_conquer(seq, *i, 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
+  }
 
-     }else{
-        return divide_conquer(seq, problem, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-     }
-     return out;
+  Output out = internal_divide_conquer(ex, *subproblems.begin(),  
+      std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+      std::forward<Combiner>(combine_op), num_threads);
+
+  g.wait();
+
+  for (auto && p : partials) { combine_op(p,out); }
+
+  return out;
 }
 
-template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_conquer(parallel_execution_tbb &p, Input & problem,
-            DivFunc && divide, Operation && op, MergeFunc && merge) {
+/**
+\addtogroup divide_conquer_pattern
+@{
+*/
 
-    // Sequential execution fo internal implementation
-    using Output = typename std::result_of<Operation(Input)>::type;
-    sequential_execution seq;
-    Output out; 
-    std::atomic<int> num_threads( p.num_threads -1 );
+/**
+\addtogroup divide_conquer_pattern_tbb TBB parallel divide/conquer pattern.
+\brief TBB parallel implementation of the \ref md_divide-conquer pattern.
+@{
+*/
 
-    if(num_threads.load()>0){
-       auto subproblems = divide(problem);
+/**
+\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with TBB 
+parallel execution.
+\tparam Input Type used for the input problem.
+\tparam Divider Callable type for the divider operation.
+\tparam Solver Callable type for the solver operation.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param input Input problem to be solved.
+\param divider_op Divider operation.
+\param solver_op Solver operation.
+\param combiner_op Combiner operation.
+*/
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+divide_conquer(parallel_execution_tbb & ex, 
+                   Input & input,
+                   Divider && divide_op, Solver && solve_op, 
+                   Combiner && combine_op) 
+{
+  // Sequential execution fo internal implementation
+  sequential_execution seq;
 
-      if(subproblems.size()>1){
-          std::vector<Output> partials(subproblems.size()-1);
-    	  int division = 0;
-          tbb::task_group g;
-             
-          auto i = subproblems.begin()+1;
-          for(i ; i != subproblems.end() && num_threads.load() > 0; i++, division++){
-              //THREAD
-              g.run(
-                 [&p, i, &partials, division, &divide, &op, &merge, &num_threads](){
-                     partials[division] = internal_divide_conquer(p, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-                  }
-              );
-              num_threads--;
-              //END TRHEAD
-          }
-          for(i; i != subproblems.end(); i++){
-              partials[division] = divide_conquer(seq,*i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-          }
-          //Main thread works on the first subproblem.
+  std::atomic<int> num_threads{ex.num_threads-1};
 
-          if(num_threads.load()>0){
-            out = internal_divide_conquer(p, *subproblems.begin(),  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-          }else{
-            out = divide_conquer(seq, *subproblems.begin(),  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-          }
+  if (num_threads.load()<=0) {
+    return divide_conquer(seq, input,  std::forward<Divider>(divide_op), 
+      std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+  }
 
-          g.wait();
+  auto subproblems = divide_op(input);
+  if (subproblems.size()<=1) {
+    return solve_op(input);
+  }
 
-          for(int i = 0; i<partials.size();i++){ 
-              merge(partials[i], out);
-          }
-        }else{
-          out = op(problem);
-        }
-    }else{
-       return divide_conquer(seq, problem,  std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge));
-    }
-    return out;
+  using Output = typename std::result_of<Solver(Input)>::type;
+  std::vector<Output> partials(subproblems.size()-1);
+  int division = 0;
+  tbb::task_group g;
+            
+  auto i = subproblems.begin()+1;
+  for (i ; i!=subproblems.end() && num_threads.load()>0; i++, division++) {
+    //THREAD
+    g.run(
+      [&ex, i, &partials, division, &divide_op, &solve_op, &combine_op, 
+       &num_threads]()
+      {
+        partials[division] = internal_divide_conquer(ex, *i, 
+            std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+            std::forward<Combiner>(combine_op), num_threads);
+      }
+    );
+    num_threads--;
+    //END TRHEAD
+  }
+  for(i; i != subproblems.end(); i++){
+    partials[division] = divide_conquer(seq, *i, 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
+  }
+  //Main thread works on the first subproblem.
+
+  Output out; 
+  if (num_threads.load()>0) {
+    out = internal_divide_conquer(ex, *subproblems.begin(), 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op), num_threads);
+  }
+  else {
+    out = divide_conquer(seq, *subproblems.begin(),  
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
+  } 
+
+  g.wait();
+
+  for (int i=0; i<partials.size(); i++){ 
+    combine_op(partials[i], out);
+  }
+  return out;
 }
 
+/**
+@}
+@}
+*/
 
 }
 #endif

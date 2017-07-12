@@ -20,34 +20,66 @@
 
 #ifndef GRPPI_SEQ_DIVIDECONQUER_H
 #define GRPPI_SEQ_DIVIDECONQUER_H
+
 namespace grppi{
 
-template <typename Input, typename DivFunc, typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_conquer(sequential_execution &s, Input &problem, DivFunc &&divide,
-                               Operation &&op, MergeFunc &&merge) {
-     
-    using Output = typename std::result_of<Operation(Input)>::type;
-    auto subproblems = divide(problem);
-    Output out;
-    if(subproblems.size()>1){
-        std::vector<Output> partials(subproblems.size());
-	int division = 0;
-        for(auto i = subproblems.begin(); i != subproblems.end(); i++, division++){
-            //THREAD
-            partials[division] = divide_conquer(s, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge) );
-            //END THREAD
-        }
-        out = partials[0] ;
-        //JOIN
-        for(int i = 1; i<partials.size();i++){
-              merge(partials[i], out);
-        }
-    }else{
+/**
+\addtogroup divide_conquer_pattern
+@{
+*/
 
-        out = op(problem);
-    }
-    return out;
+/**
+\addtogroup divide_conquer_pattern_seq Sequential divide/conquer pattern
+\brief Sequential implementation of the \ref md_divide-conquer pattern.
+@{
+*/
+
+/**
+\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with sequential
+execution.
+\tparam Input Type used for the input problem.
+\tparam Divider Callable type for the divider operation.
+\tparam Solver Callable type for the solver operation.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param input Input problem to be solved.
+\param divider_op Divider operation.
+\param solver_op Solver operation.
+\param combiner_op Combiner operation.
+*/
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+divide_conquer(sequential_execution & ex, 
+                   Input & input, 
+                   Divider && divider_op, Solver && solver_op, 
+                   Combiner && combiner_op) 
+{
+  auto subproblems = divider_op(input);
+
+  if (subproblems.size()<=1) return solver_op(input);
+
+  using Output = typename std::result_of<Solver(Input)>::type;
+  std::vector<Output> partials;
+  // FORK
+  for (auto && item : subproblems) {
+    //THREAD
+    partials.push_back(divide_conquer(ex, item, 
+        std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
+        std::forward<Combiner>(combiner_op)));
+    //END THREAD
+  }
+  Output out = partials[0] ;
+  //JOIN
+  for(int i = 1; i<partials.size();i++){
+    combiner_op(partials[i], out);
+  }
+  return out;
 }
+
+/**
+@}
+@}
+*/
 
 }
 #endif

@@ -26,71 +26,98 @@
 
 namespace grppi{
 
-template <typename Input, typename DivFunc,
-          typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_conquer_multi_impl(polymorphic_execution & e, 
-          Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge)
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+divide_conquer_multi_impl(polymorphic_execution & ex, 
+                              Input & input, 
+                              Divider && divide_op, Solver && solve_op, 
+                              Combiner && combine_op)
 {
   return {};
 }
 
-
-
 template <typename E, typename ... O,
-          typename Input, typename DivFunc,
-          typename Operation, typename MergeFunc,
+          typename Input, typename Divider, typename Solver, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
-typename std::result_of<Operation(Input)>::type divide_conquer_multi_impl(polymorphic_execution & e, 
-          Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge) 
+typename std::result_of<Solver(Input)>::type 
+divide_conquer_multi_impl(polymorphic_execution & ex, 
+                              Input & input, 
+                              Divider && divide_op, Solver && solve_op, 
+                              Combiner && combine_op) 
 {
-  return divide_conquer_multi_impl<O...>(e, problem,  
-      std::forward<DivFunc>(divide), std::forward<Operation>(op),
-      std::forward<MergeFunc>(merge) );
+  return divide_conquer_multi_impl<O...>(ex, input,  
+      std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
+      std::forward<Combiner>(combine_op) );
 }
 
-
-
 template <typename E, typename ... O,
-          typename Input, typename DivFunc,
-          typename Operation, typename MergeFunc,
+          typename Input, typename Divider, typename Solver, typename Combiner,
           internal::requires_execution_supported<E> = 0>
-typename std::result_of<Operation(Input)>::type divide_conquer_multi_impl(polymorphic_execution & e, 
-          Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge) 
+typename std::result_of<Solver(Input)>::type 
+divide_conquer_multi_impl(polymorphic_execution & ex, 
+                              Input & input, 
+                              Divider && divide_op, Solver && solve_op, 
+                              Combiner && combine_op) 
 {
-  if (typeid(E) == e.type()) {
-    return divide_conquer(*e.execution_ptr<E>(), 
-        problem, 
-        std::forward<DivFunc>(divide), std::forward<Operation>(op),
-        std::forward<MergeFunc>(merge));
+  if (typeid(E) == ex.type()) {
+    return divide_conquer(*ex.execution_ptr<E>(), 
+        input, 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
+        std::forward<Combiner>(combine_op));
   }
   else {
-    return divide_conquer_multi_impl<O...>(e, problem,  
-        std::forward<DivFunc>(divide), std::forward<Operation>(op),
-        std::forward<MergeFunc>(merge));
+    return divide_conquer_multi_impl<O...>(ex, input,  
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
+        std::forward<Combiner>(combine_op));
   }
 }
 
+/**
+\addtogroup divide_conquer_pattern
+@{
+*/
 
-/// Runs a divide_conquer pattern with an initial problem, 
-/// a divide function, an operation function and a merge function.
-/// Input: input problem.
-/// DivFunc: Division functor type.
-/// Operation: Operation functor type.
-/// MergeFunc: Merge functor type.
-template <typename Input, typename DivFunc,
-          typename Operation, typename MergeFunc>
-typename std::result_of<Operation(Input)>::type divide_conquer(polymorphic_execution & e, 
-          Input & problem, DivFunc && divide, Operation && op, MergeFunc && merge) 
+/**
+\addtogroup divide_conquer_pattern_poly Polymorphic execution divide/conquer
+pattern.
+\brief Polymorphic execution implementation of the \ref md_divide-conquer pattern.
+@{
+*/
+
+/**
+\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with polymorphic
+execution.
+\tparam Input Type used for the input input.
+\tparam Divider Callable type for the divider operation.
+\tparam Solver Callable type for the solver operation.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Sequential execution policy object.
+\param input Input input to be solved.
+\param divider_op Divider operation.
+\param solver_op Solver operation.
+\param combiner_op Combiner operation.
+*/
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+typename std::result_of<Solver(Input)>::type 
+divide_conquer(polymorphic_execution & ex, 
+                   Input & input, 
+                   Divider && divide_op, Solver && solve_op, 
+                   Combiner && combine_op) 
 {
   return divide_conquer_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, problem,  
-      std::forward<DivFunc>(divide), std::forward<Operation>(op),
-      std::forward<MergeFunc>(merge));
+  >(ex, input,  
+      std::forward<Divider>(divide_op), std::forward<Solver>(solve_op),
+      std::forward<Combiner>(combine_op));
 }
+
+/**
+@}
+@
+*/
 
 } // end namespace grppi
 
