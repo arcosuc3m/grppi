@@ -19,8 +19,8 @@
 */
 
 
-#ifndef GRPPI_STREAM_REDUCE_OMP_H
-#define GRPPI_STREAM_REDUCE_OMP_H
+#ifndef GRPPI_OMP_STREAM_REDUCE_H
+#define GRPPI_OMP_STREAM_REDUCE_H
 
 #ifdef GRPPI_OMP
 
@@ -28,8 +28,8 @@
 
 namespace grppi{
 
-template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
- void stream_reduce(parallel_execution_omp &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, IdentityType identity)
+template <typename Generator, typename Combiner, typename Consumer, typename Identity>
+ void stream_reduce(parallel_execution_omp &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, Identity identity)
 {
 
      std::vector<typename std::result_of<Generator()>::type::value_type> buffer;

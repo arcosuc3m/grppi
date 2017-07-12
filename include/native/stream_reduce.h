@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_REDUCE_THR_H
-#define GRPPI_STREAM_REDUCE_THR_H
+#ifndef GRPPI_NATIVE_STREAM_REDUCE_H
+#define GRPPI_NATIVE_STREAM_REDUCE_H
 
 #include "../reduce.h"
 
@@ -27,8 +27,8 @@
 
 namespace grppi{
 
-template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
-void stream_reduce(parallel_execution_native &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, IdentityType identity)
+template <typename Generator, typename Combiner, typename Consumer, typename Identity>
+void stream_reduce(parallel_execution_native &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, Identity identity)
 {
      
      std::vector<typename std::result_of<Generator()>::type::value_type> buffer;

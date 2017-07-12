@@ -21,7 +21,13 @@
 #ifndef GRPPI_FARM_H
 #define GRPPI_FARM_H
 
-#include "common/common.h"
+#include "common/sequential_execution.h"
+#include "common/parallel_execution_native.h"
+#include "common/parallel_execution_omp.h"
+#include "common/parallel_execution_tbb.h"
+#include "common/support.h"
+
+#include "common/patterns.h"
 #include "seq/farm.h"
 #include "native/farm.h"
 #include "omp/farm.h"

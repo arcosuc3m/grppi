@@ -18,14 +18,17 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_PIPELINE_OMP_H
-#define GRPPI_PIPELINE_OMP_H
+#ifndef GRPPI_OMP_PIPELINE_H
+#define GRPPI_OMP_PIPELINE_H
 
 #ifdef GRPPI_OMP
+
+#include <experimental/optional>
 
 #include <boost/lockfree/spsc_queue.hpp>
 
 namespace grppi{
+
 //Last stage
 template <typename Stream, typename Stage>
 void stages( parallel_execution_omp &p, Stream& st, Stage && s ){
@@ -195,15 +198,16 @@ template <typename Operation, typename Stream,typename... Stages>
 
 template <typename Operation, typename Stream,typename... Stages>
  void stages( parallel_execution_omp &p, Stream& st, farm_info<parallel_execution_omp, Operation> && se, Stages && ... sgs ) {
-   
-    mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
+  
+ 
+    mpmc_queue< std::pair < std::experimental::optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
     for( int th = 0; th < se.exectype.num_threads; th++){
       #pragma omp task shared(nend,q,se,st)
       {
          auto item = st.pop();
          while( item.first ) {
-         auto out = optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >( se.task(item.first.value()) );
+         auto out = std::experimental::optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >( se.task(item.first.value()) );
 
           q.push( std::make_pair(out,item.second)) ;
           item = st.pop( );
@@ -211,7 +215,7 @@ template <typename Operation, typename Stream,typename... Stages>
         st.push(item);
         nend++;
         if(nend == se.exectype.num_threads)
-          q.push(std::make_pair(optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+          q.push(std::make_pair(std::experimental::optional< typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
       }              
     }
     stages(p, q, std::forward<Stages>(sgs) ... );
@@ -226,20 +230,19 @@ template <typename Stage, typename Stream,typename ... Stages>
 void stages(parallel_execution_omp &p, Stream& st, Stage && se, Stages && ... sgs ) {
 
     //Create new queue
-//    boost::lockfree::spsc_queue< optional< typename std::result_of< Stage(typename Stream::value_type::value_type) > ::type>, boost::lockfree::capacity<BOOST_QUEUE_SIZE>> q;
-    mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
+    mpmc_queue<std::pair< std::experimental::optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
     //Start task
     #pragma omp task shared( se, st, q )
     {
         typename Stream::value_type item;
         item = st.pop( ); 
         while( item.first ) {
-            auto out = optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type > ( se(item.first.value()) );
+            auto out = std::experimental::optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type > ( se(item.first.value()) );
 
             q.push( std::make_pair(out, item.second) );
             item = st.pop(  ) ;
         }
-        q.push( std::make_pair(optional< typename std::result_of< Stage(typename Stream::value_type::first_type::value_type) > ::type>(),-1) ) ;
+        q.push( std::make_pair(std::experimental::optional< typename std::result_of< Stage(typename Stream::value_type::first_type::value_type) > ::type>(),-1) ) ;
     }
     //End task
     //Create next stage

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_OMP_H
-#define GRPPI_MAPREDUCE_OMP_H
+#ifndef GRPPI_OMP_MAPREDUCE_H
+#define GRPPI_OMP_MAPREDUCE_H
 
 #ifdef GRPPI_OMP
 
@@ -27,12 +27,12 @@
 
 namespace grppi{
 
-template <typename InputIt, typename Transformer, typename IdentityType, typename Combiner>
-IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, IdentityType init){
+template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
+Identity map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Identity identity, Transformer &&  transform_op,  Combiner &&combine_op){
 
     using namespace std;
-    IdentityType out = init;
-    std::vector<IdentityType> partialOuts(p.num_threads);
+    Identity out = identity;
+    std::vector<Identity> partialOuts(p.num_threads);
     #pragma omp parallel
     {
     #pragma omp single nowait
@@ -47,11 +47,11 @@ IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last
           auto begin = first + (elemperthr * i);
           auto end = first + (elemperthr * (i+1));
           if(i == p.num_threads -1 ) end= last;
-          partialOuts[i] = map_reduce(s, begin, end, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op),partialOuts[i]);
+          partialOuts[i] = map_reduce(s, begin, end, partialOuts[i], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
        }
     }
 
-    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
+    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
     #pragma omp taskwait
     }
     }
@@ -60,17 +60,6 @@ IdentityType map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last
        out = combine_op(out, map);
     } 
     return out;
-}
-
-
-template <typename InputIt, typename Transformer, typename Combiner>
-auto map_reduce ( parallel_execution_omp& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
-
-    typename std::result_of<Combiner(
-    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type init;
-
-    return map_reduce ( p, first, last, std::forward<Transformer>( transform_op ),  std::forward<Combiner>( combine_op ), init);
 }
 
 }

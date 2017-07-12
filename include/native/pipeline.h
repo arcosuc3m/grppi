@@ -18,10 +18,13 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_PIPELINE_THR_H
-#define GRPPI_PIPELINE_THR_H
+#ifndef GRPPI_NATIVE_PIPELINE_H
+#define GRPPI_NATIVE_PIPELINE_H
+
+#include <experimental/optional>
 
 #include <thread>
+
 
 namespace grppi{
 
@@ -39,10 +42,12 @@ template <typename InStream, typename OutStream, int currentStage, typename ...S
 //      typedef typename std::remove_reference<decltype(lambdaPointerType())>::type  lambdaType; 
       typedef typename std::result_of< lambdaType (typename InStream::value_type::value_type) > ::type queueType;
 
-      static mpmc_queue<optional<queueType>> queueOut(pipe.exectype.queue_size,pipe.exectype.lockfree); 
+
+
+      static mpmc_queue<std::experimental::optional<queueType>> queueOut(pipe.exectype.queue_size,pipe.exectype.lockfree); 
 
       composed_pipeline(pipe.exectype, qin, std::get<currentStage>(pipe.stages), queueOut, tasks);
-      composed_pipeline<mpmc_queue<optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
+      composed_pipeline<mpmc_queue<std::experimental::optional<queueType>>,OutStream, currentStage+1, Stages ...>(queueOut,pipe,qout,tasks);
        
 }
 
@@ -50,22 +55,17 @@ template <typename InStream, typename Stage, typename OutStream>
  void composed_pipeline(parallel_execution_native &p, InStream &qin, Stage const & s, OutStream &qout, std::vector<std::thread> & tasks){
     tasks.push_back(
       std::thread([&](){
-//        typedef typename std::remove_reference<decltype(Stage())>::type  lambdaType;
         using lambdaType = Stage;
         p.register_thread();
         
         auto item = qin.pop();
         while(true){
            if(!item) {
-                qout.push( optional< typename std::result_of< lambdaType(typename InStream::value_type::value_type) >::type >() );
+                qout.push( typename OutStream::value_type::value_type () );
                 break;
            }else{
-//              if(!item) qin.push(item); 
-//              else{
-                auto out = optional< typename std::result_of< lambdaType(typename InStream::value_type::value_type) >::type >( (*s)(item.value()) );
-                //   std::cout<<" pipe thread pushing" << out.value()<<std::endl;
+                auto out = typename OutStream::value_type::value_type( (*s)(item.value()) );
                 qout.push(out);
-//              }
            }
            item = qin.pop();
         }
@@ -307,8 +307,8 @@ template <typename Operation, typename Stream, typename... Stages>
 void stages(parallel_execution_native &p, Stream& st, 
             farm_info<parallel_execution_native,Operation> && se, Stages && ... sgs ) {
     std::vector<std::thread> tasks;
-    //mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::value_type)>::type >, long > q(p.queue_size);
-    mpmc_queue< std::pair < optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
+
+    mpmc_queue< std::pair < std::experimental::optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
     for( int th = 0; th < se.exectype.num_threads; th++){
           tasks.push_back(
@@ -319,7 +319,7 @@ void stages(parallel_execution_native &p, Stream& st,
                   long order = 0;
                   auto item = st.pop(); 
                   while( item.first ) {
-                      auto out = optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >( se.task(item.first.value()) );
+                      auto out = std::experimental::optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >( se.task(item.first.value()) );
                       
                       q.push( std::make_pair(out,item.second)) ;
                       item = st.pop( ); 
@@ -327,7 +327,7 @@ void stages(parallel_execution_native &p, Stream& st,
                  st.push(item);
                  nend++;
                  if(nend == se.exectype.num_threads) 
-                      q.push(std::make_pair(optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
+                      q.push(std::make_pair(std::experimental::optional< typename std::result_of<Operation(typename Stream::value_type::first_type::value_type) >::type >(), -1));
                 
                  //Deregister the thread in the execution model
                  se.exectype.deregister_thread();
@@ -346,7 +346,7 @@ template <typename Stage, typename Stream,typename... Stages>
 
     //Create new queue
 
-    mpmc_queue<std::pair< optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
+    mpmc_queue<std::pair< std::experimental::optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type >, long >> q(p.queue_size,p.lockfree);
 
     //Start task
     std::thread task( 
@@ -355,15 +355,13 @@ template <typename Stage, typename Stream,typename... Stages>
             p.register_thread();
             long order = 0;
             typename Stream::value_type item;
-    //        while( !st.try_dequeue( item ) );
             item = st.pop( );
             while( item.first ) {
-                auto out = optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type > ( se(item.first.value()) );
-                //auto out = se(item.value());
+                auto out = std::experimental::optional <typename std::result_of<Stage(typename Stream::value_type::first_type::value_type)>::type > ( se(item.first.value()) );
                 q.push( std::make_pair(out, item.second)) ;
                 item = st.pop( ) ;
             }
-        	q.push( std::make_pair(optional< typename std::result_of< Stage(typename Stream::value_type::first_type::value_type) > ::type>(),-1) ) ;
+        	q.push( std::make_pair(std::experimental::optional< typename std::result_of< Stage(typename Stream::value_type::first_type::value_type) > ::type>(),-1) ) ;
             //Deregister the thread in the execution model
             p.deregister_thread();
         }
@@ -374,6 +372,7 @@ template <typename Stage, typename Stream,typename... Stages>
     stages(p, q, std::forward<Stages>(sgs) ... );
     task.join();
 }
+
 
 //First stage
 template <typename FuncIn, typename ...Stages,

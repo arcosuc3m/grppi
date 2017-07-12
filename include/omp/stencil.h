@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_OMP_H
-#define GRPPI_STENCIL_OMP_H
+#ifndef GRPPI_OMP_STENCIL_H
+#define GRPPI_OMP_STENCIL_H
 
 #ifdef GRPPI_OMP
 
