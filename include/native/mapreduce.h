@@ -25,6 +25,32 @@
 
 namespace grppi{
 
+/**
+\addtogroup mapreduce_pattern
+@{
+*/
+
+/**
+\addtogroup mapreduce_pattern_native Native parallel map/reduce pattern
+Native parallel implementation of the \ref md_map-reduce pattern.
+@{
+*/
+
+/**
+\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+native parallel execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Result Result type of the reduction.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Native parallel execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
 template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
 Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Identity identity, Transformer && transform_op,  Combiner &&combine_op){
 
@@ -63,6 +89,11 @@ Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last,
     } 
     return out;
 }
+
+/**
+@}
+@}
+*/
 
 }
 #endif
