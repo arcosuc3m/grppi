@@ -83,14 +83,12 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
       auto item = input_queue.pop();
       for (;;) {
         using output_type = typename OutQueue::value_type;
-        using output_value_type = typename output_type::value_type;
         if (!item) {
-          output_queue.push(output_value_type{}); 
+          output_queue.push(output_type{}); 
           break;
         }
         else {
-          auto out = output_value_type{transform_op(item.value())};
-          output_queue.push(out);
+          output_queue.push(transform_op(*item));
         }
         item = input_queue.pop();
       }
