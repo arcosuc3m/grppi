@@ -59,7 +59,6 @@ void composed_pipeline(InQueue & input_queue,
       typename result_of<stage_type(input_value_type)>::type;
   using result_type = experimental::optional<result_value_type>;
 
-  // TODO: Why static?
   static mpmc_queue<result_type> tmp_queue{
       pipeline_obj.exectype.queue_size, pipeline_obj.exectype.lockfree}; 
 
