@@ -49,20 +49,23 @@ void composed_pipeline(InQueue & input_queue,
                        const pipeline_info<parallel_execution_native,MoreTransformers...> & pipeline_obj, 
                        OutQueue & output_queue, std::vector<std::thread> & tasks)
 {
+  using namespace std;
+
   using stage_type = 
-      typename std::tuple_element<Index,decltype(pipeline_obj.stages)>::type;
+      typename tuple_element<Index,decltype(pipeline_obj.stages)>::type;
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::value_type;
-  using result_type = 
-      typename std::result_of<stage_type(input_value_type)>::type;
+  using result_value_type = 
+      typename result_of<stage_type(input_value_type)>::type;
+  using result_type = experimental::optional<result_value_type>;
 
   // TODO: Why static?
-  static mpmc_queue<std::experimental::optional<result_type>> tmp_queue{
+  static mpmc_queue<result_type> tmp_queue{
       pipeline_obj.exectype.queue_size, pipeline_obj.exectype.lockfree}; 
 
   composed_pipeline(pipeline_obj.exectype, input_queue, 
-      std::get<Index>(pipeline_obj.stages), tmp_queue, tasks);
-  composed_pipeline<mpmc_queue<std::experimental::optional<result_type>>, 
+      get<Index>(pipeline_obj.stages), tmp_queue, tasks);
+  composed_pipeline<mpmc_queue<result_type>, 
       OutQueue, Index+1, MoreTransformers ...>(
           tmp_queue,pipeline_obj,output_queue,tasks);
 }
