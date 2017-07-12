@@ -327,10 +327,6 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
           if (filter_obj.task(*item.first)) { 
             output_queue.push(item);
           }
-//        else { // TODO: Remove?
-//          output_queue.push(
-//              make_pair(typename input_value_type(), item.second));
-//        } 
           item = input_queue.pop();
         }
         nend++;
