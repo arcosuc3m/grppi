@@ -190,8 +190,6 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
       }}
     );
   }
-  // TODO: Remove commented line?
-  //pipeline_impl(p, q, sgs ... );
 
   for (auto && t : tasks) { t.join(); }
 }
