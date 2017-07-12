@@ -54,7 +54,7 @@ void composed_pipeline(InQueue & input_queue,
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::value_type;
   using result_type = 
-      typename std::result_of<stage_type(input_type)>::type;
+      typename std::result_of<stage_type(input_value_type)>::type;
 
   // TODO: Why static?
   static mpmc_queue<std::experimental::optional<result_type>> tmp_queue{
