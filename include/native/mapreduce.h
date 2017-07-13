@@ -46,48 +46,51 @@ native parallel execution.
 \param ex Native parallel execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
-\param identity Identity value for the combination operation.
+\param identity Result value for the combination operation.
 \param transf_op Transformation operation.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
-Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Identity identity, Transformer && transform_op,  Combiner &&combine_op){
+template <typename InputIt, typename Result, typename Transformer, 
+          typename Combiner>
+Result map_reduce(parallel_execution_native & ex, 
+                  InputIt first, InputIt last, Result identity, 
+                  Transformer && transform_op,  Combiner &&combine_op)
+{
+  using namespace std;
 
-    using namespace std;
-    Identity out = identity;
-    std::vector<Identity> partialOuts(p.num_threads);
-    std::vector<std::thread> tasks;
-    int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
-    sequential_execution s {};
+  vector<Result> partial_results(ex.num_threads);
 
-    for(int i=1;i<p.num_threads;i++){    
-       auto begin = first + (elemperthr * i);
-       auto end = first + (elemperthr * (i+1));
-       if(i == p.num_threads -1 ) end= last;
-       tasks.push_back(
-        std::thread( 
-         [&](InputIt beg, InputIt en, int id){
-            // Register thread
-            p.register_thread();
-            partialOuts[id] = map_reduce(s, beg, en, partialOuts[id], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
-            // Deregister thread
-            p.deregister_thread();
-         },
-         begin, end, i)
-       );
-    }
+  const int num_elements = last - first;
+  const int elements_per_thread = num_elements/ex.num_threads;
+  sequential_execution seq{};
 
-    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
+  vector<thread> tasks;
+  for(int i=1;i<ex.num_threads;i++){    
+    const auto begin = first + (elements_per_thread * i);
+    const auto end = (i==ex.num_threads-1) ? 
+        last : 
+        (first + elements_per_thread * (i+1));
+
+    tasks.emplace_back([&,begin,end,i](){
+        ex.register_thread();
+        partial_results[i] = map_reduce(seq, begin, end, partial_results[i], 
+            forward<Transformer>(transform_op), forward<Combiner>(combine_op));
+        ex.deregister_thread();
+    });
+  }
+
+    partial_results[0] = map_reduce(seq, first,( first+elements_per_thread ), partial_results[0], forward<Transformer>(transform_op), forward<Combiner>(combine_op));
 
     for(auto task = tasks.begin();task != tasks.end();task++){    
        (*task).join();
     }
-    for(auto & map : partialOuts){
-       out = combine_op(out, map);
+
+    Result result = identity;
+    for(auto & map : partial_results){
+       result = combine_op(result, map);
     } 
-    return out;
+    return result;
 }
 
 /**
