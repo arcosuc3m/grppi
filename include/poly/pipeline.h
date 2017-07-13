@@ -78,7 +78,8 @@ with polymorphic execution.
 \param generate_op Generator operation.
 \param trasnform_ops Transformation operations for each stage.
 */
-template <typename Generator, typename ... Transformers>
+template <typename Generator, typename ... Transformers,
+          requires_no_arguments<Generator> = 0>
 void pipeline(polymorphic_execution & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
