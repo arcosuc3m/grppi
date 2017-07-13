@@ -68,21 +68,19 @@ dependencies between stages, so that every item passes sequentially across
 stages.
 
 ---
-**Example**: Read a stream of integers, apply consecutive transformations (from int to double
-and from double to string), and write to an output stream.
+**Example**: Generate a sequence of integers, apply consecutive transformations (from int to double
+and from double to string), and write to standard output.
 ~~~{.cpp}
-pipeline(ex,
-  [&input]() -> optional<int> {
-    int n;
-    input >> n;
-    if (!input) return {};
-    else return n;
+int n = 100;
+grppi::pipeline(e, 
+  [n]() -> optional<double> { 
+    static int x = 0;
+    if (x<n) return x++;
+    else return {}; 
   },
-  [](int x) -> double { return func1(x); },
-  [](double x) -> string { return func2(x); },
-  [&output](string s) {
-    output << s << "\n";
-  }
+  [](double x) { return x*x; },
+  [](double x) { return 1/x; },
+  [](double x) { cout << x << endl; }
 );
 ~~~
 ---
