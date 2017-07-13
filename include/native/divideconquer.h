@@ -89,7 +89,7 @@ internal_divide_conquer(parallel_execution_native &p,
         }
 
         for(int i = 0; i<partials.size();i++){ // MarcoA - this is moved to the user code
-           combine_op(partials[i], out);
+           out =combine_op(out,partials[i]);
         }
       }else{
         out = solve_op(input);
@@ -195,7 +195,7 @@ divide_conquer(parallel_execution_native & ex,
     //JOIN
     for (auto && t : tasks) { t.join(); }
 
-    for (auto && p : partials) { combine_op(p,out); }
+    for (auto && p : partials) { out = combine_op(out,p); }
 
     return out;
   }
