@@ -82,7 +82,7 @@ internal_divide_conquer(parallel_execution_tbb & ex,
 
   g.wait();
 
-  for (auto && p : partials) { combine_op(p,out); }
+  for (auto && p : partials) { out = combine_op(out,p); }
 
   return out;
 }
@@ -175,7 +175,7 @@ divide_conquer(parallel_execution_tbb & ex,
   g.wait();
 
   for (int i=0; i<partials.size(); i++){ 
-    combine_op(partials[i], out);
+    out = combine_op(out , partials[i]);
   }
   return out;
 }

@@ -64,7 +64,6 @@ void sort_sequence(grppi::polymorphic_execution & exec, int n) {
   
   range problem{begin(v), end(v)};
 
-/*
   auto res = grppi::divide_conquer(exec,
     problem,
     [](auto r) -> vector<range> {
@@ -77,7 +76,6 @@ void sort_sequence(grppi::polymorphic_execution & exec, int n) {
       return range{r1.first, r2.last};
     }
   );
-*/
 
   copy(begin(v), end(v), ostream_iterator<int>(cout, " "));
   cout << endl;

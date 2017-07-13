@@ -81,9 +81,10 @@ void dividec_example1() {
         return out;
     },
     // Merge: vector<T> -> T
-        [&](auto & partial, auto & out){
+        [&](auto out, auto partial){
         //std::cout<<"MERGE " << partial << "IN " << out<<"\n";
         out += partial;
+        return out;
     }
     );
 

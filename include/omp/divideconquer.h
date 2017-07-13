@@ -77,7 +77,7 @@ internal_divide_conquer(parallel_execution_omp & ex,
       #pragma omp taskwait
 
       for(int i = 0; i<partials.size();i++){ 
-        combine_op(partials[i], out);
+        out = combine_op(out,partials[i]);
       }
     }
     else {
@@ -188,7 +188,7 @@ divide_conquer(parallel_execution_omp & ex,
     }
   }
 
-  for (auto && p : partials) { combine_op(p,out); }
+  for (auto && p : partials) { out = combine_op(out,p); }
   return out;
 }
 
