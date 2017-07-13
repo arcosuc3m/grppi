@@ -31,7 +31,11 @@ produces data items from a given type. Thus, a **Generator** `gen` is any
 operation that, given an output type `U`, makes valid the following:
 
 ~~~{.cpp}
-U res = gen();
+U res{gen()};
+//...
+if (res) { /* ... */ }  // If res holds a value
+if (!res) { /* ... */ } // If res does not hold a value
+auto value = * res;     // Get value held by res
 ~~~
 
 A **Transformer** is any C++ callable entity that takes a data item and
@@ -40,7 +44,7 @@ transformer `op` is any operation that, given an input `x` of type `T` and outpu
 `U`, makes valid the following:
 
 ~~~{.cpp}
-U res = op(x)
+U res {op(x)};
 ~~~
 
 ## Details on pipeline variants
@@ -64,7 +68,8 @@ dependencies between stages, so that every item passes sequentially across
 stages.
 
 ---
-**Example**
+**Example**: Read a stream of integers, apply consecutive transformations (from int to double
+and from double to string), and write to an output stream.
 ~~~{.cpp}
 pipeline(ex,
   [&input]() -> optional<int> {
@@ -73,10 +78,10 @@ pipeline(ex,
     if (!input) return {};
     else return n;
   },
-  [](int x) { return x*x; },
-  [](int x) { return 1.0/x; },
-  [&output]() {
-    output << x;
+  [](int x) -> double { return func1(x); },
+  [](double x) -> string { return func2(x); },
+  [&output](string s) {
+    output << s << "\n";
   }
 );
 ~~~
@@ -87,6 +92,8 @@ pipeline(ex,
 A *composable pipeline* returns a representation of the pipeline that can be
 used to perform declarative composition of streaming patterns.
 
+---
+**Example:**: Use a farm of pipelines to performe previous example.
 ~~~{.cpp}
 farm(ex1,
   [&input]() -> optional<int> {
@@ -96,18 +103,21 @@ farm(ex1,
     else return n;
   },
   pipeline(ex2,
-    [](int x) { return x*x; },
-    [](int x) { return 1.0/x; },
+    [](int x) -> double { return func1(x); },
+    [](double x) -> string { return func2(x); },
   ),
-  [&output]() {
-    output << x;
+  [&output](string s) {
+    output << s << "\n";
   }
 );  
 ~~~
+---
 
 This *composable pipeline* can also be used to build complex composed patterns
 in a non-declarative way.
 
+---
+**Example:**: Piecewise construction of a farm of pipelines.
 ~~~{.cpp}
 auto reader = [&input]() -> optional<int> {
   int n;
@@ -117,12 +127,12 @@ auto reader = [&input]() -> optional<int> {
 };
 
 auto processor = pipeline(ex2,
-  [](int x) { return x*x; },
-  [](int x) { return 1.0/x; },
+  [](int x) -> double { return func1(x); },
+  [](double x) -> string { return func2(x); },
 );
 
-auto writer = [&output]() {
-  output << x;
+auto writer = [&output](string s) {
+  output << s << "\n";
 };
 
 farm(ex1, reader, processor, writer);
