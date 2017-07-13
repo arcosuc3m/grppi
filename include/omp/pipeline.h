@@ -103,9 +103,9 @@ void pipeline_impl_ordered(parallel_execution_omp & ex,
   using input_value_type = typename input_type::first_type;
   mpmc_queue<input_type> tmp_queue{ex.queue_size, ex.lockfree};
 
-  atomic<int> nend{0}; // TODO: Find better name?
+  atomic<int> done_threads{0};
   for(int th = 0; th<filter_obj.exectype.num_threads; th++) {
-    #pragma omp task shared(tmp_queue,filter_obj,input_queue,nend)
+    #pragma omp task shared(tmp_queue,filter_obj,input_queue,done_threads)
     {
       auto item{input_queue.pop()};
       while (item.first) {
@@ -117,8 +117,8 @@ void pipeline_impl_ordered(parallel_execution_omp & ex,
         }
         item = input_queue.pop();
       }
-      nend++;
-      if (nend==filter_obj.exectype.num_threads) {
+      done_threads++;
+      if (done_threads==filter_obj.exectype.num_threads) {
         tmp_queue.push (make_pair(input_value_type{}, -1));
       }
       else {
@@ -185,9 +185,9 @@ void pipeline_impl_unordered(parallel_execution_omp & ex, InQueue & input_queue,
   using input_value_type = typename input_type::first_type;
   mpmc_queue<input_type> output_queue{ex.queue_size, ex.lockfree};
 
-  std::atomic<int> nend{0}; //TODO: Better naming?
+  std::atomic<int> done_threads{0};
   for (int th=0; th<farm_obj.exectype.num_threads; th++) {
-    #pragma omp task shared(output_queue,farm_obj,input_queue,nend)
+    #pragma omp task shared(output_queue,farm_obj,input_queue,done_threads)
     {
       auto item = input_queue.pop( ) ;
       while (item.first) {
@@ -196,8 +196,8 @@ void pipeline_impl_unordered(parallel_execution_omp & ex, InQueue & input_queue,
         }
         item = input_queue.pop();
       }
-      nend++;
-      if (nend==farm_obj.exectype.num_threads) {
+      done_threads++;
+      if (done_threads==farm_obj.exectype.num_threads) {
         output_queue.push(make_pair(input_value_type{}, -1));
       }
       else {
@@ -253,9 +253,9 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
   using output_type = pair<output_value_type,long>;
  
   mpmc_queue<output_type> output_queue{ex.queue_size, ex.lockfree};
-  atomic<int> nend{0}; // TODO: Better name?
+  atomic<int> done_threads{0};
   for (int th=0; th<farm_obj.exectype.num_threads; th++) {
-    #pragma omp task shared(nend,output_queue,farm_obj,input_queue)
+    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue)
     {
       auto item = input_queue.pop();
       while (item.first) {
@@ -264,8 +264,8 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
         item = input_queue.pop();
       }
       input_queue.push(item);
-      nend++;
-      if (nend==farm_obj.exectype.num_threads) {
+      done_threads++;
+      if (done_threads==farm_obj.exectype.num_threads) {
         output_queue.push(make_pair(output_value_type{}, -1));
       }
     }              

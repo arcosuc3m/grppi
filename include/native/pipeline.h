@@ -217,7 +217,7 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
   using input_value_type = typename input_type::first_type;
   mpmc_queue<input_type> tmp_queue{ex.queue_size, ex.lockfree};
 
-  atomic<int> nend{0}; // TODO: Find better name?
+  atomic<int> done_threads{0}; 
   for (int th=0; th<filter_obj.exectype.num_threads; th++) {
     tasks.push_back(
       thread{[&](){
@@ -233,8 +233,8 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
           } 
           item = input_queue.pop();
         }
-        nend++;
-        if (nend==filter_obj.exectype.num_threads) {
+        done_threads++;
+        if (done_threads==filter_obj.exectype.num_threads) {
           tmp_queue.push(make_pair(input_value_type{}, -1));
         } 
         else {
@@ -314,7 +314,7 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
   using input_value_type = typename input_type::first_type;
   mpmc_queue<input_type> output_queue{ex.queue_size, ex.lockfree};
 
-  atomic<int> nend{0}; // TODO: Find better name?
+  atomic<int> done_threads{0};
 
   for (int th=0; th<filter_obj.exectype.num_threads; th++) {
     tasks.push_back(
@@ -328,8 +328,8 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
           }
           item = input_queue.pop();
         }
-        nend++;
-        if (nend==filter_obj.exectype.num_threads) {
+        done_threads++;
+        if (done_threads==filter_obj.exectype.num_threads) {
           output_queue.push( make_pair(input_value_type{}, -1) );
         }
         else {
@@ -395,7 +395,7 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
       pair<output_item_value_type,long>;
   mpmc_queue<output_item_type> output_queue{p.queue_size,p.lockfree};
 
-  atomic<int> nend{0}; //TODO: Look for better name
+  atomic<int> done_threads{0};
   vector<thread> tasks;
   for(int th = 0; th<farm_obj.exectype.num_threads; ++th){
     tasks.push_back(
@@ -410,8 +410,8 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
           item = input_queue.pop( ); 
         }
         input_queue.push(item);
-        nend++;
-        if (nend == farm_obj.exectype.num_threads) {
+        done_threads++;
+        if (done_threads == farm_obj.exectype.num_threads) {
           output_queue.push(make_pair(output_item_value_type{}, -1));
         }
                 
