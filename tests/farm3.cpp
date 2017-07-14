@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,10 +22,14 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <experimental/optional>
+#include <farm.h>
+
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void farm_example1() {
 
@@ -40,7 +44,7 @@ void farm_example1() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -49,17 +53,17 @@ void farm_example1() {
     std::atomic<int> output;
     output = 0;
 
-    Farm(p,
-        // Farm generator as lambda
-        [&]() {
+    farm(p,
+        // farm generator as lambda
+        [&]() -> optional<int> {
             a--; 
             if ( a == 0 ) 
-                return optional<int>(); 
+                return {}; 
             else
-                return optional<int>( a );
+                return a;
         },
 
-        // Farm kernel as lambda
+        // farm kernel as lambda
         [&]( int l ) {
             output += l*10;
         }

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/reduce.hpp>
+#include <reduce.h>
 #include <functional>
 using namespace std;
 using namespace grppi;
@@ -39,19 +39,14 @@ void reduce_example1() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p(NTHREADS);
+    parallel_execution_native p(NTHREADS);
 #else
     sequential_execution p{};
 #endif
 
     std::vector<double> in(10);
     for(int i=0;i<in.size();i++) in[i] = (i+1);
-    double out=1;
-//    Reduce(p, in.begin(), in.end(), out, Sum(out));
-    Reduce(p, in.begin(), in.end(), out, std::divides<double>());
-    std::cout<<"REDUCE : "<< out <<std::endl;
-    out = 5;
-//    Reduce(p, in.begin(), in.end(), out, [&](int & in, int & out){ out *= in; }, Mult(out));
+    double out = reduce(p, in.begin(), in.end(), 0.0,std::plus<double>());
     std::cout<<"REDUCE : "<< out <<std::endl;
 
 }

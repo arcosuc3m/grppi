@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/map.hpp>
+#include <map.h>
 
 using namespace std;
 using namespace grppi;
@@ -39,7 +39,7 @@ void map_example1() {
 #elif TBB
     #error Not yet implemented!
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -49,7 +49,7 @@ void map_example1() {
     for(int i=0;i<in.size();i++){ in[i] =i ;in2[i] = i;}
     std::vector<int> out(1000);
 
-    Map(p, in.begin(), in.end(), out.begin(), [&](int in, int in2){ return in + in2; }, in2.begin());
+    grppi::map(p, in.begin(), in.end(), out.begin(), [&](int in, int in2){ return in + in2; }, in2.begin());
     for(int i=0;i<out.size();i++){
        std::cout<<out[i]<<" ";
     }

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -23,12 +23,16 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <experimental/optional>
+
 
 #include <chrono>
-#include <ppi/farm.hpp>
+#include <farm.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 std::vector<int> read_list(std::istream & is){
   std::vector<int> result;
@@ -65,7 +69,7 @@ void farm_example1() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -73,15 +77,15 @@ void farm_example1() {
     std::ifstream is{"txt/filelist.txt"};
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
 
-    Farm(p,
-        // Farm generator as lambda
-        [&]() {
+    farm(p,
+        // farm generator as lambda
+        [&]() -> optional<std::string>{
             auto f = read_line(is);
-            
-            return ( f.empty() ) ? optional<std::string>( ) : optional<std::string>( f );
+            if( f.empty() ) return {};
+            else return f;
         },
 
-        // Farm kernel as lambda
+        // farm kernel as lambda
         [&]( std::string fname ) {
             std::fstream file (fname);
             auto v = read_list(file);

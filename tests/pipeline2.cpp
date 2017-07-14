@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,11 +21,15 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <experimental/optional>
+
 #include <algorithm>
+#include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void pipeline_example2() {
 
@@ -40,7 +44,7 @@ void pipeline_example2() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -51,17 +55,17 @@ void pipeline_example2() {
     if (!fe.good()) return;
     int numchar = 0;
 
-    Pipeline( p, 
+    pipeline( p,
         // Pipeline stage 0
-        [&]() {
+        [&]() -> optional<char>{
             char r; 
             fe >> r;
             if ( fe.eof() ) {
-                return optional<char>(); 
+                return {}; 
             }
             else { 
 		        //cout << r;
-                return optional<char>(r);
+                return r;
             }
         },
 

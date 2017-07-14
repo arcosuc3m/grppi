@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include "ppi/divideandconquer.hpp"
+#include "divideconquer.h"
 
 using namespace std;
 using namespace grppi;
@@ -46,7 +46,7 @@ void fibonacci_example() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -55,7 +55,7 @@ void fibonacci_example() {
     for(int v=0;v<40;v++){
     int find = 1;
     int out = 0;
-    DivideAndConquer(p, v, out,
+    out = divide_conquer(p, v, 
         [&](auto & v){
            std::vector< int > subproblem;
     	   if(v<2) subproblem.push_back(v);
@@ -65,9 +65,9 @@ void fibonacci_example() {
            }
            return subproblem;
         },
-        [&](auto & problem, auto & partial){
-           if(problem==0) partial = 0;
-           else{
+        [&](auto problem){
+           int partial = 0;
+           if(problem!=0){
               int a=1, b=1;
               for(int i = 3; i <= problem; i++){
                  int c = a + b;
@@ -76,11 +76,13 @@ void fibonacci_example() {
              }
              partial = b;
            }
+           return partial;
         },
-        [&](auto & partial, auto & out){
+        [&](auto out, auto partial){
            out += partial;
+           return out;
         }
-    );    
+    );
 
     std::cout << v<< ":" << out << std::endl;
    }

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
-#include <ppi/reduce.hpp>
+#include <reduce.h>
 
 using namespace std;
 using namespace grppi;
@@ -39,7 +39,7 @@ void reduce_example1() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p(NTHREADS);
+    parallel_execution_native p(NTHREADS);
 #else
     sequential_execution p{};
 #endif
@@ -51,25 +51,22 @@ void reduce_example1() {
           in[i][k]= 1;
        }
     }
-    std::vector<int> out(100);
+    std::vector<int> out(100,0);
 
 
-    int out2 =0 ;
-//    Reduce(in.begin(), in.end(), out2, [&](auto & in, int & out){  out += in; }  );
-//    Reduce(in.begin(), in.end(), out2, [&](auto & in, auto & out){
-//       Reduce(in.begin(), in.end(), out, [&](auto & in, auto & out){ out += in; });
-//     },  [&](auto & in, auto & out){ out += in; } );
-//
+    int out2 =0 ; 
+    out = reduce(p, in.begin(), in.end(), out ,[&p](auto val, auto vec){
+         auto it = val.begin();
+         auto it2= vec.begin();
+         while( it!=val.end() && it2 != vec.end()){
+             *it += *it2;
+             it++;
+             it2++;
+         }
+         return val; 
+    });
 
-     Reduce(p, in.begin(), in.end(), out.begin(), [&](auto & in, auto & out){
-             Reduce(p, in.begin(), in.end(), out,  std::plus<int>() );
-         } 
-     );
-
-    Reduce(p, out.begin(), out.end(), out2,  std::plus<int>() );
- 
-
-    std::cout<<out2<<std::endl;
+    out2 += reduce(p, out.begin(), out.end(),0, std::plus<int>() );
 
 //    for(int i = 0; i< out.size();i++) std::cout<<"REDUCTION ["<<i<<"] = "<<out[i]<<std::endl;
 }

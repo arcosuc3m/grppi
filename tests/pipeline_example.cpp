@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.1
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -24,10 +24,14 @@
 #include <sstream>
 #include <algorithm>
 #include <chrono>
-#include <ppi/pipeline.hpp>
+#include <experimental/optional>
+
+#include <pipeline.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 std::vector<int> read_list(std::istream & is){
   std::vector<int> result;
@@ -55,7 +59,7 @@ void pipeline_example() {
 #elif TBB
     parallel_execution_tbb p{NTHREADS};
 #elif THR
-    parallel_execution_thr p{NTHREADS};
+    parallel_execution_native p{NTHREADS};
 #else
     sequential_execution p{};
 #endif
@@ -64,11 +68,12 @@ void pipeline_example() {
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
     int numchar = 0;
     p.ordering=true;
-    Pipeline( p, 
+    pipeline( p,
         // Pipeline stage 0
-        [&]() {
+        [&]() -> optional<std::vector<int>>{
              auto v = read_list(is);
-             return ( v.size() == 0) ? optional<std::vector<int>>() : optional<std::vector<int>>(v);
+             if( v.size() == 0) return {};
+             else return v;
         },
 
         // Pipeline stage 1
