@@ -22,9 +22,11 @@
 #define GRPPI_TBB_FARM_H
 
 #ifdef GRPPI_TBB
+
 #include <experimental/optional>
 
 #include <tbb/tbb.h>
+
 namespace grppi{
 
 /**
@@ -49,11 +51,11 @@ execution with a generator and a consumer.
 */
 template <typename Generator, typename Consumer>
 void farm(parallel_execution_tbb & ex, Generator generate_op, 
-          Consumer && consume_op) 
+          Consumer consume_op) 
 {
   using namespace std;
 
-  using generated_type = typename std::result_of<Generator()>::type;
+  using generated_type = typename result_of<Generator()>::type;
   mpmc_queue<generated_type> queue{ex.queue_size, ex.lockfree};
 
   tbb::task_group g;
@@ -96,7 +98,7 @@ execution with a generator and a consumer.
 */
 template <typename Generator, typename Transformer, typename Consumer>
 void farm(parallel_execution_tbb & ex, Generator generate_op, 
-          Transformer transform_op , Consumer consume_op) 
+          Transformer transform_op, Consumer consume_op) 
 {
   using namespace std;
   using namespace experimental;
@@ -106,40 +108,39 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
       typename result_of<Transformer(generated_value_type)>::type;
   using transformed_type = optional<transformed_value_type>;
 
-  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
+  mpmc_queue<generated_type> generated_queue(ex.queue_size,ex.lockfree);
   mpmc_queue<transformed_type> transformed_queue(ex.queue_size,ex.lockfree);
 
   atomic<int>done_threads{0};
-  tbb::task_group g;
+  tbb::task_group generators;
   for (int i=0; i<ex.num_threads; ++i) {
-    g.run([&](){
+    generators.run([&](){
       auto item{generated_queue.pop()};
       while (item) {
-        auto out = transform_op( item.value() );
-        transformed_queue.push(transformed_type{transform_op(*item)});
+        auto result = transform_op(*item);
+        transformed_queue.push(transformed_type{result});
         item = generated_queue.pop();
       }
       done_threads++;
-      if (done_threads== ex.num_threads) {
+      if (done_threads==ex.num_threads) {
         transformed_queue.push(transformed_type{});
       }
     });
   }
 
-  //SINK 
-  thread consume([&](){
-    auto item{transformed_queue.pop()};
+  thread consumer_thread([&](){
+    auto item {transformed_queue.pop()};
     while (item) {
       consume_op(*item);
       item = transformed_queue.pop(  );
     }
   });
 
-  //Generate elements
+   //Generate elements
   for (;;) {
-    auto item{generate_op()};
-    generated_queue.push(generate_op());
-    if (!item) {
+    auto item = generate_op();
+    generated_queue.push(item) ;
+    if(!item) {
       for (int i=1; i<ex.num_threads; ++i) {
         generated_queue.push(item) ;
       }
@@ -147,13 +148,16 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
     }
   }
 
-  //Join threads
-  g.wait();
-  consume.join();
+  generators.wait();
+  consumer_thread.join();
 }
 
-}
+/**
+@}
+@}
+*/
 
+}
 #endif
 
 #endif
