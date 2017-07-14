@@ -91,7 +91,9 @@ A *composable pipeline* returns a representation of the pipeline that can be
 used to perform declarative composition of streaming patterns.
 
 ---
-**Example**: Use a farm of pipelines to performe previous example.
+**Example**: Use a farm to read intenger from a file and write to another file
+strings. The transformation phase is a pipeline that performs transformation in
+two stages.
 ~~~{.cpp}
 grppi::farm(ex1,
   [&input]() -> optional<int> {
