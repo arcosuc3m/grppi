@@ -91,21 +91,21 @@ A *composable pipeline* returns a representation of the pipeline that can be
 used to perform declarative composition of streaming patterns.
 
 ---
-**Example:**: Use a farm of pipelines to performe previous example.
+**Example**: Use a farm of pipelines to performe previous example.
 ~~~{.cpp}
-farm(ex1,
+grppi::farm(ex1,
   [&input]() -> optional<int> {
     int n;
     input >> n;
     if (!input) return {};
     else return n;
   },
-  pipeline(ex2,
+  grppi::pipeline(ex2,
     [](int x) -> double { return func1(x); },
     [](double x) -> string { return func2(x); },
   ),
   [&output](string s) {
-    output << s << "\n";
+    output << s << endl;
   }
 );  
 ~~~
@@ -115,7 +115,7 @@ This *composable pipeline* can also be used to build complex composed patterns
 in a non-declarative way.
 
 ---
-**Example:**: Piecewise construction of a farm of pipelines.
+**Example**: Piecewise construction of a farm of pipelines.
 ~~~{.cpp}
 auto reader = [&input]() -> optional<int> {
   int n;
@@ -124,7 +124,7 @@ auto reader = [&input]() -> optional<int> {
   else return n;
 };
 
-auto processor = pipeline(ex2,
+auto processor = grppi::pipeline(ex2,
   [](int x) -> double { return func1(x); },
   [](double x) -> string { return func2(x); },
 );
@@ -133,5 +133,5 @@ auto writer = [&output](string s) {
   output << s << "\n";
 };
 
-farm(ex1, reader, processor, writer);
+grppi::farm(ex1, reader, processor, writer);
 ~~~
