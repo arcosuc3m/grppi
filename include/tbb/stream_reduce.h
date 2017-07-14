@@ -28,8 +28,8 @@
 
 namespace grppi{
 
-template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
- void stream_reduce(parallel_execution_tbb &s, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, IdentityType identity)
+template <typename Generator, typename Combiner, typename Consumer, typename Identity>
+ void stream_reduce(parallel_execution_tbb &s, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, Identity identity)
 {
 
      std::vector<typename std::result_of<Generator()>::type::value_type> buffer;
@@ -43,7 +43,7 @@ template <typename Generator, typename Combiner, typename Consumer, typename Ide
         }
         if(buffer.size()>0){
            //Apply the reduce function to the elements on the window
-           auto reduceVal = reduce(s, buffer.begin(), buffer.end(), identity , std::forward<Combiner>(comb));
+           auto reduceVal = reduce(s, buffer.begin(), buffer.end(), identity, std::forward<Combiner>(comb));
            //Call to sink function
            cons(reduceVal);
            //Remove elements

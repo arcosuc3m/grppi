@@ -84,9 +84,10 @@ void dividec_example1() {
             return out;
               
         },
-        [&](auto & partial, auto & out){
+        [&](auto out, auto partial){
           for(int i = 0; i < partial.size(); i++)
               out.push_back(partial[i]);
+          return out;
         }
     );
 }
