@@ -127,11 +127,6 @@ template <typename Generator, typename Predicate, typename Consumer>
 
 }
 
-template <typename Predicate>
-filter_info<parallel_execution_tbb, Predicate> stream_filter(parallel_execution_tbb &p, Predicate && pred){
-   return filter_info<parallel_execution_tbb, Predicate>(p, std::forward<Predicate>(pred));
-
-}
 }
 #endif
 

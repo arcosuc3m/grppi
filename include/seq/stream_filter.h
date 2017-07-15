@@ -23,20 +23,16 @@
 
 namespace grppi{
 template <typename Generator, typename Predicate, typename Consumer>
-void stream_filter(sequential_execution, Generator && gen, Predicate && pred, Consumer && cons) {
-
-    while( 1 ) {
-        auto k = gen();
-        if( !k )
-            break;
-        if(pred(k.value()))
-            cons(k.value());
+void stream_filter(sequential_execution, Generator generate_op, 
+                   Predicate predicate_op, Consumer consume_op) 
+{
+  for (;;) {
+    auto item = generate_op();
+    if (!item) break;
+    if (predicate_op(*item)) {
+      consume_op(*item);
     }
-}
-
-template <typename Predicate>
-filter_info<sequential_execution, Predicate> stream_filter(sequential_execution &s, Predicate && pred){
-   return filter_info<sequential_execution, Predicate>(s, std::forward<Predicate>(pred));
+  }
 }
 
 }

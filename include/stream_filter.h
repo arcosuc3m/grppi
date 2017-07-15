@@ -28,12 +28,24 @@
 #include "common/parallel_execution_tbb.h"
 #include "common/patterns.h"
 #include "common/support.h"
+#include "common/patterns.h"
 
 #include "seq/stream_filter.h"
 #include "native/stream_filter.h"
 #include "omp/stream_filter.h"
 #include "tbb/stream_filter.h"
 #include "poly/stream_filter.h"
+
+namespace grppi {
+
+template <typename Execution, typename Predicate>
+auto stream_filter(Execution & ex, Predicate && pred)
+{
+  return filter_info<Execution, Predicate>{ex, 
+      std::forward<Predicate>(pred)};
+}
+
+}
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
