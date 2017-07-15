@@ -26,108 +26,110 @@
 #include <tbb/tbb.h>
 
 namespace grppi{
+
 template <typename Generator, typename Predicate, typename Consumer>
- void stream_filter(parallel_execution_tbb &p, Generator && gen, Predicate && pred, Consumer && cons) {
+void stream_filter(parallel_execution_tbb & ex, Generator generate_op,
+                   Predicate predicate_op, Consumer consume_op) 
+{
+  using namespace std;
+  using generated_type = typename result_of<Generator()>::type;
+  using item_type = pair<generated_type,long>;
 
-    tbb::task_group g;
+  mpmc_queue<item_type> generated_queue{ex.queue_size,ex.lockfree};
+  mpmc_queue<item_type> filtered_queue{ex.queue_size, ex.lockfree};
 
-    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > queue(p.queue_size,p.lockfree);
-    mpmc_queue< std::pair< typename std::result_of<Generator()>::type, long> > outqueue(p.queue_size, p.lockfree);
-
-    //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
-    for(int i=1; i< p.num_threads - 1; i++){
-          g.run(
-            [&](){
-               std::pair< typename std::result_of<Generator()>::type,long > item;
-               //dequeue a pair element - order
-               item = queue.pop();
-               while( item.first ){
-                   if(pred(item.first.value()))
-                       //If is an acepted element
-                       outqueue.push(item);
-                   else{
-                       //If is a discarded element
-                       outqueue.push(std::make_pair(typename std::result_of<Generator()>::type(),item.second));
-                   }
-                   item = queue.pop();
-               }
-               //If is the last element
-               outqueue.push(std::make_pair(item.first,-1));
-            }
-         );
-     }
-
-//LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
-      g.run(
-        [&](){
-           int nend = 0;
-           std::pair<typename std::result_of<Generator()>::type, long> item;
-           std::vector< std::pair<typename std::result_of<Generator()>::type, long> > aux_vector;
-           long order = 0;
-           //Dequeue an element
-           item = outqueue.pop();
-           while(nend != p.num_threads - 1){
-              //If is an end of stream element
-              if(!item.first&&item.second==-1){
-                  nend++;
-                  if(nend == p.num_threads -2 ) break;
-              }
-              //If there is not an end element
-              else {
-                  //If the element is the next one to be procesed
-                  if(order == item.second){
-                      if(item.first)
-                         cons(item.first.value());
-                      order++;
-                  }else{
-                      //If the incoming element is disordered
-                      aux_vector.push_back(item);
-                  }
-              }
-              //Search in the vector for next elements
-              for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
-                  if((*it).second == order){
-                       if((*it).first)
-                          cons((*it).first.value());
-                       aux_vector.erase(it);
-                       order++;
-                  }
-              } 
-              item = outqueue.pop();
-           }
-           while(aux_vector.size()>0){
-               for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
-                  if((*it).second == order){
-                       if((*it).first)
-                          cons((*it).first.value());
-                       aux_vector.erase(it);
-                       order++;
-                  }
-              }
-           }
-           
+  //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
+  tbb::task_group filterers;
+  for (int i=1; i< ex.num_threads-1; ++i) {
+    filterers.run([&](){
+      //dequeue a pair element - order
+      auto item = generated_queue.pop();
+      while (item.first) {
+        if (predicate_op(item.first.value())) {
+          filtered_queue.push(item);
         }
-    );
+        else {
+          filtered_queue.push({{}, item.second});
+        }
+        item = generated_queue.pop();
+      }
+      //If is the last element
+      filtered_queue.push({item.first,-1});
+    });
+  }
 
-    //THREAD 0 ENQUEUE ELEMENTS
+  //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
+  filterers.run([&](){
+    int done_tasks = 0;
+    vector<item_type> item_buffer;
     long order = 0;
-    while(1){
-        auto k = gen();
-        queue.push(std::make_pair(k,order));
-        order++;
-        if( !k ){
-           for(int i = 0; i< p.num_threads -2; i++){
-              queue.push(std::make_pair(k,-1));
-           }
-           break;
+    auto item{filtered_queue.pop()};
+    while (done_tasks!=ex.num_threads-1) {
+      //If is an end of stream element
+      if (!item.first && item.second==-1){
+        done_tasks++;
+        if (done_tasks==ex.num_threads-2) break;
+      }
+      else {
+        //If the element is the next one to be procesed
+        if (order==item.second) {
+          if(item.first) {
+            consume_op(*item.first);
+          }
+          order++;
         }
+        else {
+          //If the incoming element is disordered
+          item_buffer.push_back(item);
+        }
+      }
+      //Search in the vector for next elements
+      // TODO: find+erase
+      for (auto it=item_buffer.begin(); it<item_buffer.end(); ++it) {
+        if(it->second==order) {
+          if (it->first) {
+            consume_op((*it).first.value());
+          }
+          item_buffer.erase(it);
+          order++;
+        }
+      } 
+      item = filtered_queue.pop();
     }
+    while (item_buffer.size()>0) {
+      // TODO: find+erase
+      for (auto it=item_buffer.begin(); it<item_buffer.end(); ++it) {
+        if(it->second==order) {
+          if(it->first) {
+            consume_op(it->first.value());
+          }
+          item_buffer.erase(it);
+          order++;
+        }
+      }
+    }
+           
+  });
+
+  //THREAD 0 ENQUEUE ELEMENTS
+  long order = 0;
+  for (;;) {
+    auto item = generate_op();
+    generated_queue.push(make_pair(item,order));
+    order++;
+    if (!item) {
+      for (int i=0; i<ex.num_threads-2; ++i) {
+        generated_queue.push({item,-1});
+      }
+      break;
+    }
+  }
     
-    g.wait();
-
+  filterers.wait();
 }
 
 }
+
 #endif
 
 #endif
