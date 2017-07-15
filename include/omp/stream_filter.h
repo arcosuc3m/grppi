@@ -25,6 +25,28 @@
 
 namespace grppi{
 
+/** 
+\addtogroup filter_pattern
+@{
+*/
+
+/**
+\addtogroup filter_pattern_omp OpenMP parallel filter pattern.
+\brief OpenMP parallel implementation fo the \ref md_stream-filter pattern.
+@{
+*/
+
+/**
+\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+sequence with sequential execution policy.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex OpenMP parallel execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
 template <typename Generator, typename Predicate, typename Consumer>
 void stream_filter(parallel_execution_omp & ex, Generator generate_op, 
                    Predicate predicate_op, Consumer consume_op) 

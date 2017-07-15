@@ -22,6 +22,29 @@
 #define GRPPI_SEQ_STREAM_FILTER_H
 
 namespace grppi{
+
+/** 
+\addtogroup filter_pattern
+@{
+*/
+
+/**
+\addtogroup filter_pattern_seq Sequential filter pattern.
+\brief Sequential implementation fo the \ref md_stream-filter pattern.
+@{
+*/
+
+/**
+\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+sequence with sequential execution policy.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex Sequential execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
 template <typename Generator, typename Predicate, typename Consumer>
 void stream_filter(sequential_execution, Generator generate_op, 
                    Predicate predicate_op, Consumer consume_op) 
@@ -36,4 +59,5 @@ void stream_filter(sequential_execution, Generator generate_op,
 }
 
 }
+
 #endif
