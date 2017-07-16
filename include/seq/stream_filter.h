@@ -58,6 +58,11 @@ void stream_filter(sequential_execution, Generator generate_op,
   }
 }
 
+/**
+@}
+@}
+*/
+
 }
 
 #endif
