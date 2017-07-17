@@ -24,39 +24,39 @@
 
 #ifdef GRPPI_OMP
 
-#include "../reduce.h"
-
 namespace grppi{
 
-template <typename Generator, typename Combiner, typename Consumer, typename Identity>
- void stream_reduce(parallel_execution_omp &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, Identity identity)
+template <typename Generator, typename Combiner, typename Consumer, 
+          typename Identity>
+void stream_reduce(parallel_execution_omp &ex, Generator generate_op, 
+                   int window_size, int offset, 
+                   Combiner && combine_op, Consumer consume_op, 
+                   Identity identity)
 {
+  using namespace std;
+  using generated_type = typename result_of<Generator()>::type;
+  using generated_value_type = typename generated_type::value_type;
+  // TODO: Evaluate better structure than vector
+  vector<generated_value_type> values;
+  values.reserve(window_size);
 
-     std::vector<typename std::result_of<Generator()>::type::value_type> buffer;
-     auto k = gen();
-     while(1){
-        //Create a vector as a buffer 
-        //If its not the las element and the window is not complete keep getting more elements
-        while( k && buffer.size() != windowsize){
-           buffer.push_back(k.value());
-           k = gen();
-        }
-        if(buffer.size()>0){
-           //Apply the reduce function to the elements on the window
-           auto reduceVal = reduce(p, buffer.begin(), buffer.end(), identity, std::forward<Combiner>(comb) );
-           //Call to sink function
-           cons(reduceVal);
-           //Remove elements
-           if(k){
-              buffer.erase(buffer.begin(), buffer.begin() + offset);
-           }
-        }
-        //If there is no more elements finallize the pattern
-        if( !k ){
-           break;
-        }
+  // TODO: Set generator and consumer in separate threads
+  auto item = generate_op();
+  for (;;) {
+    while (item && values.size()!=window_size) {
+      values.push_back(*item);
+      item = generate_op();
     }
-
+    if (values.size()>0) {
+      auto reduced_value = reduce(ex, values.begin(), values.end(), identity,
+          std::forward<Combiner>(combine_op));
+      consume_op(reduced_value);
+      if (item) {
+        values.erase(values.begin(), values.begin() + offset);
+      }
+    }
+    if (!item) break;
+  }
 }
 
 
