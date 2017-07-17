@@ -59,7 +59,7 @@ void map(parallel_execution_native & ex,
     if(i == ex.num_threads-1 ) end= last;
 
     auto out = first_out + (elemperthr * i);
-    tasks.paush_back(
+    tasks.emplace_back(
       [&](InputIt begin, InputIt end, OutputIt out){
         // Register the thread in the execution model
         ex.register_thread();
