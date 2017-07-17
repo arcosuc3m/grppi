@@ -65,10 +65,10 @@ A stand alone filter has three elements:
 ~~~{.cpp}
 int n = 10;
 grppi::stream_filter(exec,
-  []() -> std::optional<int> {
+  [&n]() -> std::optional<int> {
     n--;
     if (n>0) return n;
-    else     {};
+    else     return {};
   },
   [](int x) { return x%2; },
   [](int x) {
