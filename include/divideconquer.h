@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -33,37 +33,11 @@
 #include "tbb/divideconquer.h"
 #include "poly/divideconquer.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BDataPattern
- *  @{
- */
-/** @defgroup DivideAndConquer
- *
- *	@brief Apply the divide and conquer pattern for parallelizing the code 
- *
- *  The DivideAndConquer divide a big problem in simpler problems and then
- *  solve each simpler problem in parallel using the 'task' function.
- *  Finally join the solution of all small problems using the 'merge' function.
- *
- *  @{
- */
-/**
- *  @param exec     Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param problem  Data that we want to process.
- *  @param output   Memory address where to store the result of the operation.
- *  @param divide   DivideFunction: show how to divide the problem into simple.
- *    problems, until the data is simple enough to be handle by the 'task'
- *    function.
- *  @param task     Task function: will be executed once the problem is simple 
- *    enough and contains the code section that should be parallelize.
- *  @param merge    Merge function: will join the the result of the 'task' 
- *    function
- */
-template <typename Input, typename Output, typename DivFunc, typename Operation, typename MergeFunc>
- void DivideAndConquer(execution_model exec, Input & problem, Output & output, DivFunc && divide, Operation && task, MergeFunc && merge);
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+/** 
+\defgroup divide_conquer_pattern Divide/Conquer pattern
+
+\brief Interface for applyinng the \ref md_divide-conquer.
+*/
+
 
 #endif

@@ -78,8 +78,9 @@ void fibonacci_example() {
            }
            return partial;
         },
-        [&](auto & partial, auto & out){
+        [&](auto out, auto partial){
            out += partial;
+           return out;
         }
     );
 
