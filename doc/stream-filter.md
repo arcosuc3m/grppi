@@ -1,6 +1,6 @@
 # Filter pattern
 
-The **filter** (or *stream filter*) is streaming pattern that filters out items
+The **filter** (or *stream filter*) is a streaming pattern that filters out items
 from a data stream based on a predicate, so that only data items satisfying the
 predicate are passed to the consumer.
 
@@ -17,7 +17,7 @@ grppi::stream_filter(exec, other_arguments...);
 There are two variants:
 
 * *Stand-alone filter*: Applies a filter to a stream of values produced by a
-  generator and invokes a consumer for each value satisfying the precicate.
+  generator and invokes a consumer for each value satisfying the predicate.
 * *Composable filter*: Defines a filter that can be used as a building block by 
    another pattern (e.g. a pipeline).
 
@@ -57,14 +57,14 @@ A stand alone filter has three elements:
 
 * A **Generator** of values.
 * A **Predicate** filtering values.
-* A **Consumer** of generated value.
+* A **Consumer** of generated values.
 
 
 ---
-**Example**: Generate a strem of integer numbers and filter out odd numbers.
+**Example**: Generate a stream of integer numbers and filter out odd numbers.
 ~~~{.cpp}
 int n = 10;
-grppi::filter(exec,
+grppi::stream_filter(exec,
   []() -> std::optional<int> {
     n--;
     if (n>0) return n;
@@ -93,7 +93,7 @@ also repsonsible for consuming the output values.
 grppi::pipeline(exec,
   stageA,
   stageB,
-  grppi::filter(exec, [](auto x) { return x.lenght()>4; }),
+  grppi::stream_filter(exec, [](auto x) { return x.lenght()>4; }),
   stageC
   );
 ~~~
@@ -106,13 +106,13 @@ an object that may be used later in the composition.
 ---
 **Example:**
 ~~~{.cpp}
-auto filter_odd = grppi::filter(exec,
+auto filter_odd = grppi::stream_filter(exec,
   [](auto x) { return x%2; });
 
 grppi::pipeline(exec,
   stageA,
   stageB,
-  grppi::filter_odd,
+  filter_odd,
   stageC
   );
 ~~~
