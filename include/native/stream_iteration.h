@@ -114,8 +114,8 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
    });
    //Farm workers
    for(int th = 1; th < se.exectype.num_threads; th++) {
-      tasks.push_back(
-          std::thread([&](){
+      tasks.emplace_back(
+          [&](){
               // Register the thread in the execution model
               se.exectype.register_thread();
 
@@ -136,7 +136,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
               // Deregister the thread in the execution model
               se.exectype.deregister_thread();
           }
-      ));
+      );
    }
    //Output function
    std::thread outth([&](){

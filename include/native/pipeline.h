@@ -75,8 +75,8 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
                        std::vector<std::thread> & tasks)
 {
   using namespace std;
-  tasks.push_back(
-    thread{[&](){
+  tasks.emplace_back(
+    [&](){
       ex.register_thread();
         
       auto item = input_queue.pop();
@@ -93,7 +93,7 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
       }
 
       ex.deregister_thread();
-    }}
+    }
   );
 }
 
@@ -177,8 +177,8 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
   mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
 
   for (int th=0; th<reduction_obj.exectype.num_threads; th++) {
-    tasks.push_back(
-      thread{[&](){
+    tasks.emplace_back(
+      [&](){
         auto item = input_queue.pop( );
         while (item) {
           auto local =  input_queue.task(item) ;
@@ -186,7 +186,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
           item = input_queue.pop( );
         }
         output_queue.push(result_type{}) ;
-      }}
+      }
     );
   }
 
@@ -219,8 +219,8 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
 
   atomic<int> done_threads{0}; 
   for (int th=0; th<filter_obj.exectype.num_threads; th++) {
-    tasks.push_back(
-      thread{[&](){
+    tasks.emplace_back(
+      [&](){
         filter_obj.exectype.register_thread();
 
         auto item{input_queue.pop()};
@@ -242,7 +242,7 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
         }
 
         filter_obj.exectype.deregister_thread();
-      }}
+      }
     );
   }
 
@@ -317,8 +317,8 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
   atomic<int> done_threads{0};
 
   for (int th=0; th<filter_obj.exectype.num_threads; th++) {
-    tasks.push_back(
-      thread{[&]() {
+    tasks.emplace_back(
+      [&]() {
         filter_obj.exectype.register_thread();
 
         auto item{input_queue.pop()};
@@ -337,7 +337,7 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
         }
 
         filter_obj.exectype.deregister_thread();
-      }}
+      }
     );
   }
 
@@ -398,8 +398,8 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
   atomic<int> done_threads{0};
   vector<thread> tasks;
   for(int th = 0; th<farm_obj.exectype.num_threads; ++th){
-    tasks.push_back(
-      thread{[&]() {
+    tasks.emplace_back(
+      [&]() {
         farm_obj.exectype.register_thread();
 
         long order = 0;
@@ -416,7 +416,7 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
         }
                 
         farm_obj.exectype.deregister_thread();
-      }}
+      }
     );
   }
   pipeline_impl(p, output_queue, 

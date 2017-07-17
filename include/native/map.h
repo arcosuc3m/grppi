@@ -59,8 +59,8 @@ void map(parallel_execution_native & ex,
     if(i == ex.num_threads-1 ) end= last;
 
     auto out = first_out + (elemperthr * i);
-    tasks.push_back(
-      std::thread( [&](InputIt begin, InputIt end, OutputIt out){
+    tasks.emplace_back(
+      [&](InputIt begin, InputIt end, OutputIt out){
         // Register the thread in the execution model
         ex.register_thread();
           
@@ -73,7 +73,7 @@ void map(parallel_execution_native & ex,
         // Deregister the thread in the execution model
         ex.deregister_thread();
        },
-       begin, end, out)
+       begin, end, out
      );
   }
   //Map main threads
@@ -125,8 +125,7 @@ void map(parallel_execution_native& ex,
     if( i == ex.num_threads-1) end = last;
     auto out = first_out + (elemperthr * i);
     //Begin task
-    tasks.push_back(
-      std::thread{
+    tasks.emplace_back(
         [&](InputIt begin, InputIt end, OutputIt out, 
             int tid, int
             nelem, OtherInputIts ... more_inputs) {
@@ -145,7 +144,7 @@ void map(parallel_execution_native& ex,
           // Deregister the thread in the execution model
           ex.deregister_thread();
         },
-        begin, end, out, i, elemperthr, more_inputs...}
+        begin, end, out, i, elemperthr, more_inputs...
     );
     //End task
   }

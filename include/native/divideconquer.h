@@ -44,19 +44,16 @@ typename std::result_of<Operation(Input)>::type internal_divide_conquer(parallel
         auto i = subproblems.begin();
         for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0 ; i++, division++){
             //THREAD
-            tasks.push_back(
-               std::thread(
-                   [&](auto i,int division){
+            tasks.emplace_back(
+                [&](auto i,int division){
                     // Register the thread in the execution model
                     p.register_thread(); 
 
                     partials[division] = internal_divide_conquer(p, *i, std::forward<DivFunc>(divide), std::forward<Operation>(op), std::forward<MergeFunc>(merge), num_threads);
-
+  
                     // Deregister the thread in the execution model
                     p.deregister_thread();
-                  },
-                   i, division
-               )
+                }, i, division
             );
 
             num_threads--;
@@ -111,8 +108,7 @@ typename std::result_of<Operation(Input)>::type divide_conquer(parallel_executio
         auto i = subproblems.begin();
         for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0; i++, division++){
             //THREAD
-	        tasks.push_back(
-		       std::thread(
+	        tasks.emplace_back(
                    [&](auto i,int division){ 
                     // Register the thread in the execution model
                     p.register_thread();
@@ -123,7 +119,6 @@ typename std::result_of<Operation(Input)>::type divide_conquer(parallel_executio
                     p.deregister_thread();
                   },
                    i, division
-		       )
 	        );
             num_threads --;
             //END TRHEAD
