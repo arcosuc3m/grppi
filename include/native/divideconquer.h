@@ -49,8 +49,7 @@ internal_divide_conquer(parallel_execution_native &p,
         auto i = subproblems.begin();
         for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0 ; i++, division++){
             //THREAD
-            tasks.push_back(
-               std::thread(
+            tasks.emplace_back(
                    [&](auto i,int division){
                     // Register the thread in the execution model
                     p.register_thread(); 
@@ -64,7 +63,6 @@ internal_divide_conquer(parallel_execution_native &p,
                     p.deregister_thread();
                   },
                    i, division
-               )
             );
 
             num_threads--;
@@ -156,8 +154,7 @@ divide_conquer(parallel_execution_native & ex,
     auto i = subproblems.begin();
     for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0; i++, division++) {
       //THREAD
-      tasks.push_back(
-        std::thread{
+      tasks.emplace_back(
           [&](auto i,int division){ 
             // Register the thread in the execution model
             ex.register_thread();
@@ -172,7 +169,6 @@ divide_conquer(parallel_execution_native & ex,
             ex.deregister_thread();
           },
           i, division
-	}
       );
       num_threads --;
       //END TRHEAD

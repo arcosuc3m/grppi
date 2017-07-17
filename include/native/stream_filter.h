@@ -32,8 +32,7 @@ template <typename Generator, typename Predicate, typename Consumer>
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
     for(int i=0; i< p.num_threads - 1; i++){
-      tasks.push_back(
-          std::thread(
+      tasks.emplace_back(
             [&](){
 
                // Register the thread in the execution model
@@ -58,13 +57,11 @@ template <typename Generator, typename Predicate, typename Consumer>
                // Deregister the thread in the execution model
                p.deregister_thread();
             }
-         )
        );
      }
 
 //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
-    tasks.push_back(
-      std::thread(
+    tasks.emplace_back(
         [&](){
 
            // Register the thread in the execution model
@@ -119,7 +116,6 @@ template <typename Generator, typename Predicate, typename Consumer>
            // Deregister the thread in the execution model
            p.deregister_thread();
         }
-      )
     );
 
     //THREAD 0 ENQUEUE ELEMENTS

@@ -37,8 +37,8 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
        auto out = firstOut + (elemperthr * i);
 
-       tasks.push_back(
-           std::thread( [&](InputIt begin, InputIt end, OutputIt out){
+       tasks.emplace_back(
+           [&](InputIt begin, InputIt end, OutputIt out){
               // Register the thread in the execution model
               p.register_thread();
 
@@ -52,7 +52,7 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
               // Deregister the thread in the execution model
               p.deregister_thread();
            },
-           begin, end, out)
+           begin, end, out
       );
     }
    //MAIN 

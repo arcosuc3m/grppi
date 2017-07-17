@@ -53,8 +53,8 @@ template <typename InStream, typename OutStream, int currentStage, typename ...S
 
 template <typename InStream, typename Stage, typename OutStream>
  void composed_pipeline(parallel_execution_native &p, InStream &qin, Stage const & s, OutStream &qout, std::vector<std::thread> & tasks){
-    tasks.push_back(
-      std::thread([&](){
+    tasks.emplace_back(
+      [&](){
         using lambdaType = Stage;
         p.register_thread();
         
@@ -72,7 +72,7 @@ template <typename InStream, typename Stage, typename OutStream>
 
         p.deregister_thread();
       }
-    ));
+    );
 }
 
 //Last stage
@@ -141,8 +141,8 @@ reduction_info<parallel_execution_native, Operation, Red> && se) {
     mpmc_queue<typename std::result_of<Operation(typename Stream::value_type) >::type > queueOut(p.queue_size,p.lockfree);
 
     for( int th = 0; th < se.exectype.num_threads; th++){
-        tasks.push_back(
-           std::thread([&](){
+        tasks.emplace_back(
+           [&](){
               typename Stream::value_type item;
               item = st.pop( );
               while( item ) {
@@ -152,7 +152,7 @@ reduction_info<parallel_execution_native, Operation, Red> && se) {
               }
               typename std::result_of<Operation(typename Stream::value_type) >::type out;
               queueOut.push( out ) ;
-       }));
+       });
     }
     //stages(p, q, sgs ... );
     for(int i=0;i<tasks.size(); i++) tasks[i].join();
@@ -178,8 +178,8 @@ void stages(parallel_execution_native &p, Stream& st,
 
        std::atomic<int> nend ( 0 );
        for( int th = 0; th < se.exectype.num_threads; th++){
-          tasks.push_back(
-              std::thread([&](){
+          tasks.emplace_back(
+              [&](){
                  //Register the thread in the execution model
                  se.exectype.register_thread();
                  typename Stream::value_type item;
@@ -203,7 +203,7 @@ void stages(parallel_execution_native &p, Stream& st,
                  //Deregister the thread in the execution model
                  se.exectype.deregister_thread();
 
-          }));
+          });
        } 
        mpmc_queue< typename Stream::value_type > qOut(p.queue_size,p.lockfree);
        auto orderingthr = std::thread([&](){
@@ -262,8 +262,8 @@ void stages(parallel_execution_native &p, Stream& st,
 
        std::atomic<int> nend ( 0 );
        for( int th = 0; th < se.exectype.num_threads; th++){
-          tasks.push_back(
-              std::thread([&](){
+          tasks.emplace_back(
+              [&](){
                   //Register the thread in the execution model
                   se.exectype.register_thread();
                  typename Stream::value_type item;
@@ -285,7 +285,7 @@ void stages(parallel_execution_native &p, Stream& st,
                  //Deregister the thread in the execution model
                  se.exectype.deregister_thread();
                
-          }));
+          });
        }
        stages(p, q, std::forward<Stages>(sgs) ... );
     }
@@ -311,8 +311,8 @@ void stages(parallel_execution_native &p, Stream& st,
     mpmc_queue< std::pair < std::experimental::optional < typename std::result_of< Operation(typename Stream::value_type::first_type::value_type) >::type >, long > > q(p.queue_size,p.lockfree);
     std::atomic<int> nend ( 0 );
     for( int th = 0; th < se.exectype.num_threads; th++){
-          tasks.push_back(
-              std::thread([&](){
+          tasks.emplace_back(
+              [&](){
                   //Register the thread in the execution model
                   se.exectype.register_thread();
 
@@ -331,7 +331,7 @@ void stages(parallel_execution_native &p, Stream& st,
                 
                  //Deregister the thread in the execution model
                  se.exectype.deregister_thread();
-             })
+             }
           );
     }
     stages(p, q, std::forward<Stages>(sgs) ... );

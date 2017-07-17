@@ -40,8 +40,7 @@ Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last,
        auto begin = first + (elemperthr * i);
        auto end = first + (elemperthr * (i+1));
        if(i == p.num_threads -1 ) end= last;
-       tasks.push_back(
-        std::thread( 
+       tasks.emplace_back(
          [&](InputIt beg, InputIt en, int id){
             // Register thread
             p.register_thread();
@@ -49,7 +48,7 @@ Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last,
             // Deregister thread
             p.deregister_thread();
          },
-         begin, end, i)
+         begin, end, i
        );
     }
 

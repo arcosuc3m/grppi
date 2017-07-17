@@ -38,8 +38,7 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
     std::atomic<int> nend(0);
     //Create threads
     for( int i = 0; i < p.num_threads; i++ ) {
-        tasks.push_back(
-            std::thread(
+        tasks.emplace_back(
                 [&](){
                     // Register the thread in the execution model
                     p.register_thread();
@@ -61,13 +60,11 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
                     // Deregister the thread in the execution model
                     p.deregister_thread();
                 }
-            )
         );
     }
 
     //SINK 
-    tasks.push_back(
-         std::thread(
+    tasks.emplace_back(
             [&](){
                 // Register the thread in the execution model
                 p.register_thread();
@@ -84,7 +81,6 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
                 // Deregister the thread in the execution model
                 p.deregister_thread();
              }
-        )
     );
 
    //Generate elements
@@ -115,8 +111,7 @@ template <typename Generator, typename Operation>
     //Create threads
 //    std::atomic<int> nend(0);
     for( int i = 0; i < p.num_threads; i++ ) {
-        tasks.push_back(
-            std::thread(
+        tasks.emplace_back(
                 [&](){
                     // Register the thread in the execution model
                     p.register_thread();
@@ -130,7 +125,6 @@ template <typename Generator, typename Operation>
                     // Deregister the thread in the execution model
                     p.deregister_thread();
                 }
-            )
         );
     }
 
