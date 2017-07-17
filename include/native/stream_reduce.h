@@ -59,10 +59,5 @@ void stream_reduce(parallel_execution_native & ex, Generator generate_op,
 
 }
 
-template <typename Operation, typename RedFunc>
-reduction_info<parallel_execution_native,Operation, RedFunc> stream_reduce(parallel_execution_native p, Operation && op, RedFunc && red){
-   return reduction_info<parallel_execution_native, Operation, RedFunc>(p,op, red);
-}
-
 }
 #endif

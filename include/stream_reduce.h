@@ -35,34 +35,14 @@
 #include "tbb/stream_reduce.h"
 #include "poly/stream_reduce.h"
 
+namespace grppi {
 
-#if 0 /* START DOCUMENTATION */
-/* @defgroup StreamReduce
- *
- *  @brief Apply the stream reduce pattern for parallelizing the code section
- *
- *  The Stream Reduce pattern apply a boolean function 'filter' to every element
- *  of a data stream. If the function returns true for a given stream element
- *  then the 'out' function, that shows how to handle the output,
- *
- *  The Stream Filter has 3 steps:
- *    1) Read inputs from stream, as indicated with function 'in' (1 thread)
- *    2) Filter inputs, it is performed in parallel (N-1 threads)
- *    3) Handle output with function 'out' (1 thread)
- *  where N is the number of thread indicated by the user in 'exec'
- *  @{
- */
-/* @param exec   Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param in     Generator function: This function determine how to read 
- *    the data before start the parallel stage.
- *  @param filter Filter function: Boolean function that contains the code 
- *    filter section. This code is going to be parallelize.
- *  @param out    Output Function: This function determine how to handle
- *    the filter output
- */
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
-/* @} */
-#endif  /* END DOCUMENTATION */
+template <typename Execution, typename Operation, typename RedFunc>
+auto 
+stream_reduce(Execution & ex, Operation && op, RedFunc && red){
+   return reduction_info<Execution, Operation, RedFunc>(ex,op, red);
+}
+
+}
+
 #endif

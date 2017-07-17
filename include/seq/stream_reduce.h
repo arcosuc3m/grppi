@@ -36,6 +36,7 @@ void stream_reduce(sequential_execution & ex, Generator generate_op,
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
   using generated_value_type = typename generated_type::value_type;
+  // TODO: Evaluate better structure than vector
   vector<generated_value_type> values;
   values.reserve(window_size);
      
@@ -57,11 +58,6 @@ void stream_reduce(sequential_execution & ex, Generator generate_op,
   } 
 }
 
-template <typename Operation, typename RedFunc>
-reduction_info<sequential_execution,Operation, RedFunc> stream_reduce(sequential_execution p, Operation && op, RedFunc && red){
-   return reduction_info<sequential_execution, Operation, RedFunc>(p,op, red);
 }
 
-
-}
 #endif

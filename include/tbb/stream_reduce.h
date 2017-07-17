@@ -29,7 +29,7 @@ namespace grppi{
 
 template <typename Generator, typename Combiner, typename Consumer, 
           typename Identity>
-void stream_reduce(parallel_execution_tbb & ex, 
+void stream_reduce(parallel_execution_tbb & ex, Generator generate_op,
                    int window_size, int offset, 
                    Combiner && combine_op, Consumer consume_op, 
                    Identity identity)
@@ -58,11 +58,6 @@ void stream_reduce(parallel_execution_tbb & ex,
     }
     if (!item) break;
   }
-}
-
-template <typename Operation, typename RedFunc>
-reduction_info<parallel_execution_tbb,Operation, RedFunc> stream_reduce(parallel_execution_native &p, Operation && op, RedFunc && red){
-   return reduction_info<parallel_execution_tbb, Operation, RedFunc>(p,op, red);
 }
 
 }
