@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -37,11 +37,29 @@
 
 namespace grppi {
 
+/** 
+\defgroup stream_reduce_pattern Stream reduce pattern
+
+\brief Interface for applying the \ref md_stream-reduce pattern.
+*/
+
+/**
+\addtogroup stream_reduce_pattern
+@{
+*/
+
+/**
+\todo To be documented
+*/
 template <typename Execution, typename Operation, typename RedFunc>
 auto 
 stream_reduce(Execution & ex, Operation && op, RedFunc && red){
    return reduction_info<Execution, Operation, RedFunc>(ex,op, red);
 }
+
+/**
+@}
+*/
 
 }
 

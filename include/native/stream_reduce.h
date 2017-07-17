@@ -25,6 +25,32 @@
 
 namespace grppi{
 
+/**
+\addtogroup stream_reduce_pattern
+@{
+*/
+
+/**
+\addtogroup stream_reduce_pattern_native Native parallel stream reduce pattern
+Native parallel implementation of the \ref md_stream-reduce pattern.
+@{
+*/
+
+/**
+\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
+native parallel execution.
+\tparam Generator Callable type used for generating data items.
+\tparam Combiner Callable type used for data items combination.
+\tparam Consumer Callable type used for consuming data items.
+\tparam Identity Type of the identity value used by the combiner.
+\param ex Native parallel execution policy object.
+\param generate_op Generation operation.
+\param window_size Number of consecutive items to be reduced.
+\param offset Number of items after of which a new reduction is started.
+\param combine_op Combination operation.
+\param consume_op Consume operation.
+\param identity Identity value for the combination.
+*/
 template <typename Generator, typename Combiner, typename Consumer, 
           typename Identity>
 void stream_reduce(parallel_execution_native & ex, Generator generate_op, 
@@ -56,8 +82,12 @@ void stream_reduce(parallel_execution_native & ex, Generator generate_op,
     }
     if (!item) break;
   }
-
 }
+
+/**
+@}
+@}
+*/
 
 }
 #endif
