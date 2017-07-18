@@ -52,7 +52,7 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
         queue.push(item);
 
         nend++;
-        if(nend == p.num_threads)
+        if (nend == p.num_threads)
            queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
 
         // Deregister the thread in the execution model
