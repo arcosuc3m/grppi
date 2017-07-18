@@ -49,24 +49,22 @@ internal_divide_conquer(parallel_execution_native &p,
         auto i = subproblems.begin();
         for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0 ; i++, division++){
             //THREAD
-            tasks.emplace_back(
-                   [&](auto i,int division){
-                    // Register the thread in the execution model
-                    p.register_thread(); 
+          tasks.emplace_back([&](auto i, int division) {
+            // Register the thread in the execution model
+            p.register_thread(); 
 
-                    partials[division] = internal_divide_conquer(p, *i,
-                        std::forward<Divider>(divide_op),
-                        std::forward<Solver>(solve_op), 
-                        std::forward<Combiner>(combine_op), num_threads);
+            partials[division] = internal_divide_conquer(p, *i,
+              std::forward<Divider>(divide_op),
+              std::forward<Solver>(solve_op), 
+              std::forward<Combiner>(combine_op), 
+              num_threads);
 
-                    // Deregister the thread in the execution model
-                    p.deregister_thread();
-                  },
-                   i, division
-            );
+            // Deregister the thread in the execution model
+            p.deregister_thread();
+          }, i, division);
 
-            num_threads--;
-            //END TRHEAD
+          num_threads--;
+          //END TRHEAD
         }
 
         for(i; i != subproblems.end(); i++){
@@ -154,25 +152,24 @@ divide_conquer(parallel_execution_native & ex,
     auto i = subproblems.begin();
     for(i = subproblems.begin()+1; i != subproblems.end() && num_threads.load()>0; i++, division++) {
       //THREAD
-      tasks.emplace_back(
-          [&](auto i,int division){ 
-            // Register the thread in the execution model
-            ex.register_thread();
+      tasks.emplace_back([&](auto i, int division) { 
+        // Register the thread in the execution model
+        ex.register_thread();
 
-            partials[division] = internal_divide_conquer(ex, *i, 
-                std::forward<Divider>(divide_op), 
-                std::forward<Solver>(solve_op), 
-                std::forward<Combiner>(combine_op), 
-                num_threads);
-                   
-            // Deregister the thread in the execution model
-            ex.deregister_thread();
-          },
-          i, division
-      );
-      num_threads --;
+        partials[division] = internal_divide_conquer(ex, *i, 
+          std::forward<Divider>(divide_op), 
+          std::forward<Solver>(solve_op), 
+          std::forward<Combiner>(combine_op), 
+          num_threads);
+                 
+        // Deregister the thread in the execution model
+        ex.deregister_thread();
+      }, i, division);
+
+      num_threads--;
       //END TRHEAD
     }
+
     for(i; i != subproblems.end(); i++) {
       partials[division] = divide_conquer(seq, *i, 
           std::forward<Divider>(divide_op), 

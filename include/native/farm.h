@@ -37,51 +37,44 @@ void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consu
     mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
     std::atomic<int> nend(0);
     //Create threads
-    for( int i = 0; i < p.num_threads; i++ ) {
-        tasks.emplace_back(
-                [&](){
-                    // Register the thread in the execution model
-                    p.register_thread();
+    for (int i = 0; i < p.num_threads; i++) {
+      tasks.emplace_back([&]() {
+        // Register the thread in the execution model
+        p.register_thread();
 
-                    typename std::result_of<Generator()>::type item;
-                    item = queue.pop( ) ;
-                    //auto item = queue.pop( );
-                    while( item ) {
-                       auto out = op( item.value() );
-                       queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
-                       // item = queue.pop( );
-                       item = queue.pop( ) ;
-                    }
-                    queue.push(item);
-                    nend++;
-                    if(nend == p.num_threads)
-                        queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
+        typename std::result_of<Generator()>::type item;
+        item = queue.pop() ;
+        while (item) {
+          auto out = op( item.value() );
+          queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
+          item = queue.pop() ;
+        }
+        queue.push(item);
 
-                    // Deregister the thread in the execution model
-                    p.deregister_thread();
-                }
-        );
+        nend++;
+        if(nend == p.num_threads)
+           queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
+
+        // Deregister the thread in the execution model
+        p.deregister_thread();
+      });
     }
 
     //SINK 
-    tasks.emplace_back(
-            [&](){
-                // Register the thread in the execution model
-                p.register_thread();
+    tasks.emplace_back([&]() {
+      // Register the thread in the execution model
+      p.register_thread();
 
-                std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
-                item = queueout.pop( ) ;
-                // auto item = queueout.pop(  ) ;
-                 while( item ) {
-                    cons( item.value() );
-//                  item = queueout.pop(  ) ;
-                    item = queueout.pop( );
-                 }
+      std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
+      item = queueout.pop() ;
+      while (item) {
+        cons(item.value());
+        item = queueout.pop();
+      }
 
-                // Deregister the thread in the execution model
-                p.deregister_thread();
-             }
-    );
+      // Deregister the thread in the execution model
+      p.deregister_thread();
+    });
 
    //Generate elements
     while( 1 ) {
@@ -111,21 +104,21 @@ template <typename Generator, typename Operation>
     //Create threads
 //    std::atomic<int> nend(0);
     for( int i = 0; i < p.num_threads; i++ ) {
-        tasks.emplace_back(
-                [&](){
-                    // Register the thread in the execution model
-                    p.register_thread();
-                    typename std::result_of<Generator()>::type item;
-                    item = queue.pop( );
-                    while( item ) {
-                       op( item.value() );
-                       item = queue.pop( );
-                    }
-                    queue.push(item);
-                    // Deregister the thread in the execution model
-                    p.deregister_thread();
-                }
-        );
+      tasks.emplace_back([&]() {
+        // Register the thread in the execution model
+        p.register_thread();
+
+        typename std::result_of<Generator()>::type item;
+        item = queue.pop();
+        while (item) {
+          op(item.value());
+          item = queue.pop();
+        }
+        queue.push(item);
+
+        // Deregister the thread in the execution model
+        p.deregister_thread();
+      });
     }
 
     //Generate elements

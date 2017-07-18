@@ -40,16 +40,15 @@ Identity map_reduce ( parallel_execution_native& p, InputIt first, InputIt last,
        auto begin = first + (elemperthr * i);
        auto end = first + (elemperthr * (i+1));
        if(i == p.num_threads -1 ) end= last;
-       tasks.emplace_back(
-         [&](InputIt beg, InputIt en, int id){
-            // Register thread
-            p.register_thread();
-            partialOuts[id] = map_reduce(s, beg, en, partialOuts[id], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
-            // Deregister thread
-            p.deregister_thread();
-         },
-         begin, end, i
-       );
+       tasks.emplace_back([&](InputIt beg, InputIt en, int id) {
+         // Register thread
+         p.register_thread();
+
+         partialOuts[id] = map_reduce(s, beg, en, partialOuts[id], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
+
+         // Deregister thread
+         p.deregister_thread();
+       }, begin, end, i);
     }
 
     partialOuts[0] = map_reduce(s, first,( first+elemperthr ), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
