@@ -29,6 +29,65 @@
 
 namespace grppi{
 
+template <typename Generator, typename Consumer, typename ...Stages>
+void farm(parallel_execution_native &p, Generator && gen, pipeline_info<parallel_execution_native,Stages ...> && pipe, Consumer && cons)
+{
+  std::vector<std::thread> tasks;
+  using input_type = typename std::result_of<Generator()>::type;
+  using input_value_type = typename input_type::value_type;
+  using input_queue_type = mpmc_queue< input_type >;
+  input_queue_type in_queue(p.queue_size,p.lockfree);
+
+  using output_type = typename get_return_type<input_value_type,Stages...>::type;
+  using output_queue_type = mpmc_queue< std::experimental::optional<output_type>>;
+  output_queue_type out_queue (p.queue_size,p.lockfree);
+
+  std::vector<std::thread> pipe_threads;
+  for( int i = 0; i < p.num_threads; i++ ) {
+    composed_pipeline<input_queue_type,output_queue_type,0,Stages...>
+      (in_queue,std::forward<pipeline_info<parallel_execution_native,Stages...>>(pipe),out_queue,pipe_threads);
+  }
+  
+  //Consumer function
+  std::thread sink(
+    [&](){
+      // Register the thread in the execution model
+      p.register_thread();
+      int finished_threads = 0;
+      do 
+      {
+        auto item = out_queue.pop();
+        if( item) cons(*item);
+        else finished_threads++;
+      } while( finished_threads != p.num_threads );
+      // Deregister the thread in the execution model
+      p.deregister_thread();
+    }
+  );  
+
+  //Generator function
+  for(;;) {
+    auto k = gen();
+    in_queue.push( k );
+    if( !k ) {
+      for( int i = 1; i < p.num_threads; i++ ) {
+        in_queue.push( k );
+      }
+      break;
+    }
+  }
+  
+  for(auto && t : pipe_threads) t.join();
+  sink.join();
+
+
+
+
+
+}
+
+
+
 template <typename Generator, typename Operation, typename Consumer>
 void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consumer &&cons) {
 

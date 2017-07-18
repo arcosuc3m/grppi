@@ -49,7 +49,7 @@ set( TESTS_CPU_THR
      map3                   reduce1                reduce2
      stencil1               divideandconquer1      mapreduce1
      divideandconquer-fibonacci 
-     stream_iteration1      farm_sink
+     stream_iteration1      farm_sink              farm+pipeline
      stream_iteration_pipe
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example
