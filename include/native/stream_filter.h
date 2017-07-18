@@ -32,95 +32,88 @@ template <typename Generator, typename Predicate, typename Consumer>
 
     //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
     for(int i=0; i< p.num_threads - 1; i++){
-      tasks.push_back(
-          std::thread(
-            [&](){
+      tasks.emplace_back([&]() {
+        // Register the thread in the execution model
+        p.register_thread();
 
-               // Register the thread in the execution model
-               p.register_thread();
+        std::pair< typename std::result_of<Generator()>::type,long > item;
+        //dequeue a pair element - order
+        item = queue.pop();
+        while (item.first) {
+          if (pred(item.first.value())) {
+            //If is an acepted element
+            outqueue.push(item);
+          }
+          else {
+            //If is a discarded element
+            outqueue.push(std::make_pair(typename std::result_of<Generator()>::type(),item.second));
+          }
+          item = queue.pop();
+        }
+        //If is the last element
+        outqueue.push(std::make_pair(item.first, -1 ));
 
-               std::pair< typename std::result_of<Generator()>::type,long > item;
-               //dequeue a pair element - order
-               item = queue.pop();
-               while( item.first ){
-                   if(pred(item.first.value()))
-                       //If is an acepted element
-                       outqueue.push(item);
-                   else{
-                       //If is a discarded element
-                       outqueue.push(std::make_pair(typename std::result_of<Generator()>::type(),item.second));
-                   }
-                   item = queue.pop();
-               }
-               //If is the last element
-               outqueue.push(std::make_pair(item.first, -1 ));
-
-               // Deregister the thread in the execution model
-               p.deregister_thread();
-            }
-         )
-       );
+        // Deregister the thread in the execution model
+        p.deregister_thread();
+      });
      }
 
 //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
-    tasks.push_back(
-      std::thread(
-        [&](){
+    tasks.emplace_back([&]() {
+      // Register the thread in the execution model
+      p.register_thread();
 
-           // Register the thread in the execution model
-           p.register_thread();
+      int nend = 0;
+      std::pair<typename std::result_of<Generator()>::type, long> item;
+      std::vector< std::pair<typename std::result_of<Generator()>::type, long> > aux_vector;
+      long order = 0;
 
-           int nend = 0;
-           std::pair<typename std::result_of<Generator()>::type, long> item;
-           std::vector< std::pair<typename std::result_of<Generator()>::type, long> > aux_vector;
-           long order = 0;
-           //Dequeue an element
-           item = outqueue.pop();
-           while(nend != p.num_threads - 1){
-              //If is an end of stream element
-              if( !item.first && item.second== -1 ){
-                  nend++;
-                  if(nend == p.num_threads -1 ) break;
-              }
-              //If there is not an end element
-              else {
-                  //If the element is the next one to be procesed
-                  if(order == item.second){
-                      if(item.first)
-                         cons(item.first.value());
-                      order++;
-                  }else{
-                      //If the incoming element is disordered
-                      aux_vector.push_back(item);
-                  }
-              }
-              //Search in the vector for next elements
-              for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
-                  if((*it).second == order){
-                       if((*it).first)
-                          cons((*it).first.value());
-                       aux_vector.erase(it);
-                       order++;
-                  }
-              } 
-              item = outqueue.pop();
-           }
-           while(aux_vector.size()>0){
-               for(auto it = aux_vector.begin(); it < aux_vector.end();it++) {
-                  if((*it).second == order){
-                       if((*it).first)
-                          cons((*it).first.value());
-                       aux_vector.erase(it);
-                       order++;
-                  }
-              }
-           }
-           
-           // Deregister the thread in the execution model
-           p.deregister_thread();
+      //Dequeue an element
+      item = outqueue.pop();
+      while (nend != p.num_threads - 1) {
+        //If is an end of stream element
+        if (!item.first && item.second==-1) {
+          nend++;
+          if (nend == p.num_threads -1) break;
         }
-      )
-    );
+        //If there is not an end element
+        else {
+          //If the element is the next one to be procesed
+          if (order == item.second) {
+            if (item.first)
+               cons(item.first.value());
+            order++;
+          }
+          else {
+            //If the incoming element is disordered
+            aux_vector.push_back(item);
+          }
+        }
+        //Search in the vector for next elements
+        for (auto it = aux_vector.begin(); it < aux_vector.end(); it++) {
+          if ((*it).second == order) {
+            if ((*it).first)
+              cons((*it).first.value());
+            aux_vector.erase(it);
+            order++;
+          }
+        } 
+        item = outqueue.pop();
+      }
+      while (aux_vector.size()>0) {
+        for (auto it = aux_vector.begin(); it < aux_vector.end(); it++) {
+          if ((*it).second == order) {
+            if ((*it).first)
+              cons((*it).first.value());
+            aux_vector.erase(it);
+            order++;
+          }
+        }
+      }
+           
+      // Deregister the thread in the execution model
+      p.deregister_thread();
+    });
 
     //THREAD 0 ENQUEUE ELEMENTS
     long order = 0;

@@ -37,23 +37,20 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
        auto out = firstOut + (elemperthr * i);
 
-       tasks.push_back(
-           std::thread( [&](InputIt begin, InputIt end, OutputIt out){
-              // Register the thread in the execution model
-              p.register_thread();
+       tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+         // Register the thread in the execution model
+         p.register_thread();
 
-              while(begin!=end){
-                auto neighbors = neighbor(begin);
-                *out = op(begin, neighbors);
-                begin++;
-                out++;
-              }
+         while (begin!=end) {
+           auto neighbors = neighbor(begin);
+           *out = op(begin, neighbors);
+           begin++;
+           out++;
+         }
 
-              // Deregister the thread in the execution model
-              p.deregister_thread();
-           },
-           begin, end, out)
-      );
+         // Deregister the thread in the execution model
+         p.deregister_thread();
+       }, begin, end, out);
     }
    //MAIN 
    auto end = first + elemperthr;
