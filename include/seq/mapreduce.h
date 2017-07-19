@@ -39,7 +39,7 @@ namespace grppi{
 /**
 \brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
 sequential execution.
-\tparam InputIt Iterator type used for input sequence.
+\tparam InputIt Iterator type used for the input sequence.
 \tparam Result Result type of the reduction.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.

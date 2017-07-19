@@ -14,8 +14,8 @@ grppi::map_reduce(exec, other_arguments...);
 ~~~
 
 **Note**: A **map/reduce** could be also expressed by the composition of a
-**map** and a **reduce**. However, **map/reduce** fuses both stages allowing for
-extra optimizations.
+**map** and a **reduce**. However, **map/reduce** may fuse both stages,
+allowing for extra optimizations.
 
 ## Map/reduce variants
 
@@ -44,7 +44,7 @@ U res = op(x);
 A **MultiTransformer** is any C++ callable entity that takes data items, one of
 each input sequence, and transforms them into an output value. The input types
 and the output type may differ. Thus, a multi-transformer `op` is any operation
-that, given inputs `x1, x2, ... , xN` of types `T1, T2, ... , TN` and an output
+that, given the inputs `x1, x2, ... , xN` of types `T1, T2, ... , TN` and an output
 type `U`, makes valid the following:
 
 ~~~{.cpp}
@@ -69,7 +69,7 @@ T res = cmb(x,y);
 An unary **map/reduce** takes a single data set and performs consecutively the
 **map** and the **reduce** stages, returning the reduced value.
 
-The only interface currently offered for this pattern is based in iterators
+The only interface currently offered for this pattern is based on iterators
 (following the C++ standard library conventions):
 
   * The input data set is specified by two iterators.
@@ -81,7 +81,7 @@ A unary **map/reduce** also requires an identity value for the **Combiner**.
 and computes the addition of those values.
 ~~~{.cpp}
 vector<string> v { "1.0", "2.0", "3.5", "0.25" };
-auto res = map(exec,
+auto res = grppi::map_reduce(exec,
   begin(v), end(v),
   0.0,
   [](string s) { return stod(s); },
@@ -95,14 +95,14 @@ auto res = map(exec,
 ### N-ary map/reduce
 
 A n-ary **map/reduce** takes multiple data sets and performs consecutively the
-**map** and **reduce** stage, returning the reduced value.
+**map** and **reduce** stages, returning the reduced value.
 
-The only interface currently offered for this pattern is based in iterators
+The only interface currently offered for this pattern is based on iterators
 (following the C++ standard library conventions):
 
   * The first data set is specified by two iterators.
   * All the other input data sets are specified by iterators to the start of the
-    input data sequences, assuming that the size of all sequences are at least
+    input data sequences, assuming that the size of all sequences are, at least,
     as large as the first sequence.
 
 A n-ary **map/reduce** also requires an identity value for the **Combiner**.
