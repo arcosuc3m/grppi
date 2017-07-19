@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -36,32 +36,47 @@
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BStreamPattern
- *  @{
- */
-/** @defgroup Pipeline
- *	@brief Apply the pipeline pattern for parallelizing the code section.
- *
- *	The Pipeline pattern is applied to data that is processed during 
- *	several steps.
- *  In a Pipeline each step is delegate to a different thread, each thread
- *  perform the function related with that step and forward the result to 
- *  the next step.
- *  @{
- */
+/**
+\addtogroup stream_patterns
+@{
+\defgroup pipeline_pattern Pipeline pattern
+\brief Interface for applyinng the \ref md_pipeline
+@}
+*/
 
-/** @param exec Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param in   Generator function: This function determine how to read the data
- *    before start the parallel stage.
- *  @param sts  Task functions: one or more task functions sorted by the order
- *    of execution. Each task function will be executed in a different thread.
- */
-template <typename FuncIn, typename ... Arguments>
-void Pipeline(execution_model exec, FuncIn in, Arguments ... sts ) {
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+namespace grppi {
+
+/**
+\addtogroup pipeline_pattern
+@{
+*/
+
+/**
+\brief Build a composable [pipeline pattern](@ref md_pipeline) representation
+that can be inserted into another streaming pattern.
+\tparam Execution Execution policy type.
+\tparam Transformer Callable type for first transformation stage.
+\tparam MoreTransformers Callable type for each additional transformation stage.
+\param ex Execution policy object.
+\param tranform_op First stage transformation operation
+\param more_trasnform_ops Transformation operations for each additional stage.
+*/
+template <typename Execution, typename Transformer, 
+          typename ... MoreTransformers,
+          requires_arguments<Transformer> = 0>
+pipeline_info<Execution,Transformer,MoreTransformers...> 
+pipeline(Execution & ex, Transformer && transform_op, 
+         MoreTransformers && ... more_transform_ops)
+{
+    return pipeline_info<Execution,Transformer, MoreTransformers...> (ex, 
+        std::forward<Transformer>(transform_op), 
+        std::forward<MoreTransformers>(more_transform_ops)...);
+}
+
+/**
+@}
+*/
+
+}
 
 #endif

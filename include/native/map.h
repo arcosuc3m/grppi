@@ -59,22 +59,19 @@ void map(parallel_execution_native & ex,
     if(i == ex.num_threads-1 ) end= last;
 
     auto out = first_out + (elemperthr * i);
-    tasks.push_back(
-      std::thread( [&](InputIt begin, InputIt end, OutputIt out){
-        // Register the thread in the execution model
-        ex.register_thread();
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+      // Register the thread in the execution model
+      ex.register_thread();
           
-        while(begin!=end){
-          *out = transf_op(*begin);
-          begin++;
-          out++;
-        }
+      while (begin!=end) {
+        *out = transf_op(*begin);
+        begin++;
+        out++;
+      }
           
-        // Deregister the thread in the execution model
-        ex.deregister_thread();
-       },
-       begin, end, out)
-     );
+      // Deregister the thread in the execution model
+      ex.deregister_thread();
+    }, begin, end, out);
   }
   //Map main threads
   auto end = first+elemperthr;
@@ -125,28 +122,23 @@ void map(parallel_execution_native& ex,
     if( i == ex.num_threads-1) end = last;
     auto out = first_out + (elemperthr * i);
     //Begin task
-    tasks.push_back(
-      std::thread{
-        [&](InputIt begin, InputIt end, OutputIt out, 
-            int tid, int
-            nelem, OtherInputIts ... more_inputs) {
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out, 
+      int tid, int nelem, OtherInputIts ... more_inputs) {
 
-          // Register the thread in the execution model
-          ex.register_thread();
+      // Register the thread in the execution model
+      ex.register_thread();
 
-          advance_iterators(nelem*tid, more_inputs ...);
-          while(begin!=end) {
-            *out = transf_op(*begin, *more_inputs ...);
-            advance_iterators(more_inputs ...);
-            begin++;
-            out++;
-          }
+      advance_iterators(nelem*tid, more_inputs ...);
+      while (begin!=end) {
+        *out = transf_op(*begin, *more_inputs ...);
+        advance_iterators(more_inputs ...);
+        begin++;
+        out++;
+      }
 
-          // Deregister the thread in the execution model
-          ex.deregister_thread();
-        },
-        begin, end, out, i, elemperthr, more_inputs...}
-    );
+      // Deregister the thread in the execution model
+      ex.deregister_thread();
+    }, begin, end, out, i, elemperthr, more_inputs...);
     //End task
   }
 
