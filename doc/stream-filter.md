@@ -104,7 +104,7 @@ For composing complex patterns, the **filter()** function may be used to create
 an object that may be supplied to another pattern to build a composed pattern.
 
 ---
-**Example:**: A composable filter stage in a pipeline.
+**Example**: A composable filter stage in a pipeline.
 ~~~{.cpp}
 auto filter_odd = grppi::stream_filter(exec,
   [](auto x) { return x%2; });
