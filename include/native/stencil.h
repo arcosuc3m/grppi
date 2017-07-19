@@ -21,6 +21,8 @@
 #ifndef GRPPI_NATIVE_STENCIL_H
 #define GRPPI_NATIVE_STENCIL_H
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
  void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {

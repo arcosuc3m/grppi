@@ -22,10 +22,6 @@
 #define GRPPI_MAPREDUCE_H
 
 
-#include "seq/sequential_execution.h"
-#include "native/parallel_execution_native.h"
-#include "omp/parallel_execution_omp.h"
-#include "tbb/parallel_execution_tbb.h"
 #include "common/iterator.h"
 
 

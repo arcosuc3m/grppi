@@ -23,6 +23,8 @@
 
 #ifdef GRPPI_OMP
 
+#include "parallel_execution_omp.h"
+
 namespace grppi{
 template <typename Generator, typename Predicate, typename Consumer>
  void stream_filter(parallel_execution_omp &p, Generator && gen, Predicate && pred, Consumer && cons ) {

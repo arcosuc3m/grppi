@@ -25,6 +25,8 @@
 
 #include <tbb/tbb.h>
 
+#include "parallel_execution_tbb.h"
+
 namespace grppi{
 template <typename Generator, typename Predicate, typename Consumer>
  void stream_filter(parallel_execution_tbb &p, Generator && gen, Predicate && pred, Consumer && cons) {

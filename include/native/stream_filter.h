@@ -21,6 +21,8 @@
 #ifndef GRPPI_NATIVE_STREAM_FILTER_H
 #define GRPPI_NATIVE_STREAM_FILTER_H
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 template <typename Generator, typename Predicate, typename Consumer>
  void stream_filter(parallel_execution_native &p, Generator && gen, Predicate && pred, Consumer && cons ) {

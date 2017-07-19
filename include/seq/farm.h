@@ -21,6 +21,8 @@
 #ifndef GRPPI_SEQ_FARM_H
 #define GRPPI_SEQ_FARM_H
 
+#include "sequential_execution.h"
+
 namespace grppi{
 template <typename Generator, typename Operation>
 void farm(sequential_execution , Generator &&gen, Operation && op ) {
