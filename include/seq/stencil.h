@@ -21,6 +21,8 @@
 #ifndef GRPPI_SEQ_STENCIL_H
 #define GRPPI_SEQ_STENCIL_H
 
+#include "sequential_execution.h"
+
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
  void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {

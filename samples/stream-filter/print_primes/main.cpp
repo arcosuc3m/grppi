@@ -25,28 +25,38 @@
 #include <string>
 #include <numeric>
 #include <stdexcept>
+#include <random>
+#include <experimental/optional>
 
 // grppi
-#include "poly/polymorphic_execution.h"
-#include "map.h"
-#include "poly/map.h"
+#include "stream_filter.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_map(grppi::polymorphic_execution & e, int n) {
+bool is_prime(int n) {
+  if (n<=1) return false;
+  for (int i=2;i*i<=n;++i) {
+    if (n%i==0) return false;
+  }
+  return true;
+}
+
+void print_primes(grppi::polymorphic_execution & exec, int n) {
   using namespace std;
+  using namespace experimental;
 
-  vector<int> in(n);
-  iota(in.begin(), in.end(), 0);
-
-  vector<int> out(n);
-
-  grppi::map(e, begin(in), end(in), begin(out),
-    [](int i) { return i*2; });
-
-  copy(begin(out), end(out), ostream_iterator<int>(cout, " "));
-  cout << endl;
+  int i=0;
+  grppi::stream_filter(exec,
+    [&i,n]() -> optional<int> {
+      if (i<=n) return i++;
+      else return {};
+    },
+    [](int x) { return is_prime(x); },
+    [](int x) {
+      cout << x << endl;
+    }
+  );
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
@@ -75,7 +85,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (!run_test(argv[2], test_map, n)) {
+  if (!run_test(argv[2], print_primes, n)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

@@ -28,7 +28,6 @@
 #include <cctype>
 
 // grppi
-#include "common/polymorphic_execution.h"
 #include "farm.h"
 #include "map.h"
 

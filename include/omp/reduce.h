@@ -25,6 +25,9 @@
 
 #include <thread>
 
+#include "parallel_execution_omp.h"
+
+
 namespace grppi{
 
 /**

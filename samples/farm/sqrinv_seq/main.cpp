@@ -27,7 +27,6 @@
 #include <stdexcept>
 
 // grppi
-#include "common/polymorphic_execution.h"
 #include "pipeline.h"
 #include "farm.h"
 

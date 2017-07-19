@@ -21,6 +21,7 @@
 #ifndef GRPPI_COMMON_PATTERNS_H
 #define GRPPI_COMMON_PATTERNS_H
 
+#include <tuple> 
 
 namespace grppi{
 

@@ -25,6 +25,8 @@
 
 #include <thread>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 
 template <typename Generator, typename Combiner, typename Consumer, typename Identity>

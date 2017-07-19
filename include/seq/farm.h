@@ -21,6 +21,8 @@
 #ifndef GRPPI_SEQ_FARM_H
 #define GRPPI_SEQ_FARM_H
 
+#include "sequential_execution.h"
+
 namespace grppi{
 
 /**

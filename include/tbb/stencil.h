@@ -25,6 +25,8 @@
 
 #include <tbb/tbb.h>
 
+#include "parallel_execution_tbb.h"
+
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
  void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
