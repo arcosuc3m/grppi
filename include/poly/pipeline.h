@@ -21,8 +21,8 @@
 #ifndef GRPPI_POLY_PIPELINE_H
 #define GRPPI_POLY_PIPELINE_H
 
-#include "common/polymorphic_execution.h"
 #include "common/support.h"
+#include "polymorphic_execution.h"
 
 namespace grppi{
 template <typename Generator, typename ... Transformers>

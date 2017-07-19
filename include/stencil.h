@@ -21,13 +21,6 @@
 #ifndef GRPPI_STENCIL_H 
 #define GRPPI_STENCIL_H
 
-#include "common/sequential_execution.h"
-#include "common/parallel_execution_native.h"
-#include "common/parallel_execution_omp.h"
-#include "common/parallel_execution_tbb.h"
-#include "common/support.h"
-
-
 
 #include "seq/stencil.h"
 #include "native/stencil.h"

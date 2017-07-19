@@ -18,15 +18,15 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_PARALLEL_EXECUTION_TBB_H
-#define GRPPI_COMMON_PARALLEL_EXECUTION_TBB_H
+#ifndef GRPPI_TBB_PARALLEL_EXECUTION_TBB_H
+#define GRPPI_TBB_PARALLEL_EXECUTION_TBB_H
 
 // Only if compiled with TBB enabled
 #ifdef GRPPI_TBB
 
 #include <type_traits>
 
-#include "mpmc_queue.h"
+#include "common/mpmc_queue.h"
 
 namespace grppi{
 

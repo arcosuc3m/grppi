@@ -24,6 +24,8 @@
 #include <thread>
 #include <functional>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 
 /**

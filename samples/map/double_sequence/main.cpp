@@ -27,7 +27,7 @@
 #include <stdexcept>
 
 // grppi
-#include "common/polymorphic_execution.h"
+#include "poly/polymorphic_execution.h"
 #include "map.h"
 #include "poly/map.h"
 

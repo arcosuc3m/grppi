@@ -23,8 +23,10 @@
 
 #ifdef GRPPI_TBB
 
-#include "../reduce.h"
 #include <tbb/tbb.h>
+
+#include "parallel_execution_tbb.h"
+#include "../reduce.h"
 
 namespace grppi{
 
