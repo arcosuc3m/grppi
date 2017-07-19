@@ -32,7 +32,7 @@ namespace grppi{
 
 /**
 \addtogroup mapreduce_pattern_seq Sequential map/reduce pattern
-Sequential implementation of the \ref md_map-reduce pattern.
+\brief Sequential implementation of the \ref md_map-reduce pattern.
 @{
 */
 

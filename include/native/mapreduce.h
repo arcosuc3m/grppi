@@ -32,7 +32,7 @@ namespace grppi{
 
 /**
 \addtogroup mapreduce_pattern_native Native parallel map/reduce pattern
-Native parallel implementation of the \ref md_map-reduce pattern.
+\brief Native parallel implementation of the \ref md_map-reduce pattern.
 @{
 */
 

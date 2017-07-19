@@ -34,7 +34,7 @@ namespace grppi{
 
 /**
 \addtogroup mapreduce_pattern_omp OpenMP parallel map/reduce pattern
-OpenMP parallel implementation of the \ref md_map-reduce pattern.
+\brief OpenMP parallel implementation of the \ref md_map-reduce pattern.
 @{
 */
 

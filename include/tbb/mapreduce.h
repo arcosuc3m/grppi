@@ -37,7 +37,7 @@ namespace grppi{
 
 /**
 \addtogroup mapreduce_pattern_tbb TBB parallel map/reduce pattern
-TBB parallel implementation of the \ref md_map-reduce pattern.
+\brief TBB parallel implementation of the \ref md_map-reduce pattern.
 @{
 */
 
