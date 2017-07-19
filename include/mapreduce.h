@@ -34,7 +34,7 @@
 #include "poly/mapreduce.h"
 
 /** 
-\defgroup mapreduce_pattern Map pattern
+\defgroup mapreduce_pattern Map/reduce pattern
 
 \brief Interface for applyinng the \ref md_map-reduce pattern.
 */
