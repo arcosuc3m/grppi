@@ -22,10 +22,10 @@
 #define GRPPI_PIPELINE_H
 
 
-#include "common/sequential_execution.h"
-#include "common/parallel_execution_native.h"
-#include "common/parallel_execution_omp.h"
-#include "common/parallel_execution_tbb.h"
+#include "seq/sequential_execution.h"
+#include "native/parallel_execution_native.h"
+#include "omp/parallel_execution_omp.h"
+#include "tbb/parallel_execution_tbb.h"
 #include "common/callable_traits.h"
 #include "common/support.h"
 

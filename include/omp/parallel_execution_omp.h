@@ -28,7 +28,7 @@
 
 #include <omp.h>
 
-#include "mpmc_queue.h"
+#include "common/mpmc_queue.h"
 
 namespace grppi{
 

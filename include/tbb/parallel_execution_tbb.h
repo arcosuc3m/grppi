@@ -26,7 +26,7 @@
 
 #include <type_traits>
 
-#include "mpmc_queue.h"
+#include "common/mpmc_queue.h"
 
 namespace grppi{
 

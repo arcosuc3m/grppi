@@ -21,7 +21,7 @@
 #ifndef GRPPI_POLY_REDUCE_H
 #define GRPPI_POLY_REDUCE_H
 
-#include "common/polymorphic_execution.h"
+#include "polymorphic_execution.h"
 #include "common/support.h"
 
 namespace grppi{

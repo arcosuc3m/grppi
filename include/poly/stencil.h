@@ -21,7 +21,7 @@
 #ifndef GRPPI_POLY_STENCIL_H
 #define GRPPI_POLY_STENCIL_H
 
-#include "common/polymorphic_execution.h"
+#include "polymorphic_execution.h"
 #include "common/support.h"
 
 namespace grppi{
