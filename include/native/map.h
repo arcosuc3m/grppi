@@ -21,6 +21,8 @@
 #ifndef GRPPI_NATIVE_MAP_H
 #define GRPPI_NATIVE_MAP_H
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 
 /**

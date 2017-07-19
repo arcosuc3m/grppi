@@ -24,6 +24,8 @@
 #include <thread>
 #include <atomic>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>

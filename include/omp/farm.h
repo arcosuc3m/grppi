@@ -24,6 +24,8 @@
 #ifdef GRPPI_OMP
 #include <experimental/optional>
 
+#include "parallel_execution_omp.h"
+
 
 namespace grppi
 {

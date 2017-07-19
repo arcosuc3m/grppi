@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_SEQUENTIAL_EXECUTION_H
-#define GRPPI_COMMON_SEQUENTIAL_EXECUTION_H
+#ifndef GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
+#define GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 
 #include <type_traits>
 

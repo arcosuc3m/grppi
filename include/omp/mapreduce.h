@@ -24,6 +24,7 @@
 #ifdef GRPPI_OMP
 
 #include "reduce.h"
+#include "parallel_execution_omp.h"
 
 namespace grppi{
 

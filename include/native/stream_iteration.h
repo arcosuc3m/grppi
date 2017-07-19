@@ -25,6 +25,8 @@
 #include <utility>
 #include <memory>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{ 
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>

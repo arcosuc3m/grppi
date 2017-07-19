@@ -22,6 +22,8 @@
 #define GRPPI_OMP_STENCIL_H
 
 #ifdef GRPPI_OMP
+#include "parallel_execution_omp.h"
+
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>

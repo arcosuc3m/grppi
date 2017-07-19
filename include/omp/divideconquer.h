@@ -25,6 +25,8 @@
 
 #include <thread>
 
+#include "parallel_execution_omp.h"
+
 namespace grppi{
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>

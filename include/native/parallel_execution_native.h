@@ -18,24 +18,27 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_PARALLEL_EXECUTION_OMP_H
-#define GRPPI_COMMON_PARALLEL_EXECUTION_OMP_H
+#ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
+#define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
-// Only if compiled with OpenMP enabled
-#ifdef GRPPI_OMP
-
+#include <thread>
+#include <atomic>
+#include <algorithm>
+#include <vector>
 #include <type_traits>
 
-#include <omp.h>
+#include "pool.h"
+#include "common/mpmc_queue.h"
 
-#include "mpmc_queue.h"
+namespace grppi {
 
-namespace grppi{
-
-/** @brief Set the execution mode to parallel with ompenmp framework 
- *    implementation 
+//extern bool initialised;
+//extern thread_pool pool;
+/** @brief Set the execution mode to parallel with posix thread implementation 
  */
-struct parallel_execution_omp{
+struct parallel_execution_native {
+  public: 
+  thread_pool pool;
   constexpr static int default_queue_size = 100;
   constexpr static int default_num_threads = 4;
   int queue_size = default_queue_size;
@@ -49,69 +52,63 @@ struct parallel_execution_omp{
 
 
   int get_thread_id(){
-     return omp_get_thread_num();
+      while (lock.test_and_set(std::memory_order_acquire));
+      auto it = std::find(thid_table.begin(), thid_table.end(), std::this_thread::get_id());
+      auto id = std::distance(thid_table.begin(), it);
+      lock.clear(std::memory_order_release);  
+      return id; 
+  }
+  
+  void register_thread(){
+      while (lock.test_and_set(std::memory_order_acquire));
+      thid_table.push_back(std::this_thread::get_id());    
+      lock.clear(std::memory_order_release);  
+  }
+  
+  void deregister_thread(){
+      while (lock.test_and_set(std::memory_order_acquire));
+      thid_table.erase(std::remove(thid_table.begin(), thid_table.end(),std::this_thread::get_id()), thid_table.end());
+      lock.clear(std::memory_order_release);  
   }
   /** @brief Set num_threads to the maximum number of thread available by the
    *    hardware
    */
-  parallel_execution_omp(){};
+  parallel_execution_native(){ /*if(!initialised)*/ pool.initialise(this->num_threads); };
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
    *  @param _threads number of threads used in the parallel mode
    */
-  parallel_execution_omp(int _threads){num_threads=_threads; };
+  parallel_execution_native(int _threads){ num_threads=_threads;  pool.initialise (_threads);};
 
   /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
    *
    *  @param _threads number of threads used in the parallel mode
    *  @param _order enable or disable the ordered execution
    */
-  parallel_execution_omp(int _threads, bool order){ num_threads=_threads; ordering = order;};
+  parallel_execution_native(int _threads, bool order){ num_threads=_threads; ordering = order; pool.initialise (_threads);};
+  private: 
+     std::atomic_flag lock = ATOMIC_FLAG_INIT;
+     std::vector<std::thread::id> thid_table;
 
 };
 
-/// Determine if a type is an OMP execution policy.
+/// Determine if a type is a threading execution policy.
 template <typename E>
-constexpr bool is_parallel_execution_omp() {
-  return std::is_same<E, parallel_execution_omp>::value;
+constexpr bool is_parallel_execution_native() {
+  return std::is_same<E, parallel_execution_native>::value;
 }
 
 template <typename E>
 constexpr bool is_supported();
 
 template <>
-constexpr bool is_supported<parallel_execution_omp>() {
+constexpr bool is_supported<parallel_execution_native>() {
   return true;
 }
 
+
 } // end namespace grppi
 
-#else // GRPPI_OMP undefined
-
-namespace grppi {
-
-/// Parallel execution policy.
-/// Empty type if GRPPI_OMP disabled.
-struct parallel_execution_omp {};
-
-/// Determine if a type is an OMP execution policy.
-/// False if GRPPI_OMP disabled.
-template <typename E>
-constexpr bool is_parallel_execution_omp() {
-  return false;
-}
-
-template <typename E>
-constexpr bool is_supported();
-
-template <>
-constexpr bool is_supported<parallel_execution_omp>() {
-  return false;
-}
-
-}
-
-#endif // GRPPI_OMP
 
 #endif
