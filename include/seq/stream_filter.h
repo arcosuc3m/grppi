@@ -24,22 +24,47 @@
 #include "sequential_execution.h"
 
 namespace grppi{
+
+/** 
+\addtogroup filter_pattern
+@{
+*/
+
+/**
+\addtogroup filter_pattern_seq Sequential filter pattern.
+\brief Sequential implementation fo the \ref md_stream-filter pattern.
+@{
+*/
+
+/**
+\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+sequence with sequential execution policy.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex Sequential execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
 template <typename Generator, typename Predicate, typename Consumer>
-void stream_filter(sequential_execution, Generator && gen, Predicate && pred, Consumer && cons) {
-
-    while( 1 ) {
-        auto k = gen();
-        if( !k )
-            break;
-        if(pred(k.value()))
-            cons(k.value());
+void stream_filter(sequential_execution, Generator generate_op, 
+                   Predicate predicate_op, Consumer consume_op) 
+{
+  for (;;) {
+    auto item = generate_op();
+    if (!item) break;
+    if (predicate_op(*item)) {
+      consume_op(*item);
     }
+  }
 }
 
-template <typename Predicate>
-filter_info<sequential_execution, Predicate> stream_filter(sequential_execution &s, Predicate && pred){
-   return filter_info<sequential_execution, Predicate>(s, std::forward<Predicate>(pred));
-}
+/**
+@}
+@}
+*/
 
 }
+
 #endif

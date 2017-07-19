@@ -26,74 +26,94 @@
 #include "parallel_execution_omp.h"
 
 namespace grppi{
+
+/** 
+\addtogroup filter_pattern
+@{
+*/
+
+/**
+\addtogroup filter_pattern_omp OpenMP parallel filter pattern.
+\brief OpenMP parallel implementation fo the \ref md_stream-filter pattern.
+@{
+*/
+
+/**
+\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+sequence with sequential execution policy.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex OpenMP parallel execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
 template <typename Generator, typename Predicate, typename Consumer>
- void stream_filter(parallel_execution_omp &p, Generator && gen, Predicate && pred, Consumer && cons ) {
+void stream_filter(parallel_execution_omp & ex, Generator generate_op, 
+                   Predicate predicate_op, Consumer consume_op) 
+{
+  using namespace std;
+  using generated_type = typename result_of<Generator()>::type;
 
+  mpmc_queue<generated_type> generated_queue{ex.queue_size, ex.lockfree};
+  mpmc_queue<generated_type> filtered_queue{ex.queue_size, ex.lockfree};
 
-    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.queue_size, p.lockfree);
-    mpmc_queue< typename std::result_of<Generator()>::type > outqueue(p.queue_size, p.lockfree);
-    #pragma omp parallel
-    {
+  #pragma omp parallel
+  {
     #pragma omp single nowait 
     {
-
-    //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
-    for(int i=0; i< p.num_threads - 1; i++){
-
-        #pragma omp task shared(queue, outqueue)
+      //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
+      for (int i=0; i< ex.num_threads - 1; i++) {
+        #pragma omp task shared(generated_queue, filtered_queue)
         {
-            typename std::result_of<Generator()>::type item;
-            item = queue.pop();
-            while( item ){
-                 if(pred(item.value()))
-                      outqueue.push(item);
-                 item = queue.pop();
+          auto item{generated_queue.pop()};
+          while (item) {
+            if (predicate_op(item.value())) {
+              filtered_queue.push(item);
             }
-            outqueue.push(item);
-         }
-     }
-     #pragma omp task shared(outqueue)
-     {
-         //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
-
-         int nend = 0;
-         typename std::result_of<Generator()>::type item;
-         item = outqueue.pop();
-         while(nend != p.num_threads - 1){
-            if(!item){
-                nend++;
-                if(nend == p.num_threads - 1) break;
-            }
-            else {
-                cons(item.value());
-            }
-            item = outqueue.pop();
-         }
-     }
-
-    //THREAD 0 ENQUEUE ELEMENTS
-    while(1){
-        auto k = gen();
-        queue.push(k);
-        if( !k ){
-           for(int i = 0; i< p.num_threads-1; i++){
-              queue.push(k);
-           }
-           break;
+            item = generated_queue.pop();
+          }
+          filtered_queue.push(item);
         }
+      }
+
+      #pragma omp task shared(filtered_queue)
+      {
+        //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
+        int done_threads = 0;
+        auto item{filtered_queue.pop()};
+        while (done_threads!=ex.num_threads-1) {
+          if (!item) {
+            done_threads++;
+            if(done_threads == ex.num_threads - 1) break;
+          }
+          else {
+            consume_op(item.value());
+          }
+          item = filtered_queue.pop();
+        }
+      }
+
+      //THREAD 0 ENQUEUE ELEMENTS
+      for (;;) {
+        auto item{generate_op()};
+        generated_queue.push(item);
+        if (!item) {
+          for (int i = 0; i< ex.num_threads-1; i++) {
+            generated_queue.push(item);
+          }
+          break;
+        }
+      }
+
+      #pragma omp taskwait
     }
-    #pragma omp taskwait
-    }
-    }
+  }
+}
 
 }
 
-template <typename Predicate>
-filter_info<parallel_execution_omp, Predicate> stream_filter(parallel_execution_omp &p, Predicate && pred){
-   return filter_info<parallel_execution_omp, Predicate>(p, std::forward<Predicate>(pred) );
-
-}
-}
 #endif
 
 #endif
