@@ -21,6 +21,8 @@
 #ifndef GRPPI_SEQ_STREAM_FILTER_H
 #define GRPPI_SEQ_STREAM_FILTER_H
 
+#include "sequential_execution.h"
+
 namespace grppi{
 
 /** 

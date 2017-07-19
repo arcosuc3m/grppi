@@ -21,6 +21,7 @@
 #ifndef GRPPI_SEQ_MAPREDUCE_H
 #define GRPPI_SEQ_MAPREDUCE_H
 
+#include "sequential_execution.h"
 #include "../reduce.h"
 
 namespace grppi{

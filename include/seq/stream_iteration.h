@@ -20,6 +20,8 @@
 #ifndef GRPPI_SEQ_STREAM_ITERATION_H
 #define GRPPI_SEQ_STREAM_ITERATION_H
 
+#include "sequential_execution.h"
+
 namespace grppi{
 
 template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>

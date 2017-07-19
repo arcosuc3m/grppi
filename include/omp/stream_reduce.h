@@ -24,6 +24,8 @@
 
 #ifdef GRPPI_OMP
 
+#include "parallel_execution_omp.h"
+
 namespace grppi{
 
 /**
@@ -63,6 +65,7 @@ void stream_reduce(parallel_execution_omp &ex, Generator generate_op,
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
   using generated_value_type = typename generated_type::value_type;
+
   // TODO: Evaluate better structure than vector
   vector<generated_value_type> values;
   values.reserve(window_size);

@@ -23,6 +23,8 @@
 
 #ifdef GRPPI_OMP
 
+#include "parallel_execution_omp.h"
+
 namespace grppi{
 
 /** 

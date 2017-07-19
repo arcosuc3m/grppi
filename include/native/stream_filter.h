@@ -21,6 +21,8 @@
 #ifndef GRPPI_NATIVE_STREAM_FILTER_H
 #define GRPPI_NATIVE_STREAM_FILTER_H
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 
 /** 

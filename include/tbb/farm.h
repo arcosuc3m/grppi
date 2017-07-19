@@ -25,6 +25,9 @@
 #include <experimental/optional>
 
 #include <tbb/tbb.h>
+
+#include "parallel_execution_tbb.h"
+
 namespace grppi{
 template <typename Generator, typename Operation, typename Consumer>
  void farm(parallel_execution_tbb &p, Generator &&gen, Operation && op , Consumer &&cons) {

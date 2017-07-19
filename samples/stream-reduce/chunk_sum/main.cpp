@@ -28,7 +28,6 @@
 #include <experimental/optional>
 
 // grppi
-#include "common/polymorphic_execution.h"
 #include "stream_reduce.h"
 
 // Samples shared utilities

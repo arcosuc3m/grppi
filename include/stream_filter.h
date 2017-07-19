@@ -21,20 +21,13 @@
 #ifndef GRPPI_STREAM_FILTER_H
 #define GRPPI_STREAM_FILTER_H
 
-
-#include "common/sequential_execution.h"
-#include "common/parallel_execution_native.h"
-#include "common/parallel_execution_omp.h"
-#include "common/parallel_execution_tbb.h"
-#include "common/patterns.h"
-#include "common/support.h"
-#include "common/patterns.h"
-
 #include "seq/stream_filter.h"
 #include "native/stream_filter.h"
 #include "omp/stream_filter.h"
 #include "tbb/stream_filter.h"
 #include "poly/stream_filter.h"
+
+#include "common/patterns.h"
 
 namespace grppi {
 
