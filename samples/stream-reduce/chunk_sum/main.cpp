@@ -56,7 +56,8 @@ void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
 
   cerr << msg << endl;
-  cerr << "Usage: " << prog << " size mode" << endl;
+  cerr << "Usage: " << prog << " size window_size offset mode" << endl;
+  cerr << "  size: Size of the initially generated sequence" << endl;
   cerr << "  window_size: Integer value with window size" << endl;
   cerr << "  offset: Integer value with offset" << endl;
   cerr << "  mode:" << endl;
@@ -73,9 +74,9 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  int n = stoi(argv[1]);
-  if (n<=0) {
-    print_message(argv[0], "Invalid window size. Use a positive number.");
+  int size = stoi(argv[1]);
+  if (size<=0) {
+    print_message(argv[0], "Invalid squence size. Use a positive number.");
     return -1;
   }
 
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (!run_test(argv[4], test_map, n, window_size, offset)) {
+  if (!run_test(argv[4], test_map, size, window_size, offset)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }
