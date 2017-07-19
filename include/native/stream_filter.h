@@ -82,10 +82,10 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
   }
 
   //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
-  tasks.emplace_back([&](){
+  thread consumer([&](){
     ex.register_thread();
 
-    int done_threads = 0; //TODO: atomic?
+    int done_threads = 0; 
     
     vector<item_type> item_buffer;
     long order = 0;
@@ -112,30 +112,34 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
           item_buffer.push_back(item);
         }
       }
+
       //Search in the buffer for next elements
-      // TODO: find+erase
-      for(auto it = item_buffer.begin(); it < item_buffer.end();++it) {
-        if (it->second==order) {
-          if (it->first) {
-            consume_op(*it->first);
-          }
-          item_buffer.erase(it);
-          order++;
+      auto itrm = remove_if(begin(item_buffer), end(item_buffer),
+        [&order](auto & item) {
+          bool res = item.second == order;
+          if (res) order++;
+          return res;
         }
-      } 
+      );
+      for_each (itrm, end(item_buffer), 
+        [&consume_op](auto & item) {
+          if (item.first) { consume_op(*item.first); }
+        }
+      );
+      item_buffer.erase(itrm, end(item_buffer));
+
       item = filtered_queue.pop();
     }
-    while (item_buffer.size()>0) {
-      // TODO: find+erase
-      for (auto it=item_buffer.begin(); it!=item_buffer.end(); ++it) {
-        if (it->second == order) {
-          if (it->first) {
-            consume_op(*it->first);
-          }
-          item_buffer.erase(it);
-          order++;
-        }
+
+    for (;;) {
+      auto it_find = find_if(begin(item_buffer), end(item_buffer),
+          [order](auto & item) { return item.second == order; });
+      if (it_find == end(item_buffer)) break;
+      if (it_find->first) {
+        consume_op(*it_find->first);
       }
+      item_buffer.erase(it_find);
+      order++;
     }
            
     ex.deregister_thread();
@@ -156,6 +160,7 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
   }
 
   for (auto && t : tasks) { t.join(); }
+  consumer.join();
 }
 
 }
