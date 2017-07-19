@@ -25,60 +25,33 @@
 #include <string>
 #include <numeric>
 #include <stdexcept>
-#include <random>
 
 // grppi
-#include "divideconquer.h"
+#include "common/polymorphic_execution.h"
+#include "pipeline.h"
+#include "farm.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-struct range {
-  std::vector<int>::iterator first, last;
-  
-  auto size() const { return distance(first,last); }
-  friend std::ostream & operator<<(std::ostream & os, const range & r);
-};
-
-std::ostream & operator<<(std::ostream & os, const range & r) {
-  os << "(size= " << r.size() << ") ";
-  std::copy(r.first, r.last, std::ostream_iterator<int>(std::cerr, " "));
-  return os;
-}
-
-std::vector<range> divide(range r) {
-  auto mid = r.first + distance(r.first,r.last)/2;
-  return { {r.first,mid} , {mid, r.last} };
-}
-
-void sort_sequence(grppi::polymorphic_execution & exec, int n) {
+void test_pipeline(grppi::polymorphic_execution & e, int n) {
   using namespace std;
+  using namespace experimental;
 
-  std::random_device rdev;
-  std::uniform_int_distribution<> gen{1,1000};
-
-  vector<int> v;
-  for (int i=0; i<n; ++i) {
-    v.push_back(gen(rdev));
-  }
-  
-  range problem{begin(v), end(v)};
-
-  auto res = grppi::divide_conquer(exec,
-    problem,
-    [](auto r) -> vector<range> {
-      if (1>=r.size()) { return {r}; }
-      else { return divide(r); }
-    },
-    [](auto x) { return x; },
-    [](auto r1, auto r2) {
-      std::inplace_merge(r1.first, r1.last, r2.last);
-      return range{r1.first, r2.last};
-    }
+  auto t = grppi::pipeline(e,
+      [](double x) -> double { return x*x; },
+      [](double x) -> double { return 1/x; }
   );
 
-  copy(begin(v), end(v), ostream_iterator<int>(cout, " "));
-  cout << endl;
+  grppi::farm(e, 
+    [n]() mutable -> optional<double> { 
+      static int x = 1;
+      if (x<=n) return x++;
+      else return {}; 
+    },
+    t,
+    [](double x) { cout << x << endl; }
+  );
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
@@ -107,7 +80,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (!run_test(argv[2], sort_sequence, n)) {
+  if (!run_test(argv[2], test_pipeline, n)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

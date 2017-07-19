@@ -71,7 +71,7 @@ divide_conquer(sequential_execution & ex,
   Output out = partials[0] ;
   //JOIN
   for(int i = 1; i<partials.size();i++){
-    combiner_op(partials[i], out);
+    out = combiner_op(out,partials[i]);
   }
   return out;
 }

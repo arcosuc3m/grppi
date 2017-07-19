@@ -80,16 +80,16 @@ Result map_reduce(parallel_execution_native & ex,
     });
   }
 
-    partial_results[0] = map_reduce(seq, first,( first+elements_per_thread ), partial_results[0], forward<Transformer>(transform_op), forward<Combiner>(combine_op));
+    partial_results[0] = map_reduce(seq, 
+        first,( first+elements_per_thread ), partial_results[0], 
+        forward<Transformer>(transform_op), 
+        forward<Combiner>(combine_op));
 
-    for(auto task = tasks.begin();task != tasks.end();task++){    
-       (*task).join();
-    }
+    for (auto && t : tasks) { t.join(); }
 
     Result result = identity;
-    for(auto & map : partial_results){
-       result = combine_op(result, map);
-    } 
+    for (auto && p : partial_results) { result = combine_op(result, p); } 
+
     return result;
 }
 
