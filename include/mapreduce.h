@@ -21,8 +21,6 @@
 #ifndef GRPPI_MAPREDUCE_H 
 #define GRPPI_MAPREDUCE_H
 
-#include "common/iterator.h"
-
 #include "seq/mapreduce.h"
 #include "native/mapreduce.h"
 #include "omp/mapreduce.h"

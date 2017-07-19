@@ -22,7 +22,6 @@
 #define GRPPI_SEQ_MAPREDUCE_H
 
 #include "sequential_execution.h"
-#include "reduce.h"
 
 namespace grppi{
 
@@ -62,12 +61,10 @@ Result map_reduce(sequential_execution &,
   Result out = identity;
 
   using namespace std;
-  cerr << "---Initial: " << out << endl;
 
   while (first!=last) {
     auto x = transform_op(*first);
     out = combine_op(out,x);
-    cerr << "---combining with " << x << endl;
     first++;
   }
 

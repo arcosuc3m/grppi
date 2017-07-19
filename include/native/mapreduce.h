@@ -22,7 +22,6 @@
 #define GRPPI_NATIVE_MAPREDUCE_H
 
 #include "parallel_execution_native.h"
-#include "../reduce.h"
 
 
 namespace grppi{
