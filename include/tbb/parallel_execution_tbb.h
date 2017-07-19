@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_PARALLEL_EXECUTION_TBB_H
-#define GRPPI_COMMON_PARALLEL_EXECUTION_TBB_H
+#ifndef GRPPI_TBB_PARALLEL_EXECUTION_TBB_H
+#define GRPPI_TBB_PARALLEL_EXECUTION_TBB_H
 
 // Only if compiled with TBB enabled
 #ifdef GRPPI_TBB

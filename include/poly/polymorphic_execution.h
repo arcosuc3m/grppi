@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_POLYMORPHIC_EXECUTION_H
-#define GRPPI_COMMON_POLYMORPHIC_EXECUTION_H
+#ifndef GRPPI_POLY_POLYMORPHIC_EXECUTION_H
+#define GRPPI_POLY_POLYMORPHIC_EXECUTION_H
 
 #include <typeinfo>
 #include <memory>

@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_COMMON_PARALLEL_EXECUTION_NATIVE_H
-#define GRPPI_COMMON_PARALLEL_EXECUTION_NATIVE_H
+#ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
+#define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
 #include <thread>
 #include <atomic>
