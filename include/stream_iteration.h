@@ -23,10 +23,6 @@
 
 #include "common/sequential_execution.h"
 #include "common/parallel_execution_native.h"
-#include "common/parallel_execution_omp.h"
-#include "common/parallel_execution_tbb.h"
-#include "common/patterns.h"
-#include "common/support.h"
 
 #include "seq/stream_iteration.h"
 #include "native/stream_iteration.h"
