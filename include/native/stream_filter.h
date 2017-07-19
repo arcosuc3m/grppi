@@ -64,8 +64,9 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
 
       // queue a pair element - order
       auto item{generated_queue.pop()};
+
       while (item.first) {
-        if(predicate_op(item.first.value())) {
+        if(predicate_op(*item.first)) {
           filtered_queue.push(item);
         }
         else {
@@ -102,7 +103,7 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
         //If the element is the next one to be procesed
         if (order==item.second) {
           if (item.first) {
-            consume_op(item.first.value());
+            consume_op(*item.first);
           }
           order++;
         }
@@ -116,7 +117,7 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
       for(auto it = item_buffer.begin(); it < item_buffer.end();++it) {
         if (it->second==order) {
           if (it->first) {
-            consume_op((*it).first.value());
+            consume_op(*it->first);
           }
           item_buffer.erase(it);
           order++;
@@ -129,7 +130,7 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
       for (auto it=item_buffer.begin(); it!=item_buffer.end(); ++it) {
         if (it->second == order) {
           if (it->first) {
-            consume_op((*it).first.value());
+            consume_op(*it->first);
           }
           item_buffer.erase(it);
           order++;
