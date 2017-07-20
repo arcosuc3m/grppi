@@ -21,6 +21,8 @@
 #ifndef GRPPI_NATIVE_STENCIL_H
 #define GRPPI_NATIVE_STENCIL_H
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
  void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
@@ -37,23 +39,20 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
        auto out = firstOut + (elemperthr * i);
 
-       tasks.push_back(
-           std::thread( [&](InputIt begin, InputIt end, OutputIt out){
-              // Register the thread in the execution model
-              p.register_thread();
+       tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+         // Register the thread in the execution model
+         p.register_thread();
 
-              while(begin!=end){
-                auto neighbors = neighbor(begin);
-                *out = op(begin, neighbors);
-                begin++;
-                out++;
-              }
+         while (begin!=end) {
+           auto neighbors = neighbor(begin);
+           *out = op(begin, neighbors);
+           begin++;
+           out++;
+         }
 
-              // Deregister the thread in the execution model
-              p.deregister_thread();
-           },
-           begin, end, out)
-      );
+         // Deregister the thread in the execution model
+         p.deregister_thread();
+       }, begin, end, out);
     }
    //MAIN 
    auto end = first + elemperthr;

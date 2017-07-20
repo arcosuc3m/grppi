@@ -27,6 +27,8 @@
 
 #include <boost/lockfree/spsc_queue.hpp>
 
+#include "parallel_execution_omp.h"
+
 namespace grppi{
 
 //Last stage

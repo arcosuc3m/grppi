@@ -25,6 +25,8 @@
 #include <utility>
 #include <memory>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{ 
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
@@ -114,29 +116,29 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
    });
    //Farm workers
    for(int th = 1; th < se.exectype.num_threads; th++) {
-      tasks.push_back(
-          std::thread([&](){
-              // Register the thread in the execution model
-              se.exectype.register_thread();
+     tasks.emplace_back([&]() {
+       // Register the thread in the execution model
+       se.exectype.register_thread();
 
-              auto item = queue.pop();
-              while(item){
-                  do{
-                      auto out = typename std::result_of<GenFunc()>::type ( se.task(item.value()) );
-                      item = out;
-                  }while(condition(item.value()));
-                  queueOut.push(item);
-                  item = queue.pop();
-              }
-              nend++;
-              if(nend == se.exectype.num_threads)
-                  queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
-              else queue.push(item);
+       auto item = queue.pop();
+       while (item) {
+         do {
+           auto out = typename std::result_of<GenFunc()>::type(se.task(item.value()));
+           item = out;
+         }
+         while (condition(item.value()));
+         queueOut.push(item);
+         item = queue.pop();
+       }
+       nend++;
+       if (nend == se.exectype.num_threads)
+         queueOut.push(typename std::result_of<GenFunc()>::type());
+       else 
+         queue.push(item);
 
-              // Deregister the thread in the execution model
-              se.exectype.deregister_thread();
-          }
-      ));
+       // Deregister the thread in the execution model
+       se.exectype.deregister_thread();
+     });
    }
    //Output function
    std::thread outth([&](){

@@ -27,6 +27,7 @@
 
 #include <thread>
 
+#include "parallel_execution_native.h"
 
 namespace grppi{
 
@@ -75,26 +76,24 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
                        std::vector<std::thread> & tasks)
 {
   using namespace std;
-  tasks.push_back(
-    thread{[&](){
-      ex.register_thread();
+  tasks.emplace_back([&]() {
+    ex.register_thread();
         
-      auto item = input_queue.pop();
-      for (;;) {
-        using output_type = typename OutQueue::value_type;
-        if (!item) {
-          output_queue.push(output_type{}); 
-          break;
-        }
-        else {
-          output_queue.push(transform_op(*item));
-        }
-        item = input_queue.pop();
+    auto item = input_queue.pop();
+    for (;;) {
+      using output_type = typename OutQueue::value_type;
+      if (!item) {
+        output_queue.push(output_type{}); 
+        break;
       }
+      else {
+        output_queue.push(transform_op(*item));
+      }
+      item = input_queue.pop();
+    }
 
-      ex.deregister_thread();
-    }}
-  );
+    ex.deregister_thread();
+  });
 }
 
 //Last stage
@@ -164,8 +163,6 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
   pipeline_impl(ex, input_queue, std::forward<reduction_type>(reduction_obj));
 }
 
-
-
 template <typename Transformer, typename Reducer, typename InQueue>
 void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
                    reduction_info<parallel_execution_native,Transformer,Reducer> && reduction_obj) 
@@ -177,17 +174,15 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
   mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
 
   for (int th=0; th<reduction_obj.exectype.num_threads; th++) {
-    tasks.push_back(
-      thread{[&](){
-        auto item = input_queue.pop( );
-        while (item) {
-          auto local =  input_queue.task(item) ;
-          output_queue.push( local ) ;
-          item = input_queue.pop( );
-        }
-        output_queue.push(result_type{}) ;
-      }}
-    );
+    tasks.emplace_back([&]() {
+      auto item = input_queue.pop( );
+      while (item) {
+        auto local =  input_queue.task(item) ;
+        output_queue.push( local ) ;
+        item = input_queue.pop( );
+      }
+      output_queue.push(result_type{}) ;
+    });
   }
 
   for (auto && t : tasks) { t.join(); }
@@ -219,31 +214,29 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
 
   atomic<int> done_threads{0}; 
   for (int th=0; th<filter_obj.exectype.num_threads; th++) {
-    tasks.push_back(
-      thread{[&](){
-        filter_obj.exectype.register_thread();
+    tasks.emplace_back([&]() {
+      filter_obj.exectype.register_thread();
 
-        auto item{input_queue.pop()};
-        while (item.first) {
-          if (filter_obj.task(*item.first)) {
-            tmp_queue.push(item);
-          }
-          else {
-            tmp_queue.push(make_pair(input_value_type{},item.second) );
-          } 
-          item = input_queue.pop();
+      auto item{input_queue.pop()};
+      while (item.first) {
+        if (filter_obj.task(*item.first)) {
+          tmp_queue.push(item);
         }
-        done_threads++;
-        if (done_threads==filter_obj.exectype.num_threads) {
-          tmp_queue.push(make_pair(input_value_type{}, -1));
-        } 
         else {
-          input_queue.push(item);
-        }
+          tmp_queue.push(make_pair(input_value_type{},item.second) );
+        } 
+        item = input_queue.pop();
+      }
+      done_threads++;
+      if (done_threads==filter_obj.exectype.num_threads) {
+        tmp_queue.push(make_pair(input_value_type{}, -1));
+      } 
+      else {
+        input_queue.push(item);
+      }
 
-        filter_obj.exectype.deregister_thread();
-      }}
-    );
+      filter_obj.exectype.deregister_thread();
+    });
   }
 
   mpmc_queue<input_type> output_queue{ex.queue_size,ex.lockfree};
@@ -317,28 +310,26 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
   atomic<int> done_threads{0};
 
   for (int th=0; th<filter_obj.exectype.num_threads; th++) {
-    tasks.push_back(
-      thread{[&]() {
-        filter_obj.exectype.register_thread();
+    tasks.emplace_back([&]() {
+      filter_obj.exectype.register_thread();
 
-        auto item{input_queue.pop()};
-        while (item.first) {
-          if (filter_obj.task(*item.first)) { 
-            output_queue.push(item);
-          }
-          item = input_queue.pop();
+      auto item{input_queue.pop()};
+      while (item.first) {
+        if (filter_obj.task(*item.first)) { 
+          output_queue.push(item);
         }
-        done_threads++;
-        if (done_threads==filter_obj.exectype.num_threads) {
-          output_queue.push( make_pair(input_value_type{}, -1) );
-        }
-        else {
-          input_queue.push(item);
-        }
+        item = input_queue.pop();
+      }
+      done_threads++;
+      if (done_threads==filter_obj.exectype.num_threads) {
+        output_queue.push( make_pair(input_value_type{}, -1) );
+      }
+      else {
+        input_queue.push(item);
+      }
 
-        filter_obj.exectype.deregister_thread();
-      }}
-    );
+      filter_obj.exectype.deregister_thread();
+    });
   }
 
   pipeline_impl(ex, output_queue, 
@@ -398,26 +389,24 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
   atomic<int> done_threads{0};
   vector<thread> tasks;
   for(int th = 0; th<farm_obj.exectype.num_threads; ++th){
-    tasks.push_back(
-      thread{[&]() {
-        farm_obj.exectype.register_thread();
+    tasks.emplace_back([&]() {
+      farm_obj.exectype.register_thread();
 
-        long order = 0;
-        auto item{input_queue.pop()}; 
-        while (item.first) {
-          auto out = output_item_value_type{farm_obj.task(*item.first)};
-          output_queue.push(make_pair(out,item.second)) ;
-          item = input_queue.pop( ); 
-        }
-        input_queue.push(item);
-        done_threads++;
-        if (done_threads == farm_obj.exectype.num_threads) {
-          output_queue.push(make_pair(output_item_value_type{}, -1));
-        }
+      long order = 0;
+      auto item{input_queue.pop()}; 
+      while (item.first) {
+        auto out = output_item_value_type{farm_obj.task(*item.first)};
+        output_queue.push(make_pair(out,item.second)) ;
+        item = input_queue.pop( ); 
+      }
+      input_queue.push(item);
+      done_threads++;
+      if (done_threads == farm_obj.exectype.num_threads) {
+        output_queue.push(make_pair(output_item_value_type{}, -1));
+      }
                 
-        farm_obj.exectype.deregister_thread();
-      }}
-    );
+      farm_obj.exectype.deregister_thread();
+    });
   }
   pipeline_impl(p, output_queue, 
       forward<MoreTransformers>(more_transform_ops)... );
