@@ -7,4 +7,5 @@ add_subdirectory(divide-conquer)
 # Streaming patterns
 add_subdirectory(pipeline)
 add_subdirectory(farm)
+add_subdirectory(stream-reduce)
 add_subdirectory(stream-filter)

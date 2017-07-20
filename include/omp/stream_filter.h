@@ -55,53 +55,102 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
 {
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
+  using item_type = pair<generated_type,long>;
 
-  mpmc_queue<generated_type> generated_queue{ex.queue_size, ex.lockfree};
-  mpmc_queue<generated_type> filtered_queue{ex.queue_size, ex.lockfree};
+  mpmc_queue<item_type> generated_queue{ex.queue_size, ex.lockfree};
+  mpmc_queue<item_type> filtered_queue{ex.queue_size, ex.lockfree};
 
   #pragma omp parallel
   {
     #pragma omp single nowait 
     {
-      //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
+      // Generate the task for the filter threads
       for (int i=0; i< ex.num_threads - 1; i++) {
         #pragma omp task shared(generated_queue, filtered_queue)
         {
+          // Dequeue a pair element - order
           auto item{generated_queue.pop()};
-          while (item) {
-            if (predicate_op(item.value())) {
+          while (item.first) {
+            if (predicate_op(*item.first)) {
               filtered_queue.push(item);
+            }
+            else {
+              filtered_queue.push(make_pair(generated_type{}, item.second));
             }
             item = generated_queue.pop();
           }
-          filtered_queue.push(item);
+          // If is the last item
+          filtered_queue.push(make_pair(item.first, -1 ));
         }
       }
 
+      // Generate the task for the consumer thread
       #pragma omp task shared(filtered_queue)
       {
-        //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
         int done_threads = 0;
+        
+        vector<item_type> item_buffer;
+        long order = 0;
+        // Dequeue an element
         auto item{filtered_queue.pop()};
         while (done_threads!=ex.num_threads-1) {
-          if (!item) {
+          // If the item is an end of stream
+          if (!item.first && item.second == -1) {
             done_threads++;
             if(done_threads == ex.num_threads - 1) break;
           }
           else {
-            consume_op(item.value());
+            // If the element is the next to be consumed
+            if(order == item.second) {
+              if(item.first) {
+                consume_op(*item.first);
+              } 
+              order++;
+            }
+            else {
+              item_buffer.push_back(item);
+            }
           }
+   
+          // Search in the buffer for the next element
+          auto itrm = remove_if(begin(item_buffer), end(item_buffer),
+            [&order](auto & item) {
+              bool res = item.second == order;
+              if (res) order++;
+              return res;
+            }
+          );
+          for_each (itrm, end(item_buffer),
+            [&consume_op](auto & item) {
+              if (item.first) { consume_op(*item.first); }
+            }
+          );
+          item_buffer.erase(itrm, end(item_buffer));
+
           item = filtered_queue.pop();
+        }
+        // Consume the last elements 
+        for (;;) {
+          auto it_find = find_if(begin(item_buffer), end(item_buffer),
+            [order](auto & item) { return item.second == order; });
+          if (it_find == end(item_buffer)) break;
+          if (it_find->first) {
+            consume_op(*it_find->first);
+          }
+          item_buffer.erase(it_find);
+          order++;
         }
       }
 
-      //THREAD 0 ENQUEUE ELEMENTS
+      // Main thread acts as generator
+      long order = 0;
       for (;;) {
         auto item{generate_op()};
-        generated_queue.push(item);
+        generated_queue.push(make_pair(item,order));
+        order++;
         if (!item) {
           for (int i = 0; i< ex.num_threads-1; i++) {
-            generated_queue.push(item);
+            generated_queue.push(make_pair(item,-1));
           }
           break;
         }
