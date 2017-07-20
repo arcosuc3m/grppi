@@ -112,7 +112,7 @@ A n-ary **map/reduce** also requires an identity value for the **Combiner**.
 ~~~{.cpp}
 v = get_first_vector();
 w = get_second_vector();
-auto res = map_reduce(exec,
+auto res = grppi::map_reduce(exec,
   begin(v), end(v),
   0.0,
   [](double x, double y) { return x*y; },
