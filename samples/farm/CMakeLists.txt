@@ -1,1 +1,2 @@
-#add_subdirectory(sqrinv_seq_farm)
+add_subdirectory(capitalize)
+add_subdirectory(sqrinv_seq)

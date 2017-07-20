@@ -27,7 +27,6 @@
 #include <stdexcept>
 
 // grppi
-#include "common/polymorphic_execution.h"
 #include "pipeline.h"
 #include "farm.h"
 
@@ -38,20 +37,23 @@ void test_pipeline(grppi::polymorphic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
-  auto t = grppi::pipeline(e,
+  auto pipe = grppi::pipeline(e,
       [](double x) -> double { return x*x; },
       [](double x) -> double { return 1/x; }
   );
 
+  // TODO: Fix once issue #231 is handled
+/*
   grppi::farm(e, 
     [n]() mutable -> optional<double> { 
       static int x = 1;
       if (x<=n) return x++;
       else return {}; 
     },
-    t,
+    pipe,
     [](double x) { cout << x << endl; }
   );
+*/
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
@@ -68,6 +70,8 @@ void print_message(const std::string & prog, const std::string & msg) {
 int main(int argc, char **argv) {
     
   using namespace std;
+
+  print_message(argv[0], "Not implemented waiting for fix of issue #231");
 
   if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");

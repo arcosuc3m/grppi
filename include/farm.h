@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -22,38 +22,41 @@
 #define GRPPI_FARM_H
 
 #include "common/patterns.h"
+
 #include "seq/farm.h"
 #include "native/farm.h"
 #include "omp/farm.h"
 #include "tbb/farm.h"
 #include "poly/farm.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BStreamPattern
- *  @{
- */
-/** @defgroup Farm
- *
- *  @brief Apply the farm pattern for parallelizing the code section
- *
- *  The Farm pattern apply a function 'op' to every independent element 
- *  returned by the generator function 'in'. The 'in' function read a data
- *	stream and forwards the result to the 'op' function. The task function
- *	is executed in parallel for as many thread as the user indicates in the
- *	'exec' variable.
- *  @{
- */
-/** @param exec Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework
- *  @param in   Generator function: This function determine how to read the data
- *    before start the parallel stage
- *  @param op Task function: Function that contains the code section that 
- *    should be parallelize
- */
-template <typename GenFunc, typename Operation>
-void farm(execution_model exec, GenFunc &&in, Operation && op);
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+namespace grppi {
+
+/** 
+\defgroup farm_pattern Farm pattern
+
+\brief Interface for applyinng the \ref md_farm pattern.
+@{
+*/
+
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
+execution with a Transformer that can be composed in other patterns.
+\tparam Execution Execution policy type.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param transform_op Transformer operation.
+*/
+template <typename Execution, typename Transformer>
+auto farm(Execution & ex, Transformer && transform_op)
+{
+   return farm_info<Execution,Transformer>{ex,
+       std::forward<Transformer>(transform_op)};
+}
+
+/**
+@}
+*/
+
+}
 
 #endif

@@ -24,33 +24,59 @@
 #include "sequential_execution.h"
 
 namespace grppi{
-template <typename Generator, typename Operation>
-void farm(sequential_execution , Generator &&gen, Operation && op ) {
 
-    while( 1 ) {
-        auto k = gen();
-        if( !k ) 
-            break;
-        op( k.value() );
-    }
+/**
+\addtogroup farm_pattern
+@{
+*/
+
+/**
+\addtogroup farm_pattern_seq Sequential farm pattern
+Sequential implementation of the \ref md_farm.
+@{
+*/
+
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex Sequential execution policy object.
+\param generate_op Gnerator operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Consumer>
+void farm(sequential_execution ex, 
+          Generator generate_op, Consumer consume_op) 
+{
+  for (;;) {
+    auto item{generate_op()};
+    if(!item) break;
+    consume_op(*item);
+  }
 }
 
-template <typename Generator, typename Operation, typename Consumer>
-void farm(sequential_execution , Generator &&gen, Operation && op, Consumer &&cons ) {
-
-    while( 1 ) {
-        auto k = gen();
-        if( !k ) 
-            break;
-        auto r = op( k.value() );
-        cons(r);
-    }
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
+execution with a generator, a transformer, and a comsumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex Sequential execution policy object.
+\param generate_op Generator operation.
+\param transform_op Transformer operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Transformer, typename Consumer>
+void farm(sequential_execution ex, 
+          Generator generate_op, Transformer transform_op, Consumer consume_op)
+{
+  for (;;) {
+    auto item{generate_op()};
+    if (!item) break;
+    consume_op(transform_op(*item));
+  }
 }
 
-
-template <typename Operation>
-farm_info<sequential_execution,Operation> farm(sequential_execution &s, Operation && op){
-   return farm_info<sequential_execution, Operation>(s , std::forward<Operation>(op) );
-}
 }
 #endif

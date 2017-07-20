@@ -1,5 +1,6 @@
-**Pipeline**
+**Farm**
 
 This directory offers the following examples:
 
-  **sqrinv_seq**: Generate a sequence of values 1/x^2.
+  * **capitalize**: Read a file with words and write each word capitalized.
+  * **sqrinv_seq**: Generate a sequence of values 1/x^2.
