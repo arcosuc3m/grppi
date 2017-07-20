@@ -24,6 +24,21 @@
 #include "sequential_execution.h"
 
 namespace grppi{
+
+template <typename Generator, typename Consumer, typename ...Stages>
+void farm(sequential_execution, Generator &&generator_op, pipeline_info<sequential_execution,Stages ...> && pipe, Consumer && consumer_op)
+{
+  using input_type = typename std::result_of<GenFunc()>::type;
+  using input_value_type = typename input_type::value_type;
+  using pipeline_info_type = pipeline_info<sequential_execution,Stages ...>;
+  while( 1 ) {
+    auto k = generator_op();
+    if( !k ) break;
+    auto val = composed_pipeline<input_value_type,0,Stages...>(*k, std::forward<pipeline_info_type>(pipe));
+    consumer_op(val);
+  }
+}
+
 template <typename Generator, typename Operation>
 void farm(sequential_execution , Generator &&gen, Operation && op ) {
 
