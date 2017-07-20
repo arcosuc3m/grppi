@@ -47,20 +47,20 @@ OpenMP parallel execution.
 \tparam Consumer Callable type used for consuming data items.
 \tparam Identity Type of the identity value used by the combiner.
 \param ex OpenMP parallel execution policy object.
-\param generate_op Generation operation.
 \param window_size Number of consecutive items to be reduced.
 \param offset Number of items after of which a new reduction is started.
+\param identity Identity value for the combination.
+\param generate_op Generation operation.
 \param combine_op Combination operation.
 \param consume_op Consume operation.
-\param identity Identity value for the combination.
 */
 
-template <typename Generator, typename Combiner, typename Consumer, 
-          typename Identity>
-void stream_reduce(parallel_execution_omp &ex, Generator generate_op, 
-                   int window_size, int offset, 
-                   Combiner && combine_op, Consumer consume_op, 
-                   Identity identity)
+template <typename Identity, typename Combiner, typename Consumer, 
+          typename Generator>
+void stream_reduce(parallel_execution_omp & ex,
+                   int window_size, int offset, Identity identity,
+                   Generator && generate_op, Combiner && combine_op, 
+                   Consumer && consume_op)
 {
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
