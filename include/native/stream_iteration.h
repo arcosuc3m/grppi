@@ -157,17 +157,51 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
 
 }
 
+template<typename Generator, typename Operation, typename Predicate, typename Consumer>
+void stream_iteration(parallel_execution_native &ex, Generator && gen, Operation && f, Predicate && condition, Consumer && cons){
+  using namespace std;
+  using generated_type = typename result_of<Generator()>::type;
+  using generated_value_type = typename generated_type::value_type;
+
+  using produced_type = typename result_of<Operation(generated_value_type)>::type;
+  
+  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
+  mpmc_queue<std::experimental::optional<produced_type>> produced_queue{ex.queue_size,ex.lockfree};
+
+
+  std::thread prod([&gen, &generated_queue](){
+    while(1){
+      auto k = gen();
+      generated_queue.push(k);
+      if(!k) break;
+    }
+  });
+  
+  std::thread task([&generated_queue,&f,&condition,&produced_queue](){
+    auto item = generated_queue.pop();
+    while(item){
+     produced_type val = *item;
+     do{
+       val = f(val);
+     }while(condition(val));
+     produced_queue.push(std::experimental::optional<produced_type>{val});
+     item = generated_queue.pop();
+    }
+    produced_queue.push(std::experimental::optional<produced_type>{});
+  });
+
+  std::thread sink([&cons,&produced_queue](){
+    auto item = produced_queue.pop();
+    while(item){
+      cons(*item);
+      item=produced_queue.pop();
+    }
+  });  
+  prod.join();
+  task.join();
+  sink.join();
+
 }
-/*template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void StreamIteration(sequential_execution, GenFunc && in, Operation && f, Predicate && condition, OutFunc && out){
-   while(1){
-       auto k = in();
-       if(!k) break;
-       while(condition(k)){
-          k = f(k);
-       }
-       out(k);
-   }
+
 }
-*/
 #endif

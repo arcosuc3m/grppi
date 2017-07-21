@@ -29,9 +29,9 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
    while(1){
        auto k = in();
        if(!k) break;
-       auto val = k.value();
+       auto val = *k;
        do{
-          val = f(val);
+         val = f(val);
        }while(condition(val));
        out(val);
    }
