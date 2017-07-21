@@ -24,57 +24,57 @@
 
 namespace grppi{
 
-template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(sequential_execution, GenFunc && in, Operation && f, Predicate && condition, OutFunc && out){
-   while(1){
-       auto k = in();
-       if(!k) break;
-       auto val = *k;
-       do{
-         val = f(val);
-       }while(condition(val));
-       out(val);
-   }
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void stream_iteration(sequential_execution, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
+  for(;;) {
+    auto item = generate_op();
+    if (!item) break;
+    auto val = *item;
+    do {
+      val = transform_op(val);
+    } while (predicate_op(val));
+    consume_op(val);
+  }
 }
 
 
-template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(sequential_execution &s, GenFunc && in, farm_info<sequential_execution, Operation> & f, Predicate && condition, OutFunc && out){
-    stream_iteration(s, std::forward<GenFunc>( in ), std::forward<farm_info<sequential_execution, Operation> &&>( f ), 
-          std::forward<Predicate>( condition), std::forward< OutFunc >( out ) );
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void stream_iteration(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> & farm, Predicate && predicate_op, Consumer && consume_op){
+  stream_iteration(ex, std::forward<Generator>( generate_op ), std::forward<farm_info<sequential_execution, Transformer> &&>( farm ), 
+          std::forward<Predicate>( predicate_op), std::forward< Consumer >( consume_op ) );
 }
 
-template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(sequential_execution, GenFunc && in, farm_info<sequential_execution, Operation> && f, Predicate && condition, OutFunc && out){
-   while(1){
-       auto k = in();       
-       if(!k) break;
-       auto val = k.value();
-       do{
-          val = f.task(val);
-       } while(condition(val));
-       out(val);
-   }
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void stream_iteration(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
+  for(;;) {
+    auto item = generate_op();       
+    if (!item) break;
+    auto val = *item;
+    do {
+      val = farm.task(val);
+    } while (predicate_op(val));
+    consume_op(val);
+  }
 }
 
-template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(sequential_execution &s, GenFunc && in, pipeline_info<sequential_execution, Stages...> & f, Predicate && condition, OutFunc && out){
-    stream_iteration(s, std::forward<GenFunc>(in), std::forward<pipeline_info<sequential_execution, Stages...> &&>( f ), std::forward<Predicate>(condition), std::forward< OutFunc>( out ));
+template<typename Generator, typename Predicate, typename Consumer, typename ...Stages>
+void stream_iteration(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> & pipe, Predicate && predicate_op, Consumer && consume_op){
+  stream_iteration(ex, std::forward<Generator>(generate_op), std::forward<pipeline_info<sequential_execution, Stages...> &&>( pipe ), std::forward<Predicate>(predicate_op), std::forward<Consumer>( consume_op ));
 }
 
-template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(sequential_execution &s, GenFunc && in, pipeline_info<sequential_execution, Stages...> && f, Predicate && condition, OutFunc && out){
-   while(1){
-       auto k = in();
-       if(!k) break; 
-       auto val = k.value();
-       do{
-             val = composed_pipeline<typename std::result_of<GenFunc()>::type::value_type,0,Stages...>(val,std::forward<pipeline_info<sequential_execution, Stages...>>(f) );
-       }while(condition(val));
-       out(val);
-   }
-  
+template<typename Generator, typename Predicate, typename Consumer, typename ...Stages>
+void stream_iteration(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> && pipe, Predicate && predicate_op, Consumer && consume_op){
+  for (;;) {
+    auto item = generate_op();
+    if (!item) break; 
+    auto val = *item;
+    do {
+      val = composed_pipeline<typename std::result_of<Generator()>::type::value_type,0,Stages...>(val,std::forward<pipeline_info<sequential_execution, Stages...>>(pipe) );
+    } while (predicate_op(val));
+    consume_op(val);
+  }
 }
+
 }
 
 #endif
