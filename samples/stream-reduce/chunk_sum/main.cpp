@@ -44,10 +44,9 @@ void test_map(grppi::polymorphic_execution & e, int n, int window_size, int offs
   };
 
   grppi::stream_reduce(e,
-    generator, window_size, offset,
+    window_size, offset, 0, generator,
     [](int x, int y) { return x+y; },
-    [](int x) { cout << x << endl; },
-    0
+    [](int x) { cout << x << endl; }
   );
 }
 

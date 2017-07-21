@@ -122,16 +122,17 @@ TYPED_TEST(stream_reduce_test, static_empty)
 { 
   this->setup_empty();
   grppi::stream_reduce(this->execution_,
+    this->window, 
+    this->offset,
+    0,
     [this]() -> optional<int> { 
       this->invocations_gen++; 
       return {};
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++; 
-    },0
+    }
   );
   this->check_empty();
 }
@@ -140,16 +141,17 @@ TYPED_TEST(stream_reduce_test, poly_empty)
 { 
   this->setup_empty();
   grppi::stream_reduce(this->poly_execution_,
+    this->window, 
+    this->offset,
+    0,
     [this]() -> optional<int> { 
       this->invocations_gen++; 
       return {};
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++; 
-    },0
+    }
   );
   this->check_empty();
 }
@@ -159,6 +161,9 @@ TYPED_TEST(stream_reduce_test, static_single)
 { 
   this->setup_single();
   grppi::stream_reduce(this->execution_,
+    this->window, 
+    this->offset,
+    0,
     [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
@@ -172,13 +177,11 @@ TYPED_TEST(stream_reduce_test, static_single)
         return {};
       }
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_single();
 }
@@ -187,6 +190,9 @@ TYPED_TEST(stream_reduce_test, poly_single)
 { 
   this->setup_single();
   grppi::stream_reduce(this->poly_execution_,
+    this->window, 
+    this->offset,
+    0,
     [this]() -> optional<int> { 
       this->invocations_gen++; 
       
@@ -200,13 +206,11 @@ TYPED_TEST(stream_reduce_test, poly_single)
         return {};
       }
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_single();
 }
@@ -216,6 +220,9 @@ TYPED_TEST(stream_reduce_test, static_multiple)
 { 
   this->setup_multiple();
   grppi::stream_reduce(this->execution_,
+    this->window, 
+    this->offset,
+    0,
     [this]() ->optional<int> { 
       this->invocations_gen++; 
       
@@ -229,13 +236,11 @@ TYPED_TEST(stream_reduce_test, static_multiple)
         return {};
       }
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_multiple();
 }
@@ -244,6 +249,9 @@ TYPED_TEST(stream_reduce_test, poly_multiple)
 { 
   this->setup_multiple();
   grppi::stream_reduce(this->poly_execution_,
+    this->window, 
+    this->offset,
+    0,
     [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
@@ -257,13 +265,11 @@ TYPED_TEST(stream_reduce_test, poly_multiple)
         return {};
       }
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_multiple();
 }
@@ -274,6 +280,9 @@ TYPED_TEST(stream_reduce_test, static_window_offset)
 { 
   this->setup_window_offset();
   grppi::stream_reduce(this->execution_,
+    this->window,
+    this->offset,
+    0,
     [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
@@ -287,13 +296,11 @@ TYPED_TEST(stream_reduce_test, static_window_offset)
         return {};
       }
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_window_offset();
 }
@@ -302,6 +309,9 @@ TYPED_TEST(stream_reduce_test, poly_window_offset)
 { 
   this->setup_window_offset();
   grppi::stream_reduce(this->poly_execution_,
+    this->window,
+    this->offset,
+    0,
     [this]() -> optional<int>{ 
       this->invocations_gen++; 
       
@@ -315,13 +325,11 @@ TYPED_TEST(stream_reduce_test, poly_window_offset)
         return {};
       }
     },
-    this->window, 
-    this->offset,
     std::plus<int>(),
     [this](int a) { 
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_window_offset();
 }
