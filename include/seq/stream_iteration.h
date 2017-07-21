@@ -24,6 +24,29 @@
 
 namespace grppi{
 
+/**
+\addtogroup stream_iteration_pattern
+@{
+*/
+
+/**
+\addtogroup stream_iteration_pattern_sequential Sequential stream iteration pattern
+Sequential implementation of the \ref md_stream_iteration.
+@{
+*/
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with sequential 
+execution with a generator, a predicate, a consumer and a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operations.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param transform_op Transformer operation.
+*/
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
 void stream_iteration(sequential_execution, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
   for(;;) {
@@ -44,6 +67,19 @@ void stream_iteration(sequential_execution &ex, Generator && generate_op, farm_i
           std::forward<Predicate>( predicate_op), std::forward< Consumer >( consume_op ) );
 }
 
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with sequential 
+execution with a generator, a predicate, a consumer and a farm as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operations.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param farm Composed farm object.
+*/
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
 void stream_iteration(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
   for(;;) {
@@ -62,6 +98,18 @@ void stream_iteration(sequential_execution &ex, Generator && generate_op, pipeli
   stream_iteration(ex, std::forward<Generator>(generate_op), std::forward<pipeline_info<sequential_execution, Stages...> &&>( pipe ), std::forward<Predicate>(predicate_op), std::forward<Consumer>( consume_op ));
 }
 
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with sequential 
+execution with a generator, a predicate, a consumer and a pipeline as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operations.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param pipe Composed pipeline object.
+*/
 template<typename Generator, typename Predicate, typename Consumer, typename ...Stages>
 void stream_iteration(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> && pipe, Predicate && predicate_op, Consumer && consume_op){
   for (;;) {

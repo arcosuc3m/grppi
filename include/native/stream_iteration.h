@@ -29,25 +29,51 @@
 
 namespace grppi{ 
 
+/**
+\addtogroup stream_iteration_pattern
+@{
+*/
+
+/**
+\addtogroup stream_iteration_pattern_native Native parallel stream iteration pattern
+Sequential implementation of the \ref md_stream_iteration.
+@{
+*/
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+execution with a generator, a predicate, a consumer and a pipeline as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam MoreTransformers Callable type for the transformer operations.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param pipe Composed pipeline object.
+*/
 template<typename Generator, typename Predicate, typename Consumer, typename ...MoreTransformers>
 void stream_iteration(parallel_execution_native &ex, Generator && generate_op, pipeline_info<parallel_execution_native , MoreTransformers...> && pipe, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
   using generated_type = typename std::result_of<Generator()>::type;
-  mpmc_queue< generated_type > generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue< generated_type > transformed_queue{ex.queue_size,ex.lockfree};
-  std::atomic<int> nelem {0};
-  std::atomic<bool> send_finish {false};
+  using pipeline_info_type = pipeline_info<parallel_execution_native , MoreTransformers...>;
+
+  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
+  mpmc_queue<generated_type> transformed_queue{ex.queue_size,ex.lockfree};
+  std::atomic<int> num_elements{0};
+  std::atomic<bool> send_finish{false};
   //Stream generator
   thread generator_task([&](){
     // Register the thread in the execution model
     ex.register_thread();
     for (;;) {
-      auto item = generate_op();
+      auto item{generate_op()};
       if (!item) {
         send_finish=true;
         break;
       }
-      nelem++;
+      num_elements++;
       generated_queue.push(item);
     }
     ex.deregister_thread();
@@ -55,22 +81,25 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, p
 
   vector<thread> pipe_threads;
   composed_pipeline< mpmc_queue<generated_type>, mpmc_queue<generated_type>, 0, MoreTransformers ...>
-    (generated_queue, forward<pipeline_info<parallel_execution_native , MoreTransformers...> >(pipe) , transformed_queue, pipe_threads); 
+    (generated_queue, forward<pipeline_info_type>(pipe) , transformed_queue, pipe_threads); 
  
   for (;;) {
     //If every element has been processed
-    if (send_finish && nelem==0) {
-      queue.push({});
+    if (send_finish && num_elements==0) {
+      generated_queue.push({});
       send_finish = false;
       break;
     }
     auto item{transformed_queue.pop()};
     //Check the predicate
     if (!predicate_op(*item)) {
-      nelem--;
+      num_elements--;
       consume_op(*item);
       //If the condition is not met reintroduce the element in the input queue
-    }else queue.push(item);
+    }
+    else {
+      generated_queue.push(item);
+    }
 
   }
   generator_task.join();
@@ -79,13 +108,26 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, p
   }
 }
 
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+execution with a generator, a predicate, a consumer and a farm as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operations.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param farm Composed farm object.
+*/
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
 void stream_iteration(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
   using generated_type = typename std::result_of<Generator()>::type;
-  mpmc_queue< generated_type > generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue< generated_type > transformed_queue{ex.queue_size,ex.lockfree};
-  atomic<int> done_threads {0};
+  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
+  mpmc_queue<generated_type> transformed_queue{ex.queue_size,ex.lockfree};
+  atomic<int> done_threads{0};
   vector<thread> tasks;
    //Stream generator
   thread generator_task([&](){
@@ -107,7 +149,7 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
       item = generated_queue.pop();
     }
     done_threads++;
-    if(done_treads == farm.exectype.num_threads) {
+    if(done_threads == farm.exectype.num_threads) {
       transformed_queue.push({});
     }
     else {
@@ -130,8 +172,8 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
         transformed_queue.push(out);
         item = generated_queue.pop();
       }
-      nend++;
-      if (nend == farm.exectype.num_threads) {
+      done_threads++;
+      if (done_threads == farm.exectype.num_threads) {
         transformed_queue.push({});
       }
       else {
@@ -144,18 +186,32 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
   //Output function
   std::thread consumer_task([&](){
     for (;;){
-     auto item = queue_out.pop();
+     auto item{transformed_queue.pop()};
      if(!item) break;
        consume_op(*item);
      }
   });
   //Join threads
-  for(auto && t : tasks) t.join();
-   generator_task.join();
-   consumer_task.join();
+  for(auto && t : tasks) { t.join(); }
+  generator_task.join();
+  consumer_task.join();
 
 }
 
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+execution with a generator, a predicate, a transformer and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operation.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param tranformer_op Tranformer operation.
+*/
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
 void stream_iteration(parallel_execution_native &ex, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
@@ -202,6 +258,8 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, T
   consumer_task.join();
 
 }
+
+
 
 }
 #endif
