@@ -28,49 +28,34 @@
 #include <stdexcept>
 
 // grppi
-#include "poly/polymorphic_execution.h"
 #include "mapreduce.h"
-#include "poly/map.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_mapreduce(grppi::polymorphic_execution & e,
+void test_mapreduce(grppi::polymorphic_execution & ex,
                 std::istream & file)
 {
   using namespace std;
 
-  vector<string> lines;
-  for (string line; std::getline(file,line);) {
-     lines.push_back(line);
-  }
-  map<string,int> init;
+  vector<string> words;
+  copy(istream_iterator<string>{file}, istream_iterator<string>{},
+    back_inserter(words));
 
-  auto result = map_reduce(e,
-    lines.begin(),
-    lines.end(),
-    init,
-    [](string & l){
-      // Split lines in substrings represeting words
-      istringstream line{l};
-      vector<string> words{istream_iterator<string>{line},
-                           istream_iterator<string>{}};
-      std::map<string,int> word_count;
-      // Initialize map with the line words
-      for (auto & w : words) { word_count[w]++; }
-      return word_count;
-    },
-    [](auto partial_count, auto word_count){
-      // Compute partial results
-      for (auto & w : word_count) {
-        partial_count[w.first]+= w.second;
+  // Word count for vector of lines
+  auto result = map_reduce(ex,
+    words.begin(), words.end(), map<string,int>{},
+    [](string word) -> map<string,int> { return {{word,1}}; },
+    [](map<string,int> & lhs, const map<string,int> & rhs) -> map<string,int> & {
+      for (auto & w : rhs) {
+        lhs[w.first]+= w.second;
       }
-      return partial_count;
+      return lhs;
     }
   );
 
   std::cout << "Word : count " << std::endl;
-  for (auto && w : result) {
+  for (const auto & w : result) {
     std::cout << w.first << " : " << w.second << std::endl;
   }
 }
