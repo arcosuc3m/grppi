@@ -78,8 +78,18 @@ void stream_reduce(sequential_execution & ex,
       auto reduced_value = reduce(ex, values.begin(), values.end(), identity,
           std::forward<Combiner>(combine_op));
       consume_op(reduced_value);
-      if (item) {
-        values.erase(values.begin(), values.begin() + offset);
+      if(item){
+        if (offset <= window_size) {
+          values.erase(values.begin(), values.begin() + offset);
+        }
+        else {
+          values.erase(values.begin(), values.end());
+          auto diff = offset - window_size;
+          while (diff > 0 && item) {
+            item = generate_op();
+            diff--;
+          }
+        }
       }
     }
     if (!item ) break;
