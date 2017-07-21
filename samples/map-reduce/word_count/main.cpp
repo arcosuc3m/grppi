@@ -28,9 +28,7 @@
 #include <stdexcept>
 
 // grppi
-#include "poly/polymorphic_execution.h"
 #include "mapreduce.h"
-#include "poly/map.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -51,7 +49,7 @@ void test_mapreduce(grppi::polymorphic_execution & e,
     lines.end(),
     init,
     [](string & l){
-      // Split lines in substrings represeting words
+      // Split lines in substrings representing words
       istringstream line{l};
       vector<string> words{istream_iterator<string>{line},
                            istream_iterator<string>{}};

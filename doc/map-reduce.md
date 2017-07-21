@@ -139,7 +139,7 @@ auto res = grppi::map_reduce(e,
   lines.end(),
   init,
   [](string & l){
-    // Split lines in substrings represeting words
+    // Split lines in substrings representing words
     istringstream line{l};
     vector<string> words{istream_iterator<string>{line},
                          istream_iterator<string>{}};
