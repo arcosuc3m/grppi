@@ -100,6 +100,18 @@ public:
     EXPECT_EQ(35, this->out);
   }
 
+  void setup_offset_window() {
+    out = 0;
+    v = vector<int>{1,2,3,4,5,6,7,8,9,10};
+    window = 2;
+    offset = 4;
+  }
+
+  void check_offset_window() {
+    EXPECT_EQ(11, invocations_gen);
+    EXPECT_EQ(3, invocations_reduce);
+    EXPECT_EQ(33, this->out);
+  }
 };
 
 // Test for execution policies defined in supported_executions.h
@@ -313,3 +325,63 @@ TYPED_TEST(stream_reduce_test, poly_window_offset)
   );
   this->check_window_offset();
 }
+
+// Process multiple elements with changes in the window and offset parameters
+TYPED_TEST(stream_reduce_test, static_offset_window)
+{
+  this->setup_offset_window();
+  grppi::stream_reduce(this->execution_,
+    [this]() -> optional<int>{
+      this->invocations_gen++;
+
+      if(this->v.size() > 0){
+
+        auto problem = this->v.back();
+        this->v.pop_back();
+        return problem;
+
+      }else{
+        return {};
+      }
+    },
+    this->window,
+    this->offset,
+    std::plus<int>(),
+    [this](int a) {
+      this->invocations_reduce++;
+      this->out += a;
+    },0
+  );
+  this->check_offset_window();
+}
+
+TYPED_TEST(stream_reduce_test, poly_offset_window)
+{
+  this->setup_offset_window();
+  grppi::stream_reduce(this->poly_execution_,
+    [this]() -> optional<int>{
+      this->invocations_gen++;
+
+      if(this->v.size() > 0){
+
+        auto problem = this->v.back();
+        this->v.pop_back();
+        return problem;
+
+      }else{
+        return {};
+      }
+    },
+    this->window,
+    this->offset,
+    std::plus<int>(),
+    [this](int a) {
+      this->invocations_reduce++;
+      this->out += a;
+    },0
+  );
+  this->check_offset_window();
+}
+
+
+
