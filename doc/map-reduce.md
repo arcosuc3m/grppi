@@ -126,7 +126,7 @@ auto res = grppi::map_reduce(exec,
 ## Additional examples of **map/reduce**
 
 ---
-**Example**: Count the number of word appearances in text lines.
+**Example**: Count word appearances in text lines.
 ~~~{.cpp}
 vector<string> lines{"Far far away, behind the word mountains, far from the ",
                      "countries Vokalia and Consonantia, there live the blind ",
