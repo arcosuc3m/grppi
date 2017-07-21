@@ -29,177 +29,177 @@
 
 namespace grppi{ 
 
-template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
-void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
-   std::atomic<int> nend (0);
-   std::atomic<int> nelem (0);
-   std::atomic<bool> sendFinish( false );
-   //Stream generator
-   std::thread gen([&](){
-      // Register the thread in the execution model
-      p.register_thread();
-      while(1){
-         auto k = in();
-         if(!k){
-             sendFinish=true;
-             break;
-         }
-         nelem++;
-         queue.push(k);
+template<typename Generator, typename Predicate, typename Consumer, typename ...Stages>
+void stream_iteration(parallel_execution_native &ex, Generator && generate_op, pipeline_info<parallel_execution_native , Stages...> && pipe, Predicate && predicate_op, Consumer && consume_op){
+  mpmc_queue< typename std::result_of<Generator()>::type > queue(ex.queue_size,ex.lockfree);
+  mpmc_queue< typename std::result_of<Generator()>::type > queueOut(ex.queue_size,ex.lockfree);
+  std::atomic<int> nend (0);
+  std::atomic<int> nelem (0);
+  std::atomic<bool> send_finish( false );
+  //Stream generator
+  std::thread generator_task([&](){
+    // Register the thread in the execution model
+    ex.register_thread();
+    for (;;) {
+      auto item = generate_op();
+      if (!item) {
+        send_finish=true;
+        break;
       }
-      p.deregister_thread();
-   });
+      nelem++;
+      queue.push(item);
+    }
+    ex.deregister_thread();
+  });
 
-   std::vector<std::thread> pipeThreads;
-   composed_pipeline< mpmc_queue< typename std::result_of<GenFunc()>::type >, mpmc_queue< typename std::result_of<GenFunc()>::type >, 0, Stages ...>
-      (queue, std::forward<pipeline_info<parallel_execution_native , Stages...> >(se) , queueOut, pipeThreads); 
+  std::vector<std::thread> pipe_threads;
+  composed_pipeline< mpmc_queue< typename std::result_of<Generator()>::type >, mpmc_queue< typename std::result_of<Generator()>::type >, 0, Stages ...>
+    (queue, std::forward<pipeline_info<parallel_execution_native , Stages...> >(pipe) , queueOut, pipe_threads); 
  
-   while(1){
-      //If every element has been processed
-      if(sendFinish&&nelem==0){
-          queue.push(typename std::result_of<GenFunc()>::type{});
-          sendFinish= false;
-          break;
-      }
-      auto k = queueOut.pop();
-      //Check the predicate
-      if( !condition(k.value() ) ) {
-           nelem--;
-           out( k.value() );
-       //If the condition is not met reintroduce the element in the input queue
-      }else queue.push( k );
+  for (;;) {
+    //If every element has been processed
+    if(send_finish&&nelem==0){
+      queue.push({});
+      send_finish= false;
+      break;
+    }
+    auto item = queueOut.pop();
+    //Check the predicate
+    if( !predicate_op(*item ) ) {
+      nelem--;
+      consume_op( *item );
+      //If the condition is not met reintroduce the element in the input queue
+    }else queue.push( item );
 
-   }
-   auto first = pipeThreads.begin();
-   auto end = pipeThreads.end();
-   gen.join();
-   for(;first!=end;first++){ (*first).join();}
-
+  }
+  generator_task.join();
+  for(auto && t : pipe_threads){ 
+    t.join();
+  }
 }
 
-template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(parallel_execution_native &p, GenFunc && in, farm_info<parallel_execution_native,Operation> && se, Predicate && condition, OutFunc && out){
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void stream_iteration(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
    std::vector<std::thread> tasks;
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
+   mpmc_queue< typename std::result_of<Generator()>::type > queue(ex.queue_size,ex.lockfree);
+   mpmc_queue< typename std::result_of<Generator()>::type > queue_out(ex.queue_size,ex.lockfree);
    std::atomic<int> nend (0);
    //Stream generator
-   std::thread gen([&](){
+   std::thread generator_task([&](){
       // Register the thread in the execution model
-      se.exectype.register_thread();
+      farm.exectype.register_thread();
 
-      while(1){
-         auto k = in();
-         queue.push(k);
-         if(!k) break;
+      for (;;) {
+         auto item = generate_op();
+         queue.push(item);
+         if (!item) break;
       }
       //When generation is finished it starts working on the farm
       auto item = queue.pop();
-      while(item){
+      while (item) {
+         auto out = *item;
          do{
-             auto out = typename std::result_of<GenFunc()>::type( se.task(item.value()) );
-             item = out;
-         }while(condition(item.value()));
-         queueOut.push(item);
+             out = farm.task(out);
+         } while (predicate_op(out));
+         queue_out.push(out);
          item = queue.pop();
       }
       nend++;
-      if(nend == se.exectype.num_threads)
-         queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
+      if(nend == farm.exectype.num_threads)
+         queue_out.push({});
       else queue.push(item);
 
       // Deregister the thread in the execution model
-      se.exectype.deregister_thread();
+      farm.exectype.deregister_thread();
 
    });
    //Farm workers
-   for(int th = 1; th < se.exectype.num_threads; th++) {
+   for(int th = 1; th < farm.exectype.num_threads; th++) {
      tasks.emplace_back([&]() {
        // Register the thread in the execution model
-       se.exectype.register_thread();
+       farm.exectype.register_thread();
 
        auto item = queue.pop();
        while (item) {
+         auto out = *item;
          do {
-           auto out = typename std::result_of<GenFunc()>::type(se.task(item.value()));
-           item = out;
+           out = farm.task(out);
          }
-         while (condition(item.value()));
-         queueOut.push(item);
+         while (predicate_op(out));
+         queue_out.push(out);
          item = queue.pop();
        }
        nend++;
-       if (nend == se.exectype.num_threads)
-         queueOut.push(typename std::result_of<GenFunc()>::type());
+       if (nend == farm.exectype.num_threads)
+         queue_out.push({});
        else 
          queue.push(item);
 
        // Deregister the thread in the execution model
-       se.exectype.deregister_thread();
+       farm.exectype.deregister_thread();
      });
    }
    //Output function
-   std::thread outth([&](){
-      while(1){
-         auto k = queueOut.pop();
-         if(!k) break;
-         out(k.value());
+   std::thread consumer_task([&](){
+      for (;;){
+         auto item = queue_out.pop();
+         if(!item) break;
+         consume_op(*item);
       }
    });
    //Join threads
    auto first = tasks.begin();
    auto end = tasks.end();
    for(;first!=end;first++) (*first).join();
-   gen.join();
-   outth.join();
+   generator_task.join();
+   consumer_task.join();
 
 }
 
-template<typename Generator, typename Operation, typename Predicate, typename Consumer>
-void stream_iteration(parallel_execution_native &ex, Generator && gen, Operation && f, Predicate && condition, Consumer && cons){
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void stream_iteration(parallel_execution_native &ex, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
+  using namespace std::experimental;
   using generated_type = typename result_of<Generator()>::type;
   using generated_value_type = typename generated_type::value_type;
 
-  using produced_type = typename result_of<Operation(generated_value_type)>::type;
+  using transformed_type = typename result_of<Transformer(generated_value_type)>::type;
   
   mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<std::experimental::optional<produced_type>> produced_queue{ex.queue_size,ex.lockfree};
+  mpmc_queue<optional<transformed_type>> produced_queue{ex.queue_size,ex.lockfree};
 
 
-  std::thread prod([&gen, &generated_queue](){
-    while(1){
-      auto k = gen();
-      generated_queue.push(k);
-      if(!k) break;
+  std::thread producer_task([&generate_op, &generated_queue](){
+    for(;;) {
+      auto item = generate_op();
+      generated_queue.push(item);
+      if (!item) break;
     }
   });
   
-  std::thread task([&generated_queue,&f,&condition,&produced_queue](){
+  std::thread transformer_task([&generated_queue,&transform_op,&predicate_op,&produced_queue](){
     auto item = generated_queue.pop();
-    while(item){
-     produced_type val = *item;
-     do{
-       val = f(val);
-     }while(condition(val));
-     produced_queue.push(std::experimental::optional<produced_type>{val});
+    while (item) {
+     auto val = *item;
+     do {
+       val = transform_op(val);
+     } while (predicate_op(val));
+     produced_queue.push(val);
      item = generated_queue.pop();
     }
-    produced_queue.push(std::experimental::optional<produced_type>{});
+    produced_queue.push({});
   });
 
-  std::thread sink([&cons,&produced_queue](){
+  std::thread consumer_task([&consume_op,&produced_queue](){
     auto item = produced_queue.pop();
-    while(item){
-      cons(*item);
+    while (item) {
+      consume_op(*item);
       item=produced_queue.pop();
     }
   });  
-  prod.join();
-  task.join();
-  sink.join();
+  producer_task.join();
+  transformer_task.join();
+  consumer_task.join();
 
 }
 
