@@ -34,7 +34,7 @@
 #include "../../util/util.h"
 
 void test_mapreduce(grppi::polymorphic_execution & ex,
-                std::istream & file)
+                    std::istream & file)
 {
   using namespace std;
 
@@ -54,9 +54,9 @@ void test_mapreduce(grppi::polymorphic_execution & ex,
     }
   );
 
-  std::cout << "Word : count " << std::endl;
+  cout << "Word : count " << endl;
   for (const auto & w : result) {
-    std::cout << w.first << " : " << w.second << std::endl;
+    cout << w.first << " : " << w.second << endl;
   }
 }
 
