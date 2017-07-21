@@ -121,3 +121,41 @@ auto res = grppi::map_reduce(exec,
 );
 ~~~
 ---
+
+
+## Additional examples of **map/reduce**
+
+---
+**Example**: Count the number of word appearances in text lines.
+~~~{.cpp}
+vector<string> lines{"Far far away, behind the word mountains, far from the ",
+                     "countries Vokalia and Consonantia, there live the blind ",
+                     "texts. Separated they live in Bookmarksgrove right at ",
+                     "the coast of the Semantics, a large language ocean."};
+map<string,int> init;
+
+auto res = grppi::map_reduce(e,
+  lines.begin(),
+  lines.end(),
+  init,
+  [](string & l){
+    // Split lines in substrings represeting words
+    istringstream line{l};
+    vector<string> words{istream_iterator<string>{line},
+                         istream_iterator<string>{}};
+    std::map<string,int> word_count;
+    // Initialize map with the line words
+    for (auto & w : words) { word_count[w]++; }
+    return word_count;
+  },
+  [](auto partial_count, auto word_count){
+    // Compute partial results
+    for (auto & w : word_count) {
+      partial_count[w.first]+= w.second;
+    }
+    return partial_count;
+  }
+);
+// res = {{"the", 5}, {"far", 2}, {"live", 2}, ... }
+~~~
+---
