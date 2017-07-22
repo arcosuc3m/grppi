@@ -1,30 +1,88 @@
 # Install Notes
 
-## Fully Supported Compilers ##
+## Building GrPPI
 
-  * **g++** from GNU. 
-  * **clang** from LLVM
+### Building the library
 
-  > Note: The versions of the compilers must be compatible with c++14
+GrPPI is a header only library and no build process is required for the library
+itself.
+
+However, GrPPI includes CMake scripts for supporting the following actions:
+
+* Building the sample programs.
+* Building the unit tests.
+* Performing coverage analysis on unit tests.
+* Generating the **doxygen** based documentation.
+* Installing the library in your system
+
+To setup the build scripts we recommend that you create an out of source
+directory under the root GrPPI directory:
+
+~~~
+mkdir build
+cd build
+~~~
+
+Then, you may generate the scripts by just doing:
+
+~~~
+cmake ..
+make
+~~~
+
+**Important Note:** Be sure to invoke make once before modifying you `CMakeCache.txt`
+file. This will allow CMake to compile and setup dependent libraries (e.g.
+GoogleTest).
+
+### Building the unit tests
+
+To build the unit tests, you need to set configuration variable
+`GRPPI_UNIT_TEST_ENABLE` to `ON`. You can do so be using the CMake GUI or by
+typing:
+
+~~~
+cmake .. -DGRPPI_UNIT_TEST_ENABLE=ON
+~~~
+
+
+
+### Building the sample programs
+
+
+
+## Compilers ##
+
+For using GrPPI you need a C++14 compliant compiler.
+
+GrPPI has been tested with the following compilers:
+
+  * **g++** 6.1. 
+  * **clang++** 3.4.
 
 ## Required Libraries ##
 
-  * [BOOST](http://www.boost.org/)
+Miminal support of GrPPI requires the following libraries.
+
+  * [BOOST](http://www.boost.org/) version 1.58 or above.
 
 ## Additional Libraries ##
 
+In order to use the **Threading Building Blocks** (TBB) back-end you need to
+install the following library:
+
   * [TBB](https://www.threadingbuildingblocks.org/)
 
+## Unit tests and coverage analysis
+
+For unit testing GrPPI uses the GoogleTest framework. However you do not need to
+install yourself. The framework is locally downloaded and compiled in your build
+tree to ensure that the right version is used. For more details see section
+(building).
+
+If you want to run unit tests and perform coverage analysis you will need:
+
   * [lcov](https://github.com/linux-test-project/lcov)
-  	To use coverage with Google Test.
-
-## Additional Programs ##
-
-  * [ccmake](https://cmake.org/cmake/help/v3.0/manual/ccmake.1.html)
-  	To enable/disable or modify options of the cmake configuration file through the terminal.
-
-  * [cmake-gui](https://cmake.org/cmake/help/v3.0/manual/cmake-gui.1.html)
-    Graphical tool to enable/disable or modify options of the cmake configuration file.
+    To generate gcov HTML reports.
 
 ## Installation ##
 
