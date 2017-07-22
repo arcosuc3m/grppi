@@ -339,6 +339,9 @@ TYPED_TEST(stream_reduce_test, static_offset_window)
 {
   this->setup_offset_window();
   grppi::stream_reduce(this->execution_,
+    this->window,
+    this->offset,
+    0,
     [this]() -> optional<int>{
       this->invocations_gen++;
 
@@ -352,13 +355,11 @@ TYPED_TEST(stream_reduce_test, static_offset_window)
         return {};
       }
     },
-    this->window,
-    this->offset,
     std::plus<int>(),
     [this](int a) {
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_offset_window();
 }
@@ -367,6 +368,9 @@ TYPED_TEST(stream_reduce_test, poly_offset_window)
 {
   this->setup_offset_window();
   grppi::stream_reduce(this->poly_execution_,
+    this->window,
+    this->offset,
+    0,
     [this]() -> optional<int>{
       this->invocations_gen++;
 
@@ -380,13 +384,11 @@ TYPED_TEST(stream_reduce_test, poly_offset_window)
         return {};
       }
     },
-    this->window,
-    this->offset,
     std::plus<int>(),
     [this](int a) {
       this->invocations_reduce++;
       this->out += a;
-    },0
+    }
   );
   this->check_offset_window();
 }
