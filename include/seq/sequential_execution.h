@@ -28,7 +28,10 @@ namespace grppi{
 /**
 \brief Sequential execution policy.
 */
-struct sequential_execution {
+class sequential_execution {
+
+public:
+
   /// \brief Default constructor.
   sequential_execution() {}
 
@@ -76,8 +79,6 @@ template <>
 constexpr bool is_supported<sequential_execution>() {
   return true;
 }
-
-
 
 } // end namespace grppi
 
