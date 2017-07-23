@@ -106,7 +106,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
          item = queue.pop();
       }
       nend++;
-      if(nend == se.exectype.num_threads)
+      if(nend == se.exectype.concurrency_degree())
          queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
       else queue.push(item);
 
@@ -115,7 +115,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
 
    });
    //Farm workers
-   for(int th = 1; th < se.exectype.num_threads; th++) {
+   for(int th = 1; th < se.exectype.concurrency_degree(); th++) {
      tasks.emplace_back([&]() {
        // Register the thread in the execution model
        se.exectype.register_thread();
@@ -131,7 +131,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
          item = queue.pop();
        }
        nend++;
-       if (nend == se.exectype.num_threads)
+       if (nend == se.exectype.concurrency_degree())
          queueOut.push(typename std::result_of<GenFunc()>::type());
        else 
          queue.push(item);
