@@ -49,7 +49,7 @@ namespace grppi {
 template <typename Execution, typename Operation, typename RedFunc>
 auto 
 stream_reduce(Execution & ex, Operation && op, RedFunc && red){
-   return reduction_info<Execution, Operation, RedFunc>(ex,op, red);
+   return reduction_info<Execution, Operation, RedFunc>(ex, op, red);
 }
 
 /**

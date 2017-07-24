@@ -121,3 +121,23 @@ auto res = grppi::map_reduce(exec,
 );
 ~~~
 ---
+
+
+## Additional examples of **map/reduce**
+
+---
+**Example**: Count word appearances in text lines.
+~~~{.cpp}
+vector<string> words = get_words();
+auto result = grppi::map_reduce(ex,
+  words.begin(), words.end(), map<string,int>{},
+  [](string word) -> map<string,int> { return {{word, 1}}; },
+  [](map<string,int> & lhs, const map<string,int> & rhs) -> map<string,int> & {
+    for (auto & w : rhs) {
+      lhs[w.first]+= w.second;
+    }
+    return lhs;
+  }
+);
+~~~
+---

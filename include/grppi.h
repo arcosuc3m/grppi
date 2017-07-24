@@ -33,7 +33,7 @@
 */
 
 // Includes for task patterns
-#include "divideandconquer.h"
+#include "divideconquer.h"
 
 /** 
 \defgroup trask_patterns Task parallel patterns

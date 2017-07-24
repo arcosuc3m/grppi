@@ -1,5 +1,6 @@
 # Data-parallel patterns
 add_subdirectory(map)
+add_subdirectory(map-reduce)
 
 # Task-parallel patterns
 add_subdirectory(divide-conquer)

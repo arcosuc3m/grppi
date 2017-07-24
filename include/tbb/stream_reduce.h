@@ -44,24 +44,24 @@ TBB parallel implementation of the \ref md_stream-reduce pattern.
 /**
 \brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
 TBB parallel execution.
+\tparam Identity Type of the identity value used by the combiner.
 \tparam Generator Callable type used for generating data items.
 \tparam Combiner Callable type used for data items combination.
 \tparam Consumer Callable type used for consuming data items.
-\tparam Identity Type of the identity value used by the combiner.
 \param ex TBB parallel execution policy object.
-\param generate_op Generation operation.
 \param window_size Number of consecutive items to be reduced.
 \param offset Number of items after of which a new reduction is started.
+\param identity Identity value for the combination.
+\param generate_op Generation operation.
 \param combine_op Combination operation.
 \param consume_op Consume operation.
-\param identity Identity value for the combination.
 */
-template <typename Generator, typename Combiner, typename Consumer, 
-          typename Identity>
-void stream_reduce(parallel_execution_tbb & ex, Generator generate_op,
-                   int window_size, int offset, 
-                   Combiner && combine_op, Consumer consume_op, 
-                   Identity identity)
+template <typename Identity, typename Generator, typename Combiner, 
+          typename Consumer>
+void stream_reduce(parallel_execution_tbb & ex, 
+                   int window_size, int offset, Identity identity,
+                   Generator && generate_op, Combiner && combine_op, 
+                   Consumer consume_op)
 {
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
@@ -82,7 +82,18 @@ void stream_reduce(parallel_execution_tbb & ex, Generator generate_op,
           std::forward<Combiner>(combine_op));
       consume_op(reduced_value);
       if (item) {
-        values.erase(values.begin(), values.begin() + offset);
+        if (offset <= window_size) {
+          values.erase(values.begin(), values.begin() + offset);
+        }
+        else {
+          values.erase(values.begin(), values.end());
+          auto diff = offset - window_size;
+          while (diff > 0 && item) {
+            item = generate_op();
+            diff--;
+          }
+        }
+
       }
     }
     if (!item) break;
