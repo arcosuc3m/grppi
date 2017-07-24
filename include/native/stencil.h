@@ -40,8 +40,7 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
        auto out = firstOut + (elemperthr * i);
 
        tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
-         // Register the thread in the execution model
-         p.register_thread();
+         auto manager = p.thread_manager();
 
          while (begin!=end) {
            auto neighbors = neighbor(begin);
@@ -49,9 +48,6 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
            begin++;
            out++;
          }
-
-         // Deregister the thread in the execution model
-         p.deregister_thread();
        }, begin, end, out);
     }
    //MAIN 

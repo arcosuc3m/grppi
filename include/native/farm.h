@@ -62,7 +62,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
   vector<thread> tasks;
   for (int i=0; i<ex.concurrency_degree(); ++i) {
     tasks.emplace_back([&](){
-      ex.register_thread();
+      auto manger = ex.thread_manager();
 
       auto item{queue.pop()};
       while(item) {
@@ -70,8 +70,6 @@ void farm(parallel_execution_native & ex, Generator generate_op,
         item = queue.pop();
       }
       queue.push(item);
-
-      ex.deregister_thread();
     });
   }
 
@@ -115,7 +113,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
 
   for (int i=0; i<ex.concurrency_degree(); ++i) {
     tasks.emplace_back([&](){
-      ex.register_thread();
+      auto manager = ex.thread_manager();
 
       auto item{generated_queue.pop()};
       while (item) {
@@ -127,21 +125,17 @@ void farm(parallel_execution_native & ex, Generator generate_op,
       if (done_threads==ex.concurrency_degree()) {
         transformed_queue.push(transformed_type{});
       }
-
-      ex.deregister_thread();
     });
   }
 
   tasks.emplace_back([&](){
-    ex.register_thread();
+    auto manager = ex.thread_manager();
 
     auto item{transformed_queue.pop()};
     while (item) {
       consume_op( item.value() );
       item = transformed_queue.pop( );
     }
-
-    ex.deregister_thread();
   });
 
   for (;;) {

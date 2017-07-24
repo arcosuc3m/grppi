@@ -77,8 +77,7 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
 {
   using namespace std;
   tasks.emplace_back([&]() {
-    ex.register_thread();
-        
+    auto manager = ex.thread_manager();
     auto item = input_queue.pop();
     for (;;) {
       using output_type = typename OutQueue::value_type;
@@ -91,8 +90,6 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
       }
       item = input_queue.pop();
     }
-
-    ex.deregister_thread();
   });
 }
 
@@ -104,7 +101,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
   using namespace std;
   using input_type = typename InQueue::value_type;
 
-  ex.register_thread();
+  auto manager = ex.thread_manager();
 
   vector<input_type> elements;
   long current = 0;
@@ -148,8 +145,6 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
       item = input_queue.pop();
     }
   }
-  
-  ex.deregister_thread();
 }
 
 //Item reduce stage
@@ -215,7 +210,7 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
   atomic<int> done_threads{0}; 
   for (int th=0; th<filter_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
-      filter_obj.exectype.register_thread();
+      auto manager = filter_obj.exectype.thread_manager();
 
       auto item{input_queue.pop()};
       while (item.first) {
@@ -234,14 +229,12 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
       else {
         input_queue.push(item);
       }
-
-      filter_obj.exectype.deregister_thread();
     });
   }
 
   mpmc_queue<input_type> output_queue{ex.queue_size,ex.lockfree};
   auto ordering_thread = thread{[&](){
-    ex.register_thread();
+    auto manager = ex.thread_manager();
     vector<input_type> elements;
     int current = 0;
     long order = 0;
@@ -287,7 +280,6 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
       }
     }
     output_queue.push(item);
-    ex.deregister_thread();
   }};
 
   pipeline_impl(ex, output_queue, forward<MoreTransformers>(more_transform_ops) ... );
@@ -311,7 +303,7 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
 
   for (int th=0; th<filter_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
-      filter_obj.exectype.register_thread();
+      auto manager = filter_obj.exectype.thread_manager();
 
       auto item{input_queue.pop()};
       while (item.first) {
@@ -327,8 +319,6 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
       else {
         input_queue.push(item);
       }
-
-      filter_obj.exectype.deregister_thread();
     });
   }
 
@@ -390,7 +380,7 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
   vector<thread> tasks;
   for(int th = 0; th<farm_obj.exectype.concurrency_degree(); ++th){
     tasks.emplace_back([&]() {
-      farm_obj.exectype.register_thread();
+      auto manager = farm_obj.exectype.thread_manager();
 
       long order = 0;
       auto item{input_queue.pop()}; 
@@ -404,8 +394,6 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
       if (done_threads == farm_obj.exectype.concurrency_degree()) {
         output_queue.push(make_pair(output_item_value_type{}, -1));
       }
-                
-      farm_obj.exectype.deregister_thread();
     });
   }
   pipeline_impl(p, output_queue, 
@@ -435,7 +423,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
 
   thread task( 
     [&]() {
-      ex.register_thread();
+      auto manager = ex.thread_manager();
 
       long order = 0;
       auto item{input_queue.pop()};
@@ -445,8 +433,6 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
         item = input_queue.pop( ) ;
       }
       output_queue.push(make_pair(output_item_value_type{},-1));
-
-      ex.deregister_thread();
     }
   );
 
@@ -489,7 +475,7 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
 
   thread generator_task(
     [&]() {
-      ex.register_thread();
+      auto manager = ex.thread_manager();
 
       long order = 0;
       for (;;) {
@@ -498,8 +484,6 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
         order++;
         if (!item) break;
       }
-
-      ex.deregister_thread();
     }
   );
 

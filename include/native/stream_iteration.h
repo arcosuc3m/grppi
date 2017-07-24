@@ -38,8 +38,7 @@ void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info
    std::atomic<bool> sendFinish( false );
    //Stream generator
    std::thread gen([&](){
-      // Register the thread in the execution model
-      p.register_thread();
+     auto manager = ex.thread_manager();
       while(1){
          auto k = in();
          if(!k){
@@ -49,7 +48,6 @@ void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info
          nelem++;
          queue.push(k);
       }
-      p.deregister_thread();
    });
 
    std::vector<std::thread> pipeThreads;
@@ -87,8 +85,7 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
    std::atomic<int> nend (0);
    //Stream generator
    std::thread gen([&](){
-      // Register the thread in the execution model
-      se.exectype.register_thread();
+      auto manager = se.exectype.thread_manager();
 
       while(1){
          auto k = in();
@@ -110,16 +107,11 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
          queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
       else queue.push(item);
 
-      // Deregister the thread in the execution model
-      se.exectype.deregister_thread();
-
    });
    //Farm workers
    for(int th = 1; th < se.exectype.concurrency_degree(); th++) {
      tasks.emplace_back([&]() {
-       // Register the thread in the execution model
-       se.exectype.register_thread();
-
+       auto manager = se.exectype.thread_manager();
        auto item = queue.pop();
        while (item) {
          do {
@@ -135,9 +127,6 @@ template<typename GenFunc, typename Operation, typename Predicate, typename OutF
          queueOut.push(typename std::result_of<GenFunc()>::type());
        else 
          queue.push(item);
-
-       // Deregister the thread in the execution model
-       se.exectype.deregister_thread();
      });
    }
    //Output function
