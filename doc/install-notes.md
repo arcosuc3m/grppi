@@ -4,8 +4,8 @@
 
 ### Building the library
 
-GrPPI is a header only library and no build process is required for the library
-itself.
+GrPPI is a *header-only* library. Consequently no build process is required for
+the library itself.
 
 However, GrPPI includes CMake scripts for supporting the following actions:
 
@@ -15,8 +15,8 @@ However, GrPPI includes CMake scripts for supporting the following actions:
 * Building the sample programs.
 * Installing the library in your system
 
-To setup the build scripts we recommend that you create an out of source
-directory under the root GrPPI directory:
+To setup the build scripts we recommend that you create an *out-of-source*
+directory under the GrPPI root directory:
 
 ~~~
 mkdir build
@@ -50,13 +50,13 @@ Then, you can build the unit tests by typing:
 make
 ~~~
 
-### Disabling specific GrPPI backends
+### Disabling specific GrPPI back ends
 
-You may want to disable specific back-ends. GrPPI offers specific variables to
+You may want to disable specific back ends. GrPPI offers specific variables to
 control this issue:
 
-* `GRPPI_OMP_ENABLE`: Enable/disable OpenMP backend.
-* `GRPPI_TBB_ENABLE`: Enable/disable TBB backend.
+* `GRPPI_OMP_ENABLE`: Enable/disable OpenMP back end.
+* `GRPPI_TBB_ENABLE`: Enable/disable TBB back end.
 
 ### Running the unit tests
 
@@ -74,7 +74,7 @@ ctest
 
 ### Performing coverage analysis
 
-To performe a coverage analysis type:
+To perform a coverage analysis type:
 
 ~~~
 make coverage
@@ -84,7 +84,7 @@ The coverage HTML reports are generated under `unit_tests/mycov/index.html`.
 
 ### Documentation generation
 
-Documentation generatio is disabled by default. However, if you wish to build
+Documentation generation is disabled by default. However, if you wish to build
 the documentation yourself, you may enable the option:
 
 ~~~
@@ -152,15 +152,15 @@ Miminal support of GrPPI requires the following libraries.
 
 ## Additional Libraries ##
 
-In order to use the **Threading Building Blocks** (TBB) back-end you need to
-install the following library:
+In order to use the **Intel Threading Building Blocks** (TBB) back-end you need
+to install the following library:
 
   * [TBB](https://www.threadingbuildingblocks.org/)
 
 ## Unit tests and coverage analysis
 
 For unit testing GrPPI uses the GoogleTest framework. However you do not need to
-install yourself. The framework is locally downloaded and compiled in your build
+install it yourself. The framework is locally downloaded and compiled in your build
 tree to ensure that the right version is used. For more details see section
 (building).
 
