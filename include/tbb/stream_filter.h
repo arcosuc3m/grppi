@@ -41,7 +41,7 @@ namespace grppi{
 */
 
 /**
-\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
 sequence with sequential execution policy.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
@@ -53,8 +53,8 @@ sequence with sequential execution policy.
 */
 
 template <typename Generator, typename Predicate, typename Consumer>
-void stream_filter(parallel_execution_tbb & ex, Generator generate_op,
-                   Predicate predicate_op, Consumer consume_op) 
+void keep(parallel_execution_tbb & ex, Generator generate_op,
+          Predicate predicate_op, Consumer consume_op) 
 {
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
@@ -151,6 +151,29 @@ void stream_filter(parallel_execution_tbb & ex, Generator generate_op,
   }
     
   filterers.wait();
+}
+
+/**
+\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+sequence with sequential execution policy.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex TBB parallel execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
+
+template <typename Generator, typename Predicate, typename Consumer>
+void discard(parallel_execution_tbb & ex, Generator generate_op,
+             Predicate predicate_op, Consumer consume_op) 
+{
+  keep(ex, 
+    std::forward<Generator>(generate_op), 
+    [&](auto val) { return !predicate_op(val); },
+    std::forward<Consumer>(consume_op) 
+  );
 }
 
 }
