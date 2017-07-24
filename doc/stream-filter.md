@@ -1,6 +1,6 @@
 # Filter pattern
 
-The **filter** (or *stream filter*) is a streaming pattern that filters out items
+The **filter** (or *stream filter*) is a streaming pattern that discards items
 from a data stream based on a predicate, so that only data items satisfying (keep) or dissatisfying (discard) the predicate are passed to the consumer.
 
 The interface to the **filter** pattern is provided by functions
@@ -30,10 +30,7 @@ predicate `pred` is any operation, that given a value `x` of type `T`, makes the
 following valid:
 
 ~~~{.cpp}
-/* keep */
 if (predicate(item)) { /*...*/ }. 
-
-/* discard */
 if (!predicate(item)) { /*...*/ }. 
 ~~~
 
@@ -50,7 +47,7 @@ if (r) {       // r is convertible to bool
 }
 ~~~
 
-Additionally, a farm may have a **Consumer**. The consumer may be any C++ callable
+Additionally, a **filter** may have a **Consumer**. The consumer may be any C++ callable
 entity that takes values of the result type of the Operation.
 
 ## Details on stream filter variants
@@ -60,12 +57,12 @@ entity that takes values of the result type of the Operation.
 A stand alone filter has three elements:
 
 * A **Generator** of values.
-* A **Predicate** filtering values.
+* A **Predicate** for keeping or discarding elements.
 * A **Consumer** of generated values.
 
 
 ---
-**Example**: Generate a stream of integer numbers and filter out odd numbers.
+**Example**: Generate a stream of integer numbers and discards odd numbers.
 ~~~{.cpp}
 int n = 10;
 grppi::keep(exec,
@@ -104,7 +101,7 @@ grppi::pipeline(exec,
 ---
 **Note**: For brevity we do not show here the details of other stages.
 
-For composing complex patterns, the **keep()** and **discard()** functions may be used to create
+For composing complex patterns, the `keep()` and `discard()` functions may be used to create
 an object that may be supplied to another pattern to build a composed pattern.
 
 ---
