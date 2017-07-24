@@ -23,6 +23,7 @@
 #include <chrono>
 #include <experimental/optional>
 
+#include <pipeline.h>
 #include <stream_reduce.h>
 
 using namespace std;
@@ -52,7 +53,7 @@ void reduce_example1(){
     std::vector<int> stream( 10000, 1 );
     int index = 0;
     int n=0;
-    stream_reduce( p,
+/*    stream_reduce( p,
         //Window size
         1000000,
         1000000,
@@ -72,7 +73,33 @@ void reduce_example1(){
             total += a;
             std::cout<<"PARTIAL REDUCE : "<<a<<" TOTAL " <<total<< std::endl;
         }
-    );
+    );*/
+
+    n = 100;
+    int out = 0;
+    pipeline(p,
+       [&]() -> optional<int>{
+         if(n > 0) {
+            n--;
+            return n;
+         }
+         else {
+           return {};
+         }
+       },
+       [](int a){
+         return a+1;
+       },
+       grppi::stream_reduce(p,
+          3, 2, 0,
+          [](int a, int b){
+             return a+b;
+          }
+       ),
+       [&](int a){
+         std::cout<<a<<std::endl;
+       }
+  );
 }
 
 int main() {

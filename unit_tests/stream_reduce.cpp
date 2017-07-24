@@ -393,5 +393,35 @@ TYPED_TEST(stream_reduce_test, poly_offset_window)
   this->check_offset_window();
 }
 
-
+TYPED_TEST(stream_reduce_test, static_composed)
+{
+  grppi::pipeline( this->execution_,
+    [this]() -> optional<int>{
+      this->invocations_gen++;
+      if(this-> v.size() > 0) {
+        auto problem = this->v.back();
+        this->v.pop_back();
+        return problem;
+      }
+      else {
+        return {};
+      }
+    },
+    [this](int a){
+      this->invocations_stage++;
+       return a+1;
+    },
+    grppi::stream_reduce(this->execution,
+      3, 1, 0,
+      [this](int a, int b){
+        this->invocations_reduce++;
+        return a+b;
+      }
+    ),
+    [this](int a){
+      this->invocations_cons++;
+      this-> out += a;
+    }
+  );
+}
 
