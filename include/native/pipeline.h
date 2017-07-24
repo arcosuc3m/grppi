@@ -21,7 +21,7 @@
 #ifndef GRPPI_NATIVE_PIPELINE_H
 #define GRPPI_NATIVE_PIPELINE_H
 
-#include "common/pack_traits.h"
+#include "../common/pack_traits.h"
 
 #include <experimental/optional>
 
