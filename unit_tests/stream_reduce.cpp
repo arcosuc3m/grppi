@@ -100,6 +100,7 @@ public:
     EXPECT_EQ(35, this->out);
   }
 
+
   void setup_offset_window() {
     out = 0;
     v = vector<int>{1,2,3,4,5,6,7,8,9,10};
@@ -393,35 +394,4 @@ TYPED_TEST(stream_reduce_test, poly_offset_window)
   this->check_offset_window();
 }
 
-TYPED_TEST(stream_reduce_test, static_composed)
-{
-  grppi::pipeline( this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_gen++;
-      if(this-> v.size() > 0) {
-        auto problem = this->v.back();
-        this->v.pop_back();
-        return problem;
-      }
-      else {
-        return {};
-      }
-    },
-    [this](int a){
-      this->invocations_stage++;
-       return a+1;
-    },
-    grppi::stream_reduce(this->execution,
-      3, 1, 0,
-      [this](int a, int b){
-        this->invocations_reduce++;
-        return a+b;
-      }
-    ),
-    [this](int a){
-      this->invocations_cons++;
-      this-> out += a;
-    }
-  );
-}
 
