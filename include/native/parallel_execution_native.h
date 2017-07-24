@@ -32,94 +32,153 @@
 
 namespace grppi {
 
-//extern bool initialised;
-//extern thread_pool pool;
-/** @brief Set the execution mode to parallel with posix thread implementation 
+class native_thread_table {
+public:
+  native_thread_table() noexcept = default;
+
+  void register_thread() noexcept;
+  void deregister_thread() noexcept;
+  int current_index() const noexcept;
+private:
+  mutable std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
+  std::vector<std::thread::id> ids_;
+};
+
+inline void native_thread_table::register_thread() noexcept 
+{
+  using namespace std;
+  while (lock_.test_and_set(memory_order_acquire)) {}
+  auto this_id = this_thread::get_id();
+  ids_.push_back(this_id);
+  lock_.clear(memory_order_release);
+}
+
+inline void native_thread_table::deregister_thread() noexcept
+{
+  using namespace std;
+  while (lock_.test_and_set(memory_order_acquire)) {}
+  auto this_id = this_thread::get_id();
+  ids_.erase(remove(begin(ids_), end(ids_), this_id), end(ids_));
+  lock_.clear(memory_order_release);
+}
+
+inline int native_thread_table::current_index() const noexcept
+{
+  using namespace std;
+  while (lock_.test_and_set(memory_order_acquire)) {}
+  auto this_id = this_thread::get_id();
+  auto current = find(begin(ids_), end(ids_), this_id);
+  auto index = distance(begin(ids_), current);
+  lock_.clear(memory_order_release);
+  return index;
+};
+
+class native_thread_manager {
+public:
+  native_thread_manager(native_thread_table & table) 
+      : table_{table}
+  { table_.register_thread(); }
+  ~native_thread_manager() { table_.deregister_thread(); }
+private:
+  native_thread_table & table_;
+};
+
+/** 
+ \brief Native parallel execution policy.
+ This policy uses ISO C++ threads as implementation building block allowing
+ usage in any ISO C++ compliant platform.
  */
-struct parallel_execution_native {
-  public: 
-  thread_pool pool;
-  constexpr static int default_queue_size = 100;
-  int queue_size = default_queue_size;
-  queue_mode lockfree = queue_mode::blocking;
+class parallel_execution_native {
+public:
 
-  void set_queue_size(int new_size){
-     queue_size = new_size;
+  /** 
+  \brief Default construct a native parallel execution policy.
+
+  Creates a parallel execution native object.
+
+  The concurrency degree is determined by the platform.
+
+  \note The concurrency degree is fixed to 2 times the hardware concurrency
+   degree.
+  */
+  parallel_execution_native() noexcept :
+      parallel_execution_native{
+          static_cast<int>(2 * std::thread::hardware_concurrency()), 
+          true}
+  {}
+
+  /** 
+  \brief Constructs a native parallele execution policy.
+
+  Creates a parallel execution native object selecting the concurrency degree
+  and ordering mode.
+  \param concurrency_degree Number of threads used for parallel algorithms.
+  \param order Whether ordered executions is enabled or disabled.
+  */
+  parallel_execution_native(int concurrency_degree, bool ordering=true) noexcept :
+    concurrency_degree_{concurrency_degree},
+    ordering_{ordering}
+  {
+    pool.initialise(concurrency_degree_);
   }
-
-
-  int get_thread_id(){
-      while (lock.test_and_set(std::memory_order_acquire));
-      auto it = std::find(thid_table.begin(), thid_table.end(), std::this_thread::get_id());
-      auto id = std::distance(thid_table.begin(), it);
-      lock.clear(std::memory_order_release);  
-      return id; 
-  }
-  
-  void register_thread(){
-      while (lock.test_and_set(std::memory_order_acquire));
-      thid_table.push_back(std::this_thread::get_id());    
-      lock.clear(std::memory_order_release);  
-  }
-  
-  void deregister_thread(){
-      while (lock.test_and_set(std::memory_order_acquire));
-      thid_table.erase(std::remove(thid_table.begin(), thid_table.end(),std::this_thread::get_id()), thid_table.end());
-      lock.clear(std::memory_order_release);  
-  }
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_native(){ /*if(!initialised)*/ pool.initialise(this->num_threads); };
-
-  /** @brief Set num_threads to _threads in order to run in parallel
-   *
-   *  @param _threads number of threads used in the parallel mode
-   */
-  parallel_execution_native(int _threads){ num_threads=_threads;  pool.initialise (_threads);};
-
-  /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
-   *
-   *  @param _threads number of threads used in the parallel mode
-   *  @param _order enable or disable the ordered execution
-   */
-  parallel_execution_native(int _threads, bool order){ num_threads=_threads; ordering = order; pool.initialise (_threads);};
 
   /**
   \brief Set number of grppi threads.
   */
-  void set_concurrency_degree(int degree) noexcept { num_threads = degree; }
+  void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
 
   /**
   \brief Get number of grppi trheads.
   */
-  int concurrency_degree() const noexcept { return num_threads; }
+  int concurrency_degree() const noexcept { return concurrency_degree_; }
 
   /**
   \brief Enable ordering.
   */
-  void enable_ordering() noexcept { ordering=true; }
+  void enable_ordering() noexcept { ordering_=true; }
 
   /**
   \brief Disable ordering.
   */
-  void disable_ordering() noexcept { ordering=false; }
+  void disable_ordering() noexcept { ordering_=false; }
 
   /**
   \brief Is execution ordered.
   */
-  bool is_ordered() const noexcept { return ordering; }
+  bool is_ordered() const noexcept { return ordering_; }
 
+  /**
+  \brief Get a manager object for registration/deregistration in the
+  thread index table for current thread.
+  */
+  native_thread_manager thread_manager() { 
+    return native_thread_manager{thread_table_}; 
+  }
+
+  /**
+  \brief Get index of current thread in the thread table
+  \pre The current thread is currently registered.
+  */
+  int get_thread_id() {
+    return thread_table_.current_index();
+  }
+  
+  void set_queue_attributes(int size, queue_mode mode) {
+    queue_size = size;
+    lockfree = mode;
+  }
+
+  public: 
+    thread_pool pool;
+    constexpr static int default_queue_size = 100;
+    int queue_size = default_queue_size;
+    queue_mode lockfree = queue_mode::blocking;
 
   private: 
-     std::atomic_flag lock = ATOMIC_FLAG_INIT;
-     std::vector<std::thread::id> thid_table;
+    native_thread_table thread_table_;
 
-  // TODO: Set default num_threads to hardware concurrency?
-  constexpr static int default_num_threads = 4;
-  int num_threads = default_num_threads;
-
-  bool ordering = true;
+    int concurrency_degree_;
+    bool ordering_;
 };
 
 /// Determine if a type is a threading execution policy.
