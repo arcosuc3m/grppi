@@ -39,7 +39,7 @@ void internal_map(parallel_execution_omp & ex,
   //Calculate local input and output iterator 
   auto begin = first + (elemperthr * i);
   auto end = first + (elemperthr * (i+1));
-  if( i == ex.num_threads-1) end = last;
+  if( i == ex.concurrency_degree()-1) end = last;
   auto out = first_out + (elemperthr * i);
   advance_iterators(elemperthr*i, more_firsts ...);
   while(begin!=end){
@@ -78,13 +78,13 @@ void map(parallel_execution_omp & ex,
 {
   int numElements = last - first;
 
-  int elemperthr = numElements/ex.num_threads;
+  int elemperthr = numElements/ex.concurrency_degree();
 
   #pragma omp parallel
   {
    #pragma omp single nowait
    {
-    for(int i=1;i<ex.num_threads;i++){
+    for(int i=1;i<ex.concurrency_degree();i++){
       
 
 
@@ -92,7 +92,7 @@ void map(parallel_execution_omp & ex,
       {
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
-        if(i == ex.num_threads -1 ) end = last;
+        if(i == ex.concurrency_degree() -1 ) end = last;
         auto out = first_out + (elemperthr * i);
         while(begin!=end){
           *out = transf_op(*begin);
@@ -139,14 +139,14 @@ void map(parallel_execution_omp & ex,
 {
   //Calculate number of elements per thread
   int numElements = last - first;
-  int elemperthr = numElements/ex.num_threads;
+  int elemperthr = numElements/ex.concurrency_degree();
 
   //Create tasks
   #pragma omp parallel
   {
     #pragma omp single nowait
     {
-      for(int i=1;i<ex.num_threads;i++){
+      for(int i=1;i<ex.concurrency_degree();i++){
 
       #pragma omp task firstprivate(i)
       {

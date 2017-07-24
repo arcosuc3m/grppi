@@ -61,7 +61,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
   mpmc_queue<generated_type> queue{ex.queue_size, ex.lockfree};
 
   tbb::task_group g;
-  for (int i=0; i<ex.num_threads; ++i) {
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
     g.run([&](){
       auto item{queue.pop()};
       while (item) {
@@ -76,7 +76,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
     auto item{generate_op()};
     queue.push(item);
       if (!item) {
-        for (int i=1; i<ex.num_threads; i++) {
+        for (int i=1; i<ex.concurrency_degree(); i++) {
           queue.push(item);
         }
         break;
@@ -115,7 +115,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
 
   atomic<int>done_threads{0};
   tbb::task_group generators;
-  for (int i=0; i<ex.num_threads; ++i) {
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
     generators.run([&](){
       auto item{generated_queue.pop()};
       while (item) {
@@ -124,7 +124,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
         item = generated_queue.pop();
       }
       done_threads++;
-      if (done_threads==ex.num_threads) {
+      if (done_threads==ex.concurrency_degree()) {
         transformed_queue.push(transformed_type{});
       }
     });
@@ -143,7 +143,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
     auto item = generate_op();
     generated_queue.push(item) ;
     if(!item) {
-      for (int i=1; i<ex.num_threads; ++i) {
+      for (int i=1; i<ex.concurrency_degree(); ++i) {
         generated_queue.push(item) ;
       }
       break;

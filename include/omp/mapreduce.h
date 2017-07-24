@@ -63,20 +63,20 @@ Result map_reduce(parallel_execution_omp & ex,
   using namespace std;
   Result result{identity};
 
-  std::vector<Result> partial_results(ex.num_threads);
+  std::vector<Result> partial_results(ex.concurrency_degree());
   #pragma omp parallel
   {
     #pragma omp single nowait
     {
       int num_elements = distance(first,last);
-      int elements_per_thread = num_elements/ex.num_threads;
+      int elements_per_thread = num_elements/ex.concurrency_degree();
       sequential_execution seq{};
 
-      for (int i=1;i<ex.num_threads;i++) {    
+      for (int i=1;i<ex.concurrency_degree();i++) {    
         #pragma omp task firstprivate(i)
         {
           auto begin = next(first, elements_per_thread * i);
-          auto end = (i==ex.num_threads-1) ? last :
+          auto end = (i==ex.concurrency_degree()-1) ? last :
               next(first, elements_per_thread * (i+1));
           partial_results[i] = map_reduce(seq, 
               begin, end, partial_results[i], 

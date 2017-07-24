@@ -65,7 +65,7 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
     #pragma omp single nowait 
     {
       // Generate the task for the filter threads
-      for (int i=0; i< ex.num_threads - 1; i++) {
+      for (int i=0; i< ex.concurrency_degree() - 1; i++) {
         #pragma omp task shared(generated_queue, filtered_queue)
         {
           // Dequeue a pair element - order
@@ -93,11 +93,11 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
         long order = 0;
         // Dequeue an element
         auto item{filtered_queue.pop()};
-        while (done_threads!=ex.num_threads-1) {
+        while (done_threads!=ex.concurrency_degree()-1) {
           // If the item is an end of stream
           if (!item.first && item.second == -1) {
             done_threads++;
-            if(done_threads == ex.num_threads - 1) break;
+            if(done_threads == ex.concurrency_degree() - 1) break;
           }
           else {
             // If the element is the next to be consumed
@@ -149,7 +149,7 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
         generated_queue.push(make_pair(item,order));
         order++;
         if (!item) {
-          for (int i = 0; i< ex.num_threads-1; i++) {
+          for (int i = 0; i< ex.concurrency_degree()-1; i++) {
             generated_queue.push(make_pair(item,-1));
           }
           break;
