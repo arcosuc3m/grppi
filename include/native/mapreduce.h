@@ -74,10 +74,9 @@ Result map_reduce(parallel_execution_native & ex,
         (first + elements_per_thread * (i+1));
 
     tasks.emplace_back([&,begin,end,i](){
-        ex.register_thread();
+        auto manager = ex.thread_manager();
         partial_results[i] = map_reduce(seq, begin, end, partial_results[i], 
             forward<Transformer>(transform_op), forward<Combiner>(combine_op));
-        ex.deregister_thread();
     });
   }
 

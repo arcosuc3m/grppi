@@ -62,17 +62,13 @@ void map(parallel_execution_native & ex,
 
     auto out = first_out + (elemperthr * i);
     tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
-      // Register the thread in the execution model
-      ex.register_thread();
+      auto manager = ex.thread_manager();
           
       while (begin!=end) {
         *out = transf_op(*begin);
         begin++;
         out++;
       }
-          
-      // Deregister the thread in the execution model
-      ex.deregister_thread();
     }, begin, end, out);
   }
   //Map main threads
@@ -126,10 +122,7 @@ void map(parallel_execution_native& ex,
     //Begin task
     tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out, 
       int tid, int nelem, OtherInputIts ... more_inputs) {
-
-      // Register the thread in the execution model
-      ex.register_thread();
-
+        auto manager = ex.thread_manager();
       advance_iterators(nelem*tid, more_inputs ...);
       while (begin!=end) {
         *out = transf_op(*begin, *more_inputs ...);
@@ -137,9 +130,6 @@ void map(parallel_execution_native& ex,
         begin++;
         out++;
       }
-
-      // Deregister the thread in the execution model
-      ex.deregister_thread();
     }, begin, end, out, i, elemperthr, more_inputs...);
     //End task
   }
