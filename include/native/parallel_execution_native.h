@@ -32,19 +32,44 @@
 
 namespace grppi {
 
-class native_thread_table {
-public:
-  native_thread_table() noexcept = default;
+/**
+\brief Thread index table to provide portable natural thread indices.
 
+A thread table provides a simple way to offer thread indices (starting from 0).
+
+When a thread registers itself in the registry. To get an integer index, users
+may call current_index, which provides the order number of the calling thread in
+the registry.
+
+\note This class is thread safe by means of using a spin-lock.
+*/
+class thread_registry {
+public:
+  thread_registry() noexcept = default;
+
+  /**
+  \brief Adds current thread in the registry.
+  */
   void register_thread() noexcept;
+
+  /**
+  \brief Removes current thread from the registry.
+  */
   void deregister_thread() noexcept;
+
+  /**
+  \brief Integer index for current thread
+  \return Integer value with the registration order of current thread.
+  \pre Current thread is registered.
+  */
   int current_index() const noexcept;
+
 private:
   mutable std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
   std::vector<std::thread::id> ids_;
 };
 
-inline void native_thread_table::register_thread() noexcept 
+inline void thread_registry::register_thread() noexcept 
 {
   using namespace std;
   while (lock_.test_and_set(memory_order_acquire)) {}
@@ -53,7 +78,7 @@ inline void native_thread_table::register_thread() noexcept
   lock_.clear(memory_order_release);
 }
 
-inline void native_thread_table::deregister_thread() noexcept
+inline void thread_registry::deregister_thread() noexcept
 {
   using namespace std;
   while (lock_.test_and_set(memory_order_acquire)) {}
@@ -62,7 +87,7 @@ inline void native_thread_table::deregister_thread() noexcept
   lock_.clear(memory_order_release);
 }
 
-inline int native_thread_table::current_index() const noexcept
+inline int thread_registry::current_index() const noexcept
 {
   using namespace std;
   while (lock_.test_and_set(memory_order_acquire)) {}
@@ -73,14 +98,30 @@ inline int native_thread_table::current_index() const noexcept
   return index;
 };
 
+/**
+\brief RAII class to mange registration/deregistration pairs.
+This class allows to manage automatic deregistration of threads through
+the common RAII pattern. The current thread is registered into the registry
+at construction and deregistered a destruction.
+*/
 class native_thread_manager {
 public:
-  native_thread_manager(native_thread_table & table) 
-      : table_{table}
-  { table_.register_thread(); }
-  ~native_thread_manager() { table_.deregister_thread(); }
+  /**
+  \brief Saves a reference to the registry and registers current thread
+  */
+  native_thread_manager(thread_registry & registry) 
+      : registry_{registry}
+  { registry_.register_thread(); }
+
+  /**
+  \brief Deregisters current thread from the registry.
+  */
+  ~native_thread_manager() { 
+    registry_.deregister_thread(); 
+  }
+
 private:
-  native_thread_table & table_;
+  thread_registry & registry_;
 };
 
 /** 
@@ -152,44 +193,74 @@ public:
   thread index table for current thread.
   */
   native_thread_manager thread_manager() { 
-    return native_thread_manager{thread_table_}; 
+    return native_thread_manager{thread_registry_}; 
   }
 
   /**
   \brief Get index of current thread in the thread table
   \pre The current thread is currently registered.
   */
-  int get_thread_id() {
-    return thread_table_.current_index();
+  int get_thread_id() const noexcept {
+    return thread_registry_.current_index();
   }
   
-  void set_queue_attributes(int size, queue_mode mode) {
-    queue_size = size;
-    lockfree = mode;
+  /**
+  \brief Sets the attributes for the queues built through make_queue<T<(()
+  */
+  void set_queue_attributes(int size, queue_mode mode) noexcept {
+    queue_size_ = size;
+    queue_mode_ = mode;
   }
 
-  public: 
-    thread_pool pool;
-    constexpr static int default_queue_size = 100;
-    int queue_size = default_queue_size;
-    queue_mode lockfree = queue_mode::blocking;
+  /**
+  \brief Makes a communication queue for elements of type T.
+  Constructs a queue using the attributes that can be set via 
+  et_queue_attributes(). The value is returned via move semantics.
+  */
+  template <typename T>
+  mpmc_queue<T> make_queue() const {
+    return {queue_size_, queue_mode_};
+  }
 
-  private: 
-    native_thread_table thread_table_;
+public: 
+  /**
+  \brief Thread pool for lanching workers.
+  \note This member is temporary and is likely to be deprecated or even removed 
+        in a future version of GrPPI.
+  */
+  thread_pool pool;
 
-    int concurrency_degree_;
-    bool ordering_;
+private: 
+  thread_registry thread_registry_;
+
+  int concurrency_degree_;
+  bool ordering_;
+
+  constexpr static int default_queue_size = 100;
+  int queue_size_ = default_queue_size;
+
+  queue_mode queue_mode_ = queue_mode::blocking;
 };
 
-/// Determine if a type is a threading execution policy.
+/**
+\brief Metafunction that determines if type E is parallel_execution_native
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_parallel_execution_native() {
   return std::is_same<E, parallel_execution_native>::value;
 }
 
+/**
+\brief Metafunction that determines if type E is supported in the current build.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_supported();
 
+/**
+\brief Specialization stating that parallel_execution_native is supported.
+*/
 template <>
 constexpr bool is_supported<parallel_execution_native>() {
   return true;

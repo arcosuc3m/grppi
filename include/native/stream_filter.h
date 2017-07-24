@@ -55,8 +55,8 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
   using generated_type = typename result_of<Generator()>::type;
   using item_type = pair<generated_type,long>;
 
-  mpmc_queue<item_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<item_type> filtered_queue{ex.queue_size,ex.lockfree};
+  auto generated_queue = ex.make_queue<item_type>();
+  auto filtered_queue = ex.make_queue<item_type>();
 
   //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
   vector<thread> tasks;
