@@ -83,7 +83,8 @@ inline void thread_registry::deregister_thread() noexcept
   using namespace std;
   while (lock_.test_and_set(memory_order_acquire)) {}
   auto this_id = this_thread::get_id();
-  ids_.erase(remove(begin(ids_), end(ids_), this_id), end(ids_));
+  auto current = find(begin(ids_), end(ids_), this_id);
+  *current = {}; //Empty thread
   lock_.clear(memory_order_release);
 }
 

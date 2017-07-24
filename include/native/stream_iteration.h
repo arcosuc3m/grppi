@@ -31,14 +31,14 @@ namespace grppi{
 
 template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
 void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
-   auto queue = p.make_queue<typename std::result_of<GenFunc()>::type>()
+   auto queue = p.make_queue<typename std::result_of<GenFunc()>::type>();
    auto queueOut = p.make_queue<typename std::result_of<GenFunc()>::type>();
    std::atomic<int> nend (0);
    std::atomic<int> nelem (0);
    std::atomic<bool> sendFinish( false );
    //Stream generator
    std::thread gen([&](){
-     auto manager = ex.thread_manager();
+     auto manager = p.thread_manager();
       while(1){
          auto k = in();
          if(!k){
