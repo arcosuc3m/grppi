@@ -60,7 +60,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
   mpmc_queue<result_type> queue{ex.queue_size,ex.lockfree};
 
   vector<thread> tasks;
-  for (int i=0; i<ex.num_threads; ++i) {
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
     tasks.emplace_back([&](){
       ex.register_thread();
 
@@ -113,7 +113,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
   atomic<int> done_threads(0);
   vector<thread> tasks;
 
-  for (int i=0; i<ex.num_threads; ++i) {
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
     tasks.emplace_back([&](){
       ex.register_thread();
 
@@ -124,7 +124,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
       }
       generated_queue.push(item);
       done_threads++;
-      if (done_threads==ex.num_threads) {
+      if (done_threads==ex.concurrency_degree()) {
         transformed_queue.push(transformed_type{});
       }
 

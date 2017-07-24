@@ -108,7 +108,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
 
   vector<input_type> elements;
   long current = 0;
-  if (ex.ordering){
+  if (ex.is_ordered()){
     auto item = input_queue.pop();
     while (item.first) {
       if(current == item.second){
@@ -173,7 +173,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
   using result_type = typename result_of<Transformer(input_type)>::type;
   mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
 
-  for (int th=0; th<reduction_obj.exectype.num_threads; th++) {
+  for (int th=0; th<reduction_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
       auto item = input_queue.pop( );
       while (item) {
@@ -213,7 +213,7 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
   mpmc_queue<input_type> tmp_queue{ex.queue_size, ex.lockfree};
 
   atomic<int> done_threads{0}; 
-  for (int th=0; th<filter_obj.exectype.num_threads; th++) {
+  for (int th=0; th<filter_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
       filter_obj.exectype.register_thread();
 
@@ -228,7 +228,7 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
         item = input_queue.pop();
       }
       done_threads++;
-      if (done_threads==filter_obj.exectype.num_threads) {
+      if (done_threads==filter_obj.exectype.concurrency_degree()) {
         tmp_queue.push(make_pair(input_value_type{}, -1));
       } 
       else {
@@ -309,7 +309,7 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
 
   atomic<int> done_threads{0};
 
-  for (int th=0; th<filter_obj.exectype.num_threads; th++) {
+  for (int th=0; th<filter_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
       filter_obj.exectype.register_thread();
 
@@ -321,7 +321,7 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
         item = input_queue.pop();
       }
       done_threads++;
-      if (done_threads==filter_obj.exectype.num_threads) {
+      if (done_threads==filter_obj.exectype.concurrency_degree()) {
         output_queue.push( make_pair(input_value_type{}, -1) );
       }
       else {
@@ -344,7 +344,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
                    MoreTransformers && ... more_transform_ops) 
 {
   using filter_type = filter_info<parallel_execution_native,Transformer>;
-  if(ex.ordering) {
+  if(ex.is_ordered()) {
     pipeline_impl_ordered(ex, input_queue, 
         std::forward<filter_type>(filter_obj),
         std::forward<MoreTransformers>(more_transform_ops)...);
@@ -388,7 +388,7 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
 
   atomic<int> done_threads{0};
   vector<thread> tasks;
-  for(int th = 0; th<farm_obj.exectype.num_threads; ++th){
+  for(int th = 0; th<farm_obj.exectype.concurrency_degree(); ++th){
     tasks.emplace_back([&]() {
       farm_obj.exectype.register_thread();
 
@@ -401,7 +401,7 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
       }
       input_queue.push(item);
       done_threads++;
-      if (done_threads == farm_obj.exectype.num_threads) {
+      if (done_threads == farm_obj.exectype.concurrency_degree()) {
         output_queue.push(make_pair(output_item_value_type{}, -1));
       }
                 

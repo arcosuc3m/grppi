@@ -29,13 +29,13 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.concurrency_degree();
  
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.concurrency_degree();i++){
        auto begin = first + (elemperthr * i);
        auto end = first + (elemperthr * (i+1));
       
-       if( i == p.num_threads-1) end = last;
+       if( i == p.concurrency_degree()-1) end = last;
 
        auto out = firstOut + (elemperthr * i);
 
@@ -64,7 +64,7 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
    }
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.concurrency_degree()-1;i++){
       tasks[i].join();
    }
  

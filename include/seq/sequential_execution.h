@@ -25,13 +25,45 @@
 
 namespace grppi{
 
-/** @brief Set the execution mode to sequencial */
-struct sequential_execution {
-  bool ordering = true;
-  int num_threads=1;
-  bool lockfree = false;
-  /** @brief set num_threads to 1 in order to sequential execution */
-  sequential_execution(){};
+/**
+\brief Sequential execution policy.
+*/
+class sequential_execution {
+
+public:
+
+  /// \brief Default constructor.
+  sequential_execution() {}
+
+  /**
+  \brief Set number of grppi threads.
+  \note Setting concurrency degree is ignored for sequential execution.
+  */
+  void set_concurrency_degree(int n) const noexcept {}
+
+  /**
+  \brief Get number of grppi trheads.
+  \note Getting concurrency degree is always 1 for sequential execution.
+  */
+  int concurrency_degree() const noexcept { return 1; }
+
+  /**
+  \brief Enable ordering.
+  \note Enabling ordering of sequential execution is always ignored.
+  */
+  void enable_ordering() const noexcept {}
+
+  /**
+  \brief Disable ordering.
+  \note Disabling ordering of sequential execution is always ignored.
+  */
+  void disable_ordering() const noexcept {}
+
+  /**
+  \brief Is execution ordered.
+  \note Sequential execution is always ordered.
+  */
+  bool is_ordered() const noexcept { return true; }
 };
 
 /// Determine if a type is a sequential execution policy.
@@ -47,8 +79,6 @@ template <>
 constexpr bool is_supported<sequential_execution>() {
   return true;
 }
-
-
 
 } // end namespace grppi
 

@@ -282,7 +282,7 @@ TYPED_TEST(divideconquer_test, poly_multiple)
 TYPED_TEST(divideconquer_test, static_multiple_single_thread)
 {
   this->setup_multiple();
-  this->execution_.num_threads = 1;
+  this->execution_.set_concurrency_degree(1);
   this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
@@ -326,7 +326,7 @@ TYPED_TEST(divideconquer_test, static_multiple_single_thread)
 TYPED_TEST(divideconquer_test, static_multiple_five_threads)
 {
   this->setup_multiple();
-  this->execution_.num_threads = 5;
+  this->execution_.set_concurrency_degree(5);
   this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
@@ -370,7 +370,7 @@ TYPED_TEST(divideconquer_test, static_multiple_five_threads)
 TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
 {
   this->setup_multiple_triple_div();
-  this->execution_.num_threads = 2;
+  this->execution_.set_concurrency_degree(2);
   this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
@@ -418,7 +418,7 @@ TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
 TYPED_TEST(divideconquer_test, static_multiple_triple_div_4_threads)
 {
   this->setup_multiple_triple_div();
-  this->execution_.num_threads = 4;
+  this->execution_.set_concurrency_degree(4);
   this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 

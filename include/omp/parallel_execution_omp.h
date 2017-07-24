@@ -37,10 +37,7 @@ namespace grppi{
  */
 struct parallel_execution_omp{
   constexpr static int default_queue_size = 100;
-  constexpr static int default_num_threads = 4;
   int queue_size = default_queue_size;
-  int num_threads = default_num_threads;
-  bool ordering = true;
   queue_mode lockfree = queue_mode::blocking;
 
   void set_queue_size(int new_size){
@@ -69,6 +66,36 @@ struct parallel_execution_omp{
    */
   parallel_execution_omp(int _threads, bool order){ num_threads=_threads; ordering = order;};
 
+  /**
+  \brief Set number of grppi threads.
+  */
+  void set_concurrency_degree(int degree) noexcept { num_threads = degree; }
+
+  /**
+  \brief Get number of grppi trheads.
+  */
+  int concurrency_degree() const noexcept { return num_threads; }
+
+  /**
+  \brief Enable ordering.
+  */
+  void enable_ordering() noexcept { ordering=true; }
+
+  /**
+  \brief Disable ordering.
+  */
+  void disable_ordering() noexcept { ordering=false; }
+
+  /**
+  \brief Is execution ordered.
+  */
+  bool is_ordered() const noexcept { return ordering; }
+
+
+  private:
+    constexpr static int default_num_threads = 4;
+    int num_threads = default_num_threads;
+    bool ordering = true;
 };
 
 /// Determine if a type is an OMP execution policy.
