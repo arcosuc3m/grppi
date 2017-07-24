@@ -1,15 +1,15 @@
 # Filter pattern
 
 The **filter** (or *stream filter*) is a streaming pattern that filters out items
-from a data stream based on a predicate, so that only data items satisfying the
-predicate are passed to the consumer.
+from a data stream based on a predicate, so that only data items satisfying (keep) or dissatisfying (discard) the predicate are passed to the consumer.
 
-The interface to the **filter** pattern is provided by function
-`grppi::stream_filter()`. As all functions in *GrPPI*, this function takes as
+The interface to the **filter** pattern is provided by functions
+`grppi::keep()` and `grppi::discard()`. As all functions in *GrPPI*, this functions takes as
 its first argument an execution policy.
 
 ~~~{.cpp}
-grppi::stream_filter(exec, other_arguments...);
+grppi::keep(exec, other_arguments...);
+grppi::discard(exec, other_arguments...);
 ~~~
 
 ## Stream filter variants
@@ -30,7 +30,11 @@ predicate `pred` is any operation, that given a value `x` of type `T`, makes the
 following valid:
 
 ~~~{.cpp}
-if (predicate(item)) { /*...*/ }.
+/* keep */
+if (predicate(item)) { /*...*/ }. 
+
+/* discard */
+if (!predicate(item)) { /*...*/ }. 
 ~~~
 
 A stand-alone **filter** also has a **Generator**. The generator may be any C++
@@ -64,7 +68,7 @@ A stand alone filter has three elements:
 **Example**: Generate a stream of integer numbers and filter out odd numbers.
 ~~~{.cpp}
 int n = 10;
-grppi::stream_filter(exec,
+grppi::keep(exec,
   [&n]() -> std::optional<int> {
     n--;
     if (n>0) return n;
@@ -93,26 +97,26 @@ also responsible for consuming the output values.
 grppi::pipeline(exec,
   stageA,
   stageB,
-  grppi::stream_filter(exec, [](auto x) { return x.lenght()>4; }),
+  grppi::keep(exec, [](auto x) { return x.lenght()>4; }),
   stageC
   );
 ~~~
 ---
 **Note**: For brevity we do not show here the details of other stages.
 
-For composing complex patterns, the **filter()** function may be used to create
+For composing complex patterns, the **keep()** and **discard()** functions may be used to create
 an object that may be supplied to another pattern to build a composed pattern.
 
 ---
 **Example**: A composable filter stage in a pipeline.
 ~~~{.cpp}
-auto filter_odd = grppi::stream_filter(exec,
+auto keep_odd = grppi::keep(exec,
   [](auto x) { return x%2; });
 
 grppi::pipeline(exec,
   stageA,
   stageB,
-  filter_odd,
+  keep_odd,
   stageC
   );
 ~~~

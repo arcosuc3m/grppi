@@ -63,7 +63,7 @@ p.ordering=true;
         },
 
         // Pipeline stage 1
-        stream_filter(f, [&]( int k ) {
+        keep(f, [&]( int k ) {
               if (k%2==0) {
                   //std::cout << "Discard " << k << "\n";
                   return false;
