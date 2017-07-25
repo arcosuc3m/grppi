@@ -190,7 +190,7 @@ void pipeline(parallel_execution_tbb & ex, Generator generate_op,
   );
 
   tbb::task_group_context context;
-  tbb::parallel_pipeline(ex.num_tokens, 
+  tbb::parallel_pipeline(ex.tokens(), 
       this_filter 
       & 
       pipeline_impl(ex, output_value_type{}, 

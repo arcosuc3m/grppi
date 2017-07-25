@@ -58,7 +58,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
   using namespace std;
 
   using generated_type = typename result_of<Generator()>::type;
-  mpmc_queue<generated_type> queue{ex.queue_size, ex.lockfree};
+  auto queue = ex.make_queue<generated_type>();
 
   tbb::task_group g;
   for (int i=0; i<ex.concurrency_degree(); ++i) {
@@ -110,8 +110,8 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
       typename result_of<Transformer(generated_value_type)>::type;
   using transformed_type = optional<transformed_value_type>;
 
-  mpmc_queue<generated_type> generated_queue(ex.queue_size,ex.lockfree);
-  mpmc_queue<transformed_type> transformed_queue(ex.queue_size,ex.lockfree);
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<transformed_type>();
 
   atomic<int>done_threads{0};
   tbb::task_group generators;

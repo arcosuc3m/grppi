@@ -30,73 +30,124 @@
 
 namespace grppi{
 
-/** @brief Set the execution mode to parallel with threading building blocks
- *    (TBB) framework implementation
+/** 
+ \brief TBB parallel execution policy.
+
+ This policy uses Intel Threading Building Blocks as implementation back end.
  */
-struct parallel_execution_tbb{
-  constexpr static int default_queue_size = 100;
-  constexpr static int default_num_tokens = 100;
+class parallel_execution_tbb {
+public:
 
-  int queue_size = default_queue_size;
-  int num_tokens = default_num_tokens;
+  /** 
+  \brief Default construct a TBB parallel execution policy.
 
-  queue_mode lockfree = queue_mode::blocking;
+  Creates a TBB parallel execution object.
 
-  void set_queue_size(int new_size){
-     queue_size = new_size;
-  }
+  The concurrency degree is determined by the platform.
 
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_tbb(){};
+  */
+  parallel_execution_tbb() noexcept :
+      parallel_execution_tbb{default_concurrency_degree}
+  {}
 
-  /** @brief Set num_threads to _threads in order to run in parallel
-   *
-   *  @param _threads number of threads used in the parallel mode
-   */
-  parallel_execution_tbb(int _threads){ num_threads= _threads; };
+  /** 
+  \brief Constructs a TBB parallel execution policy.
+
+  Creates a TBB parallel execution object selecting the concurrency degree.
+
+  \param concurrency_degree Number of threads used for parallel algorithms.
+  \param order Whether ordered executions is enabled or disabled.
+  */
+  parallel_execution_tbb(int concurrency_degree, bool order = true) noexcept :
+      concurrency_degree_{concurrency_degree},
+      ordering_{order}
+  {}
 
   /**
   \brief Set number of grppi threads.
   */
-  void set_concurrency_degree(int degree) noexcept { num_threads = degree; }
+  void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
 
   /**
   \brief Get number of grppi trheads.
   */
-  int concurrency_degree() const noexcept { return num_threads; }
+  int concurrency_degree() const noexcept { return concurrency_degree_; }
 
   /**
   \brief Enable ordering.
   */
-  void enable_ordering() noexcept { ordering=true; }
+  void enable_ordering() noexcept { ordering_=true; }
 
   /**
   \brief Disable ordering.
   */
-  void disable_ordering() noexcept { ordering=false; }
+  void disable_ordering() noexcept { ordering_=false; }
 
   /**
   \brief Is execution ordered.
   */
-  bool is_ordered() const noexcept { return ordering; }
+  bool is_ordered() const noexcept { return ordering_; }
 
+  /**
+  \brief Sets the attributes for the queues built through make_queue<T>()
+  */
+  void set_queue_attributes(int size, queue_mode mode, int tokens) noexcept {
+    queue_size_ = size;
+    queue_mode_ = mode;
+    num_tokens_ = tokens;
+  }
 
-  private:
-    constexpr static int default_num_threads = 4;
-    int num_threads = default_num_threads;
-    bool ordering = true;
+  /**
+  \brief Makes a communication queue for elements of type T.
+  Constructs a queue using the attributes that can be set via 
+  set_queue_attributes(). The value is returned via move semantics.
+  */
+  template <typename T>
+  mpmc_queue<T> make_queue() const {
+    return {queue_size_, queue_mode_};
+  }
+
+  /**
+  \brien Get num of tokens.
+  */
+  int tokens() const noexcept { return num_tokens_; }
+
+private:
+
+  constexpr static int default_concurrency_degree = 4;
+  int concurrency_degree_ = default_concurrency_degree;
+
+  bool ordering_ = true;
+
+  constexpr static int default_queue_size = 100;
+  int queue_size_ = default_queue_size;
+
+  constexpr static int default_num_tokens_ = 100;
+  int num_tokens_ = default_num_tokens_;
+
+  queue_mode queue_mode_ = queue_mode::blocking;
 };
 
+/**
+\brief Metafunction that determines if type E is parallel_execution_tbb
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_parallel_execution_tbb() {
   return std::is_same<E, parallel_execution_tbb>::value;
 }
 
+/**
+\brief Metafunction that determines if type E is supported in the current build.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_supported();
 
+/**
+\brief Specialization stating that parallel_execution_tbb is supported.
+This metafunction evaluates to false if GRPPI_TBB is enabled.
+*/
 template <>
 constexpr bool is_supported<parallel_execution_tbb>() {
   return true;
@@ -109,26 +160,37 @@ constexpr bool is_supported<parallel_execution_tbb>() {
 
 namespace grppi {
 
+
 /// Parallel execution policy.
 /// Empty type if GRPPI_TBB disabled.
 struct parallel_execution_tbb {};
 
-/// Determine if a type is a TBB execution policy.
-/// False if GRPPI_TBB disabled.
+/**
+\brief Metafunction that determines if type E is parallel_execution_tbb
+This metafunction evaluates to false if GRPPI_TBB is disabled.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_parallel_execution_tbb() {
   return false;
 }
 
+/**
+\brief Metafunction that determines if type E is supported in the current build.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_supported();
 
+/**
+\brief Specialization stating that parallel_execution_native is supported.
+*/
 template <>
 constexpr bool is_supported<parallel_execution_tbb>() {
   return false;
 }
 
-}
+} // end namespace grppi
 
 #endif // GRPPI_TBB
 
