@@ -60,7 +60,7 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
 
   //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
   vector<thread> tasks;
-  for (int i=0; i<ex.num_threads-1; ++i) {
+  for (int i=0; i<ex.concurrency_degree()-1; ++i) {
     tasks.emplace_back([&](){
       ex.register_thread();
 
@@ -94,11 +94,11 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
 
     // queue an element
     auto item{filtered_queue.pop()};
-    while (done_threads != ex.num_threads-1) {
+    while (done_threads != ex.concurrency_degree()-1) {
       //If is an end of stream element
       if (!item.first && item.second==-1) {
         done_threads++;
-        if (done_threads==ex.num_threads-1) break;
+        if (done_threads==ex.concurrency_degree()-1) break;
       }
       //If there is not an end element
       else {
@@ -154,7 +154,7 @@ void stream_filter(parallel_execution_native & ex, Generator generate_op,
     generated_queue.push(make_pair(item,order));
     order++;
     if(!item) {
-      for (int i=0; i<ex.num_threads-1; ++i) {
+      for (int i=0; i<ex.concurrency_degree()-1; ++i) {
         generated_queue.push(make_pair(item,-1));
       }
       break;

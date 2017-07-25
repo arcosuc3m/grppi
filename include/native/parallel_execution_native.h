@@ -40,10 +40,7 @@ struct parallel_execution_native {
   public: 
   thread_pool pool;
   constexpr static int default_queue_size = 100;
-  constexpr static int default_num_threads = 4;
   int queue_size = default_queue_size;
-  int num_threads = default_num_threads;
-  bool ordering = true;
   queue_mode lockfree = queue_mode::blocking;
 
   void set_queue_size(int new_size){
@@ -87,10 +84,42 @@ struct parallel_execution_native {
    *  @param _order enable or disable the ordered execution
    */
   parallel_execution_native(int _threads, bool order){ num_threads=_threads; ordering = order; pool.initialise (_threads);};
+
+  /**
+  \brief Set number of grppi threads.
+  */
+  void set_concurrency_degree(int degree) noexcept { num_threads = degree; }
+
+  /**
+  \brief Get number of grppi trheads.
+  */
+  int concurrency_degree() const noexcept { return num_threads; }
+
+  /**
+  \brief Enable ordering.
+  */
+  void enable_ordering() noexcept { ordering=true; }
+
+  /**
+  \brief Disable ordering.
+  */
+  void disable_ordering() noexcept { ordering=false; }
+
+  /**
+  \brief Is execution ordered.
+  */
+  bool is_ordered() const noexcept { return ordering; }
+
+
   private: 
      std::atomic_flag lock = ATOMIC_FLAG_INIT;
      std::vector<std::thread::id> thid_table;
 
+  // TODO: Set default num_threads to hardware concurrency?
+  constexpr static int default_num_threads = 4;
+  int num_threads = default_num_threads;
+
+  bool ordering = true;
 };
 
 /// Determine if a type is a threading execution policy.

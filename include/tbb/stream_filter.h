@@ -65,7 +65,7 @@ void stream_filter(parallel_execution_tbb & ex, Generator generate_op,
 
   //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
   tbb::task_group filterers;
-  for (int i=1; i< ex.num_threads-1; ++i) {
+  for (int i=1; i< ex.concurrency_degree()-1; ++i) {
     filterers.run([&](){
       //dequeue a pair element - order
       auto item = generated_queue.pop();
@@ -89,11 +89,11 @@ void stream_filter(parallel_execution_tbb & ex, Generator generate_op,
     vector<item_type> item_buffer;
     long order = 0;
     auto item{filtered_queue.pop()};
-    while (done_tasks!=ex.num_threads-1) {
+    while (done_tasks!=ex.concurrency_degree()-1) {
       //If is an end of stream element
       if (!item.first && item.second==-1){
         done_tasks++;
-        if (done_tasks==ex.num_threads-2) break;
+        if (done_tasks==ex.concurrency_degree()-2) break;
       }
       else {
         //If the element is the next one to be procesed
@@ -143,7 +143,7 @@ void stream_filter(parallel_execution_tbb & ex, Generator generate_op,
     generated_queue.push(make_pair(item,order));
     order++;
     if (!item) {
-      for (int i=0; i<ex.num_threads-2; ++i) {
+      for (int i=0; i<ex.concurrency_degree()-2; ++i) {
         generated_queue.push({item,-1});
       }
       break;

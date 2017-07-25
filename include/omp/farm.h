@@ -62,7 +62,7 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
   {
     #pragma omp single nowait
     {
-      for (int i = 0; i<ex.num_threads; i++) {
+      for (int i = 0; i<ex.concurrency_degree(); i++) {
         #pragma omp task shared(queue)
         {
           auto item{queue.pop()};
@@ -77,7 +77,7 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
         auto item = generate_op();
         queue.push(item) ;
         if (!item) {
-          for (int i=1; i<ex.num_threads; ++i) {
+          for (int i=1; i<ex.concurrency_degree(); ++i) {
             queue.push(item);
           }
           break;
@@ -120,7 +120,7 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
   {
     #pragma omp single nowait
     {
-      for (int i=0; i<ex.num_threads; ++i) {
+      for (int i=0; i<ex.concurrency_degree(); ++i) {
         #pragma omp task shared(generated_queue, transformed_queue, transform_op)
         {
           auto item{generated_queue.pop()};
@@ -130,7 +130,7 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
           }
           generated_queue.push(item);
           done_threads++;
-          if (done_threads == ex.num_threads)
+          if (done_threads == ex.concurrency_degree())
             transformed_queue.push(transformed_type{});
         }
       }

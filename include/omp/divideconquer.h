@@ -124,7 +124,7 @@ divide_conquer(parallel_execution_omp & ex,
                    Divider && divide_op, Solver && solve_op, 
                    Combiner && combine_op) 
 {
-  std::atomic<int> num_threads{ex.num_threads-1};
+  std::atomic<int> num_threads{ex.concurrency_degree()-1};
 
   sequential_execution seq;
 
