@@ -100,6 +100,7 @@ public:
     EXPECT_EQ(35, this->out);
   }
 
+
   void setup_offset_window() {
     out = 0;
     v = vector<int>{1,2,3,4,5,6,7,8,9,10};
@@ -392,6 +393,5 @@ TYPED_TEST(stream_reduce_test, poly_offset_window)
   );
   this->check_offset_window();
 }
-
 
 
