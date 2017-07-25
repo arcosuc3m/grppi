@@ -37,9 +37,12 @@ namespace grppi {
 
 A thread table provides a simple way to offer thread indices (starting from 0).
 
-When a thread registers itself in the registry. To get an integer index, users
-may call current_index, which provides the order number of the calling thread in
-the registry.
+When a thread registers itself in the registry, its id is added to the vector 
+of identifiers. When a thread deregisters itself from the registry its entry
+is modified to contain the empty thread id.
+
+To get an integer index, users may call `current_index`, which provides the order
+number of the calling thread in the registry.
 
 \note This class is thread safe by means of using a spin-lock.
 */
@@ -48,12 +51,12 @@ public:
   thread_registry() noexcept = default;
 
   /**
-  \brief Adds current thread in the registry.
+  \brief Adds the current thread id in the registry.
   */
   void register_thread() noexcept;
 
   /**
-  \brief Removes current thread from the registry.
+  \brief Removes current thread id from the registry.
   */
   void deregister_thread() noexcept;
 
@@ -100,7 +103,7 @@ inline int thread_registry::current_index() const noexcept
 };
 
 /**
-\brief RAII class to mange registration/deregistration pairs.
+\brief RAII class to manage registration/deregistration pairs.
 This class allows to manage automatic deregistration of threads through
 the common RAII pattern. The current thread is registered into the registry
 at construction and deregistered a destruction.
@@ -150,7 +153,7 @@ public:
   {}
 
   /** 
-  \brief Constructs a native parallele execution policy.
+  \brief Constructs a native parallel execution policy.
 
   Creates a parallel execution native object selecting the concurrency degree
   and ordering mode.
@@ -206,7 +209,7 @@ public:
   }
   
   /**
-  \brief Sets the attributes for the queues built through make_queue<T<(()
+  \brief Sets the attributes for the queues built through make_queue<T>()
   */
   void set_queue_attributes(int size, queue_mode mode) noexcept {
     queue_size_ = size;
@@ -216,7 +219,7 @@ public:
   /**
   \brief Makes a communication queue for elements of type T.
   Constructs a queue using the attributes that can be set via 
-  et_queue_attributes(). The value is returned via move semantics.
+  set_queue_attributes(). The value is returned via move semantics.
   */
   template <typename T>
   mpmc_queue<T> make_queue() const {
