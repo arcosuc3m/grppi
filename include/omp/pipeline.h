@@ -116,7 +116,7 @@ void pipeline_impl_ordered(parallel_execution_omp & ex, InQueue & input_queue,
   using result_value_type = typename result_of<Combiner(input_value_type, input_value_type)>::type;
   using result_type = pair<optional<result_value_type>, long>;
 
-  mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
+  auto output_queue = ex.make_queue<result_type>();
 
   #pragma omp task shared(output_queue, input_queue, reduction_obj)
   {
