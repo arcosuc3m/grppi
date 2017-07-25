@@ -62,7 +62,7 @@ void composed_pipeline(InQueue & input_queue,
   using result_type = optional<result_value_type>;
 
   parallel_execution_native & ex = pipeline_obj.exectype;
-  auto tmp_queue = ex.make_queue<result_type>();
+  static auto tmp_queue = ex.make_queue<result_type>();
 
   composed_pipeline(pipeline_obj.exectype, input_queue, 
       get<Index>(pipeline_obj.stages), tmp_queue, tasks);

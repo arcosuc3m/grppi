@@ -258,7 +258,7 @@ TYPED_TEST(stream_iteration_test, static_composed_farm)
   );
   this->check_composed_farm();
 }
-/*
+
 TYPED_TEST(stream_iteration_test, poly_composed_farm)
 {
   this->setup_composed_farm();
@@ -271,7 +271,7 @@ TYPED_TEST(stream_iteration_test, poly_composed_farm)
       }
       else return {};
     },
-    grppi::farm(this->execution_,
+    grppi::farm(this->poly_execution_,
        [this](int val){
          this->invocations_oper++;
          return val+1;
@@ -290,4 +290,4 @@ TYPED_TEST(stream_iteration_test, poly_composed_farm)
 }
 
 
-*/
+

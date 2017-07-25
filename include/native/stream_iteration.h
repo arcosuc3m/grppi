@@ -79,9 +79,10 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, p
   });
 
   vector<thread> pipe_threads;
-  composed_pipeline< mpmc_queue<generated_type>, mpmc_queue<generated_type>, 0, MoreTransformers ...>
+  composed_pipeline< decltype(generated_queue), decltype(transformed_queue), 0, MoreTransformers ...>
     (generated_queue, forward<pipeline_info_type>(pipe) , transformed_queue, pipe_threads); 
  
+
   auto manager = ex.thread_manager();
   for (;;) {
     //If every element has been processed
