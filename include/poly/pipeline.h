@@ -25,10 +25,24 @@
 #include "polymorphic_execution.h"
 
 namespace grppi{
+
+template <typename Execution, typename Transformer,
+          typename ... MoreTransformers,
+          requires_arguments<Transformer> = 0>
+pipeline_info<Execution,Transformer,MoreTransformers...>
+transform_pipeline(Execution & ex, std::tuple<Transformer, MoreTransformers ...> transform_ops)
+{
+    return pipeline_info<Execution,Transformer, MoreTransformers...> (ex,std::forward<std::tuple<MoreTransformers...>>(transform_ops));
+}
+
+
+
+
 template <typename Generator, typename ... Transformers>
 void pipeline_multi_impl(polymorphic_execution &, Generator &&, 
                          Transformers && ...) 
 {
+
 }
 
 template <typename E, typename ... O,

@@ -25,6 +25,7 @@
 
 #include "seq/stream_iteration.h"
 #include "native/stream_iteration.h"
+#include "poly/stream_iteration.h"
 
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern

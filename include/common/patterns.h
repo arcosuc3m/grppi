@@ -25,12 +25,28 @@
 
 namespace grppi{
 
+template <typename,typename...> struct get_return_type;
+
+template <typename Input, typename Stage>
+struct get_return_type<Input,Stage>
+{
+  using type = typename std::result_of<Stage(Input)>::type;
+};
+
+template <typename Input, typename Stage, typename ...Stages> 
+struct get_return_type<Input, Stage, Stages ...>
+{
+  using type = typename get_return_type<typename std::result_of<Stage(Input)>::type, Stages...>::type;
+};
+
+
 template <typename E,typename Stage, typename ... Stages>
 class pipeline_info{
    public:
       E & exectype;
       std::tuple<Stage , Stages ...> stages;
       pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages{std::make_tuple(s, sts...)} {}
+      pipeline_info(E &p, std::tuple<Stage,Stages ...> st) : exectype{p} , stages{st} {}
 };
 
 template <typename E,class Operation, class RedFunc>

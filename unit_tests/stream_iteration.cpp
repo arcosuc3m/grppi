@@ -193,7 +193,7 @@ TYPED_TEST(stream_iteration_test, static_composed_pipeline)
   );
   this->check_composed_pipeline();
 }
-/*
+
 TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
 {
   this->setup_composed_pipeline();
@@ -206,7 +206,7 @@ TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
       }
       else return {};
     },
-    grppi::pipeline(this->execution_,
+    grppi::pipeline(this->poly_execution_,
        [this](int val){
          this->invocations_stage1++;
          return val+1;
@@ -228,7 +228,7 @@ TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
   this->check_composed_pipeline();
 
 }
-*/
+
 TYPED_TEST(stream_iteration_test, static_composed_farm)
 {
   this->setup_composed_farm();
