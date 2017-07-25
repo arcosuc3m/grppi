@@ -131,7 +131,7 @@ TYPED_TEST(stream_iteration_test, static_no_composed)
   );
   this->check_no_composed();
 }
-/*
+
 TYPED_TEST(stream_iteration_test, poly_no_composed)
 { 
   this->setup_no_composed();
@@ -159,7 +159,7 @@ TYPED_TEST(stream_iteration_test, poly_no_composed)
   );
   this->check_no_composed();
 }
-*/
+
 TYPED_TEST(stream_iteration_test, static_composed_pipeline)
 {
   this->setup_composed_pipeline();
