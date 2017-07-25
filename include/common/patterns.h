@@ -31,6 +31,7 @@ class pipeline_info{
       E & exectype;
       std::tuple<Stage , Stages ...> stages;
       pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages{std::make_tuple(s, sts...)} {}
+      pipeline_info(E &p, std::tuple<Stage,Stages ...> st) : exectype{p} , stages{st} {}
 };
 
 template <typename E,class Combiner, typename Identity>

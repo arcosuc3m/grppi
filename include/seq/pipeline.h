@@ -33,7 +33,7 @@ auto composed_pipeline(Input in,
                            sequential_execution,
                            MoreTransformers...> & pipeline_obj)
 {
-  return (*std::get<Index>(pipeline_obj.stages))(in);
+  return std::get<Index>(pipeline_obj.stages)(in);
 }
 
 template <typename Input, int Index, typename ... MoreTransformers,
@@ -44,7 +44,7 @@ auto composed_pipeline(Input in,
                            MoreTransformers...> & pipeline_obj)
 {
   return composed_pipeline<Input, Index+1, MoreTransformers...>(
-      (*std::get<Index>(pipeline_obj.stages))(in),
+      std::get<Index>(pipeline_obj.stages)(in),
       pipeline_obj);
 }
 
