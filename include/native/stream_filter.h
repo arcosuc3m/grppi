@@ -55,14 +55,14 @@ void keep(parallel_execution_native & ex, Generator generate_op,
   using generated_type = typename result_of<Generator()>::type;
   using item_type = pair<generated_type,long>;
 
-  mpmc_queue<item_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<item_type> filtered_queue{ex.queue_size,ex.lockfree};
+  auto generated_queue = ex.make_queue<item_type>();
+  auto filtered_queue = ex.make_queue<item_type>();
 
   //THREAD 1-(N-1) EXECUTE FILTER AND PUSH THE VALUE IF TRUE
   vector<thread> tasks;
   for (int i=0; i<ex.concurrency_degree()-1; ++i) {
     tasks.emplace_back([&](){
-      ex.register_thread();
+      auto manager = ex.thread_manager();
 
       // queue a pair element - order
       auto item{generated_queue.pop()};
@@ -78,14 +78,12 @@ void keep(parallel_execution_native & ex, Generator generate_op,
       }
       //If is the last element
       filtered_queue.push(make_pair(item.first, -1 ));
-
-      ex.deregister_thread();
     });
   }
 
   //LAST THREAD CALL FUNCTION OUT WITH THE FILTERED ELEMENTS
   thread consumer([&](){
-    ex.register_thread();
+    auto manager = ex.thread_manager();
 
     int done_threads = 0; 
     
@@ -143,8 +141,6 @@ void keep(parallel_execution_native & ex, Generator generate_op,
       item_buffer.erase(it_find);
       order++;
     }
-           
-    ex.deregister_thread();
   });
 
   //THREAD 0 ENQUEUE ELEMENTS

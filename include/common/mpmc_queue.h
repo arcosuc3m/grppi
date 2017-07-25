@@ -43,6 +43,18 @@ class mpmc_queue{
       mpmc_queue<T>(int q_size, queue_mode q_mode ):
            size{q_size}, buffer{std::vector<T>(q_size)}, mode{q_mode}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
       
+      mpmc_queue(mpmc_queue && q) :
+        size{q.size},
+        buffer{std::move(q.buffer)},
+        mode{q.mode},
+        pread{q.pread.load()},
+        pwrite{q.pwrite.load()},
+        internal_pread{q.internal_pread.load()},
+        internal_pwrite{q.internal_pwrite.load()},
+        m{},
+        empty{},
+        full{}
+      {}
      
       bool is_empty () const noexcept;
       T pop () ;

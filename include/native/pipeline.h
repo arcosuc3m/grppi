@@ -51,6 +51,7 @@ void composed_pipeline(InQueue & input_queue,
                        OutQueue & output_queue, std::vector<std::thread> & tasks)
 {
   using namespace std;
+  using namespace experimental;
 
   using stage_type = 
       typename tuple_element<Index,decltype(pipeline_obj.stages)>::type;
@@ -58,10 +59,10 @@ void composed_pipeline(InQueue & input_queue,
   using input_value_type = typename input_type::value_type;
   using result_value_type = 
       typename result_of<stage_type(input_value_type)>::type;
-  using result_type = experimental::optional<result_value_type>;
+  using result_type = optional<result_value_type>;
 
-  static mpmc_queue<result_type> tmp_queue{
-      pipeline_obj.exectype.queue_size, pipeline_obj.exectype.lockfree}; 
+  parallel_execution_native & ex = pipeline_obj.exectype;
+  auto tmp_queue = ex.make_queue<result_type>();
 
   composed_pipeline(pipeline_obj.exectype, input_queue, 
       get<Index>(pipeline_obj.stages), tmp_queue, tasks);
@@ -77,8 +78,7 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
 {
   using namespace std;
   tasks.emplace_back([&]() {
-    ex.register_thread();
-        
+    auto manager = ex.thread_manager();
     auto item = input_queue.pop();
     for (;;) {
       using output_type = typename OutQueue::value_type;
@@ -91,8 +91,6 @@ void composed_pipeline(parallel_execution_native & ex, InQueue & input_queue,
       }
       item = input_queue.pop();
     }
-
-    ex.deregister_thread();
   });
 }
 
@@ -104,7 +102,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
   using namespace std;
   using input_type = typename InQueue::value_type;
 
-  ex.register_thread();
+  auto manager = ex.thread_manager();
 
   vector<input_type> elements;
   long current = 0;
@@ -148,8 +146,6 @@ void pipeline_impl(parallel_execution_native & ex, InQueue& input_queue,
       item = input_queue.pop();
     }
   }
-  
-  ex.deregister_thread();
 }
 
 //Item reduce stage
@@ -185,7 +181,7 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue & input_queue
   using result_value_type = typename result_of<Combiner(input_value_type, input_value_type)>::type;
   using result_type = pair<optional<result_value_type>, long>;
   
-  mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
+  auto output_queue = ex.make_queue<result_type>();
   
   thread windower_task([&](){
     vector<input_value_type> values;
@@ -246,12 +242,12 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
 
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type;
-  mpmc_queue<input_type> tmp_queue{ex.queue_size, ex.lockfree};
+  auto tmp_queue = ex.make_queue<input_type>();
 
   atomic<int> done_threads{0}; 
   for (int th=0; th<filter_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
-      filter_obj.exectype.register_thread();
+      auto manager = filter_obj.exectype.thread_manager();
 
       auto item{input_queue.pop()};
       while (item.first) {
@@ -270,14 +266,12 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
       else {
         input_queue.push(item);
       }
-
-      filter_obj.exectype.deregister_thread();
     });
   }
 
-  mpmc_queue<input_type> output_queue{ex.queue_size,ex.lockfree};
+  auto output_queue = ex.make_queue<input_type>();
   auto ordering_thread = thread{[&](){
-    ex.register_thread();
+    auto manager = ex.thread_manager();
     vector<input_type> elements;
     int current = 0;
     long order = 0;
@@ -323,7 +317,6 @@ void pipeline_impl_ordered(parallel_execution_native & ex, InQueue& input_queue,
       }
     }
     output_queue.push(item);
-    ex.deregister_thread();
   }};
 
   pipeline_impl(ex, output_queue, forward<MoreTransformers>(more_transform_ops) ... );
@@ -341,13 +334,13 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
 
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type;
-  mpmc_queue<input_type> output_queue{ex.queue_size, ex.lockfree};
+  auto output_queue = ex.make_queue<input_type>();
 
   atomic<int> done_threads{0};
 
   for (int th=0; th<filter_obj.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
-      filter_obj.exectype.register_thread();
+      auto manager = filter_obj.exectype.thread_manager();
 
       auto item{input_queue.pop()};
       while (item.first) {
@@ -363,8 +356,6 @@ void pipeline_impl_unordered(parallel_execution_native & ex, InQueue & input_que
       else {
         input_queue.push(item);
       }
-
-      filter_obj.exectype.deregister_thread();
     });
   }
 
@@ -420,13 +411,13 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
       experimental::optional<transform_result_type>;
   using output_item_type =
       pair<output_item_value_type,long>;
-  mpmc_queue<output_item_type> output_queue{p.queue_size,p.lockfree};
+  auto output_queue = p.make_queue<output_item_type>();
 
   atomic<int> done_threads{0};
   vector<thread> tasks;
   for(int th = 0; th<farm_obj.exectype.concurrency_degree(); ++th){
     tasks.emplace_back([&]() {
-      farm_obj.exectype.register_thread();
+      auto manager = farm_obj.exectype.thread_manager();
 
       long order = 0;
       auto item{input_queue.pop()}; 
@@ -440,8 +431,6 @@ void pipeline_impl(parallel_execution_native & p, InQueue & input_queue,
       if (done_threads == farm_obj.exectype.concurrency_degree()) {
         output_queue.push(make_pair(output_item_value_type{}, -1));
       }
-                
-      farm_obj.exectype.deregister_thread();
     });
   }
   pipeline_impl(p, output_queue, 
@@ -467,11 +456,11 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
   using output_item_type =
       pair<output_item_value_type,long>;
 
-  mpmc_queue<output_item_type> output_queue{ex.queue_size,ex.lockfree};
+  auto output_queue = ex.make_queue<output_item_type>();
 
   thread task( 
     [&]() {
-      ex.register_thread();
+      auto manager = ex.thread_manager();
 
       long order = 0;
       auto item{input_queue.pop()};
@@ -481,8 +470,6 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
         item = input_queue.pop( ) ;
       }
       output_queue.push(make_pair(output_item_value_type{},-1));
-
-      ex.deregister_thread();
     }
   );
 
@@ -521,11 +508,11 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
 
   using result_type = typename result_of<Generator()>::type;
   using output_type = pair<result_type,long>;
-  mpmc_queue<output_type> first_queue{ex.queue_size,ex.lockfree};
+  auto first_queue = ex.make_queue<output_type>();
 
   thread generator_task(
     [&]() {
-      ex.register_thread();
+      auto manager = ex.thread_manager();
 
       long order = 0;
       for (;;) {
@@ -534,8 +521,6 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
         order++;
         if (!item) break;
       }
-
-      ex.deregister_thread();
     }
   );
 
