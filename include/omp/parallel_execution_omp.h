@@ -49,7 +49,7 @@ public:
   rules.
   */
   parallel_execution_omp() noexcept :
-      parallel_execution_omp{omp_get_num_threads()}
+      parallel_execution_omp{impl_concurrency_degree()}
   {}
 
   /** @brief Set num_threads to _threads in order to run in parallel
@@ -124,7 +124,30 @@ public:
   \brief Get index of current thread in the thread table
   */
   int get_thread_id() const noexcept {
-     return omp_get_thread_num();
+    int result;
+    #pragma omp parallel
+    {
+      result = omp_get_thread_num();
+    }
+    return result;
+  }
+
+private:
+
+  /**
+  \brief Obtain OpenMP platform number of threads.
+  Queries the current OpenMP number of threads so that it can be used in
+  intialization of data members.
+  \return The current OpenMP number of threads.
+  \note The determination is performed inside a parallel region.
+  */
+  static int impl_concurrency_degree() {
+    int result;
+    #pragma omp parallel
+    {
+      result = omp_get_num_threads();
+    }
+    return result;
   }
 
 private:
@@ -139,15 +162,26 @@ private:
   queue_mode queue_mode_ = queue_mode::blocking;
 };
 
-/// Determine if a type is an OMP execution policy.
+/**
+\brief Metafunction that determines if type E is parallel_execution_omp
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_parallel_execution_omp() {
   return std::is_same<E, parallel_execution_omp>::value;
 }
 
+/**
+\brief Metafunction that determines if type E is supported in the current build.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_supported();
 
+/**
+\brief Specialization stating that parallel_execution_omp is supported.
+This metafunction evaluates to false if GRPPI_OMP is enabled.
+*/
 template <>
 constexpr bool is_supported<parallel_execution_omp>() {
   return true;
@@ -159,20 +193,31 @@ constexpr bool is_supported<parallel_execution_omp>() {
 
 namespace grppi {
 
+
 /// Parallel execution policy.
 /// Empty type if GRPPI_OMP disabled.
 struct parallel_execution_omp {};
 
-/// Determine if a type is an OMP execution policy.
-/// False if GRPPI_OMP disabled.
+/**
+\brief Metafunction that determines if type E is parallel_execution_omp
+This metafunction evaluates to false if GRPPI_OMP is disabled.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_parallel_execution_omp() {
   return false;
 }
 
+/**
+\brief Metafunction that determines if type E is supported in the current build.
+\tparam Execution policy type.
+*/
 template <typename E>
 constexpr bool is_supported();
 
+/**
+\brief Specialization stating that parallel_execution_omp is supported.
+*/
 template <>
 constexpr bool is_supported<parallel_execution_omp>() {
   return false;
