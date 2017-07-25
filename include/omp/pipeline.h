@@ -82,6 +82,83 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
    //End task
 }
 
+
+//Reduction composition
+template <typename Combiner, typename Identity, typename InQueue, typename ...MoreTransformers>
+void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
+                   reduction_info<parallel_execution_omp, Combiner, Identity> & reduction_obj, MoreTransformers ...more_transform_ops)
+{
+  using reduction_type =
+      reduction_info<parallel_execution_omp,Combiner,Identity>;
+
+  pipeline_impl(ex, input_queue, std::forward<reduction_type&&>(reduction_obj), std::forward<MoreTransformers...>(more_transform_ops...));
+}
+
+template <typename Combiner, typename Identity, typename InQueue, typename ...MoreTransformers>
+void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
+                   reduction_info<parallel_execution_omp, Combiner, Identity> && reduction_obj, MoreTransformers ...more_transform_ops)
+{
+  using reduction_type =
+      reduction_info<parallel_execution_omp,Combiner,Identity>;
+  pipeline_impl_ordered(ex, input_queue, std::forward<reduction_type>(reduction_obj), std::forward<MoreTransformers...>(more_transform_ops...));
+}
+
+template <typename Combiner, typename Identity, typename InQueue, typename ...MoreTransformers>
+void pipeline_impl_ordered(parallel_execution_omp & ex, InQueue & input_queue,
+                   reduction_info<parallel_execution_omp,Combiner,Identity> && reduction_obj, MoreTransformers ...more_transform_ops)
+{
+  using namespace std;
+  using namespace std::experimental;
+  vector<thread> tasks;
+  using input_type = typename InQueue::value_type;
+  using input_value_type = typename input_type::first_type::value_type;
+
+  using result_value_type = typename result_of<Combiner(input_value_type, input_value_type)>::type;
+  using result_type = pair<optional<result_value_type>, long>;
+
+  mpmc_queue<result_type> output_queue{ex.queue_size,ex.lockfree};
+
+  #pragma omp task shared(output_queue, input_queue, reduction_obj)
+  {
+    vector<input_value_type> values;
+    long out_order=0;
+    auto item {input_queue.pop()};
+    for(;;){
+      while (item.first && values.size() != reduction_obj.window_size) {
+        values.push_back(*item.first);
+        item = input_queue.pop();
+      }
+      if (values.size() > 0) {
+        auto reduced_value = reduce(reduction_obj.exectype, values.begin(), values.end(), reduction_obj.identity,
+            std::forward<Combiner>(reduction_obj.combine_op));
+        output_queue.push({{reduced_value}, out_order});
+        out_order++;
+        if (item.first) {
+          if (reduction_obj.offset <= reduction_obj.window_size) {
+            values.erase(values.begin(), values.begin() + reduction_obj.offset);
+          }
+          else {
+            values.erase(values.begin(), values.end());
+            auto diff = reduction_obj.offset - reduction_obj.window_size;
+            while (diff > 0 && item.first) {
+              item = input_queue.pop();
+              diff--;
+            }
+          }
+        }
+      }
+      if (!item.first) break;
+    }
+    output_queue.push({{},-1});
+  }
+
+  pipeline_impl(ex, output_queue, forward<MoreTransformers>(more_transform_ops) ... );
+  #pragma omp taskwait
+}
+
+
+
+
 template <typename Transformer, typename InQueue, typename... MoreTransformers>
 void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue, 
                    filter_info<parallel_execution_omp,Transformer> & filter_obj, 

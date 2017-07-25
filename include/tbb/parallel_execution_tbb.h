@@ -89,7 +89,7 @@ public:
   bool is_ordered() const noexcept { return ordering_; }
 
   /**
-  \brief Sets the attributes for the queues built through make_queue<T<(()
+  \brief Sets the attributes for the queues built through make_queue<T>()
   */
   void set_queue_attributes(int size, queue_mode mode, int tokens) noexcept {
     queue_size_ = size;
@@ -100,7 +100,7 @@ public:
   /**
   \brief Makes a communication queue for elements of type T.
   Constructs a queue using the attributes that can be set via 
-  et_queue_attributes(). The value is returned via move semantics.
+  set_queue_attributes(). The value is returned via move semantics.
   */
   template <typename T>
   mpmc_queue<T> make_queue() const {
@@ -145,8 +145,8 @@ template <typename E>
 constexpr bool is_supported();
 
 /**
-\brief Specialization stating that parallel_execution_native is supported.
-This metafunction evaluates to fals if GRPPI_TBB is enabled.
+\brief Specialization stating that parallel_execution_tbb is supported.
+This metafunction evaluates to false if GRPPI_TBB is enabled.
 */
 template <>
 constexpr bool is_supported<parallel_execution_tbb>() {
@@ -167,7 +167,7 @@ struct parallel_execution_tbb {};
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_tbb
-This metafunction evaluates to fals if GRPPI_TBB is disabled.
+This metafunction evaluates to false if GRPPI_TBB is disabled.
 \tparam Execution policy type.
 */
 template <typename E>

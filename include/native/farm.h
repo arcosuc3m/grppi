@@ -62,7 +62,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
   vector<thread> tasks;
   for (int i=0; i<ex.concurrency_degree(); ++i) {
     tasks.emplace_back([&](){
-      auto manger = ex.thread_manager();
+      auto manager = ex.thread_manager();
 
       auto item{queue.pop()};
       while(item) {
