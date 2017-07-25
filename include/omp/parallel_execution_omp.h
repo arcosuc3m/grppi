@@ -35,40 +35,111 @@ namespace grppi{
 /** @brief Set the execution mode to parallel with ompenmp framework 
  *    implementation 
  */
-struct parallel_execution_omp{
-  constexpr static int default_queue_size = 100;
-  constexpr static int default_num_threads = 4;
-  int queue_size = default_queue_size;
-  int num_threads = default_num_threads;
-  bool ordering = true;
-  queue_mode lockfree = queue_mode::blocking;
+/**
+\brief OpenMP parallel execution policy.
 
-  void set_queue_size(int new_size){
-     queue_size = new_size;
-  }
+This policy uses OpenMP as implementation back-end.
+*/
+class parallel_execution_omp {
 
+public:
+  /** 
+  \brief Default construct an OpenMP parallel execution policy.
 
-  int get_thread_id(){
-     return omp_get_thread_num();
-  }
-  /** @brief Set num_threads to the maximum number of thread available by the
-   *    hardware
-   */
-  parallel_execution_omp(){};
+  Creates an OpenMP parallel execution object.
+
+  The concurrency degree is determined by the platform according to OpenMP 
+  rules.
+  */
+  parallel_execution_omp() noexcept :
+      parallel_execution_omp{omp_get_num_threads()}
+  {}
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
    *  @param _threads number of threads used in the parallel mode
    */
-  parallel_execution_omp(int _threads){num_threads=_threads; };
+  /** 
+  \brief Constructs an OpenMP parallel execution policy.
 
-  /** @brief Set num_threads to _threads in order to run in parallel and allows to disable the ordered execution
-   *
-   *  @param _threads number of threads used in the parallel mode
-   *  @param _order enable or disable the ordered execution
-   */
-  parallel_execution_omp(int _threads, bool order){ num_threads=_threads; ordering = order;};
+  Creates an OpenMP parallel execution object selecting the concurrency degree
+  and ordering.
+  \param concurrency_degree Number of threads used for parallel algorithms.
+  \param order Whether ordered executions is enabled or disabled.
+  */
+  parallel_execution_omp(int concurrency_degree, bool order = true) noexcept :
+      concurrency_degree_{concurrency_degree},
+      ordering_{order}
+  {
+    omp_set_num_threads(concurrency_degree_);
+  }
 
+  /**
+  \brief Set number of grppi threads.
+  */
+  void set_concurrency_degree(int degree) noexcept { 
+    concurrency_degree_ = degree; 
+    omp_set_num_threads(concurrency_degree_);
+  }
+
+  /**
+  \brief Get number of grppi trheads.
+  */
+  int concurrency_degree() const noexcept { 
+    return concurrency_degree_; 
+  }
+
+  /**
+  \brief Enable ordering.
+  */
+  void enable_ordering() noexcept { ordering_=true; }
+
+  /**
+  \brief Disable ordering.
+  */
+  void disable_ordering() noexcept { ordering_=false; }
+
+  /**
+  \brief Is execution ordered.
+  */
+  bool is_ordered() const noexcept { return ordering_; }
+
+  /**
+  \brief Sets the attributes for the queues built through make_queue<T>(()
+  */
+  void set_queue_attributes(int size, queue_mode mode) noexcept {
+    queue_size_ = size;
+    queue_mode_ = mode;
+  }
+
+  /**
+  \brief Makes a communication queue for elements of type T.
+
+  Constructs a queue using the attributes that can be set via 
+  set_queue_attributes(). The value is returned via move semantics.
+  */
+  template <typename T>
+  mpmc_queue<T> make_queue() const {
+    return {queue_size_, queue_mode_};
+  }
+
+  /**
+  \brief Get index of current thread in the thread table
+  */
+  int get_thread_id() const noexcept {
+     return omp_get_thread_num();
+  }
+
+private:
+
+  int concurrency_degree_;
+
+  bool ordering_;
+
+  constexpr static int default_queue_size = 100;
+  int queue_size_ = default_queue_size;
+
+  queue_mode queue_mode_ = queue_mode::blocking;
 };
 
 /// Determine if a type is an OMP execution policy.

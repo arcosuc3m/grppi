@@ -39,7 +39,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
   using namespace std;
   using input_type = typename InQueue::value_type;
 
-  if (ex.ordering){
+  if (ex.is_ordered()){
     vector<input_type> elements;
     long current = 0;
     auto item = input_queue.pop( );
@@ -103,10 +103,10 @@ void pipeline_impl_ordered(parallel_execution_omp & ex,
   using namespace std;
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type;
-  mpmc_queue<input_type> tmp_queue{ex.queue_size, ex.lockfree};
+  auto tmp_queue = ex.make_queue<input_type>();
 
   atomic<int> done_threads{0};
-  for(int th = 0; th<filter_obj.exectype.num_threads; th++) {
+  for(int th = 0; th<filter_obj.exectype.concurrency_degree(); th++) {
     #pragma omp task shared(tmp_queue,filter_obj,input_queue,done_threads)
     {
       auto item{input_queue.pop()};
@@ -120,7 +120,7 @@ void pipeline_impl_ordered(parallel_execution_omp & ex,
         item = input_queue.pop();
       }
       done_threads++;
-      if (done_threads==filter_obj.exectype.num_threads) {
+      if (done_threads==filter_obj.exectype.concurrency_degree()) {
         tmp_queue.push (make_pair(input_value_type{}, -1));
       }
       else {
@@ -129,7 +129,7 @@ void pipeline_impl_ordered(parallel_execution_omp & ex,
     }
   }
 
-  mpmc_queue<input_type> output_queue{ex.queue_size, ex.lockfree};
+  auto output_queue = ex.make_queue<input_type>();
   #pragma omp task shared (output_queue,tmp_queue)
   {
     vector<input_type> elements;
@@ -185,10 +185,10 @@ void pipeline_impl_unordered(parallel_execution_omp & ex, InQueue & input_queue,
 {
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type;
-  mpmc_queue<input_type> output_queue{ex.queue_size, ex.lockfree};
+  auto output_queue = ex.make_queue<input_type>();
 
   std::atomic<int> done_threads{0};
-  for (int th=0; th<farm_obj.exectype.num_threads; th++) {
+  for (int th=0; th<farm_obj.exectype.concurrency_degree(); th++) {
     #pragma omp task shared(output_queue,farm_obj,input_queue,done_threads)
     {
       auto item = input_queue.pop( ) ;
@@ -199,7 +199,7 @@ void pipeline_impl_unordered(parallel_execution_omp & ex, InQueue & input_queue,
         item = input_queue.pop();
       }
       done_threads++;
-      if (done_threads==farm_obj.exectype.num_threads) {
+      if (done_threads==farm_obj.exectype.concurrency_degree()) {
         output_queue.push(make_pair(input_value_type{}, -1));
       }
       else {
@@ -219,7 +219,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
 {
   using filter_type = filter_info<parallel_execution_omp, Transformer>;
 
-  if (ex.ordering) {
+  if (ex.is_ordered()) {
     pipeline_impl_ordered(ex, input_queue, 
         std::forward<filter_type>(filter_obj),
         std::forward<MoreTransformers>(more_transform_ops)...);
@@ -254,9 +254,9 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
   using output_value_type = experimental::optional<result_type>;
   using output_type = pair<output_value_type,long>;
  
-  mpmc_queue<output_type> output_queue{ex.queue_size, ex.lockfree};
+  auto output_queue = ex.make_queue<output_type>();
   atomic<int> done_threads{0};
-  for (int th=0; th<farm_obj.exectype.num_threads; th++) {
+  for (int th=0; th<farm_obj.exectype.concurrency_degree(); th++) {
     #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue)
     {
       auto item = input_queue.pop();
@@ -267,7 +267,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
       }
       input_queue.push(item);
       done_threads++;
-      if (done_threads==farm_obj.exectype.num_threads) {
+      if (done_threads==farm_obj.exectype.concurrency_degree()) {
         output_queue.push(make_pair(output_value_type{}, -1));
       }
     }              
@@ -288,7 +288,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
   using result_type = typename result_of<Transformer(input_value_type)>::type;
   using output_value_type = experimental::optional<result_type>;
   using output_type = pair<output_value_type,long>;
-  mpmc_queue<output_type> output_queue{ex.queue_size, ex.lockfree};
+  auto output_queue = ex.make_queue<output_queue>();
 
   //Start task
   #pragma omp task shared(transform_op, input_queue, output_queue)
@@ -336,7 +336,7 @@ void pipeline(parallel_execution_omp & ex, Generator && generate_op,
   using namespace std;
 
   using result_type = typename result_of<Generator()>::type;
-  mpmc_queue<pair<result_type,long>> output_queue{ex.queue_size,ex.lockfree};
+  auto output_queue = ex.make_queue<pair<result_type,long>>(); 
 
   #pragma omp parallel
   {
