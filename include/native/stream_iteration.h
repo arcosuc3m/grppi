@@ -59,14 +59,14 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, p
   using generated_type = typename std::result_of<Generator()>::type;
   using pipeline_info_type = pipeline_info<parallel_execution_native , MoreTransformers...>;
 
-  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<generated_type> transformed_queue{ex.queue_size,ex.lockfree};
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<generated_type>();
   std::atomic<int> num_elements{0};
   std::atomic<bool> send_finish{false};
   //Stream generator
   thread generator_task([&](){
     // Register the thread in the execution model
-    ex.register_thread();
+    auto manager = ex.thread_manager();
     for (;;) {
       auto item{generate_op()};
       if (!item) {
@@ -76,13 +76,13 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, p
       num_elements++;
       generated_queue.push(item);
     }
-    ex.deregister_thread();
   });
 
   vector<thread> pipe_threads;
   composed_pipeline< mpmc_queue<generated_type>, mpmc_queue<generated_type>, 0, MoreTransformers ...>
     (generated_queue, forward<pipeline_info_type>(pipe) , transformed_queue, pipe_threads); 
  
+  auto manager = ex.thread_manager();
   for (;;) {
     //If every element has been processed
     if (send_finish && num_elements==0) {
@@ -125,14 +125,14 @@ template<typename Generator, typename Transformer, typename Predicate, typename 
 void stream_iteration(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
   using generated_type = typename std::result_of<Generator()>::type;
-  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<generated_type> transformed_queue{ex.queue_size,ex.lockfree};
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<generated_type>();
   atomic<int> done_threads{0};
   vector<thread> tasks;
    //Stream generator
   thread generator_task([&](){
     // Register the thread in the execution model
-    farm.exectype.register_thread();
+    auto manager = farm.exectype.thread_manager();
     for (;;) {
       auto item = generate_op();
       generated_queue.push(item);
@@ -149,20 +149,18 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
       item = generated_queue.pop();
     }
     done_threads++;
-    if(done_threads == farm.exectype.num_threads) {
+    if(done_threads == farm.exectype.concurrency_degree()) {
       transformed_queue.push({});
     }
     else {
       generated_queue.push(item);
     }
-    // Deregister the thread in the execution model
-    farm.exectype.deregister_thread();
   });
   //Farm workers
-  for(int th = 1; th < farm.exectype.num_threads; th++) {
+  for(int th = 1; th < farm.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
       // Register the thread in the execution model
-      farm.exectype.register_thread();
+      auto manager = farm.exectype.thread_manager();
       auto item{generated_queue.pop()};
       while (item) {
         auto out = *item;
@@ -173,18 +171,17 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
         item = generated_queue.pop();
       }
       done_threads++;
-      if (done_threads == farm.exectype.num_threads) {
+      if (done_threads == farm.exectype.concurrency_degree()) {
         transformed_queue.push({});
       }
       else {
         generated_queue.push(item);
       }
-      // Deregister the thread in the execution model
-      farm.exectype.deregister_thread();
     });
   }
   //Output function
   std::thread consumer_task([&](){
+    auto manager = ex.thread_manager();
     for (;;){
      auto item{transformed_queue.pop()};
      if(!item) break;
@@ -221,36 +218,39 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, T
 
   using transformed_type = typename result_of<Transformer(generated_value_type)>::type;
   
-  mpmc_queue<generated_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<optional<transformed_type>> produced_queue{ex.queue_size,ex.lockfree};
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<generated_type>();
 
 
-  std::thread producer_task([&generate_op, &generated_queue](){
+  std::thread producer_task([&generate_op, &generated_queue, &ex](){
+    auto manager = ex.thread_manager();
     for(;;) {
-      auto item = generate_op();
+      auto item{generate_op()};
       generated_queue.push(item);
       if (!item) break;
     }
   });
   
-  std::thread transformer_task([&generated_queue,&transform_op,&predicate_op,&produced_queue](){
-    auto item = generated_queue.pop();
+  std::thread transformer_task([&generated_queue,&transform_op,&predicate_op,&transformed_queue, &ex](){
+    auto manager = ex.thread_manager();
+    auto item{generated_queue.pop()};
     while (item) {
      auto val = *item;
      do {
        val = transform_op(val);
      } while (predicate_op(val));
-     produced_queue.push(val);
+     transformed_queue.push(val);
      item = generated_queue.pop();
     }
-    produced_queue.push({});
+    transformed_queue.push({});
   });
 
-  std::thread consumer_task([&consume_op,&produced_queue](){
-    auto item = produced_queue.pop();
+  std::thread consumer_task([&consume_op,&transformed_queue,&ex](){
+    auto manager = ex.thread_manager();
+    auto item{transformed_queue.pop()};
     while (item) {
       consume_op(*item);
-      item=produced_queue.pop();
+      item=transformed_queue.pop();
     }
   });  
   producer_task.join();

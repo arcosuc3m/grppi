@@ -46,10 +46,10 @@ namespace grppi {
 /**
 \todo To be documented
 */
-template <typename Execution, typename Operation, typename RedFunc>
+template <typename Execution, typename Combiner, typename Identity>
 auto 
-stream_reduce(Execution & ex, Operation && op, RedFunc && red){
-   return reduction_info<Execution, Operation, RedFunc>(ex, op, red);
+stream_reduce(Execution & ex, int window_size, int offset, Identity identity, Combiner && combine_op){
+   return reduction_info<Execution, Combiner, Identity>(ex, window_size, offset, identity, combine_op);
 }
 
 /**

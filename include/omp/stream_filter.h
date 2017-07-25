@@ -39,7 +39,7 @@ namespace grppi{
 */
 
 /**
-\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
 sequence with sequential execution policy.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
@@ -50,8 +50,8 @@ sequence with sequential execution policy.
 \param consume_op Consumer callable object.
 */
 template <typename Generator, typename Predicate, typename Consumer>
-void stream_filter(parallel_execution_omp & ex, Generator generate_op, 
-                   Predicate predicate_op, Consumer consume_op) 
+void keep(parallel_execution_omp & ex, Generator generate_op, 
+          Predicate predicate_op, Consumer consume_op) 
 {
   using namespace std;
   using generated_type = typename result_of<Generator()>::type;
@@ -65,7 +65,7 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
     #pragma omp single nowait 
     {
       // Generate the task for the filter threads
-      for (int i=0; i< ex.num_threads - 1; i++) {
+      for (int i=0; i< ex.concurrency_degree() - 1; i++) {
         #pragma omp task shared(generated_queue, filtered_queue)
         {
           // Dequeue a pair element - order
@@ -93,11 +93,11 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
         long order = 0;
         // Dequeue an element
         auto item{filtered_queue.pop()};
-        while (done_threads!=ex.num_threads-1) {
+        while (done_threads!=ex.concurrency_degree()-1) {
           // If the item is an end of stream
           if (!item.first && item.second == -1) {
             done_threads++;
-            if(done_threads == ex.num_threads - 1) break;
+            if(done_threads == ex.concurrency_degree() - 1) break;
           }
           else {
             // If the element is the next to be consumed
@@ -149,7 +149,7 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
         generated_queue.push(make_pair(item,order));
         order++;
         if (!item) {
-          for (int i = 0; i< ex.num_threads-1; i++) {
+          for (int i = 0; i< ex.concurrency_degree()-1; i++) {
             generated_queue.push(make_pair(item,-1));
           }
           break;
@@ -159,6 +159,28 @@ void stream_filter(parallel_execution_omp & ex, Generator generate_op,
       #pragma omp taskwait
     }
   }
+}
+
+/**
+\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+sequence with sequential execution policy.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex OpenMP parallel execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
+template <typename Generator, typename Predicate, typename Consumer>
+void discard(parallel_execution_omp & ex, Generator generate_op, 
+             Predicate predicate_op, Consumer consume_op) 
+{
+  keep(ex, 
+    std::forward<Generator>(generate_op), 
+    [&](auto val) { return !predicate_op(val); },
+    std::forward<Consumer>(consume_op) 
+  );
 }
 
 }

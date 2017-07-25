@@ -47,7 +47,7 @@ void print_primes(grppi::polymorphic_execution & exec, int n) {
   using namespace experimental;
 
   int i=0;
-  grppi::stream_filter(exec,
+  grppi::keep(exec,
     [&i,n]() -> optional<int> {
       if (i<=n) return i++;
       else return {};

@@ -23,6 +23,7 @@
 #include <chrono>
 #include <experimental/optional>
 
+#include <pipeline.h>
 #include <stream_reduce.h>
 
 using namespace std;

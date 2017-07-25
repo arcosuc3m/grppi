@@ -52,27 +52,23 @@ void map(parallel_execution_native & ex,
 {
   std::vector<std::thread> tasks;
   int numElements = last - first; 
-  int elemperthr = numElements / ex.num_threads; 
+  int elemperthr = numElements / ex.concurrency_degree(); 
 
-  for(int i=1;i<ex.num_threads;i++){
+  for(int i=1;i<ex.concurrency_degree();i++){
     auto begin = first + (elemperthr * i); 
     auto end = first + (elemperthr * (i+1)); 
 
-    if(i == ex.num_threads-1 ) end= last;
+    if(i == ex.concurrency_degree()-1 ) end= last;
 
     auto out = first_out + (elemperthr * i);
     tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
-      // Register the thread in the execution model
-      ex.register_thread();
+      auto manager = ex.thread_manager();
           
       while (begin!=end) {
         *out = transf_op(*begin);
         begin++;
         out++;
       }
-          
-      // Deregister the thread in the execution model
-      ex.deregister_thread();
     }, begin, end, out);
   }
   //Map main threads
@@ -84,7 +80,7 @@ void map(parallel_execution_native & ex,
   }
 
   //Join threads
-  for(int i=0;i<ex.num_threads-1;i++){
+  for(int i=0;i<ex.concurrency_degree()-1;i++){
     tasks[i].join();
   }
 }
@@ -114,22 +110,19 @@ void map(parallel_execution_native& ex,
 
   //Calculate number of elements per thread
   int numElements = last - first;
-  int elemperthr = numElements / ex.num_threads;
+  int elemperthr = numElements / ex.concurrency_degree();
 
   //Create tasks
-  for(int i=1;i<ex.num_threads;i++){
+  for(int i=1;i<ex.concurrency_degree();i++){
     //Calculate local input and output iterator 
     auto begin = first + (elemperthr * i);
     auto end = first + (elemperthr * (i+1));
-    if( i == ex.num_threads-1) end = last;
+    if( i == ex.concurrency_degree()-1) end = last;
     auto out = first_out + (elemperthr * i);
     //Begin task
     tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out, 
       int tid, int nelem, OtherInputIts ... more_inputs) {
-
-      // Register the thread in the execution model
-      ex.register_thread();
-
+        auto manager = ex.thread_manager();
       advance_iterators(nelem*tid, more_inputs ...);
       while (begin!=end) {
         *out = transf_op(*begin, *more_inputs ...);
@@ -137,9 +130,6 @@ void map(parallel_execution_native& ex,
         begin++;
         out++;
       }
-
-      // Deregister the thread in the execution model
-      ex.deregister_thread();
     }, begin, end, out, i, elemperthr, more_inputs...);
     //End task
   }
@@ -154,7 +144,7 @@ void map(parallel_execution_native& ex,
   }
 
   //Join threads
-  for(int i=0;i<ex.num_threads-1;i++) {
+  for(int i=0;i<ex.concurrency_degree()-1;i++) {
     tasks[i].join();
   }
 }
