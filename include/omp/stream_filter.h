@@ -57,8 +57,8 @@ void keep(parallel_execution_omp & ex, Generator generate_op,
   using generated_type = typename result_of<Generator()>::type;
   using item_type = pair<generated_type,long>;
 
-  mpmc_queue<item_type> generated_queue{ex.queue_size, ex.lockfree};
-  mpmc_queue<item_type> filtered_queue{ex.queue_size, ex.lockfree};
+  auto generated_queue = ex.make_queue<item_type>();
+  auto filtered_queue = ex.make_queue<item_type>();
 
   #pragma omp parallel
   {

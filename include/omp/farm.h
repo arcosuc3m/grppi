@@ -56,7 +56,7 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
 {
   using namespace std;
   using result_type = typename result_of<Generator()>::type;
-  mpmc_queue<result_type> queue{ex.queue_size, ex.lockfree};
+  auto queue = ex.make_queue<result_type>();
 
   #pragma omp parallel
   {
@@ -112,8 +112,8 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
       typename result_of<Transformer(result_value_type)>::type;
   using transformed_type = optional<transformed_value_type>;
 
-  mpmc_queue<result_type> generated_queue{ex.queue_size,ex.lockfree};
-  mpmc_queue<transformed_type> transformed_queue{ex.queue_size, ex.lockfree};
+  auto generated_queue = ex.make_queue<result_type>();
+  auto transformed_queue = ex.make_queue<transformed_type>();
   atomic<int> done_threads{0};
 
   #pragma omp parallel
