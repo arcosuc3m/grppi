@@ -60,24 +60,23 @@ Result map_reduce(parallel_execution_native & ex,
 {
   using namespace std;
 
-  vector<Result> partial_results(ex.num_threads);
+  vector<Result> partial_results(ex.concurrency_degree());
 
   const int num_elements = last - first;
-  const int elements_per_thread = num_elements/ex.num_threads;
+  const int elements_per_thread = num_elements/ex.concurrency_degree();
   sequential_execution seq{};
 
   vector<thread> tasks;
-  for(int i=1;i<ex.num_threads;i++){    
+  for(int i=1;i<ex.concurrency_degree();i++){    
     const auto begin = first + (elements_per_thread * i);
-    const auto end = (i==ex.num_threads-1) ? 
+    const auto end = (i==ex.concurrency_degree()-1) ? 
         last : 
         (first + elements_per_thread * (i+1));
 
     tasks.emplace_back([&,begin,end,i](){
-        ex.register_thread();
+        auto manager = ex.thread_manager();
         partial_results[i] = map_reduce(seq, begin, end, partial_results[i], 
             forward<Transformer>(transform_op), forward<Combiner>(combine_op));
-        ex.deregister_thread();
     });
   }
 

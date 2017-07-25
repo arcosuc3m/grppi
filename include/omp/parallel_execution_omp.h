@@ -32,9 +32,6 @@
 
 namespace grppi{
 
-/** @brief Set the execution mode to parallel with ompenmp framework 
- *    implementation 
- */
 /**
 \brief OpenMP parallel execution policy.
 

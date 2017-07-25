@@ -43,7 +43,7 @@ namespace grppi {
 */
 
 /**
-\brief Invoke [stream filter pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
 sequence with any execution policy.
 \tparam Execution Execution policy.
 \tparam Predicate Callable type for filter predicate.
@@ -51,10 +51,24 @@ sequence with any execution policy.
 \param predicate_op Predicate callable object.
 */
 template <typename Execution, typename Predicate>
-auto stream_filter(Execution & ex, Predicate && predicate_op)
+auto keep(Execution & ex, Predicate && predicate_op)
 {
   return filter_info<Execution, Predicate>{ex, 
       std::forward<Predicate>(predicate_op)};
+}
+
+/**
+\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+sequence with any execution policy.
+\tparam Execution Execution policy.
+\tparam Predicate Callable type for filter predicate.
+\param ex Execution policy object.
+\param predicate_op Predicate callable object.
+*/
+template <typename Execution, typename Predicate>
+auto discard(Execution & ex, Predicate && predicate_op)
+{
+  return keep(ex, [&](auto val) { return !predicate_op(val); });
 }
 
 /**

@@ -49,7 +49,7 @@ void pipeline_example1() {
 #endif
 
     int a = 10;
-p.ordering=true;
+    p.enable_ordering();
 
     pipeline( p,
         // Pipeline stage 0
@@ -63,7 +63,7 @@ p.ordering=true;
         },
 
         // Pipeline stage 1
-        stream_filter(f, [&]( int k ) {
+        keep(f, [&]( int k ) {
               if (k%2==0) {
                   //std::cout << "Discard " << k << "\n";
                   return false;

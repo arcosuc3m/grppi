@@ -52,7 +52,7 @@ void pipeline_farm_example() {
 
     int n=10;
     std::vector<string> output;
-    p.ordering=true;
+    p.enable_ordering();
 
     auto f_obj = farm(f,
          [&](std::vector<int> v) {

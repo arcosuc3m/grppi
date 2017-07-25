@@ -288,7 +288,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
   using result_type = typename result_of<Transformer(input_value_type)>::type;
   using output_value_type = experimental::optional<result_type>;
   using output_type = pair<output_value_type,long>;
-  auto output_queue = ex.make_queue<output_queue>();
+  auto output_queue = ex.make_queue<output_type>();
 
   //Start task
   #pragma omp task shared(transform_op, input_queue, output_queue)
