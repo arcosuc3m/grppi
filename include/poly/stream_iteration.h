@@ -70,9 +70,7 @@ void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
 {
   if (typeid(E) == e.type() && typeid(E) == op.exectype.type()) {
     auto & pipe_exec = op.exectype;
-    static_assert(std::is_same<decltype(pipe_exec),polymorphic_execution>::value, "Son distintos");
-    auto * tmp = pipe_exec.execution_ptr<E>(); 
-    auto & actual_exec = *tmp;
+    auto & actual_exec = *pipe_exec. template execution_ptr<E>(); 
     auto transformed_pipe = transform_pipeline(actual_exec, std::forward<std::tuple<MoreTransformers...>>(op.stages)); 
     stream_iteration(*e.execution_ptr<E>(),
         std::forward<GenFunc>(in),
