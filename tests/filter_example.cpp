@@ -70,7 +70,7 @@ void filter_example() {
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
     std::ofstream os{"txt/out.txt"};
 
-    stream_filter(p,
+    keep(p,
         [&]() -> optional<std::vector<int>> {
             auto v = read_list(is);
             if (v.size() == 0) return {};

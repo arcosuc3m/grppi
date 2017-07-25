@@ -21,7 +21,7 @@
 #ifndef GRPPI_POLY_MAPREDUCE_H
 #define GRPPI_POLY_MAPREDUCE_H
 
-#include "common/support.h"
+#include "../common/support.h"
 #include "polymorphic_execution.h"
 
 namespace grppi{

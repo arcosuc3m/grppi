@@ -22,7 +22,7 @@
 #ifndef GRPPI_POLY_FARM_H
 #define GRPPI_POLY_FARM_H
 
-#include "common/support.h"
+#include "../common/support.h"
 #include "polymorphic_execution.h"
 
 namespace grppi{

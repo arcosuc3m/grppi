@@ -22,7 +22,7 @@
 #define GRPPI_SEQ_PIPELINE_H
 
 #include "sequential_execution.h"
-#include "common/pack_traits.h"
+#include "../common/pack_traits.h"
 
 namespace grppi {
 

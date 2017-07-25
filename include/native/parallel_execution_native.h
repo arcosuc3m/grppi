@@ -28,7 +28,7 @@
 #include <type_traits>
 
 #include "pool.h"
-#include "common/mpmc_queue.h"
+#include "../common/mpmc_queue.h"
 
 namespace grppi {
 
