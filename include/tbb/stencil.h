@@ -69,17 +69,17 @@ template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Ope
 void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
      int numElements = last - first;
-     int elemperthr = numElements/p.num_threads;
+     int elemperthr = numElements/p.concurrency_degree();
      tbb::task_group g;
 
-     for(int i=1;i<p.num_threads;i++){
+     for(int i=1;i<p.concurrency_degree();i++){
 
         
         g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( )mutable{
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
 
-               if(i==p.num_threads-1) end = last;
+               if(i==p.concurrency_degree()-1) end = last;
 
                auto out = firstOut + (elemperthr * i);
         

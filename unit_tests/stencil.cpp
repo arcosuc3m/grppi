@@ -161,8 +161,6 @@ TYPED_TEST(stencil_test, poly_empty)
   this->check_empty();
 }
 
-
-
 TYPED_TEST(stencil_test, static_single)
 {
   this->setup_single();
@@ -202,7 +200,6 @@ TYPED_TEST(stencil_test, poly_single)
   );
   this->check_single();
 }
-
 
 
 TYPED_TEST(stencil_test, static_multiple)
@@ -261,7 +258,7 @@ TYPED_TEST(stencil_test, static_empty_ary)
   this->check_empty_ary();
 }
 
-
+/*
 TYPED_TEST(stencil_test, static_single_ary)
 {
   this->setup_single_ary();
@@ -385,5 +382,5 @@ TYPED_TEST(stencil_test, poly_multiple_ary)
   );
   this->check_multiple_ary();
 }
-
+*/
 

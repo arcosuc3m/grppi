@@ -22,6 +22,7 @@
 #define GRPPI_NATIVE_STENCIL_H
 
 #include "parallel_execution_native.h"
+#include "../common/iterator.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
@@ -72,23 +73,21 @@ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt
 
      std::vector<std::thread> tasks;
      int numElements = last - first;
-     int elemperthr = numElements/p.num_threads;
+     int elemperthr = numElements/p.concurrency_degree();
 
-     for(int i=1;i<p.num_threads;i++){
+     for(int i=1;i<p.concurrency_degree();i++){
 
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
 
-	if(i==p.num_threads-1) end = last;
+	if(i==p.concurrency_degree()-1) end = last;
 
         auto out = firstOut + (elemperthr * i);
         
         tasks.push_back(
             std::thread( [&](InputIt begin, InputIt end, OutputIt out, int i, int n, MoreIn ... inputs){
+               auto manager = p.thread_manager();
 
-               // Register the thread in the execution model
-               p.register_thread();
-               
                advance_iterators((n*i), inputs ...);
                while(begin!=end){
                  auto neighbors = neighbor(begin,inputs...);
@@ -97,9 +96,6 @@ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt
                  advance_iterators( inputs ... );
                  out++;
                }
-
-               // Deregister the thread in the execution model
-               p.deregister_thread();
             },
             begin, end, out, i, elemperthr,inputs ...)
        );
@@ -117,7 +113,7 @@ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt
 
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.concurrency_degree()-1;i++){
       tasks[i].join();
    }
 
