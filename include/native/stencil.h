@@ -22,10 +22,11 @@
 #define GRPPI_NATIVE_STENCIL_H
 
 #include "parallel_execution_native.h"
+#include "../common/iterator.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
- void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
+void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
@@ -65,6 +66,60 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
    }
  
 }
+
+
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+
+     std::vector<std::thread> tasks;
+     int numElements = last - first;
+     int elemperthr = numElements/p.concurrency_degree();
+
+     for(int i=1;i<p.concurrency_degree();i++){
+
+        auto begin = first + (elemperthr * i);
+        auto end = first + (elemperthr * (i+1));
+
+	if(i==p.concurrency_degree()-1) end = last;
+
+        auto out = firstOut + (elemperthr * i);
+        
+        tasks.push_back(
+            std::thread( [&](InputIt begin, InputIt end, OutputIt out, int i, int n, MoreIn ... inputs){
+               auto manager = p.thread_manager();
+
+               advance_iterators((n*i), inputs ...);
+               while(begin!=end){
+                 auto neighbors = neighbor(begin,inputs...);
+                 *out = op(begin, neighbors);
+                 begin++;
+                 advance_iterators( inputs ... );
+                 out++;
+               }
+            },
+            begin, end, out, i, elemperthr,inputs ...)
+       );
+    }
+
+   //MAIN 
+   auto end = first + elemperthr;
+   while(first!=end){
+      auto neighbors = neighbor(first,inputs...);
+      *firstOut = op(*first, neighbors);
+      first++;
+      advance_iterators( inputs ... );
+      firstOut++;
+   }
+
+
+   //Join threads
+   for(int i=0;i<p.concurrency_degree()-1;i++){
+      tasks[i].join();
+   }
+
+}
+
+
 
 }
 #endif

@@ -22,6 +22,7 @@
 #define GRPPI_SEQ_STENCIL_H
 
 #include "sequential_execution.h"
+#include "../common/iterator.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
@@ -34,6 +35,17 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
     }
     
+}
+
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+void stencil(sequential_execution & s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+    while( first != last ) {
+        auto neighbors = neighbor(first, inputs...);
+        *firstOut = op(first, neighbors);
+        advance_iterators( inputs... );
+        first++;
+        firstOut++;
+    }
 }
 }
 #endif
