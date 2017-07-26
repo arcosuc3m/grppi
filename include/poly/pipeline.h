@@ -21,60 +21,95 @@
 #ifndef GRPPI_POLY_PIPELINE_H
 #define GRPPI_POLY_PIPELINE_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "../common/support.h"
+#include "polymorphic_execution.h"
 
 namespace grppi{
-template <typename FuncIn, typename ...Stages>
-void pipeline_multi_impl(polymorphic_execution & e, FuncIn && in, Stages && ... sgs) 
+
+template <typename Execution, typename Transformer,
+          typename ... MoreTransformers,
+          requires_arguments<Transformer> = 0>
+pipeline_info<Execution,Transformer,MoreTransformers...>
+transform_pipeline(Execution & ex, std::tuple<Transformer, MoreTransformers ...> && transform_ops)
 {
+    return pipeline_info<Execution,Transformer, MoreTransformers...> (ex,std::forward<std::tuple<Transformer,MoreTransformers...>>(transform_ops));
 }
 
 
+
+
+template <typename Generator, typename ... Transformers>
+void pipeline_multi_impl(polymorphic_execution &, Generator &&, 
+                         Transformers && ...) 
+{
+
+}
+
 template <typename E, typename ... O,
-          typename FuncIn, typename ...Stages,
+          typename Generator, typename ... Transformers,
           internal::requires_execution_not_supported<E> = 0>
-void pipeline_multi_impl(polymorphic_execution & e, FuncIn && in, Stages && ... sgs) 
+void pipeline_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+                         Transformers && ... transform_ops) 
 {
-  pipeline_multi_impl<O...>(e, std::forward<FuncIn>(in), 
-    std::forward<Stages>(sgs) ...);
+  pipeline_multi_impl<O...>(ex, std::forward<Generator>(generate_op), 
+    std::forward<Transformers>(transform_ops) ...);
 }
 
-
-
-
 template <typename E, typename ... O,
-          typename FuncIn, typename ...Stages,
+          typename Generator, typename ... Transformers,
           internal::requires_execution_supported<E> = 0>
-void pipeline_multi_impl(polymorphic_execution & e, FuncIn && in, Stages && ... sgs) 
+void pipeline_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+                         Transformers && ... transform_ops) 
 {
-  if (typeid(E) == e.type()) {
-    pipeline(*e.execution_ptr<E>(), 
-      std::forward<FuncIn>(in), std::forward<Stages>(sgs) ...);
+  if (typeid(E) == ex.type()) {
+    pipeline(*ex.execution_ptr<E>(), 
+      std::forward<Generator>(generate_op), 
+      std::forward<Transformers>(transform_ops)...);
   }
   else {
-    pipeline_multi_impl<O...>(e, std::forward<FuncIn>(in), std::forward<Stages>(sgs) ...);
+    pipeline_multi_impl<O...>(ex, std::forward<Generator>(generate_op), 
+        std::forward<Transformers>(transform_ops)...);
   }
 }
 
+/**
+\addtogroup pipeline_pattern
+@{
+*/
 
+/**
+\addtogroup pipeline_pattern_poly Polymorphic pipeline pattern
+\brief Polymorphic implementation of the \ref md_pipeline pattern
+@{
+*/
 
-/// Runs a pipeline pattern with an intial function and a set of stages
-/// FuncIn: Initial functor type.
-/// Stages: intermediate and last stages
-template <typename FuncIn, typename ...Stages>
-void pipeline(polymorphic_execution & e, FuncIn && in, Stages && ... sgs) 
+/**
+\brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
+with polymorphic execution.
+\tparam Generator Callable type for the stream generator.
+\tparam Transformers Callable type for each transformation stage.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator operation.
+\param trasnform_ops Transformation operations for each stage.
+*/
+template <typename Generator, typename ... Transformers,
+          requires_no_arguments<Generator> = 0>
+void pipeline(polymorphic_execution & ex, Generator && generate_op, 
+              Transformers && ... transform_ops) 
 {
   pipeline_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<FuncIn>(in), std::forward<Stages>(sgs) ...);
+  >(ex, std::forward<Generator>(generate_op), 
+      std::forward<Transformers>(transform_ops) ...);
 }
 
-
-
+/**
+@}
+@}
+*/
 
 } // end namespace grppi
 

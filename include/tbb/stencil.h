@@ -18,12 +18,14 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_TBB_H
-#define GRPPI_STENCIL_TBB_H
+#ifndef GRPPI_TBB_STENCIL_H
+#define GRPPI_TBB_STENCIL_H
 
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
+
+#include "parallel_execution_tbb.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
@@ -31,15 +33,15 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
   OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
   int numElements = last - first;
-  int elemperthr = numElements/p.num_threads;
+  int elemperthr = numElements/p.concurrency_degree();
   tbb::task_group g;
 
-  for(int i=1;i<p.num_threads;i++){
+  for(int i=1;i<p.concurrency_degree();i++){
 
      g.run( [&neighbor, &op, first, firstOut, elemperthr, i, last, p ]() {
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
-        if( i == p.num_threads-1) end = last;
+        if( i == p.concurrency_degree()-1) end = last;
         auto out = firstOut + (elemperthr * i);
         while(begin!=end){
           auto neighbors = neighbor(begin);

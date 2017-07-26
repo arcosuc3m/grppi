@@ -18,12 +18,14 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_TBB_H
-#define GRPPI_REDUCE_TBB_H
+#ifndef GRPPI_TBB_REDUCE_H
+#define GRPPI_TBB_REDUCE_H
 
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
+
+#include "parallel_execution_tbb.h"
 
 namespace grppi{
 

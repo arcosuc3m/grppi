@@ -18,8 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAP_SEQ_H
-#define GRPPI_MAP_SEQ_H
+#ifndef GRPPI_SEQ_MAP_H
+#define GRPPI_SEQ_MAP_H
+
+#include "sequential_execution.h"
 
 namespace grppi{
 

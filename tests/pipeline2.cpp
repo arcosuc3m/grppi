@@ -50,7 +50,7 @@ void pipeline_example2() {
 #endif
 
     std::vector<string> output;
-    p.ordering=true;
+    p.enable_ordering();
     ifstream fe("txt/words.txt");
     if (!fe.good()) return;
     int numchar = 0;

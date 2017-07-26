@@ -21,22 +21,112 @@
 #ifndef GRPPI_POLY_STREAM_ITERATOR_H
 #define GRPPI_POLY_STREAM_ITERATOR_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "../common/support.h"
+#include "polymorphic_execution.h"
 
 namespace grppi{
 
-/*template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
- void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
+/**
+\addtogroup stream_iteration_pattern
+@{
+*/
 
--->
-(CREO un typename nuevo y se lo paso)
+/**
+\addtogroup stream_iteration_pattern_poly Polymorphic stream iteration pattern
+Sequential implementation of the \ref md_stream_iteration.
+@{
+*/
+
+
 template<typename GenFunc, typename Predicate, typename OutFunc,
-         typename Object, typename ...Stages>
- void stream_iteration(parallel_execution_native &p, GenFunc && in, 
-      Object && se, Predicate && condition, OutFunc && out){*/
+         typename Transformer >
+void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+      farm_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
+{
+}
 
 
+
+template <typename E, typename ... O,
+          typename GenFunc, typename Predicate, typename OutFunc,
+          typename Transformer ,
+          internal::requires_execution_not_supported<E> = 0>
+void stream_iteration_multi_impl(polymorphic_execution & e,  GenFunc && in,
+      pipeline_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
+{
+  stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+    std::forward<farm_info<polymorphic_execution,Transformer> >(op), std::forward<Predicate>(condition),
+    std::forward<OutFunc>(out));
+}
+
+template <class E, typename ... O,
+          typename GenFunc, typename Predicate, typename OutFunc,
+          typename Transformer ,
+          internal::requires_execution_supported<E> = 0>
+void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+      farm_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
+{
+  if (typeid(E) == e.type() && typeid(E) == op.exectype.type()) {
+    auto & pipe_exec = op.exectype;
+    auto & actual_exec = *pipe_exec. template execution_ptr<E>();
+    auto transformed_farm = farm(actual_exec, std::forward<Transformer>(op.task));
+    stream_iteration(*e.execution_ptr<E>(),
+        std::forward<GenFunc>(in),
+        std::forward<farm_info<E,Transformer> >(transformed_farm), std::forward<Predicate>(condition),
+        std::forward<OutFunc>(out));
+  }
+  else {
+    stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+        std::forward<farm_info<polymorphic_execution,Transformer> >(op), std::forward<Predicate>(condition),
+        std::forward<OutFunc>(out));
+  }
+}
+
+
+
+template<typename GenFunc, typename Predicate, typename OutFunc,
+         typename ...MoreTransformers >
+void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+      pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
+{
+}
+
+
+
+template <typename E, typename ... O,
+          typename GenFunc, typename Predicate, typename OutFunc,
+          typename ...MoreTransformers ,
+          internal::requires_execution_not_supported<E> = 0>
+void stream_iteration_multi_impl(polymorphic_execution & e,  GenFunc && in,
+      pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
+{
+  stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+    std::forward<pipeline_info<polymorphic_execution,MoreTransformers...> >(op), std::forward<Predicate>(condition),
+    std::forward<OutFunc>(out));
+}
+
+template <class E, typename ... O,
+          typename GenFunc, typename Predicate, typename OutFunc,
+          typename ...MoreTransformers ,
+          internal::requires_execution_supported<E> = 0>
+void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+      pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
+{
+  if (typeid(E) == e.type() && typeid(E) == op.exectype.type()) {
+    auto & pipe_exec = op.exectype;
+    auto & actual_exec = *pipe_exec. template execution_ptr<E>(); 
+    auto transformed_pipe = transform_pipeline(actual_exec, std::forward<std::tuple<MoreTransformers...>>(op.stages)); 
+    stream_iteration(*e.execution_ptr<E>(),
+        std::forward<GenFunc>(in),
+        std::forward<pipeline_info<E,MoreTransformers...> >(transformed_pipe), std::forward<Predicate>(condition),
+        std::forward<OutFunc>(out));
+  }
+  else {
+    stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+        std::forward<pipeline_info<polymorphic_execution,MoreTransformers...> >(op), std::forward<Predicate>(condition),
+        std::forward<OutFunc>(out));
+  }
+}
 
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename Operation>
@@ -84,22 +174,79 @@ void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
 
 
 
-/// Runs a stream_iteration pattern with a generator function, an operation object
-/// a predicate condition and an output function.
-/// GenFunc: Generator functor type.
-/// Operation: Operation functor type.
-/// Predicate: Predicator functor type.
-/// OutFunc: Output functor type.
+/**
+\brief Invoke [stream iteration pattern](@ref md_stream_iteration) on a data stream with polymorphic 
+execution with a generator, a predicate, a consumer and a farm as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operations.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param farm Composed farm object.
+*/
 template <typename GenFunc, typename Predicate, typename OutFunc,
-          typename Operation>
+          typename Transformer>
+void stream_iteration(polymorphic_execution & e, GenFunc && in,
+      farm_info<polymorphic_execution, Transformer> && op, Predicate && condition, OutFunc && out)
+{
+  stream_iteration_multi_impl<
+    sequential_execution,
+    parallel_execution_native
+  >(e, std::forward<GenFunc>(in), std::forward<farm_info<polymorphic_execution,Transformer> >(op),
+       std::forward<Predicate>(condition), std::forward<OutFunc>(out));
+}
+
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_stream_iteration) on a data stream with polymorphic 
+execution with a generator, a predicate, a consumer and a pipeline as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam MoreTransformers Callable type for the transformer operations.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param pipe Composed pipeline object.
+*/
+template <typename GenFunc, typename Predicate, typename OutFunc,
+          typename ...MoreTransformers>
+void stream_iteration(polymorphic_execution & e, GenFunc && in,
+      pipeline_info<polymorphic_execution, MoreTransformers...> && op, Predicate && condition, OutFunc && out)
+{
+  stream_iteration_multi_impl<
+    sequential_execution,
+    parallel_execution_native
+  >(e, std::forward<GenFunc>(in), std::forward<pipeline_info<polymorphic_execution,MoreTransformers...> >(op),
+       std::forward<Predicate>(condition), std::forward<OutFunc>(out));
+}
+
+
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_stream_iteration) on a data stream with polymorphic 
+execution with a generator, a predicate, a transformer and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operation.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param tranformer_op Tranformer operation.
+*/
+template <typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
 void stream_iteration(polymorphic_execution & e, GenFunc && in, 
       Operation && op, Predicate && condition, OutFunc && out) 
 {
   stream_iteration_multi_impl<
     sequential_execution,
-    parallel_execution_native,
-    parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_native
   >(e, std::forward<GenFunc>(in), std::forward<Operation>(op), 
        std::forward<Predicate>(condition), std::forward<OutFunc>(out));
 }

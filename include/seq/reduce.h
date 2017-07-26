@@ -18,8 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_SEQ_H
-#define GRPPI_REDUCE_SEQ_H
+#ifndef GRPPI_SEQ_REDUCE_H
+#define GRPPI_SEQ_REDUCE_H
+
+#include "sequential_execution.h"
 
 namespace grppi{
 

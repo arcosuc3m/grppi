@@ -18,46 +18,58 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_SEQ_H
-#define GRPPI_MAPREDUCE_SEQ_H
+#ifndef GRPPI_SEQ_MAPREDUCE_H
+#define GRPPI_SEQ_MAPREDUCE_H
 
-#include "../reduce.h"
+#include "sequential_execution.h"
 
 namespace grppi{
 
-//Parallel STL like function
-template <typename InputIt, typename Transformer, class T, typename Combiner>
-T map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op, T init){
-    T out = init;
+/**
+\addtogroup mapreduce_pattern
+@{
+*/
 
-    while(first != last){
-       auto mappedValue = transform_op(*first);
-       out = combine_op(out, mappedValue);
-       first++;
-    }
+/**
+\addtogroup mapreduce_pattern_seq Sequential map/reduce pattern
+\brief Sequential implementation of the \ref md_map-reduce pattern.
+@{
+*/
 
-    return out;
+/**
+\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+sequential execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam Result Result type of the reduction.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename InputIt, typename Result, typename Transformer, 
+          typename Combiner>
+Result map_reduce(sequential_execution &, 
+                  InputIt first, InputIt last, 
+                  Result identity, 
+                  Transformer &&  transform_op, Combiner && combine_op)
+{
+  Result out = identity;
+
+  using namespace std;
+
+  while (first!=last) {
+    auto x = transform_op(*first);
+    out = combine_op(out,x);
+    first++;
+  }
+
+  return out;
 }
 
-template <typename InputIt, typename Transformer,typename Combiner>
-auto map_reduce ( sequential_execution &, InputIt first, InputIt last, Transformer &&  transform_op, Combiner && combine_op){
-
-   typename std::result_of<Combiner(
-   typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-   typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type out;  
-    bool firstElement = true;
-    while(first != last){
-       auto mappedValue = transform_op(*first);
-       if(firstElement) {
-          firstElement = false;
-          out = mappedValue;
-       }else{
-          out = combine_op(out, mappedValue);
-       }
-       first++;
-    }
-    return out;
-
-}
 }
 #endif

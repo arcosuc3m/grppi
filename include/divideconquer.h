@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -17,20 +17,21 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
+#ifndef GRPPI_DIVIDECONQUER_H
+#define GRPPI_DIVIDECONQUER_H
 
-#ifndef GRPPI_COMMON_H
-#define GRPPI_COMMON_H
 
-// Includes for execution policies
-#include "sequential_execution.h"
-#include "parallel_execution_native.h"
-#include "parallel_execution_omp.h"
-#include "parallel_execution_tbb.h"
+#include "seq/divideconquer.h"
+#include "native/divideconquer.h"
+#include "omp/divideconquer.h"
+#include "tbb/divideconquer.h"
+#include "poly/divideconquer.h"
 
-// Includes with GRPPI internals
-#include "callable_traits.h"
-#include "iterator.h"
-#include "patterns.h"
-#include "common/support.h"
+/** 
+\defgroup divide_conquer_pattern Divide/Conquer pattern
+
+\brief Interface for applyinng the \ref md_divide-conquer.
+*/
+
 
 #endif

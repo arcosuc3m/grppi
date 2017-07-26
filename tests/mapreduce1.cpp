@@ -46,10 +46,12 @@ void mapreduce_example1() {
 #endif
 
    std::vector<std::string> words{"a","b","a","c","d","e","c","c","a","b"};
+   std::map<std::string,int> init;
    auto result = map_reduce(
       p,
       words.begin(),
       words.end(),
+      init,
       [](std::string word){
          std::map<string,int> key_value;
          key_value[word]=1;

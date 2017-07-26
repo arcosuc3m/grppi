@@ -18,8 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_THR_H
-#define GRPPI_STENCIL_THR_H
+#ifndef GRPPI_NATIVE_STENCIL_H
+#define GRPPI_NATIVE_STENCIL_H
+
+#include "parallel_execution_native.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
@@ -27,33 +29,26 @@ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt
 
     std::vector<std::thread> tasks;
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.concurrency_degree();
  
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.concurrency_degree();i++){
        auto begin = first + (elemperthr * i);
        auto end = first + (elemperthr * (i+1));
       
-       if( i == p.num_threads-1) end = last;
+       if( i == p.concurrency_degree()-1) end = last;
 
        auto out = firstOut + (elemperthr * i);
 
-       tasks.push_back(
-           std::thread( [&](InputIt begin, InputIt end, OutputIt out){
-              // Register the thread in the execution model
-              p.register_thread();
+       tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+         auto manager = p.thread_manager();
 
-              while(begin!=end){
-                auto neighbors = neighbor(begin);
-                *out = op(begin, neighbors);
-                begin++;
-                out++;
-              }
-
-              // Deregister the thread in the execution model
-              p.deregister_thread();
-           },
-           begin, end, out)
-      );
+         while (begin!=end) {
+           auto neighbors = neighbor(begin);
+           *out = op(begin, neighbors);
+           begin++;
+           out++;
+         }
+       }, begin, end, out);
     }
    //MAIN 
    auto end = first + elemperthr;
@@ -65,7 +60,7 @@ void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt
    }
 
    //Join threads
-   for(int i=0;i<p.num_threads-1;i++){
+   for(int i=0;i<p.concurrency_degree()-1;i++){
       tasks[i].join();
    }
  

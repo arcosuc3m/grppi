@@ -18,117 +18,148 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FARM_OMP_H
-#define GRPPI_FARM_OMP_H
+#ifndef GRPPI_OMP_FARM_H
+#define GRPPI_OMP_FARM_H
 
 #ifdef GRPPI_OMP
 #include <experimental/optional>
+
+#include "parallel_execution_omp.h"
 
 
 namespace grppi
 {
 
-template <typename Generator, typename Operation, typename Consumer>
-void farm(parallel_execution_omp &p, Generator &&gen, Operation && op , Consumer &&cons) {
+/**
+\addtogroup farm_pattern
+@{
+*/
 
-    mpmc_queue< typename std::result_of<Generator()>::type > queue (p.queue_size,p.lockfree);
-    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size, p.lockfree);
-    std::atomic<int> nend(0);
-    #pragma omp parallel
+/**
+\addtogroup farm_pattern_omp OpenMP parallel farm pattern
+OpenMP implementation of the \ref md_farm.
+@{
+*/
+
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with OpenMP parallel 
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex OpenMP arallel execution policy object.
+\param generate_op Generator operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Consumer>
+void farm(parallel_execution_omp & ex, Generator generate_op, 
+          Consumer consume_op) 
+{
+  using namespace std;
+  using result_type = typename result_of<Generator()>::type;
+  auto queue = ex.make_queue<result_type>();
+
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
     {
-        #pragma omp single nowait
+      for (int i = 0; i<ex.concurrency_degree(); i++) {
+        #pragma omp task shared(queue)
         {
-        //Create threads
-        for( int i = 0; i < p.num_threads; i++ ) {
-             #pragma omp task shared(queue, queueout, op)
-             {
-                    typename std::result_of<Generator()>::type item;
-                    item = queue.pop( ) ;
-                    //auto item = queue.pop( );
-                    while( item ) {
-                       auto out = op( item.value() );
-                       queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
-                       // item = queue.pop( );
-                       item = queue.pop( ) ;
-                    }
-                    queue.push(item);
-                    nend++;
-                    if(nend == p.num_threads)
-                        queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
-             }
-       }
-
-        //SINK
-       #pragma omp task shared(queueout,cons)
-       { 
-             std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
-             item = queueout.pop( ) ;
-             // auto item = queueout.pop(  ) ;
-             while( item ) {
-                 cons( item.value() );
-//               item = queueout.pop(  ) ;
-                 item = queueout.pop( );
-             }
-       }
-
-       //Generate elements
-        while( 1 ) {
-           auto k = gen();
-           queue.push( k );
-           if( !k ) {
-               break;
-            }
+          auto item{queue.pop()};
+          while (item) {
+            consume_op(*item);
+            item = queue.pop() ;
+          }
         }
-
-        #pragma omp taskwait
-        }
-    }
-
-}
-
-
-
-template <typename Generator, typename Operation>
-void farm(parallel_execution_omp &p, Generator &&gen, Operation &&op) {
-	
-    mpmc_queue<typename std::result_of<Generator()>::type> queue(p.queue_size, p.lockfree);
-    #pragma omp parallel
-    {
-	#pragma omp single nowait
-	{
-            //Create threads
-            for( int i = 0; i < p.num_threads; i++ ) {
-                #pragma omp task shared(queue)
-		{
-                    typename std::result_of<Generator()>::type item;
-                    item = queue.pop() ;
-                    while( item ) {
-                        op( item.value() );
-                        item = queue.pop() ;
-                    }
-               	}
-            }
+      }
 		
-            //Generate elements
-            while( 1 ) {
-                auto k = gen();
-                queue.push( k ) ;
-                if( !k ) {
-                    for( int i = 1; i < p.num_threads; i++ )
-                        queue.push(k);
-                    break;
-                }
-            }
-            //Join threads
-            #pragma omp taskwait
+      for (;;) {
+        auto item = generate_op();
+        queue.push(item) ;
+        if (!item) {
+          for (int i=1; i<ex.concurrency_degree(); ++i) {
+            queue.push(item);
+          }
+          break;
         }
-    }	
+      }
+
+      #pragma omp taskwait
+    }
+  }	
 }
 
-template <typename Operation>
-farm_info<parallel_execution_omp,Operation> farm(parallel_execution_omp &p, Operation && op){
-   return farm_info<parallel_execution_omp, Operation>(p,std::forward<Operation>(op) );
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with OpenMP parallel 
+execution with a generator, a transformer, and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Tranformer Callable type for the tranformation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex OpenMP Parallel execution policy object.
+\param generate_op Generator operation.
+\param transform_op Transformer operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Transformer, typename Consumer>
+void farm(parallel_execution_omp & ex, Generator generate_op, 
+          Transformer transform_op , Consumer consume_op) 
+{
+  using namespace std;
+  using namespace experimental;
+  using result_type = typename result_of<Generator()>::type;
+  using result_value_type = typename result_type::value_type;
+  using transformed_value_type = 
+      typename result_of<Transformer(result_value_type)>::type;
+  using transformed_type = optional<transformed_value_type>;
+
+  auto generated_queue = ex.make_queue<result_type>();
+  auto transformed_queue = ex.make_queue<transformed_type>();
+  atomic<int> done_threads{0};
+
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
+    {
+      for (int i=0; i<ex.concurrency_degree(); ++i) {
+        #pragma omp task shared(generated_queue, transformed_queue, transform_op)
+        {
+          auto item{generated_queue.pop()};
+          while (item) {
+            transformed_queue.push(transformed_type{transform_op(*item)});
+            item = generated_queue.pop( ) ;
+          }
+          generated_queue.push(item);
+          done_threads++;
+          if (done_threads == ex.concurrency_degree())
+            transformed_queue.push(transformed_type{});
+        }
+      }
+
+      #pragma omp task shared(transformed_queue,consume_op)
+      { 
+        auto item{transformed_queue.pop()};
+        while (item) {
+          consume_op( item.value() );
+          item = transformed_queue.pop( );
+        }
+      }
+
+      for (;;) {
+        auto item = generate_op();
+        generated_queue.push(item);
+        if (!item) break;
+      }
+
+      #pragma omp taskwait
+    }
+  }
 }
+
+/**
+@}
+@}
+*/
+
 }
 #endif
 

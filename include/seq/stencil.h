@@ -18,8 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_SEQ_H
-#define GRPPI_STENCIL_SEQ_H
+#ifndef GRPPI_SEQ_STENCIL_H
+#define GRPPI_SEQ_STENCIL_H
+
+#include "sequential_execution.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>

@@ -18,28 +18,30 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_OMP_H
-#define GRPPI_STENCIL_OMP_H
+#ifndef GRPPI_OMP_STENCIL_H
+#define GRPPI_OMP_STENCIL_H
 
 #ifdef GRPPI_OMP
+#include "parallel_execution_omp.h"
+
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
  void stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.concurrency_degree();
     #pragma omp parallel
     {
     #pragma omp single nowait
     { 
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.concurrency_degree();i++){
        #pragma omp task firstprivate(i)
        {
          auto begin = first + (elemperthr * i);
          auto end = first + (elemperthr * (i+1));
       
-         if( i == p.num_threads-1) end = last;
+         if( i == p.concurrency_degree()-1) end = last;
 
          auto out = firstOut + (elemperthr * i);
 

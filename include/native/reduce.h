@@ -18,11 +18,13 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_THR_H
-#define GRPPI_REDUCE_THR_H
+#ifndef GRPPI_NATIVE_REDUCE_H
+#define GRPPI_NATIVE_REDUCE_H
 
 #include <thread>
 #include <functional>
+
+#include "parallel_execution_native.h"
 
 namespace grppi{
 
@@ -58,15 +60,15 @@ auto reduce(parallel_execution_native & ex,
     auto identityVal = identity;
 
     int numElements = last - first;
-    int elemperthr = numElements/ex.num_threads;
+    int elemperthr = numElements/ex.concurrency_degree();
     std::atomic<int> finishedTask(1);
     //local output
-    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.concurrency_degree());
     //Create threads
-    for(int i=1;i<ex.num_threads;i++){
+    for(int i=1;i<ex.concurrency_degree();i++){
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == ex.num_threads -1) end = last;
+      if(i == ex.concurrency_degree() -1) end = last;
       ex.pool.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
@@ -85,7 +87,7 @@ auto reduce(parallel_execution_native & ex,
          out[0] = combine_op( out[0], *first);
     }
 
-    while(finishedTask.load()!=ex.num_threads);
+    while(finishedTask.load()!=ex.concurrency_degree());
 
     auto outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){

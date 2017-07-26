@@ -19,53 +19,93 @@
 */
 
 
-#ifndef GRPPI_STREAM_REDUCE_OMP_H
-#define GRPPI_STREAM_REDUCE_OMP_H
+#ifndef GRPPI_OMP_STREAM_REDUCE_H
+#define GRPPI_OMP_STREAM_REDUCE_H
 
 #ifdef GRPPI_OMP
 
-#include "../reduce.h"
+#include "parallel_execution_omp.h"
 
 namespace grppi{
 
-template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
- void stream_reduce(parallel_execution_omp &p, Generator &&gen, int windowsize, int offset, Combiner && comb, Consumer &&cons, IdentityType identity)
+/**
+\addtogroup stream_reduce_pattern
+@{
+*/
+
+/**
+\addtogroup stream_reduce_pattern_omp OpenMP parallel stream reduce pattern
+OpenMP parallel implementation of the \ref md_stream-reduce pattern.
+@{
+*/
+
+/**
+\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
+OpenMP parallel execution.
+\tparam Generator Callable type used for generating data items.
+\tparam Combiner Callable type used for data items combination.
+\tparam Consumer Callable type used for consuming data items.
+\tparam Identity Type of the identity value used by the combiner.
+\param ex OpenMP parallel execution policy object.
+\param window_size Number of consecutive items to be reduced.
+\param offset Number of items after of which a new reduction is started.
+\param identity Identity value for the combination.
+\param generate_op Generation operation.
+\param combine_op Combination operation.
+\param consume_op Consume operation.
+*/
+
+template <typename Identity, typename Combiner, typename Consumer, 
+          typename Generator>
+void stream_reduce(parallel_execution_omp & ex,
+                   int window_size, int offset, Identity identity,
+                   Generator && generate_op, Combiner && combine_op, 
+                   Consumer && consume_op)
 {
+  using namespace std;
+  using generated_type = typename result_of<Generator()>::type;
+  using generated_value_type = typename generated_type::value_type;
 
-     std::vector<typename std::result_of<Generator()>::type::value_type> buffer;
-     auto k = gen();
-     while(1){
-        //Create a vector as a buffer 
-        //If its not the las element and the window is not complete keep getting more elements
-        while( k && buffer.size() != windowsize){
-           buffer.push_back(k.value());
-           k = gen();
-        }
-        if(buffer.size()>0){
-           //Apply the reduce function to the elements on the window
-           auto reduceVal = reduce(p, buffer.begin(), buffer.end(), identity, std::forward<Combiner>(comb) );
-           //Call to sink function
-           cons(reduceVal);
-           //Remove elements
-           if(k){
-              buffer.erase(buffer.begin(), buffer.begin() + offset);
-           }
-        }
-        //If there is no more elements finallize the pattern
-        if( !k ){
-           break;
-        }
+  // TODO: Evaluate better structure than vector
+  vector<generated_value_type> values;
+  values.reserve(window_size);
+
+  // TODO: Set generator and consumer in separate threads
+  auto item = generate_op();
+  for (;;) {
+    while (item && values.size()!=window_size) {
+      values.push_back(*item);
+      item = generate_op();
     }
+    if (values.size()>0) {
+      auto reduced_value = reduce(ex, values.begin(), values.end(), identity,
+          std::forward<Combiner>(combine_op));
+      consume_op(reduced_value);
+      if (item) {
+        if (offset <= window_size) {
+          values.erase(values.begin(), values.begin() + offset);
+        }
+        else {
+          values.erase(values.begin(), values.end());
+          auto diff = offset - window_size;
+          while (diff > 0 && item) {
+            item = generate_op();
+            diff--;
+          }
+        }
+      }
+    }
+    if (!item) break;
+  }
+}
+
+/**
+@}
+@}
+*/
 
 }
 
-
-
-template <typename Operation, typename RedFunc>
-reduction_info<parallel_execution_omp,Operation, RedFunc> stream_reduce(parallel_execution_omp &p, Operation && op, RedFunc && red){
-   return reduction_info<parallel_execution_omp, Operation, RedFunc>(p,op, red);
-}
-}
 #endif
 
 #endif
