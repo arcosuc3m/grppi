@@ -22,106 +22,156 @@
 #define GRPPI_OMP_STENCIL_H
 
 #ifdef GRPPI_OMP
+
 #include "parallel_execution_omp.h"
 
-
 namespace grppi{
-template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
- void stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
-    int numElements = last - first;
-    int elemperthr = numElements/p.concurrency_degree();
-    #pragma omp parallel
-    {
+template <typename InputIt, typename OutputIt, typename StencilTransformer, typename Neighbourhood,
+          typename ... OtherInputIts>
+void internal_stencil(parallel_execution_omp & ex, 
+                      InputIt first, InputIt last, OutputIt first_out, 
+                      StencilTransformer transform_op, 
+                      Neighbourhood neighbour_op, 
+                      int i, int elements_per_thread, 
+                      OtherInputIts ... other_firsts )
+{
+  auto begin = next(first, elements_per_thread * i);
+  auto end = (i==ex.concurrency_degree()-1)?
+      last :
+      next(first, elements_per_thread * (i+1));
+
+  auto out = next(first_out, elements_per_thread * i);
+
+  advance_iterators(elements_per_thread*i, other_firsts ...);
+  while (begin!=end) {
+    *out = transform_op(begin, neighbour_op(begin,other_firsts ... ));
+    begin++;
+    advance_iterators(other_firsts...);
+    out++;
+  }
+}
+
+/**
+\addtogroup stencil_pattern
+@{
+*/
+
+/**
+\addtogroup stencil_pattern_omp OpenMP Parallel stencil pattern
+\brief OpenMP parallel implementation of the \ref md_stencil pattern.
+@{
+*/
+
+/**
+\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+OpenMP parallel execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\param ex OpenMP parallel execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation transform_operation.
+\param neighbour_op Neighbourhood transform_operation.
+*/
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood>
+void stencil(parallel_execution_omp & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer transform_op, Neighbourhood neighbour_op) 
+{
+  int size = last - first;
+  int elements_per_thread = size/ex.concurrency_degree();
+  #pragma omp parallel
+  {
     #pragma omp single nowait
     { 
-    for(int i=1;i<p.concurrency_degree();i++){
-       #pragma omp task firstprivate(i)
-       {
-         auto begin = first + (elemperthr * i);
-         auto end = first + (elemperthr * (i+1));
-      
-         if( i == p.concurrency_degree()-1) end = last;
+      for(int i=1; i<ex.concurrency_degree(); i++) {
+        #pragma omp task firstprivate(i)
+        {
+          auto begin = next(first, elements_per_thread * i);
+          auto end = (i==ex.concurrency_degree()-1)?
+              last :
+              next(first, elements_per_thread * (i+1));
+          auto out = next(first_out, elements_per_thread * i);
 
-         auto out = firstOut + (elemperthr * i);
-
-         while(begin!=end){
-           auto neighbors = neighbor(begin);
-           *out = op(begin, neighbors);
-           begin++;
-           out++;
+          while(begin!=end){
+            *out = transform_op(begin, neighbour_op(begin));
+            begin++;
+            out++;
+          }
         }
       }
+
+      auto begin = first; 
+      auto end = next(first, elements_per_thread);
+      auto out = first_out;
+      while (begin!=end) {
+        *out = transform_op(begin, neighbour_op(begin));
+        begin++;
+        out++;
+      }
+      #pragma omp taskwait
     }
-   //MAIN
-   auto begin = first; 
-   auto end = first + elemperthr;
-   auto out = firstOut;
-   while(begin!=end){
-      auto neighbors = neighbor(begin);
-      *out = op(begin, neighbors);
-      begin++;
-      out++;
-   }
-   #pragma omp taskwait
-   }
-   }
+  }
 }
 
+/**
+\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+TBB parallel execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\tparam OtherInputIts Iterator types for additional input sequences.
+\param ex TBB parallel execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+\param other_firsts Iterators to the first element of additional input sequences.
+*/
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood, typename ... OtherInputIts>
+void stencil(parallel_execution_omp & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer && transform_op, Neighbourhood && neighbour_op, 
+             OtherInputIts ... other_firsts ) 
+{
+  int size = distance(frist,last);
+  int elements_per_thread = size/ex.concurrency_degree();
+  #pragma omp parallel 
+  {
+    #pragma omp single nowait
+    {
+      for (int i=1; i<ex.concurrency_degree(); ++i) {
+        #pragma omp task firstprivate(i)
+        {
+          internal_stencil(ex, first, last, first_out,
+              std::forward<StencilTransformer>(transform_op),
+              std::forward<Neighbourhood>(neighbour_op),
+              i,elements_per_thread, 
+              other_firsts...);
+        }
+      }
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
-void internal_stencil(parallel_execution_omp & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, int i, int elemperthr, MoreIn ... inputs ){
-   auto begin = first + (elemperthr * i);
-   auto end = first + (elemperthr * (i+1));
-   if(i==p.concurrency_degree()-1) end = last;
+      auto begin = first;
+      auto out = first_out; 
+      auto end = next(first, elements_per_thread);
+      while (begin!=end) {
+        *out = transform_op(*begin, neighbour_op(begin,other_firsts...));
+        begin++;
+        advance_iterators( other_firsts ... );
+        out++;
+      }
 
-   auto out = firstOut + (elemperthr * i);
-
-   advance_iterators((elemperthr*i), inputs ...);
-   while(begin!=end){
-      auto neighbors = neighbor(begin,inputs ... );
-      *out = op(begin, neighbors);
-      begin++;
-      advance_iterators( inputs ... );
-      out++;
-   }
-}
-
-
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
-void stencil(parallel_execution_omp & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
-
-   int numElements = last - first;
-   int elemperthr = numElements/p.concurrency_degree();
-   #pragma omp parallel 
-   {
-   #pragma omp single nowait
-   {
-
-   for(int i=1;i<p.concurrency_degree();i++){
-       #pragma omp task firstprivate(i)// firstprivate(inputs...)
-       {
-          internal_stencil(p,first,last,firstOut,std::forward<Operation>(op),std::forward<NFunc>(neighbor),i,elemperthr, inputs...);
-       }
+      #pragma omp taskwait
     }
-
-   //MAIN
-   auto begin = first;
-   auto out = firstOut; 
-   auto end = first + elemperthr;
-   while(begin!=end){
-      auto neighbors = neighbor(begin,inputs...);
-      *out = op(*begin, neighbors);
-      begin++;
-      advance_iterators( inputs ... );
-      out++;
-   }
-
-   #pragma omp taskwait
-   }
-   }
-
-
+  }
 }
 
 
