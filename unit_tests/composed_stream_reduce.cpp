@@ -55,6 +55,7 @@ public:
   std::atomic<int> invocations_stage{0};
 
   void setup_window_offset() {
+    execution_.set_concurrency_degree(4);
     out = 0;
     v = vector<int>{1,2,3,4,5,6};
     window = 2;
@@ -70,6 +71,7 @@ public:
   }
 
   void setup_offset_window() {
+    execution_.set_concurrency_degree(4);
     out = 0;
     v = vector<int>{1,2,3,4,5,6,7,8,9,10};
     window = 2;
