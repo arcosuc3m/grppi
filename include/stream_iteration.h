@@ -27,12 +27,16 @@
 #include "native/stream_iteration.h"
 #include "poly/stream_iteration.h"
 
+namespace grppi {
+
 /**
 \addtogroup stream_patterns
 @{
 \defgroup stream_iteration_pattern Stream iteration pattern
-\brief Interface for applyinng the \ref md_stream-iteration pattern.
+\brief Interface for applyinng the \ref md_stream-iteration.
 @}
 */
+
+}
 
 #endif

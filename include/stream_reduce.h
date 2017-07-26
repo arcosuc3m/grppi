@@ -36,21 +36,30 @@ namespace grppi {
 \addtogroup stream_patterns
 @{
 \defgroup stream_reduce_pattern Stream reduce pattern
-\brief Interface for applying the \ref md_stream-reduce pattern.
-*/
-
-/**
-\addtogroup stream_reduce_pattern
+\brief Interface for applying the \ref md_stream-reduce.
 @{
 */
 
 /**
-\todo To be documented
+\brief Invoke \ref md_stream-reduce on a stream.
+\tparam Identity Type of the identity value used by the combiner.
+\tparam Combiner Callable type used for data items combination.
+\param ex Sequential execution policy object.
+\param window_size Number of consecutive items to be reduced.
+\param offset Number of items after of which a new reduction is started.
+\param identity Identity value for the combination.
+\param combine_op Combination operation.
+
 */
-template <typename Execution, typename Combiner, typename Identity>
-auto 
-stream_reduce(Execution & ex, int window_size, int offset, Identity identity, Combiner && combine_op){
-   return reduction_info<Execution, Combiner, Identity>(ex, window_size, offset, identity, combine_op);
+template <typename Execution, typename Identity, typename Combiner>
+auto stream_reduce(Execution & ex, 
+                   int window_size, int offset, 
+                   Identity identity, 
+                   Combiner && combine_op)
+{
+   return reduction_info<Execution, Combiner, Identity>(ex, 
+       window_size, offset, identity, 
+       std::forward<Combiner>(combine_op));
 }
 
 /**

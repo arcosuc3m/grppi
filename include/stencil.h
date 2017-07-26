@@ -34,7 +34,7 @@ namespace grppi {
 \addtogroup data_patterns
 @{
 \defgroup stencil_pattern Stencil pattern
-\brief Interface for applyinng the \ref md_stencil pattern.
+\brief Interface for applyinng the \ref md_stencil.
 @}
 */
 

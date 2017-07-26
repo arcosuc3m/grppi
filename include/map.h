@@ -36,7 +36,7 @@ namespace grppi {
 \addtogroup data_patterns
 @{
 \defgroup map_pattern Map pattern
-\brief Interface for applyinng the \ref md_map pattern.
+\brief Interface for applyinng the \ref md_map.
 @}
 */
 

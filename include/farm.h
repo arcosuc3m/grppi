@@ -35,12 +35,12 @@ namespace grppi {
 \addtogroup stream_patterns
 @{
 \defgroup farm_pattern Farm pattern
-\brief Interface for applyinng the \ref md_farm pattern.
+\brief Interface for applyinng the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
+\brief Invoke \ref md_farm on a data stream with sequential
 execution with a Transformer that can be composed in other patterns.
 \tparam Execution Execution policy type.
 \tparam Transformer Callable type for the transformation operation.

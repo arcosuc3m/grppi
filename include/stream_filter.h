@@ -35,16 +35,12 @@ namespace grppi {
 \addtogroup stream_patterns
 @{
 \defgroup filter_pattern Stream filter pattern
-\brief Interface for applyinng the \ref md_stream-filter
-*/
-
-/**
-\addtogroup filter_pattern
+\brief Interface for applyinng the \ref md_stream-filter.
 @{
 */
 
 /**
-\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke \ref md_stream-filter on a data
 sequence with any execution policy.
 \tparam Execution Execution policy.
 \tparam Predicate Callable type for filter predicate.
@@ -59,7 +55,7 @@ auto keep(Execution & ex, Predicate && predicate_op)
 }
 
 /**
-\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke \ref md_stream-filter on a data
 sequence with any execution policy.
 \tparam Execution Execution policy.
 \tparam Predicate Callable type for filter predicate.

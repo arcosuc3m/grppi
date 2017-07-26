@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -31,7 +31,6 @@ namespace grppi {
 
 /** 
 \defgroup data_patterns Data parallel patterns
-
 \brief Patterns for data parallel processing.
 */
 
@@ -44,7 +43,6 @@ namespace grppi {
 
 /** 
 \defgroup task_patterns Task parallel patterns
-
 \brief Patterns for task parallel processing.
 */
 }
@@ -60,7 +58,6 @@ namespace grppi {
 
 /** 
 \defgroup stream_patterns Streaming patterns
-
 \brief Patterns for data stream processing.
 */
 

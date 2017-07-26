@@ -33,7 +33,7 @@ namespace grppi {
 \addtogroup data_patterns
 @{
 \defgroup mapreduce_pattern Map/reduce pattern
-\brief Interface for applyinng the \ref md_map-reduce pattern.
+\brief Interface for applyinng the \ref md_map-reduce.
 @}
 */
 

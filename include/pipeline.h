@@ -38,16 +38,11 @@ namespace grppi {
 @{
 \defgroup pipeline_pattern Pipeline pattern
 \brief Interface for applyinng the \ref md_pipeline
-@}
-*/
-
-/**
-\addtogroup pipeline_pattern
 @{
 */
 
 /**
-\brief Build a composable [pipeline pattern](@ref md_pipeline) representation
+\brief Build a composable \ref md_pipeline representation
 that can be inserted into another streaming pattern.
 \tparam Execution Execution policy type.
 \tparam Transformer Callable type for first transformation stage.
@@ -71,6 +66,7 @@ pipeline(Execution & ex, Transformer && transform_op,
 
 
 /**
+@}
 @}
 */
 
