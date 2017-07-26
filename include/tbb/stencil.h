@@ -66,7 +66,7 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 }
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
-void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt firstOut, Operation op, NFunc neighbor, MoreIn ... inputs ) {
 
      int numElements = last - first;
      int elemperthr = numElements/p.concurrency_degree();
@@ -75,7 +75,8 @@ void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt f
      for(int i=1;i<p.concurrency_degree();i++){
 
         
-        g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( )mutable{
+        auto in2 = make_tuple(inputs...);
+        g.run([neighbor, op, first, firstOut, elemperthr, i, last, p,in2](){
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
 
@@ -83,12 +84,12 @@ void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt f
 
                auto out = firstOut + (elemperthr * i);
         
-               advance_iterators((elemperthr* i), inputs ...);
+               advance_iterators((elemperthr* i), in2 ...);
                while(begin!=end){
-                 auto neighbors = neighbor(begin,inputs ...);
+                 auto neighbors = neighbor(begin,in2 ...);
                  *out = op(begin, neighbors);
                  begin++;
-                 advance_iterators( inputs ... );
+                 advance_iterators( in2 ... );
                  out++;
                }
             });
