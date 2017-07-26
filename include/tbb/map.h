@@ -18,12 +18,15 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAP_TBB_H
-#define GRPPI_MAP_TBB_H
+#ifndef GRPPI_TBB_MAP_H
+#define GRPPI_TBB_MAP_H
 
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
+
+#include "parallel_execution_tbb.h"
+
 namespace grppi{
 
 /**

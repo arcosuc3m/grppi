@@ -18,33 +18,58 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_THR_H
-#define GRPPI_REDUCE_THR_H
+#ifndef GRPPI_NATIVE_REDUCE_H
+#define GRPPI_NATIVE_REDUCE_H
 
 #include <thread>
 #include <functional>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{
 
-// Empty sequences are currently not supported.
-template < typename InputIt, typename Combiner>
-typename std::iterator_traits<InputIt>::value_type
-reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::iterator_traits<InputIt>::value_type init, Combiner && combine_op){
-   
-    auto identityVal = init;
+/**
+\addtogroup reduce_pattern
+@{
+*/
+
+/**
+\addtogroup reduce_pattern_native Native parallel reduce pattern
+\brief Native parallel implementation of the \ref md_reduce pattern
+@{
+*/
+
+/**
+\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+on a data sequence with parallel native execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Identity Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Parallel native execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+*/
+template < typename InputIt, typename Identity, typename Combiner>
+auto reduce(parallel_execution_native & ex,
+            InputIt first, InputIt last, 
+            Identity identity,
+            Combiner && combine_op)
+{
+    auto identityVal = identity;
 
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/ex.concurrency_degree();
     std::atomic<int> finishedTask(1);
     //local output
-    std::vector<typename std::iterator_traits<InputIt>::value_type> out(p.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.concurrency_degree());
     //Create threads
-    for(int i=1;i<p.num_threads;i++){
-
+    for(int i=1;i<ex.concurrency_degree();i++){
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == p.num_threads -1) end = last;
-      p.pool.create_task(boost::bind<void>(
+      if(i == ex.concurrency_degree() -1) end = last;
+      ex.pool.create_task(boost::bind<void>(
            [&](InputIt begin, InputIt end, int tid){
                out[tid] = identityVal;
                for( ; begin != end; begin++ ) {
@@ -62,7 +87,7 @@ reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::
          out[0] = combine_op( out[0], *first);
     }
 
-    while(finishedTask.load()!=p.num_threads);
+    while(finishedTask.load()!=ex.concurrency_degree());
 
     auto outVal = out[0];
     for(unsigned int i = 1; i < out.size(); i++){
@@ -71,12 +96,10 @@ reduce(parallel_execution_native &p, InputIt first, InputIt last, typename std::
     return outVal;
 }
 
-template < typename InputIt, typename Combiner>
-typename std::result_of< Combiner(typename std::iterator_traits<InputIt>::value_type, typename std::iterator_traits<InputIt>::value_type) >::type
-reduce(parallel_execution_native &p, InputIt first, InputIt last, Combiner && combine_op){
-   auto identityVal = !combine_op(false,true);
-   return reduce(p, first, last, identityVal, std::forward<Combiner>(combine_op));
-}
+/**
+@}
+@}
+*/
 
 }
 #endif

@@ -18,48 +18,64 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAMFILTER_H
-#define GRPPI_STREAMFILTER_H
+#ifndef GRPPI_STREAM_FILTER_H
+#define GRPPI_STREAM_FILTER_H
 
-#include "common/common.h"
 #include "seq/stream_filter.h"
 #include "native/stream_filter.h"
 #include "omp/stream_filter.h"
 #include "tbb/stream_filter.h"
 #include "poly/stream_filter.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BStreamPattern
- *  @{
- */
-/** @defgroup StreamFilter
- *
- *  @brief Apply the stream filter pattern for parallelizing the code section
- *
- *  The Stream Filter pattern apply a boolean function 'filter' to every element
- *  of a data stream. If the function returns true for a given stream element
- *  then the 'out' function, that shows how to handle the output,
- *
- *  The Stream Filter has 3 steps:@n
- *    1) Read inputs from stream, as indicated with function 'in' (1 thread)@n
- *    2) Filter inputs, it is performed in parallel (N-1 threads)@n
- *    3) Handle output with function 'out' (1 thread)@n
- *  where N is the number of thread indicated by the user in 'exec'@n
- *  @{
- */
-/** @param exec   Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param in     Generator function: This function determine how to read 
- *    the data before start the parallel stage.
- *  @param filter Filter function: Boolean function that contains the code 
- *    filter section. This code is going to be parallelize.
- *  @param out    Output Function: This function determine how to handle
- *    the filter output
- */
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+#include "common/patterns.h"
+
+namespace grppi {
+
+/** 
+\defgroup filter_pattern Stream filter pattern
+
+\brief Interface for applyinng the \ref md_stream-filter
+*/
+
+/**
+\addtogroup filter_pattern
+@{
+*/
+
+/**
+\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
+sequence with any execution policy.
+\tparam Execution Execution policy.
+\tparam Predicate Callable type for filter predicate.
+\param ex Execution policy object.
+\param predicate_op Predicate callable object.
+*/
+template <typename Execution, typename Predicate>
+auto keep(Execution & ex, Predicate && predicate_op)
+{
+  return filter_info<Execution, Predicate>{ex, 
+      std::forward<Predicate>(predicate_op)};
+}
+
+/**
+\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+sequence with any execution policy.
+\tparam Execution Execution policy.
+\tparam Predicate Callable type for filter predicate.
+\param ex Execution policy object.
+\param predicate_op Predicate callable object.
+*/
+template <typename Execution, typename Predicate>
+auto discard(Execution & ex, Predicate && predicate_op)
+{
+  return keep(ex, [&](auto val) { return !predicate_op(val); });
+}
+
+/**
+@}
+*/
+
+}
+
 
 #endif

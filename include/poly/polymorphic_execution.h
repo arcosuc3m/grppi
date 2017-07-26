@@ -18,16 +18,16 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_POLYMORPHIC_EXECUTION_H
-#define GRPPI_POLYMORPHIC_EXECUTION_H
+#ifndef GRPPI_POLY_POLYMORPHIC_EXECUTION_H
+#define GRPPI_POLY_POLYMORPHIC_EXECUTION_H
 
 #include <typeinfo>
 #include <memory>
 
-#include "common/sequential_execution.h"
-#include "common/parallel_execution_native.h"
-#include "common/parallel_execution_tbb.h"
-#include "common/parallel_execution_omp.h"
+#include "../seq/sequential_execution.h"
+#include "../native/parallel_execution_native.h"
+#include "../tbb/parallel_execution_tbb.h"
+#include "../omp/parallel_execution_omp.h"
 
 namespace grppi{
 

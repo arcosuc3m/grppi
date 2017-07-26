@@ -19,7 +19,7 @@
 */
 #include <gtest/gtest.h>
 
-#include "common/polymorphic_execution.h"
+#include "poly/polymorphic_execution.h"
 
 using namespace std;
 using namespace grppi;

@@ -18,154 +18,249 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_ITERATION_THR_H
-#define GRPPI_STREAM_ITERATION_THR_H
+#ifndef GRPPI_NATIVE_STREAM_ITERATION_H
+#define GRPPI_NATIVE_STREAM_ITERATION_H
 
 #include <thread>
 #include <utility>
 #include <memory>
 
+#include "parallel_execution_native.h"
+
 namespace grppi{ 
 
-template<typename GenFunc, typename Predicate, typename OutFunc, typename ...Stages>
-void stream_iteration(parallel_execution_native &p, GenFunc && in, pipeline_info<parallel_execution_native , Stages...> && se, Predicate && condition, OutFunc && out){
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
-   std::atomic<int> nend (0);
-   std::atomic<int> nelem (0);
-   std::atomic<bool> sendFinish( false );
-   //Stream generator
-   std::thread gen([&](){
-      // Register the thread in the execution model
-      p.register_thread();
-      while(1){
-         auto k = in();
-         if(!k){
-             sendFinish=true;
-             break;
-         }
-         nelem++;
-         queue.push(k);
-      }
-      p.deregister_thread();
-   });
-
-   std::vector<std::thread> pipeThreads;
-   composed_pipeline< mpmc_queue< typename std::result_of<GenFunc()>::type >, mpmc_queue< typename std::result_of<GenFunc()>::type >, 0, Stages ...>
-      (queue, std::forward<pipeline_info<parallel_execution_native , Stages...> >(se) , queueOut, pipeThreads); 
- 
-   while(1){
-      //If every element has been processed
-      if(sendFinish&&nelem==0){
-          queue.push(typename std::result_of<GenFunc()>::type{});
-          sendFinish= false;
-          break;
-      }
-      auto k = queueOut.pop();
-      //Check the predicate
-      if( !condition(k.value() ) ) {
-           nelem--;
-           out( k.value() );
-       //If the condition is not met reintroduce the element in the input queue
-      }else queue.push( k );
-
-   }
-   auto first = pipeThreads.begin();
-   auto end = pipeThreads.end();
-   gen.join();
-   for(;first!=end;first++){ (*first).join();}
-
-}
-
-template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void stream_iteration(parallel_execution_native &p, GenFunc && in, farm_info<parallel_execution_native,Operation> && se, Predicate && condition, OutFunc && out){
-   std::vector<std::thread> tasks;
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queue(p.queue_size,p.lockfree);
-   mpmc_queue< typename std::result_of<GenFunc()>::type > queueOut(p.queue_size,p.lockfree);
-   std::atomic<int> nend (0);
-   //Stream generator
-   std::thread gen([&](){
-      // Register the thread in the execution model
-      se.exectype.register_thread();
-
-      while(1){
-         auto k = in();
-         queue.push(k);
-         if(!k) break;
-      }
-      //When generation is finished it starts working on the farm
-      auto item = queue.pop();
-      while(item){
-         do{
-             auto out = typename std::result_of<GenFunc()>::type( se.task(item.value()) );
-             item = out;
-         }while(condition(item.value()));
-         queueOut.push(item);
-         item = queue.pop();
-      }
-      nend++;
-      if(nend == se.exectype.num_threads)
-         queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
-      else queue.push(item);
-
-      // Deregister the thread in the execution model
-      se.exectype.deregister_thread();
-
-   });
-   //Farm workers
-   for(int th = 1; th < se.exectype.num_threads; th++) {
-      tasks.push_back(
-          std::thread([&](){
-              // Register the thread in the execution model
-              se.exectype.register_thread();
-
-              auto item = queue.pop();
-              while(item){
-                  do{
-                      auto out = typename std::result_of<GenFunc()>::type ( se.task(item.value()) );
-                      item = out;
-                  }while(condition(item.value()));
-                  queueOut.push(item);
-                  item = queue.pop();
-              }
-              nend++;
-              if(nend == se.exectype.num_threads)
-                  queueOut.push( typename std::result_of<GenFunc()>::type ( ) );
-              else queue.push(item);
-
-              // Deregister the thread in the execution model
-              se.exectype.deregister_thread();
-          }
-      ));
-   }
-   //Output function
-   std::thread outth([&](){
-      while(1){
-         auto k = queueOut.pop();
-         if(!k) break;
-         out(k.value());
-      }
-   });
-   //Join threads
-   auto first = tasks.begin();
-   auto end = tasks.end();
-   for(;first!=end;first++) (*first).join();
-   gen.join();
-   outth.join();
-
-}
-
-}
-/*template<typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
- void StreamIteration(sequential_execution, GenFunc && in, Operation && f, Predicate && condition, OutFunc && out){
-   while(1){
-       auto k = in();
-       if(!k) break;
-       while(condition(k)){
-          k = f(k);
-       }
-       out(k);
-   }
-}
+/**
+\addtogroup stream_iteration_pattern
+@{
 */
+
+/**
+\addtogroup stream_iteration_pattern_native Native parallel stream iteration pattern
+Sequential implementation of the \ref md_stream_iteration.
+@{
+*/
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+execution with a generator, a predicate, a consumer and a pipeline as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam MoreTransformers Callable type for the transformer operations.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param pipe Composed pipeline object.
+*/
+template<typename Generator, typename Predicate, typename Consumer, typename ...MoreTransformers>
+void repeat_until(parallel_execution_native &ex, Generator && generate_op, pipeline_info<parallel_execution_native , MoreTransformers...> && pipe, Predicate && predicate_op, Consumer && consume_op){
+  using namespace std;
+  using generated_type = typename std::result_of<Generator()>::type;
+  using pipeline_info_type = pipeline_info<parallel_execution_native , MoreTransformers...>;
+
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<generated_type>();
+  std::atomic<int> num_elements{0};
+  std::atomic<bool> send_finish{false};
+  //Stream generator
+  thread generator_task([&](){
+    // Register the thread in the execution model
+    auto manager = ex.thread_manager();
+    for (;;) {
+      auto item{generate_op()};
+      if (!item) {
+        send_finish=true;
+        break;
+      }
+      num_elements++;
+      generated_queue.push(item);
+    }
+  });
+
+  vector<thread> pipe_threads;
+  composed_pipeline< decltype(generated_queue), decltype(transformed_queue), 0, MoreTransformers ...>
+    (generated_queue, forward<pipeline_info_type>(pipe) , transformed_queue, pipe_threads); 
+ 
+
+  auto manager = ex.thread_manager();
+  for (;;) {
+    //If every element has been processed
+    if (send_finish && num_elements==0) {
+      generated_queue.push({});
+      send_finish = false;
+      break;
+    }
+    auto item{transformed_queue.pop()};
+    //Check the predicate
+    if (predicate_op(*item)) {
+      num_elements--;
+      consume_op(*item);
+      //If the condition is not met reintroduce the element in the input queue
+    }
+    else {
+      generated_queue.push(item);
+    }
+
+  }
+  generator_task.join();
+  for(auto && t : pipe_threads){ 
+    t.join();
+  }
+}
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+execution with a generator, a predicate, a consumer and a farm as a transformer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operations.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param farm Composed farm object.
+*/
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
+  using namespace std;
+  using generated_type = typename std::result_of<Generator()>::type;
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<generated_type>();
+  atomic<int> done_threads{0};
+  vector<thread> tasks;
+   //Stream generator
+  thread generator_task([&](){
+    // Register the thread in the execution model
+    auto manager = farm.exectype.thread_manager();
+    for (;;) {
+      auto item = generate_op();
+      generated_queue.push(item);
+      if (!item) break;
+    }
+    //When generation is finished it starts working on the farm
+    auto item{generated_queue.pop()};
+    while (item) {
+      auto out = *item;
+      do {
+        out = farm.task(out);
+      } while (!predicate_op(out));
+      transformed_queue.push(out);
+      item = generated_queue.pop();
+    }
+    done_threads++;
+    if(done_threads == farm.exectype.concurrency_degree()) {
+      transformed_queue.push({});
+    }
+    else {
+      generated_queue.push(item);
+    }
+  });
+  //Farm workers
+  for(int th = 1; th < farm.exectype.concurrency_degree(); th++) {
+    tasks.emplace_back([&]() {
+      // Register the thread in the execution model
+      auto manager = farm.exectype.thread_manager();
+      auto item{generated_queue.pop()};
+      while (item) {
+        auto out = *item;
+        do {
+          out = farm.task(out);
+        } while (!predicate_op(out));
+        transformed_queue.push(out);
+        item = generated_queue.pop();
+      }
+      done_threads++;
+      if (done_threads == farm.exectype.concurrency_degree()) {
+        transformed_queue.push({});
+      }
+      else {
+        generated_queue.push(item);
+      }
+    });
+  }
+  //Output function
+  std::thread consumer_task([&](){
+    auto manager = ex.thread_manager();
+    for (;;){
+     auto item{transformed_queue.pop()};
+     if(!item) break;
+       consume_op(*item);
+     }
+  });
+  //Join threads
+  for(auto && t : tasks) { t.join(); }
+  generator_task.join();
+  consumer_task.join();
+
+}
+
+
+/**
+\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+execution with a generator, a predicate, a transformer and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Predicate Callable type for the predicate operation.
+\tparam Consumer Callable type for the consume operation.
+\tparam Transformer Callable type for the transformer operation.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param predicate_op Predicate operation.
+\param consume_op Consumer operation.
+\param tranformer_op Tranformer operation.
+*/
+template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
+void repeat_until(parallel_execution_native &ex, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
+  using namespace std;
+  using namespace std::experimental;
+  using generated_type = typename result_of<Generator()>::type;
+  using generated_value_type = typename generated_type::value_type;
+
+  using transformed_type = typename result_of<Transformer(generated_value_type)>::type;
+  
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<generated_type>();
+
+
+  std::thread producer_task([&generate_op, &generated_queue, &ex](){
+    auto manager = ex.thread_manager();
+    for(;;) {
+      auto item{generate_op()};
+      generated_queue.push(item);
+      if (!item) break;
+    }
+  });
+  
+  std::thread transformer_task([&generated_queue,&transform_op,&predicate_op,&transformed_queue, &ex](){
+    auto manager = ex.thread_manager();
+    auto item{generated_queue.pop()};
+    while (item) {
+     auto val = *item;
+     do {
+       val = transform_op(val);
+     } while (!predicate_op(val));
+     transformed_queue.push(val);
+     item = generated_queue.pop();
+    }
+    transformed_queue.push({});
+  });
+
+  std::thread consumer_task([&consume_op,&transformed_queue,&ex](){
+    auto manager = ex.thread_manager();
+    auto item{transformed_queue.pop()};
+    while (item) {
+      consume_op(*item);
+      item=transformed_queue.pop();
+    }
+  });  
+  producer_task.join();
+  transformer_task.join();
+  consumer_task.join();
+
+}
+
+
+
+}
 #endif

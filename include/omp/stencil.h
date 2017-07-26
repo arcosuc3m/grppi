@@ -18,28 +18,30 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_OMP_H
-#define GRPPI_STENCIL_OMP_H
+#ifndef GRPPI_OMP_STENCIL_H
+#define GRPPI_OMP_STENCIL_H
 
 #ifdef GRPPI_OMP
+#include "parallel_execution_omp.h"
+
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
  void stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
     int numElements = last - first;
-    int elemperthr = numElements/p.num_threads;
+    int elemperthr = numElements/p.concurrency_degree();
     #pragma omp parallel
     {
     #pragma omp single nowait
     { 
-    for(int i=1;i<p.num_threads;i++){
+    for(int i=1;i<p.concurrency_degree();i++){
        #pragma omp task firstprivate(i)
        {
          auto begin = first + (elemperthr * i);
          auto end = first + (elemperthr * (i+1));
       
-         if( i == p.num_threads-1) end = last;
+         if( i == p.concurrency_degree()-1) end = last;
 
          auto out = firstOut + (elemperthr * i);
 
@@ -66,53 +68,67 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
    }
 }
 
+
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void internal_stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut,
-                         Operation &&op, NFunc && neighbor, int i, int elemperthr, MoreIn ... inputs){
-        //Calculate local input and output iterator 
-        auto begin = first + (elemperthr * i);
-        auto end = first + (elemperthr * (i+1));
-        if( i == p.num_threads-1) end = last;
-        auto out = firstOut + (elemperthr * i);
-        advance_iterators(elemperthr*i, inputs ...);
-        while(begin!=end){
-          auto neighbors = neighbor(begin);
-           *out = op(*begin,neighbors, *inputs ...);
-           advance_iterators(inputs ...);
-           begin++;
-           out++;
-        }
+void internal_stencil(parallel_execution_omp & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, int i, int elemperthr, MoreIn ... inputs ){
+   auto begin = first + (elemperthr * i);
+   auto end = first + (elemperthr * (i+1));
+   if(i==p.concurrency_degree()-1) end = last;
+
+   auto out = firstOut + (elemperthr * i);
+
+   advance_iterators((elemperthr*i), inputs ...);
+   while(begin!=end){
+      auto neighbors = neighbor(begin,inputs ... );
+      *out = op(begin, neighbors);
+      begin++;
+      advance_iterators( inputs ... );
+      out++;
+   }
 }
 
 
-
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void stencil(parallel_execution_omp &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+void stencil(parallel_execution_omp & p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
 
-     int numElements = last - first;
-     int elemperthr = numElements/p.num_threads;
-     #pragma omp parallel 
-     {
-     #pragma omp single nowait
-     {
+   int numElements = last - first;
+   int elemperthr = numElements/p.concurrency_degree();
+   #pragma omp parallel 
+   {
+   #pragma omp single nowait
+   {
 
-     for(int i=1;i<p.num_threads;i++){
-        #pragma omp task firstprivate(i)// firstprivate(inputs...)
-        {
-           internal_stencil(p, first, last, firstOut, std::forward<Operation>(op) , std::forward<NFunc>(neighbor), i, elemperthr, inputs ...);  
+   for(int i=1;i<p.concurrency_degree();i++){
+       #pragma omp task firstprivate(i)// firstprivate(inputs...)
+       {
+          internal_stencil(p,first,last,firstOut,std::forward<Operation>(op),std::forward<NFunc>(neighbor),i,elemperthr, inputs...);
        }
     }
 
    //MAIN
-   internal_stencil(p, first, last, firstOut, std::forward<Operation>(op) , std::forward<NFunc>(neighbor), 0, elemperthr, inputs ...);  
-   
+   auto begin = first;
+   auto out = firstOut; 
+   auto end = first + elemperthr;
+   while(begin!=end){
+      auto neighbors = neighbor(begin,inputs...);
+      *out = op(*begin, neighbors);
+      begin++;
+      advance_iterators( inputs ... );
+      out++;
+   }
+
    #pragma omp taskwait
    }
    }
 
 
 }
+
+
 }
 #endif
+
+
+
 
 #endif

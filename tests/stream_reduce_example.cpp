@@ -21,10 +21,15 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
+#include <pipeline.h>
 #include <stream_reduce.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void reduce_example1(){
 
@@ -49,24 +54,25 @@ void reduce_example1(){
     int index = 0;
     int n=0;
     stream_reduce( p,
-        // Reduce generator as lambda
-        [&]() { 
-            n++;
-            if(n != 1000000000) 
-              return (optional<int> ( 1 ));
-            else
-              return (optional<int> ());
-        },
         //Window size
         1000000,
         1000000,
+        0,
+        // Reduce generator as lambda
+        [&]() -> optional<int>{ 
+            n++;
+            if(n != 1000000000) 
+              return  1;
+            else
+              return {};
+        },
         // Reduce kernel as lambda
         std::plus<int>(),
         // Reduce join as lambda
         [&]( int a) {
             total += a;
             std::cout<<"PARTIAL REDUCE : "<<a<<" TOTAL " <<total<< std::endl;
-        } 
+        }
     );
 }
 

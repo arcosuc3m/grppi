@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_ITERATOR_TRAITS_H
-#define GRPPI_ITERATOR_TRAITS_H
+#ifndef GRPPI_COMMON_ITERATOR_TRAITS_H
+#define GRPPI_COMMON_ITERATOR_TRAITS_H
 
 namespace grppi{
   template<typename T, typename = void>

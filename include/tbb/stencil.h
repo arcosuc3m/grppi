@@ -18,12 +18,14 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_TBB_H
-#define GRPPI_STENCIL_TBB_H
+#ifndef GRPPI_TBB_STENCIL_H
+#define GRPPI_TBB_STENCIL_H
 
 #ifdef GRPPI_TBB
 
 #include <tbb/tbb.h>
+
+#include "parallel_execution_tbb.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
@@ -31,15 +33,15 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
   OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
   int numElements = last - first;
-  int elemperthr = numElements/p.num_threads;
+  int elemperthr = numElements/p.concurrency_degree();
   tbb::task_group g;
 
-  for(int i=1;i<p.num_threads;i++){
+  for(int i=1;i<p.concurrency_degree();i++){
 
      g.run( [&neighbor, &op, first, firstOut, elemperthr, i, last, p ]() {
         auto begin = first + (elemperthr * i);
         auto end = first + (elemperthr * (i+1));
-        if( i == p.num_threads-1) end = last;
+        if( i == p.concurrency_degree()-1) end = last;
         auto out = firstOut + (elemperthr * i);
         while(begin!=end){
           auto neighbors = neighbor(begin);
@@ -63,51 +65,49 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
 
 }
 
+template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
+void internal_stencil(parallel_execution_tbb &p, int elemperthr, int index, InputIt first,
+            InputIt last, OutputIt firstOut, Operation op, NFunc neighbor, MoreIn ... inputs){
+  auto begin = first + (elemperthr * index);
+  auto end = first + (elemperthr * (index+1));
+  if (index==p.concurrency_degree()-1) end = last;
+  auto out = firstOut + (elemperthr * index);
+  advance_iterators((elemperthr* index), inputs ...);
+  while(begin!=end){
+    auto neighbors = neighbor(begin, inputs ...);
+    *out = op(begin, neighbors);
+    begin++;
+    advance_iterators( inputs ... );
+    out++;
+  }
+}
 
 
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
-void stencil(parallel_execution_tbb &p, InputIt first, InputIt last, 
-  OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
-
-   int numElements = last - first;
-   int elemperthr = numElements/p.num_threads;
-   tbb::task_group g;
-
-   for(int i=1;i<p.num_threads;i++){
-
-
-    g.run([&neighbor, &op, first, firstOut, elemperthr, i, last, p,inputs...]( ){
-     auto begin = first + (elemperthr * i);
-     auto end = first + (elemperthr * (i+1));
-
-     if(i==p.num_threads-1) end = last;
-
-     auto out = firstOut + (elemperthr * i);
-     int iteration = (elemperthr*i);
-     while(begin!=end){
-       auto neighbors = neighbor(begin);
-       *out = op(*begin, neighbors, *(inputs+iteration)...);
-       begin++;
-       iteration++;
-       out++;
-     }
-   });
+void stencil(parallel_execution_tbb & p, InputIt first, InputIt last, OutputIt firstOut, Operation op, NFunc neighbor, MoreIn ... inputs ) {
+  int numElements = last - first;
+  int elemperthr = numElements/p.concurrency_degree();
+  tbb::task_group g;
+  for(int index=1;index<p.concurrency_degree();index++){
+    g.run([neighbor, op, first, firstOut, elemperthr, index, last, &p, inputs...](){
+      internal_stencil(p,elemperthr,index,first, last, firstOut, op, neighbor, inputs ...);
+    });
   }
-
   //MAIN 
   auto end = first + elemperthr;
   while(first!=end){
-    auto neighbors = neighbor(first);
-    *firstOut = op(*first, neighbors, *inputs...);
+    auto neighbors = neighbor(first,inputs ...);
+    *firstOut = op(first, neighbors);
     first++;
     advance_iterators( inputs ... );
     firstOut++;
   }
 
-
   //Join threads
   g.wait();
 }
+
+
 
 }
 #endif

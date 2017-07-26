@@ -21,18 +21,12 @@
 #ifndef GRPPI_STREAM_ITERATION_H
 #define GRPPI_STREAM_ITERATION_H
 
-#include "common/common.h"
+#include "common/patterns.h"
 
 #include "seq/stream_iteration.h"
 #include "native/stream_iteration.h"
+#include "poly/stream_iteration.h"
 
-#ifdef OMP_ENABLE
-//	#include "omp/farm_omp.hpp"
-#endif
-
-#ifdef TBB_ENABLE
-//	#include "tbb/farm_tbb.hpp"
-#endif
 #if 0 /* START DOCUMENTATION */
 /** @addtogroup BStreamPattern
  *  @{

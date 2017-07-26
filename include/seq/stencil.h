@@ -18,8 +18,11 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STENCIL_SEQ_H
-#define GRPPI_STENCIL_SEQ_H
+#ifndef GRPPI_SEQ_STENCIL_H
+#define GRPPI_SEQ_STENCIL_H
+
+#include "sequential_execution.h"
+#include "../common/iterator.h"
 
 namespace grppi{
 template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
@@ -34,12 +37,11 @@ template <typename InputIt, typename OutputIt, typename Operation, typename NFun
     
 }
 
-
 template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
- void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+void stencil(sequential_execution & s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
     while( first != last ) {
-        auto neighbors = neighbor(first);
-        *firstOut = op(*first, neighbors, *inputs ...);
+        auto neighbors = neighbor(first, inputs...);
+        *firstOut = op(first, neighbors);
         advance_iterators( inputs... );
         first++;
         firstOut++;

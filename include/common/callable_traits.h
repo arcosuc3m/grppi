@@ -18,8 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_CALLABLE_TRAITS_H
-#define GRPPI_CALLABLE_TRAITS_H
+#ifndef GRPPI_COMMON_CALLABLE_TRAITS_H
+#define GRPPI_COMMON_CALLABLE_TRAITS_H
 
 namespace grppi {
 

@@ -21,8 +21,8 @@
 
 #include <gtest/gtest.h>
 
-#include "divideandconquer.h"
-#include "common/polymorphic_execution.h"
+#include "divideconquer.h"
+#include "poly/polymorphic_execution.h"
 
 #include "supported_executions.h"
 
@@ -30,7 +30,7 @@ using namespace std;
 using namespace grppi;
 
 template <typename T>
-class divideandconquer_test : public ::testing::Test {
+class divideconquer_test : public ::testing::Test {
 public:
   T execution_;
   polymorphic_execution poly_execution_ = 
@@ -95,12 +95,12 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(divideandconquer_test, executions);
+TYPED_TEST_CASE(divideconquer_test, executions);
 
-TYPED_TEST(divideandconquer_test, static_empty)
+TYPED_TEST(divideconquer_test, static_empty)
 {
   this->setup_empty();
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -112,17 +112,18 @@ TYPED_TEST(divideandconquer_test, static_empty)
       return 0; 
     }, 
     // Combine
-    [this](auto partial, auto out) { 
+    [this](auto out, auto partial) { 
       this->invocations_merge++; 
+      return 0;
     }
   );
   this->check_empty();
 }
 
-TYPED_TEST(divideandconquer_test, poly_empty)
+TYPED_TEST(divideconquer_test, poly_empty)
 {
   this->setup_empty();
-  this->out = grppi::divide_and_conquer(this->poly_execution_, this->v,
+  this->out = grppi::divide_conquer(this->poly_execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -134,8 +135,9 @@ TYPED_TEST(divideandconquer_test, poly_empty)
       return 0; 
     }, 
     // Combine
-    [this](auto partial, auto out) { 
-      this->invocations_merge++; 
+    [this](auto out, auto partial) { 
+      this->invocations_merge++;
+      return 0; 
     }
   );
   this->check_empty();
@@ -143,10 +145,10 @@ TYPED_TEST(divideandconquer_test, poly_empty)
 
 
 
-TYPED_TEST(divideandconquer_test, static_single)
+TYPED_TEST(divideconquer_test, static_single)
 {
   this->setup_single();
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -158,17 +160,18 @@ TYPED_TEST(divideandconquer_test, static_single)
       return problem[0];
     }, 
     // Combine
-    [this](auto partial, auto out) { 
-      this->invocations_merge++; 
+    [this](auto out, auto partial) { 
+      this->invocations_merge++;
+      return 0; 
     }
   );
   this->check_single();
 }
 
-TYPED_TEST(divideandconquer_test, poly_single)
+TYPED_TEST(divideconquer_test, poly_single)
 {
   this->setup_single();
-  this->out = grppi::divide_and_conquer(this->poly_execution_, this->v,
+  this->out = grppi::divide_conquer(this->poly_execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -180,8 +183,9 @@ TYPED_TEST(divideandconquer_test, poly_single)
       return problem[0];
     }, 
     // Combine
-    [this](auto partial, auto out) { 
-      this->invocations_merge++; 
+    [this](auto out, auto partial) { 
+      this->invocations_merge++;
+      return 0; 
     }
   );
   this->check_single();
@@ -189,11 +193,11 @@ TYPED_TEST(divideandconquer_test, poly_single)
 
 
 
-TYPED_TEST(divideandconquer_test, static_multiple)
+TYPED_TEST(divideconquer_test, static_multiple)
 {
   this->setup_multiple();
   
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -222,19 +226,20 @@ TYPED_TEST(divideandconquer_test, static_multiple)
       return acumm;
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto  out, auto  partial) { 
       this->invocations_merge++; 
       out += partial;
+      return out;
     }
   );
   this->check_multiple();
 }
 
-TYPED_TEST(divideandconquer_test, poly_multiple)
+TYPED_TEST(divideconquer_test, poly_multiple)
 {
   this->setup_multiple();
   
-  this->out = grppi::divide_and_conquer(this->poly_execution_, this->v,
+  this->out = grppi::divide_conquer(this->poly_execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -263,9 +268,10 @@ TYPED_TEST(divideandconquer_test, poly_multiple)
       return acumm;
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto out, auto partial) { 
       this->invocations_merge++; 
       out += partial;
+      return out;
     }
   );
   this->check_multiple();
@@ -273,11 +279,11 @@ TYPED_TEST(divideandconquer_test, poly_multiple)
 
 
 
-TYPED_TEST(divideandconquer_test, static_multiple_single_thread)
+TYPED_TEST(divideconquer_test, static_multiple_single_thread)
 {
   this->setup_multiple();
-  this->execution_.num_threads = 1;
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->execution_.set_concurrency_degree(1);
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -306,9 +312,10 @@ TYPED_TEST(divideandconquer_test, static_multiple_single_thread)
       return acumm;
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto out, auto partial) { 
       this->invocations_merge++; 
       out += partial;
+      return out;
     }
   );
   this->check_multiple();
@@ -316,11 +323,11 @@ TYPED_TEST(divideandconquer_test, static_multiple_single_thread)
 
 
 
-TYPED_TEST(divideandconquer_test, static_multiple_five_threads)
+TYPED_TEST(divideconquer_test, static_multiple_five_threads)
 {
   this->setup_multiple();
-  this->execution_.num_threads = 5;
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->execution_.set_concurrency_degree(5);
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -349,9 +356,10 @@ TYPED_TEST(divideandconquer_test, static_multiple_five_threads)
       return acumm;
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto out, auto partial) { 
       this->invocations_merge++; 
       out += partial;
+      return out;
     }
   );
   this->check_multiple();
@@ -359,11 +367,11 @@ TYPED_TEST(divideandconquer_test, static_multiple_five_threads)
 
 
 
-TYPED_TEST(divideandconquer_test, static_multiple_triple_div_2_threads)
+TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
 {
   this->setup_multiple_triple_div();
-  this->execution_.num_threads = 2;
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->execution_.set_concurrency_degree(2);
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -397,20 +405,21 @@ TYPED_TEST(divideandconquer_test, static_multiple_triple_div_2_threads)
       return acumm;
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto out, auto partial) { 
       this->invocations_merge++; 
       out += partial;
+      return out;
     }
   );
   this->check_multiple_triple_div();
 }
 
 
-TYPED_TEST(divideandconquer_test, static_multiple_triple_div_4_threads)
+TYPED_TEST(divideconquer_test, static_multiple_triple_div_4_threads)
 {
   this->setup_multiple_triple_div();
-  this->execution_.num_threads = 4;
-  this->out = grppi::divide_and_conquer(this->execution_, this->v,
+  this->execution_.set_concurrency_degree(4);
+  this->out = grppi::divide_conquer(this->execution_, this->v,
     // Divide
     [this](auto & v) { 
       this->invocations_divide++; 
@@ -444,9 +453,10 @@ TYPED_TEST(divideandconquer_test, static_multiple_triple_div_4_threads)
       return acumm;
     }, 
     // Combine
-    [this](auto & partial, auto & out) { 
+    [this](auto out, auto partial) { 
       this->invocations_merge++; 
       out += partial;
+      return out;
     }
   );
   this->check_multiple_triple_div();

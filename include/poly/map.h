@@ -21,8 +21,8 @@
 #ifndef GRPPI_POLY_MAP_H
 #define GRPPI_POLY_MAP_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "../common/support.h"
+#include "polymorphic_execution.h"
 
 namespace grppi{
 
@@ -156,6 +156,11 @@ void map(polymorphic_execution & ex, InputIt first, InputIt last,
     parallel_execution_tbb
   >(ex, first, last, first_out, std::forward<Transformer>(op), first2, more_firsts...);
 }
+
+/**
+@}
+@}
+*/
 
 } // end namespace grppi
 

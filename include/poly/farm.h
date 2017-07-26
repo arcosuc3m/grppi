@@ -22,96 +22,137 @@
 #ifndef GRPPI_POLY_FARM_H
 #define GRPPI_POLY_FARM_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "../common/support.h"
+#include "polymorphic_execution.h"
 
 namespace grppi{
 
-template <typename Generator, typename Operation>
-void farm_multi_impl(polymorphic_execution & e, Generator &&in, Operation && op) 
+template <typename Generator, typename Consumer>
+void farm_multi_impl(polymorphic_execution & ex, Generator generate_op,
+                     Consumer consume_op) 
 {
 }
 
 
-template <typename Generator, typename Operation, typename Consumer>
-void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op, Consumer &&cons) 
+template <typename Generator, typename Transformer, typename Consumer>
+void farm_multi_impl(polymorphic_execution & ex, Generator generate_op, 
+                     Transformer transform_op, Consumer consume_op) 
 {
 }
 
-
-template <typename E, typename ... O, typename Generator, typename Operation,
+template <typename E, typename ... O, typename Generator, typename Transformer,
           internal::requires_execution_not_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op)
+void farm_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+                     Transformer && transform_op)
 {
-  farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op));
+  farm_multi_impl<O...>(ex, std::forward<Generator>(generate_op), 
+      std::forward<Transformer>(transform_op));
 }
 
-template <typename E, typename ... O, typename Generator, typename Operation, typename Consumer,
+template <typename E, typename ... O, typename Generator, typename Transformer, 
+          typename Consumer,
           internal::requires_execution_not_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op, Consumer && cons)
+void farm_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+                     Transformer && transform_op, Consumer && consume_op)
 {
-  farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
+  farm_multi_impl<O...>(ex, std::forward<Generator>(generate_op),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Consumer>(consume_op));
 }
 
 
 
-template <typename E, typename ... O, typename Generator, typename Operation,
+template <typename E, typename ... O, typename Generator, typename Consumer,
           internal::requires_execution_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op)
+void farm_multi_impl(polymorphic_execution & ex, Generator && generate_op,
+                     Consumer && consume_op)
 {
-  if (typeid(E) == e.type()) {
-    farm(*e.execution_ptr<E>(), 
-        std::forward<Generator>(in), std::forward<Operation>(op));
+  if (typeid(E) == ex.type()) {
+    farm(*ex.execution_ptr<E>(), std::forward<Generator>(generate_op),
+        std::forward<Consumer>(consume_op));
   }
   else {
-    farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op));
+    farm_multi_impl<O...>(ex, std::forward<Generator>(generate_op), 
+        std::forward<Consumer>(consume_op));
   }
 }
 
 
-template <typename E, typename ... O, typename Generator, typename Operation, typename Consumer,
+template <typename E, typename ... O, typename Generator, typename Transformer, typename Consumer,
           internal::requires_execution_supported<E> = 0>
-void farm_multi_impl(polymorphic_execution & e, Generator && in, Operation && op, Consumer && cons)
+void farm_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+                     Transformer && transform_op, Consumer && consume_op)
 {
-  if (typeid(E) == e.type()) {
-    farm(*e.execution_ptr<E>(), 
-        std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
+  if (typeid(E) == ex.type()) {
+    farm(*ex.execution_ptr<E>(), std::forward<Generator>(generate_op), 
+        std::forward<Transformer>(transform_op),
+        std::forward<Consumer>(consume_op));
   }
   else {
-    farm_multi_impl<O...>(e, std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
+    farm_multi_impl<O...>(ex, std::forward<Generator>(generate_op), 
+        std::forward<Transformer>(transform_op),
+        std::forward<Consumer>(consume_op));
   }
 }
 
 
+/**
+\addtogroup farm_pattern
+@{
+*/
 
-/// Runs a farm pattern with a generator function and an operation function
-/// Generator: Generator functor type.
-/// Operation: Operation functor type.
-/// Consumer: cons functor type.
-template <typename Generator, typename Operation>
-void farm(polymorphic_execution & e, Generator && in, Operation && op)
+/**
+\addtogroup farm_pattern_poly Polymorphic execution farm pattern
+Polymorphic execution implementation of the \ref md_farm.
+@{
+*/
+
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with polymorphic 
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Consumer>
+void farm(polymorphic_execution & ex, Generator && generate_op, 
+          Consumer && consume_op)
 {
   farm_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<Generator>(in), std::forward<Operation>(op));
+  >(ex, std::forward<Generator>(generate_op), 
+      std::forward<Consumer>(consume_op));
 }
 
-template <typename Generator, typename Operation, typename Consumer>
-void farm(polymorphic_execution & e, Generator && in, Operation && op, Consumer && cons)
+/**
+\brief Invoke [farm pattern](@ref md_farm) on a data stream with polymorphic
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Tranformer Callable type for the tranformation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator operation.
+\param transform_op Transformer operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Transformer, typename Consumer>
+void farm(polymorphic_execution & ex, Generator && generate_op, 
+          Transformer && transform_op, Consumer && consume_op)
 {
   farm_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<Generator>(in), std::forward<Operation>(op), std::forward<Consumer>(cons));
+  >(ex, std::forward<Generator>(generate_op), 
+      std::forward<Transformer>(transform_op), 
+      std::forward<Consumer>(consume_op));
 }
-
-
-
 
 } // end namespace grppi
 

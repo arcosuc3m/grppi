@@ -18,33 +18,22 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_OPTIONAL_H
-#define GRPPI_OPTIONAL_H
+#ifndef GRPPI_COMMON_PACK_TRAITS_H
+#define GRPPI_COMMON_PACK_TRAITS_H
 
-namespace grppi{
+namespace grppi {
 
-template <typename T>
-class optional {
-    public:
-        typedef T type;
-        typedef T value_type;
-        T elem;
-        bool end;
-        optional(): end(true) { }
-        optional(const T& i): elem(i), end(false) { }
+namespace internal {
 
-        optional& operator=(const optional& o) {
-                 elem = o.elem;
-                 end = o.end;
-                 return *this;
-        }
+template <int Index, typename ... T>
+using requires_index_last =
+  std::enable_if_t<(Index == sizeof...(T) - 1), int>;
 
-        T& value(){ return elem; }
+template <int Index, typename ... T>
+using requires_index_not_last =
+  std::enable_if_t<(Index < sizeof...(T) - 1), int>;
 
-        constexpr explicit operator bool() const {
-            return !end;
-        }
-};
+} // end namespace internal
 
 } // end namespace grppi
 

@@ -21,12 +21,16 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <experimental/optional>
+
 #include <farm.h>
 #include <pipeline.h>
 #include <stream_iteration.h>
 
 using namespace std;
 using namespace grppi;
+template <typename T>
+using optional = std::experimental::optional<T>;
 
 void iteration_example1() {
 
@@ -51,14 +55,14 @@ void iteration_example1() {
     std::atomic<int> output;
     output = 0;
 
-    stream_iteration(p,
+    repeat_until(p,
         // farm generator as lambda
-        [&]() {
+        [&]() -> optional<int> {
             a--; 
             if ( a == 0 ) 
-                return optional<int>(); 
+                return {}; 
             else
-                return optional<int>( a );
+                return  a;
         },
 
         // farm kernel as lambda
@@ -73,7 +77,7 @@ void iteration_example1() {
              }         
         ),
         [&](int l){
-           return l<100 ? true : false;
+           return l<100 ? false : true;
         },
         [&](int l){
             std::cout<<l<<std::endl;

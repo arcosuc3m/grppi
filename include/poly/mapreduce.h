@@ -21,133 +21,91 @@
 #ifndef GRPPI_POLY_MAPREDUCE_H
 #define GRPPI_POLY_MAPREDUCE_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "../common/support.h"
+#include "polymorphic_execution.h"
 
 namespace grppi{
 
-template <typename InputIt, typename Transformer, typename Combiner>
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)
->::type
- map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  Transformer && transform_op, Combiner && combine_op) 
+template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
+Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+  Identity identity, Transformer && transform_op, Combiner && combine_op) 
 {
   return {};
 }
 
-template <typename InputIt, typename Transformer, class T, typename Combiner>
-T map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  Transformer && transform_op, Combiner && combine_op, T init) 
-{
-  return {};
-}
-
-
-
 template <typename E, typename ... O,
-          typename InputIt, typename Transformer, class T, typename Combiner,
+          typename InputIt, typename Transformer, typename Identity, typename Combiner,
           internal::requires_execution_not_supported<E> = 0>
-T map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  Transformer && transform_op, Combiner && combine_op, T init) 
+Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+  Identity identity, Transformer && transform_op, Combiner && combine_op) 
 {
-  return map_reduce_multi_impl<O...>(e, first, last, std::forward<Transformer>(transform_op), 
-    std::forward<Combiner>(combine_op), init);
+  return map_reduce_multi_impl<O...>(e, first, last, identity, std::forward<Transformer>(transform_op), 
+    std::forward<Combiner>(combine_op));
 }
 
-
-
 template <typename E, typename ... O,
-          typename InputIt, typename Transformer, class T, typename Combiner,
+          typename InputIt, typename Transformer, typename Identity, typename Combiner,
           internal::requires_execution_supported<E> = 0>
-T map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  Transformer && transform_op, Combiner && combine_op, T init) 
-{
-  if (typeid(E) == e.type()) {
-    return map_reduce(*e.execution_ptr<E>(), 
-        first, last, std::forward<Transformer>(transform_op), 
-        std::forward<Combiner>(combine_op), init);
-  }
-  else {
-    return map_reduce_multi_impl<O...>(e, first, last, std::forward<Transformer>(transform_op), 
-        std::forward<Combiner>(combine_op), init);
-  }
-}
-
-template <typename E, typename ... O,
-          typename InputIt, typename Transformer,typename Combiner,
-          internal::requires_execution_not_supported<E> = 0>
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)
->::type
-  map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
-  Transformer && transform_op, Combiner && combine_op) 
-{
-  return map_reduce_multi_impl<O...>(e, first, last, std::forward<Transformer>(transform_op),
-                       std::forward<Combiner>(combine_op));
-}
-
-
-
-template <typename E, typename ... O,
-          typename InputIt, typename Transformer,typename Combiner,
-          internal::requires_execution_supported<E> = 0>
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)
->::type
- map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
+Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, Identity identity,
   Transformer && transform_op, Combiner && combine_op) 
 {
   if (typeid(E) == e.type()) {
     return map_reduce(*e.execution_ptr<E>(), 
-        first, last, std::forward<Transformer>(transform_op),
+        first, last, identity, std::forward<Transformer>(transform_op), 
         std::forward<Combiner>(combine_op));
   }
   else {
-    return map_reduce_multi_impl<O...>(e, first, last, std::forward<Transformer>(transform_op),
+    return map_reduce_multi_impl<O...>(e, first, last, identity, std::forward<Transformer>(transform_op), 
         std::forward<Combiner>(combine_op));
   }
 }
 
-/// Runs a map_reduce pattern with an input sequence, an output sequence, 
-/// a Map function and a Reduce operation.
-/// InputIt: Iterator for the input sequence.
-/// OutputIt: Iterator for the output sequence.
-/// MapFunc: Map functor type.
-/// ReduceOperator: Reduce functor type.
-template < typename InputIt, typename Transformer,typename Combiner >
-typename std::result_of<Combiner(
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)
->::type
- map_reduce(polymorphic_execution & e, InputIt first, InputIt last, 
-      Transformer && transform_op, Combiner && combine_op) 
+/**
+\addtogroup mapreduce_pattern
+@{
+*/
+
+/**
+\addtogroup mapreduce_pattern_poly Polymorphic map/reduce pattern
+\brief Polymorphic implementation of the \ref md_map-reduce pattern.
+@{
+*/
+
+/**
+\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+polymorphic execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam Result Result type of the reduction.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Polymorphic execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename InputIt, typename Transformer, typename Result, 
+          typename Combiner>
+Result map_reduce(polymorphic_execution & ex, 
+                  InputIt first, InputIt last, Result identity,
+                  Transformer && transform_op, 
+                  Combiner && combine_op) 
 {
   return map_reduce_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, first, last, std::forward<Transformer>(transform_op),
-      std::forward<Combiner>(combine_op));
+  >(ex, first, last, identity, std::forward<Transformer>(transform_op), 
+        std::forward<Combiner>(combine_op));
 }
 
-template <typename InputIt, typename Transformer, class T, typename Combiner>
-T map_reduce(polymorphic_execution & e, InputIt first, InputIt last, 
-  Transformer && transform_op, Combiner && combine_op, T init) 
-{
-  return map_reduce_multi_impl<
-    sequential_execution,
-    parallel_execution_native,
-    parallel_execution_omp,
-    parallel_execution_tbb
-  >(e, first, last, std::forward<Transformer>(transform_op), 
-        std::forward<Combiner>(combine_op), init);
-}
-
+/**
+@}
+@}
+*/
 
 
 } // end namespace grppi
