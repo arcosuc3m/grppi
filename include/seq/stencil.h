@@ -96,6 +96,11 @@ void stencil(sequential_execution & ex,
   }
 }
 
+/**
+@}
+@}
+*/
+
 }
 
 #endif

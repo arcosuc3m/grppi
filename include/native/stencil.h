@@ -114,7 +114,8 @@ template <typename InputIt, typename OutputIt, typename StencilTransformer,
 void stencil(parallel_execution_native & ex, 
              InputIt first, InputIt last, OutputIt first_out, 
              StencilTransformer transform_op, Neighbourhood neighbour_op, 
-             OtherInputIts ... other_firsts ) {
+             OtherInputIts ... other_firsts ) 
+{
   using namespace std;
 
   vector<thread> tasks;

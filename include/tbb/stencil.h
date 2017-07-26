@@ -165,6 +165,11 @@ void stencil(parallel_execution_tbb & ex,
   g.wait();
 }
 
+/**
+@}
+@}
+*/
+
 }
 
 #endif

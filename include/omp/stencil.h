@@ -174,11 +174,13 @@ void stencil(parallel_execution_omp & ex,
   }
 }
 
+/**
+@}
+@}
+*/
 
 }
+
 #endif
-
-
-
 
 #endif
