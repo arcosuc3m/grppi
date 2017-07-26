@@ -28,9 +28,11 @@
 #include "poly/divideconquer.h"
 
 /** 
+\addtogroup task_patterns
+@{
 \defgroup divide_conquer_pattern Divide/Conquer pattern
-
 \brief Interface for applyinng the \ref md_divide-conquer.
+@}
 */
 
 

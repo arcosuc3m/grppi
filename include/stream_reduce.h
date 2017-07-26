@@ -33,8 +33,9 @@
 namespace grppi {
 
 /** 
+\addtogroup stream_patterns
+@{
 \defgroup stream_reduce_pattern Stream reduce pattern
-
 \brief Interface for applying the \ref md_stream-reduce pattern.
 */
 
@@ -53,6 +54,7 @@ stream_reduce(Execution & ex, int window_size, int offset, Identity identity, Co
 }
 
 /**
+@}
 @}
 */
 

@@ -34,9 +34,11 @@
 #include "poly/reduce.h"
 
 /** 
+\addtogroup data_patterns
+@{
 \defgroup reduce_pattern Reduce pattern
-
 \brief Interface for applyinng the \ref md_reduce.
+@}
 */
 
 

@@ -32,8 +32,9 @@
 namespace grppi {
 
 /** 
+\addtogroup stream_patterns
+@{
 \defgroup farm_pattern Farm pattern
-
 \brief Interface for applyinng the \ref md_farm pattern.
 @{
 */
@@ -54,6 +55,7 @@ auto farm(Execution & ex, Transformer && transform_op)
 }
 
 /**
+@}
 @}
 */
 

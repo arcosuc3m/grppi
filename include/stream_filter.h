@@ -32,8 +32,9 @@
 namespace grppi {
 
 /** 
+\addtogroup stream_patterns
+@{
 \defgroup filter_pattern Stream filter pattern
-
 \brief Interface for applyinng the \ref md_stream-filter
 */
 
@@ -72,6 +73,7 @@ auto discard(Execution & ex, Predicate && predicate_op)
 }
 
 /**
+@}
 @}
 */
 

@@ -36,7 +36,7 @@
 #include "divideconquer.h"
 
 /** 
-\defgroup trask_patterns Task parallel patterns
+\defgroup task_patterns Task parallel patterns
 
 \brief Patterns for task parallel processing.
 */

@@ -31,9 +31,11 @@
 #include "poly/map.h"
 
 /** 
+\addtogroup data_patterns
+@{
 \defgroup map_pattern Map pattern
-
 \brief Interface for applyinng the \ref map-pattern.
+@}
 */
 
 #endif
