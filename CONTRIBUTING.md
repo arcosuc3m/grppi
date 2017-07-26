@@ -26,7 +26,7 @@ You may contribute in a number of ways, including:
 
 ## General rules
 
-* Please read and follow the GrPPI Code of Conduct before contributing to **GrPPi**.
+* Please read and follow the GrPPI Code of Conduct before contributing to **GrPPI**.
 
 If you are contributing with documentation:
 
@@ -47,7 +47,7 @@ If you find a bug, please create an issue and include the following information:
 * Compiler and version that you used.
 * Operating system.
 * Processor and architecture.
-* Smallest use case that can be used to reproduce the the bug.
+* Smallest use case that can be used to reproduce the bug.
 * Results that you obtained and results that you were expecting.
 
 **Important**: Please, mark the issue with the label **bug**.
