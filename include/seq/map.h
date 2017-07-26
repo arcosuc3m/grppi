@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -28,11 +28,8 @@ namespace grppi{
 /**
 \addtogroup map_pattern
 @{
-*/
-
-/**
 \addtogroup map_pattern_seq Sequential map pattern
-\brief Sequential implementation of the \ref md_map
+\brief Sequential implementation of the \ref md_map.
 @{
 */
 

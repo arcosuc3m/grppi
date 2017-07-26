@@ -31,16 +31,13 @@ namespace grppi{
 /**
 \addtogroup reduce_pattern
 @{
-*/
-
-/**
 \addtogroup reduce_pattern_native Native parallel reduce pattern
-\brief Native parallel implementation of the \ref md_reduce pattern
+\brief Native parallel implementation of the \ref md_reduce.
 @{
 */
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+\brief Invoke \ref md_reduce with identity value
 on a data sequence with parallel native execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.

@@ -29,16 +29,13 @@ namespace grppi{
 /**
 \addtogroup mapreduce_pattern
 @{
-*/
-
-/**
 \addtogroup mapreduce_pattern_native Native parallel map/reduce pattern
-\brief Native parallel implementation of the \ref md_map-reduce pattern.
+\brief Native parallel implementation of the \ref md_map-reduce.
 @{
 */
 
 /**
-\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+\brief Invoke \ref md_map-reduce on a data sequence with 
 native parallel execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam Result Result type of the reduction.
@@ -99,4 +96,5 @@ Result map_reduce(parallel_execution_native & ex,
 */
 
 }
+
 #endif

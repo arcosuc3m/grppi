@@ -106,16 +106,13 @@ void discard_multi_impl(polymorphic_execution & ex,
 /** 
 \addtogroup filter_pattern
 @{
-*/
-
-/**
 \addtogroup filter_poly Polymorphic parallel filter pattern.
-\brief Polymorphic parallel implementation fo the \ref md_stream-filter pattern.
+\brief Polymorphic parallel implementation of the \ref md_stream-filter.
 @{
 */
 
 /**
-\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke \ref md_stream-filter on a data
 sequence with polymorphic execution policy.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
@@ -140,7 +137,7 @@ void keep(polymorphic_execution & ex, Generator && generate_op,
 }
 
 /**
-\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke \ref md_stream-filter on a data
 sequence with polymorphic execution policy.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.

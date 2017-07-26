@@ -26,26 +26,12 @@
 
 namespace grppi{
 
-/**
-\addtogroup stream_iteration_pattern
-@{
-*/
-
-/**
-\addtogroup stream_iteration_pattern_poly Polymorphic stream iteration pattern
-\brief Sequential implementation of the \ref md_stream_iteration.
-@{
-*/
-
-
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename Transformer >
 void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
       farm_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
 {
 }
-
-
 
 template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
@@ -82,16 +68,12 @@ void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
   }
 }
 
-
-
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename ...MoreTransformers >
 void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
       pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
 {
 }
-
-
 
 template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
@@ -135,8 +117,6 @@ void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
 {
 }
 
-
-
 template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename Operation,
@@ -148,9 +128,6 @@ void repeat_until_multi_impl(polymorphic_execution & e,  GenFunc && in,
     std::forward<Operation>(op), std::forward<Predicate>(condition), 
     std::forward<OutFunc>(out));
 }
-
-
-
 
 template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
@@ -172,10 +149,17 @@ void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
   }
 }
 
+/**
+\addtogroup stream_iteration_pattern
+@{
+\addtogroup stream_iteration_pattern_poly Polymorphic stream iteration pattern
+\brief Sequential implementation of the \ref md_stream-iteration.
+@{
+*/
 
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_stream_iteration) on a data stream with polymorphic 
+\brief Invoke \ref md_stream-iteration on a data stream with polymorphic 
 execution with a generator, a predicate, a consumer and a farm as a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -199,9 +183,8 @@ void repeat_until(polymorphic_execution & e, GenFunc && in,
        std::forward<Predicate>(condition), std::forward<OutFunc>(out));
 }
 
-
 /**
-\brief Invoke [stream iteration pattern](@ref md_stream_iteration) on a data stream with polymorphic 
+\brief Invoke \ref md_stream-iteration on a data stream with polymorphic 
 execution with a generator, a predicate, a consumer and a pipeline as a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -225,10 +208,8 @@ void repeat_until(polymorphic_execution & e, GenFunc && in,
        std::forward<Predicate>(condition), std::forward<OutFunc>(out));
 }
 
-
-
 /**
-\brief Invoke [stream iteration pattern](@ref md_stream_iteration) on a data stream with polymorphic 
+\brief Invoke \ref md_stream-iteration on a data stream with polymorphic 
 execution with a generator, a predicate, a transformer and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -250,8 +231,6 @@ void repeat_until(polymorphic_execution & e, GenFunc && in,
   >(e, std::forward<GenFunc>(in), std::forward<Operation>(op), 
        std::forward<Predicate>(condition), std::forward<OutFunc>(out));
 }
-
-
 
 } // end namespace grppi
 

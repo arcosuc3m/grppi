@@ -55,16 +55,13 @@ void internal_stencil(parallel_execution_omp & ex,
 /**
 \addtogroup stencil_pattern
 @{
-*/
-
-/**
 \addtogroup stencil_pattern_omp OpenMP Parallel stencil pattern
-\brief OpenMP parallel implementation of the \ref md_stencil pattern.
+\brief OpenMP parallel implementation of the \ref md_stencil.
 @{
 */
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+\brief Invoke \ref md_stencil on a data sequence with 
 OpenMP parallel execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence
@@ -120,7 +117,7 @@ void stencil(parallel_execution_omp & ex,
 }
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+\brief Invoke \ref md_stencil on multiple data sequences with 
 TBB parallel execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence

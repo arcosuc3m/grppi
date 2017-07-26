@@ -63,16 +63,13 @@ Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt
 /**
 \addtogroup mapreduce_pattern
 @{
-*/
-
-/**
 \addtogroup mapreduce_pattern_poly Polymorphic map/reduce pattern
-\brief Polymorphic implementation of the \ref md_map-reduce pattern.
+\brief Polymorphic implementation of the \ref md_map-reduce.
 @{
 */
 
 /**
-\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+\brief Invoke \ref md_map-reduce on a data sequence with 
 polymorphic execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam Result Result type of the reduction.

@@ -26,7 +26,6 @@
 
 namespace grppi{
 
-
 template <typename Identity, typename Combiner, typename Consumer, typename Generator>
 void stream_reduce_multi_impl(polymorphic_execution & ex, int window_size, int offset, 
                               Identity identity, Generator && generate_op, 
@@ -77,16 +76,13 @@ void stream_reduce_multi_impl(polymorphic_execution & ex, int windowsize, int of
 /**
 \addtogroup stream_reduce_pattern
 @{
-*/
-
-/**
 \addtogroup stream_reduce_pattern_poly Polymorphic parallel stream reduce pattern
-\brief Polymorphic parallel implementation of the \ref md_stream-reduce pattern.
+\brief Polymorphic parallel implementation of the \ref md_stream-reduce.
 @{
 */
 
 /**
-\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
+\brief Invoke \ref md_stream-reduce on a stream with
 polymorphic parallel execution.
 \tparam Identity Type of the identity value used by the combiner.
 \tparam Generator Callable type used for generating data items.

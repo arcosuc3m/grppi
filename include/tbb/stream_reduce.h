@@ -33,16 +33,13 @@ namespace grppi{
 /**
 \addtogroup stream_reduce_pattern
 @{
-*/
-
-/**
 \addtogroup stream_reduce_pattern_tbb TBB parallel stream reduce pattern
-\brief TBB parallel implementation of the \ref md_stream-reduce pattern.
+\brief TBB parallel implementation of the \ref md_stream-reduce.
 @{
 */
 
 /**
-\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
+\brief Invoke \ref md_stream-reduce on a stream with
 TBB parallel execution.
 \tparam Identity Type of the identity value used by the combiner.
 \tparam Generator Callable type used for generating data items.

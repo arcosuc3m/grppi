@@ -31,16 +31,13 @@ namespace grppi{
 /**
 \addtogroup stream_reduce_pattern
 @{
-*/
-
-/**
 \addtogroup stream_reduce_pattern_seq Sequential stream reduce pattern
-\brief Sequential implementation of the \ref md_stream-reduce pattern.
+\brief Sequential implementation of the \ref md_stream-reduce.
 @{
 */
 
 /**
-\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with sequential
+\brief Invoke \ref md_stream-reduce on a stream with sequential
 execution.
 \tparam Identity Type of the identity value used by the combiner.
 \tparam Generator Callable type used for generating data items.

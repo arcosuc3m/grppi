@@ -105,16 +105,13 @@ void stencil_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
 /**
 \addtogroup stencil_pattern
 @{
-*/
-
-/**
 \addtogroup stencil_pattern_poly Polymorphic stencil pattern
-\brief Polymorphic implementation of the \ref md_stencil pattern.
+\brief Polymorphic implementation of the \ref md_stencil.
 @{
 */
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+\brief Invoke \ref md_stencil on a data sequence with 
 polymorphic execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence
@@ -144,7 +141,7 @@ void stencil(polymorphic_execution & ex,
 }
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+\brief Invoke \ref md_stencil on multiple data sequences with 
 sequential execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence

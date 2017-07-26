@@ -124,7 +124,6 @@ private:
 
 };
 
-
 } // end namespace grppi
 
 #endif

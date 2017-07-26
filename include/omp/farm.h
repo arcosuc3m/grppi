@@ -33,16 +33,13 @@ namespace grppi
 /**
 \addtogroup farm_pattern
 @{
-*/
-
-/**
 \addtogroup farm_pattern_omp OpenMP parallel farm pattern
 \brief OpenMP implementation of the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with OpenMP parallel 
+\brief Invoke the \ref md_farm on a data stream with OpenMP parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Consumer Callable type for the consume operation.
@@ -90,7 +87,7 @@ void farm(parallel_execution_omp & ex, Generator generate_op,
 }
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with OpenMP parallel 
+\brief Invoke the \ref md_farm on a data stream with OpenMP parallel 
 execution with a generator, a transformer, and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Tranformer Callable type for the tranformation operation.

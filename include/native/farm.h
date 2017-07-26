@@ -34,16 +34,13 @@ namespace grppi{
 /**
 \addtogroup farm_pattern
 @{
-*/
-
-/**
 \addtogroup farm_pattern_native Native parallel farm pattern
 \brief Sequential implementation of the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_farm on a data stream with native parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Consumer Callable type for the consume operation.
@@ -83,7 +80,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
 }
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_farm on a data stream with native parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Tranformer Callable type for the tranformation operation.

@@ -105,7 +105,7 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with
+\brief Invoke \ref map-pattern on a data sequence with
 polymorphic execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -130,7 +130,7 @@ void map(polymorphic_execution & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with
+\brief Invoke \ref map-pattern on a data sequence with
 polymorphic parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

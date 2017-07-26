@@ -481,16 +481,13 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
 /**
 \addtogroup pipeline_pattern
 @{
-*/
-
-/**
 \addtogroup pipeline_pattern_native Native parallel pipeline pattern
-\brief Native parallel implementation of the \ref md_pipeline pattern
+\brief Native parallel implementation of the \ref md_pipeline.
 @{
 */
 
 /**
-\brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
+\brief Invoke \ref md_pipeline on a data stream
 with native parallel execution.
 \tparam Generator Callable type for the stream generator.
 \tparam Transformers Callable type for each transformation stage.

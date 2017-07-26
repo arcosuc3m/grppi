@@ -99,16 +99,13 @@ void farm_multi_impl(polymorphic_execution & ex, Generator && generate_op,
 /**
 \addtogroup farm_pattern
 @{
-*/
-
-/**
 \addtogroup farm_pattern_poly Polymorphic execution farm pattern
 \brief Polymorphic execution implementation of the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with polymorphic 
+\brief Invoke \ref md_farm on a data stream with polymorphic 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Consumer Callable type for the consume operation.
@@ -130,7 +127,7 @@ void farm(polymorphic_execution & ex, Generator && generate_op,
 }
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with polymorphic
+\brief Invoke \ref md_farm on a data stream with polymorphic
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Tranformer Callable type for the tranformation operation.

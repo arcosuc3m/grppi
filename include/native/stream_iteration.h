@@ -32,16 +32,13 @@ namespace grppi{
 /**
 \addtogroup stream_iteration_pattern
 @{
-*/
-
-/**
 \addtogroup stream_iteration_pattern_native Native parallel stream iteration pattern
-\brief Sequential implementation of the \ref md_stream_iteration.
+\brief Sequential implementation of the \ref md_stream-iteration.
 @{
 */
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_stream-iteration on a data stream with native parallel 
 execution with a generator, a predicate, a consumer and a pipeline as a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -110,7 +107,7 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, pipel
 }
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_stream-iteration on a data stream with native parallel 
 execution with a generator, a predicate, a consumer and a farm as a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -198,7 +195,7 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_
 
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_stream-iteration on a data stream with native parallel 
 execution with a generator, a predicate, a transformer and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -260,7 +257,6 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, Trans
 
 }
 
-
-
 }
+
 #endif

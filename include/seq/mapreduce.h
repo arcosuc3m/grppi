@@ -28,16 +28,13 @@ namespace grppi{
 /**
 \addtogroup mapreduce_pattern
 @{
-*/
-
-/**
 \addtogroup mapreduce_pattern_seq Sequential map/reduce pattern
-\brief Sequential implementation of the \ref md_map-reduce pattern.
+\brief Sequential implementation of the \ref md_map-reduce.
 @{
 */
 
 /**
-\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+\brief Invoke \ref md_map-reduce on a data sequence with 
 sequential execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam Result Result type of the reduction.
@@ -72,4 +69,5 @@ Result map_reduce(sequential_execution &,
 }
 
 }
+
 #endif

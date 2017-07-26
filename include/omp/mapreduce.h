@@ -30,16 +30,13 @@ namespace grppi{
 /**
 \addtogroup mapreduce_pattern
 @{
-*/
-
-/**
 \addtogroup mapreduce_pattern_omp OpenMP parallel map/reduce pattern
-\brief OpenMP parallel implementation of the \ref md_map-reduce pattern.
+\brief OpenMP parallel implementation of the \ref md_map-reduce.
 @{
 */
 
 /**
-\brief Invoke [map/reduce pattern](\ref md_map-reduce) on a data sequence with 
+\brief Invoke \ref md_map-reduce on a data sequence with 
 native parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Result Result type of the reduction.

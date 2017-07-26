@@ -27,16 +27,13 @@ namespace grppi{
 /**
 \addtogroup stream_iteration_pattern
 @{
-*/
-
-/**
 \addtogroup stream_iteration_pattern_sequential Sequential stream iteration pattern
-\brief Sequential implementation of the \ref md_stream_iteration.
+\brief Sequential implementation of the \ref md_stream-iteration.
 @{
 */
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with sequential 
+\brief Invoke \ref md_stream-iteration on a data stream with sequential 
 execution with a generator, a predicate, a consumer and a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -69,7 +66,7 @@ void repeat_until(sequential_execution &ex, Generator && generate_op, farm_info<
 
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with sequential 
+\brief Invoke \ref md_stream-iteration on a data stream with sequential 
 execution with a generator, a predicate, a consumer and a farm as a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.
@@ -99,7 +96,7 @@ void repeat_until(sequential_execution &ex, Generator && generate_op, pipeline_i
 }
 
 /**
-\brief Invoke [stream iteration pattern](@ref md_farm) on a data stream with sequential 
+\brief Invoke \ref md_stream-iteration on a data stream with sequential 
 execution with a generator, a predicate, a consumer and a pipeline as a transformer.
 \tparam Generator Callable type for the generation operation.
 \tparam Predicate Callable type for the predicate operation.

@@ -31,16 +31,13 @@ namespace grppi{
 /**
 \addtogroup stream_reduce_pattern
 @{
-*/
-
-/**
 \addtogroup stream_reduce_pattern_omp OpenMP parallel stream reduce pattern
-\brief OpenMP parallel implementation of the \ref md_stream-reduce pattern.
+\brief OpenMP parallel implementation of the \ref md_stream-reduce.
 @{
 */
 
 /**
-\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
+\brief Invoke \ref md_stream-reduce on a stream with
 OpenMP parallel execution.
 \tparam Generator Callable type used for generating data items.
 \tparam Combiner Callable type used for data items combination.

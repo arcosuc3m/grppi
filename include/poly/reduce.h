@@ -71,13 +71,13 @@ auto reduce_multi_impl(polymorphic_execution & ex,
 \addtogroup reduce_pattern
 @{
 \addtogroup reduce_pattern_poly Polymorphic execution reduce pattern.
-\brief Implementation of reduce pattern for polymorphic execution back-end.
+\brief Polymorphic implementation of \ref md_reduce.
 @{
 */
 
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with no identity value
+\brief Invoke \ref md_reduce with no identity value
 on a data sequence with sequential execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.

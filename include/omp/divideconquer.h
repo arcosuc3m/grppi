@@ -96,16 +96,13 @@ internal_divide_conquer(parallel_execution_omp & ex,
 /**
 \addtogroup divide_conquer_pattern
 @{
-*/
-
-/**
 \addtogroup divide_conquer_pattern_omp OpenMP parallel divide/conquer pattern.
-\brief OpenMP parallel implementation of the \ref md_divide-conquer pattern.
+\brief OpenMP parallel implementation of the \ref md_divide-conquer.
 @{
 */
 
 /**
-\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with OpenMP
+\brief Invoke \ref md_divide-conquer with OpenMP
 parallel execution.
 \tparam Input Type used for the input problem.
 \tparam Divider Callable type for the divider operation.
@@ -200,7 +197,5 @@ divide_conquer(parallel_execution_omp & ex,
 */
 
 }
-
-#endif
 
 #endif
