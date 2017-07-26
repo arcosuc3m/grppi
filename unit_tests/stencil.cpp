@@ -104,10 +104,9 @@ public:
   }
 
   void check_multiple_ary() {
-    EXPECT_EQ(9, invocations_operation);
-    EXPECT_EQ(9, invocations_neighbour);
+    EXPECT_EQ(54, invocations_operation);
+    EXPECT_EQ(54, invocations_neighbour);
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
-
   }
 
 
@@ -258,7 +257,7 @@ TYPED_TEST(stencil_test, static_empty_ary)
   this->check_empty_ary();
 }
 
-/*
+
 TYPED_TEST(stencil_test, static_single_ary)
 {
   this->setup_single_ary();
@@ -382,5 +381,5 @@ TYPED_TEST(stencil_test, poly_multiple_ary)
   );
   this->check_multiple_ary();
 }
-*/
+
 
