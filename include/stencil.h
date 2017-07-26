@@ -28,41 +28,13 @@
 #include "tbb/stencil.h"
 #include "poly/stencil.h"
 
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BDataPattern
- *  @{
- */
-/** @defgroup Stencil
- *
- *  @brief Apply the stencil pattern for parallelizing the code section.
- *
- *  The Stencil pattern is applied in data structures when the computations
- *  need information about other elements of the data structures.
- *  The Stencil divide the data structure in as many parts as threads are 
- *  available to be used. Then each threads perform the computation needed for
- *  each neighbor of that element using the 'neighbor' function and perform 
- *  the code section 'op' with the data computed with the neighbors.
- *  @{
- */
-/** @param exec     Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework and number of
- *    threads.
- *  @param first    Iterator pointing to the first element of the input data
- *    structure. 
- *  @param last     Iterator pointing to the last element of the input data
- *    structure.
- *  @param firstOut Iterator pointing to the first elements of the output data
- *    structure.
- *  @param op    Task function: function that contains the code section that 
- *    will be parallelized.
- *  @param neighbor Support function: function that handle how to get the needed
- *    data from the neighbors. This functions serves as support for getting data
- *    to 'op'.
- */
-template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
- void Stencil(execution_model exec, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor );
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+/**
+\addtogroup data_patterns
+@{
+\defgroup stencil_pattern Stencil pattern
+\brief Interface for applyinng the \ref md_stencil pattern.
+@}
+*/
+
 
 #endif
