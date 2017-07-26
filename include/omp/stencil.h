@@ -142,7 +142,7 @@ void stencil(parallel_execution_omp & ex,
              StencilTransformer && transform_op, Neighbourhood && neighbour_op, 
              OtherInputIts ... other_firsts ) 
 {
-  int size = distance(frist,last);
+  int size = distance(first,last);
   int elements_per_thread = size/ex.concurrency_degree();
   #pragma omp parallel 
   {
