@@ -25,27 +25,77 @@
 #include "../common/iterator.h"
 
 namespace grppi{
-template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
- void stencil(sequential_execution &s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
-    while( first != last ) {
-       auto neighbors = neighbor(first);   
-       *firstOut = op(first, neighbors);
-       first++;
-       firstOut++;
 
-    }
-    
+/**
+\addtogroup stencil_pattern
+@{
+*/
+
+/**
+\addtogroup stencil_pattern_seq Sequential stencil pattern
+\brief Sequential implementation of the \ref md_stencil pattern.
+@{
+*/
+
+/**
+\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+sequential execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+*/
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood>
+void stencil(sequential_execution & ex, 
+             InputIt first, InputIt last, OutputIt out, 
+             StencilTransformer transform_op, 
+             Neighbourhood neighbour_op) 
+{
+  while (first!=last) {
+    *out = transform_op(first, neighbour_op(first));
+    first++;
+    out++;
+  }
 }
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
-void stencil(sequential_execution & s, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
-    while( first != last ) {
-        auto neighbors = neighbor(first, inputs...);
-        *firstOut = op(first, neighbors);
-        advance_iterators( inputs... );
-        first++;
-        firstOut++;
-    }
+/**
+\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+sequential execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\tparam OtherInputIts Iterator types for additional input sequences.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+\param other_firsts Iterators to the first element of additional input sequences.
+*/
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood, typename ... OtherInputIts>
+void stencil(sequential_execution & ex, 
+             InputIt first, InputIt last, OutputIt out, 
+             StencilTransformer transform_op, 
+             Neighbourhood neighbour_op, OtherInputIts ... other_firsts) 
+{
+  while (first!=last) {
+    *out = transform_op(first, neighbour_op(first, other_firsts ...));
+    advance_iterators(other_firsts...);
+    first++;
+    out++;
+  }
 }
+
 }
+
 #endif
