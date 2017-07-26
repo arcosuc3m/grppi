@@ -100,7 +100,7 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
 \addtogroup map_pattern
 @{
 \addtogroup map_pattern_poly Polymorphic execution map pattern.
-\brief Implementation of map pattern for polymorphic execution back-end.
+\brief Polymorphic implementation of \ref md_map.
 @{
 */
 

@@ -32,12 +32,12 @@ namespace grppi{
 
 /**
 \addtogroup map_pattern_seq Sequential map pattern
-\brief Sequential implementation of the \ref map-pattern
+\brief Sequential implementation of the \ref md_map
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+\brief Invoke \ref md_map on a data sequence with sequential
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -61,7 +61,7 @@ void map(sequential_execution & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+\brief Invoke \ref md_map on a data sequence with sequential
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

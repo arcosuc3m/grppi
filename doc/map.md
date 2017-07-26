@@ -1,4 +1,4 @@
-# Map pattern {#map-pattern}
+# Map pattern 
 
 The **map** pattern applies an operation to every element in one or multiple
 data sets, generating a new data set as an output.

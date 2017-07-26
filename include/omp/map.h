@@ -54,12 +54,12 @@ void internal_map(parallel_execution_omp & ex,
 \addtogroup map_pattern
 @{
 \addtogroup map_pattern_omp OpenMP parallel map pattern.
-\brief Implementation of map pattern for OpenMP parallel back-end.
+\brief OpenMP parallel implementation of the \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with OpenMP
+\brief Invoke \ref md_map on a data sequence with OpenMP
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -116,7 +116,7 @@ void map(parallel_execution_omp & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with OpenMP
+\brief Invoke \ref md_map on a data sequence with OpenMP
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

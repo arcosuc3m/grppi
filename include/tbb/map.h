@@ -32,13 +32,13 @@ namespace grppi{
 /**
 \addtogroup map_pattern
 @{
-\addtogroup map_pattern_tbb TBB parallel map pattern.
-\brief Implementation of map pattern for TBB parallel back-end.
+\addtogroup map_pattern_tbb TBB parallel \ref md_map pattern.
+\brief TBB parallel implementation of \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with TBB
+\brief Invoke \ref md_map on a data sequence with TBB
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -66,7 +66,7 @@ void map(parallel_execution_tbb & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with TBB
+\brief Invoke \ref md_map on a data sequence with TBB
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
