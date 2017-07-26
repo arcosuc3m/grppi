@@ -3,7 +3,7 @@
 ## Thanks
 
 Thank you for considering contributing to **GrPPI**. Our aim is to make
-**GrPPI** useful for the software comunity at large.  Any kind of contribution
+**GrPPI** useful for the software community at large.  Any kind of contribution
 is highly appreciated.
 
 ## Why should you read this guideline?
@@ -35,16 +35,16 @@ If you are contributing with documentation:
 
 If you are contributing with code:
 
-* Ensure that your pull request passes al unit tests for the set of supported platforms.
+* Ensure that your pull request passes all unit tests for the set of supported platforms.
 * For minor issues you can submit a pull request without filing and issue.
 * For non-trivial issue, please, file an issue that can be discussed before a decision is taken on how to process it.
 * Software pull requests should be as small as possible and providing only one feature per pull request.
 
 ## How to file a bug report
 
-If you find a bug, please create an issue, and include the following information:
+If you find a bug, please create an issue and include the following information:
 
-* Type and version of compiler that you used.
+* Compiler and version that you used.
 * Operating system.
 * Processor and architecture.
 * Smallest use case that can be used to reproduce the the bug.
@@ -62,4 +62,4 @@ If you want to suggest a new feature, please create an issue and include the fol
 
 ## How to run tests
 
-Before contributing with code pull request, please, make sure that your code passes all unit tests.
+Before contributing with code, please, make sure that your code passes all unit tests.
