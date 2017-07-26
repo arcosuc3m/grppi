@@ -100,7 +100,7 @@ The only interface currently offered for this pattern is based in iterators:
 * All the other input data sets are specified by iterators to the start of the input data sequences.
 
 ---
-**Example**: Stencil operation adding neighbours in a vector.
+**Example**: Stencil operation adding neighbours in two vector.
 ~~~{.cpp}
 vector<double> v1 = get_the_vector();
 vector<double> v2 = get_the_vector();
