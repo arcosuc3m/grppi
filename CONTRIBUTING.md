@@ -2,8 +2,9 @@
 
 ## Thanks
 
-Thank you for considering contributing to **GrPPI. Our aim is to make **GrPPI** useful for the software comunity at large. 
-Any kind of contribution is highly appreciated.
+Thank you for considering contributing to **GrPPI**. Our aim is to make
+**GrPPI** useful for the software comunity at large.  Any kind of contribution
+is highly appreciated.
 
 ## Why should you read this guideline?
 
@@ -12,18 +13,20 @@ This will result in shorter time to process your bug reports, suggestions and pu
 
 ## Ways of contributing to GrPPI
 
-You may contribute in a number of ways:
+You may contribute in a number of ways, including:
 
 * Filing bug reports.
 * Suggesting new features.
-* Contributing with documentation pull requests.
-* Contributing with pull requests with improved implementation of patterns or back ends.
+* Contributing with documentation.
+* Contributing with with improved implementation of patterns or back ends.
+* Contributing with unit test cases.
+* Contributing with sample applications.
 
 # Contributing go GrPPI
 
 ## General rules
 
-* Please read and follow the GrPPI Code of Conduct.
+* Please read and follow the GrPPI Code of Conduct before contributing to **GrPPi**.
 
 If you are contributing with documentation:
 
@@ -33,8 +36,8 @@ If you are contributing with documentation:
 If you are contributing with code:
 
 * Ensure that your pull request passes al unit tests for the set of supported platforms.
-* For minor issues you can submit a pull-request without filing and issue.
-* For non-trivial issue, please, file an issue that can be discussed, before a decision is taken on how to process it.
+* For minor issues you can submit a pull request without filing and issue.
+* For non-trivial issue, please, file an issue that can be discussed before a decision is taken on how to process it.
 * Software pull requests should be as small as possible and providing only one feature per pull request.
 
 ## How to file a bug report
@@ -44,8 +47,8 @@ If you find a bug, please create an issue, and include the following information
 * Type and version of compiler that you used.
 * Operating system.
 * Processor and architecture.
-* Smallest use case that we can use to reproduce the the bug.
-* Results obtained and results that you expected.
+* Smallest use case that can be used to reproduce the the bug.
+* Results that you obtained and results that you were expecting.
 
 **Important**: Please, mark the issue with the label **bug**.
 
