@@ -107,7 +107,7 @@ TYPED_TEST_CASE(stream_iteration_test, executions);
 TYPED_TEST(stream_iteration_test, static_no_composed)
 { 
   this->setup_no_composed();
-  grppi::stream_iteration(this->execution_,
+  grppi::repeat_until(this->execution_,
     [this]() -> optional<int> { 
       this->invocations_gen++; 
       if (this->count < this->n) {
@@ -122,7 +122,7 @@ TYPED_TEST(stream_iteration_test, static_no_composed)
     },
     [this](int val) { 
       this->invocations_pred++; 
-      return val<10;
+      return val>=10;
     },
     [this](int val) {
       this->invocations_cons++; 
@@ -135,7 +135,7 @@ TYPED_TEST(stream_iteration_test, static_no_composed)
 TYPED_TEST(stream_iteration_test, poly_no_composed)
 { 
   this->setup_no_composed();
-  grppi::stream_iteration(this->poly_execution_,
+  grppi::repeat_until(this->poly_execution_,
     [this]() -> optional<int> {
       this->invocations_gen++;
       if (this->count < this->n){
@@ -150,7 +150,7 @@ TYPED_TEST(stream_iteration_test, poly_no_composed)
     },
     [this](int val) {
       this->invocations_pred++;
-      return val<10;
+      return val>=10;
     },
     [this](int val) {
       this->invocations_cons++;
@@ -163,7 +163,7 @@ TYPED_TEST(stream_iteration_test, poly_no_composed)
 TYPED_TEST(stream_iteration_test, static_composed_pipeline)
 {
   this->setup_composed_pipeline();
-  grppi::stream_iteration(this->execution_,
+  grppi::repeat_until(this->execution_,
     [this]() -> optional<int> {
       this->invocations_gen++;
       if (this->count < this->n) {
@@ -184,7 +184,7 @@ TYPED_TEST(stream_iteration_test, static_composed_pipeline)
     ),
     [this](int val) {
       this->invocations_pred++;
-      return val<10;
+      return val>=10;
     },
     [this](int val) {
       this->invocations_cons++;
@@ -197,7 +197,7 @@ TYPED_TEST(stream_iteration_test, static_composed_pipeline)
 TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
 {
   this->setup_composed_pipeline();
-  grppi::stream_iteration(this->poly_execution_,
+  grppi::repeat_until(this->poly_execution_,
     [this]() -> optional<int> {
       this->invocations_gen++;
       if (this->count < this->n) {
@@ -218,7 +218,7 @@ TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
     ),
     [this](int val) {
       this->invocations_pred++;
-      return val<10;
+      return val>=10;
     },
     [this](int val) {
       this->invocations_cons++;
@@ -232,7 +232,7 @@ TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
 TYPED_TEST(stream_iteration_test, static_composed_farm)
 {
   this->setup_composed_farm();
-  grppi::stream_iteration(this->execution_,
+  grppi::repeat_until(this->execution_,
     [this]() -> optional<int> {
       this->invocations_gen++;
       if (this->count < this->n) {
@@ -249,7 +249,7 @@ TYPED_TEST(stream_iteration_test, static_composed_farm)
     ),
     [this](int val) {
       this->invocations_pred++;
-      return val<10;
+      return val>=10;
     },
     [this](int val) {
       this->invocations_cons++;
@@ -262,7 +262,7 @@ TYPED_TEST(stream_iteration_test, static_composed_farm)
 TYPED_TEST(stream_iteration_test, poly_composed_farm)
 {
   this->setup_composed_farm();
-  grppi::stream_iteration(this->poly_execution_,
+  grppi::repeat_until(this->poly_execution_,
     [this]() -> optional<int> {
       this->invocations_gen++;
       if (this->count < this->n) {
@@ -279,7 +279,7 @@ TYPED_TEST(stream_iteration_test, poly_composed_farm)
     ),
     [this](int val) {
       this->invocations_pred++;
-      return val<10;
+      return val>=10;
     },
     [this](int val) {
       this->invocations_cons++;

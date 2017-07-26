@@ -40,7 +40,7 @@ Sequential implementation of the \ref md_stream_iteration.
 
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename Transformer >
-void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
       farm_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
 {
 }
@@ -51,10 +51,10 @@ template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename Transformer ,
           internal::requires_execution_not_supported<E> = 0>
-void stream_iteration_multi_impl(polymorphic_execution & e,  GenFunc && in,
+void repeat_until_multi_impl(polymorphic_execution & e,  GenFunc && in,
       pipeline_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
 {
-  stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+  repeat_until_multi_impl<O...>(e, std::forward<GenFunc>(in),
     std::forward<farm_info<polymorphic_execution,Transformer> >(op), std::forward<Predicate>(condition),
     std::forward<OutFunc>(out));
 }
@@ -63,20 +63,20 @@ template <class E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename Transformer ,
           internal::requires_execution_supported<E> = 0>
-void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
       farm_info<polymorphic_execution,Transformer> && op, Predicate && condition, OutFunc && out)
 {
   if (typeid(E) == e.type() && typeid(E) == op.exectype.type()) {
     auto & pipe_exec = op.exectype;
     auto & actual_exec = *pipe_exec. template execution_ptr<E>();
     auto transformed_farm = farm(actual_exec, std::forward<Transformer>(op.task));
-    stream_iteration(*e.execution_ptr<E>(),
+    repeat_until(*e.execution_ptr<E>(),
         std::forward<GenFunc>(in),
         std::forward<farm_info<E,Transformer> >(transformed_farm), std::forward<Predicate>(condition),
         std::forward<OutFunc>(out));
   }
   else {
-    stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+    repeat_until_multi_impl<O...>(e, std::forward<GenFunc>(in),
         std::forward<farm_info<polymorphic_execution,Transformer> >(op), std::forward<Predicate>(condition),
         std::forward<OutFunc>(out));
   }
@@ -86,7 +86,7 @@ void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
 
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename ...MoreTransformers >
-void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
       pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
 {
 }
@@ -97,10 +97,10 @@ template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename ...MoreTransformers ,
           internal::requires_execution_not_supported<E> = 0>
-void stream_iteration_multi_impl(polymorphic_execution & e,  GenFunc && in,
+void repeat_until_multi_impl(polymorphic_execution & e,  GenFunc && in,
       pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
 {
-  stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+  repeat_until_multi_impl<O...>(e, std::forward<GenFunc>(in),
     std::forward<pipeline_info<polymorphic_execution,MoreTransformers...> >(op), std::forward<Predicate>(condition),
     std::forward<OutFunc>(out));
 }
@@ -109,20 +109,20 @@ template <class E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename ...MoreTransformers ,
           internal::requires_execution_supported<E> = 0>
-void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
+void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in,
       pipeline_info<polymorphic_execution,MoreTransformers...> && op, Predicate && condition, OutFunc && out)
 {
   if (typeid(E) == e.type() && typeid(E) == op.exectype.type()) {
     auto & pipe_exec = op.exectype;
     auto & actual_exec = *pipe_exec. template execution_ptr<E>(); 
     auto transformed_pipe = transform_pipeline(actual_exec, std::forward<std::tuple<MoreTransformers...>>(op.stages)); 
-    stream_iteration(*e.execution_ptr<E>(),
+    repeat_until(*e.execution_ptr<E>(),
         std::forward<GenFunc>(in),
         std::forward<pipeline_info<E,MoreTransformers...> >(transformed_pipe), std::forward<Predicate>(condition),
         std::forward<OutFunc>(out));
   }
   else {
-    stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in),
+    repeat_until_multi_impl<O...>(e, std::forward<GenFunc>(in),
         std::forward<pipeline_info<polymorphic_execution,MoreTransformers...> >(op), std::forward<Predicate>(condition),
         std::forward<OutFunc>(out));
   }
@@ -130,7 +130,7 @@ void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in,
 
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename Operation>
-void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in, 
+void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in, 
       Operation && op, Predicate && condition, OutFunc && out)
 {
 }
@@ -141,10 +141,10 @@ template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename Operation,
           internal::requires_execution_not_supported<E> = 0>
-void stream_iteration_multi_impl(polymorphic_execution & e,  GenFunc && in, 
+void repeat_until_multi_impl(polymorphic_execution & e,  GenFunc && in, 
       Operation && op, Predicate && condition, OutFunc && out) 
 {
-  stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in), 
+  repeat_until_multi_impl<O...>(e, std::forward<GenFunc>(in), 
     std::forward<Operation>(op), std::forward<Predicate>(condition), 
     std::forward<OutFunc>(out));
 }
@@ -156,17 +156,17 @@ template <typename E, typename ... O,
           typename GenFunc, typename Predicate, typename OutFunc,
           typename Operation,
           internal::requires_execution_supported<E> = 0>
-void stream_iteration_multi_impl(polymorphic_execution & e, GenFunc && in, 
+void repeat_until_multi_impl(polymorphic_execution & e, GenFunc && in, 
       Operation && op, Predicate && condition, OutFunc && out) 
 {
   if (typeid(E) == e.type()) {
-    stream_iteration(*e.execution_ptr<E>(), 
+    repeat_until(*e.execution_ptr<E>(), 
         std::forward<GenFunc>(in), 
         std::forward<Operation>(op), std::forward<Predicate>(condition), 
         std::forward<OutFunc>(out));
   }
   else {
-    stream_iteration_multi_impl<O...>(e, std::forward<GenFunc>(in), 
+    repeat_until_multi_impl<O...>(e, std::forward<GenFunc>(in), 
         std::forward<Operation>(op), std::forward<Predicate>(condition), 
         std::forward<OutFunc>(out));
   }
@@ -189,10 +189,10 @@ execution with a generator, a predicate, a consumer and a farm as a transformer.
 */
 template <typename GenFunc, typename Predicate, typename OutFunc,
           typename Transformer>
-void stream_iteration(polymorphic_execution & e, GenFunc && in,
+void repeat_until(polymorphic_execution & e, GenFunc && in,
       farm_info<polymorphic_execution, Transformer> && op, Predicate && condition, OutFunc && out)
 {
-  stream_iteration_multi_impl<
+  repeat_until_multi_impl<
     sequential_execution,
     parallel_execution_native
   >(e, std::forward<GenFunc>(in), std::forward<farm_info<polymorphic_execution,Transformer> >(op),
@@ -215,10 +215,10 @@ execution with a generator, a predicate, a consumer and a pipeline as a transfor
 */
 template <typename GenFunc, typename Predicate, typename OutFunc,
           typename ...MoreTransformers>
-void stream_iteration(polymorphic_execution & e, GenFunc && in,
+void repeat_until(polymorphic_execution & e, GenFunc && in,
       pipeline_info<polymorphic_execution, MoreTransformers...> && op, Predicate && condition, OutFunc && out)
 {
-  stream_iteration_multi_impl<
+  repeat_until_multi_impl<
     sequential_execution,
     parallel_execution_native
   >(e, std::forward<GenFunc>(in), std::forward<pipeline_info<polymorphic_execution,MoreTransformers...> >(op),
@@ -241,10 +241,10 @@ execution with a generator, a predicate, a transformer and a consumer.
 \param tranformer_op Tranformer operation.
 */
 template <typename GenFunc, typename Operation, typename Predicate, typename OutFunc>
-void stream_iteration(polymorphic_execution & e, GenFunc && in, 
+void repeat_until(polymorphic_execution & e, GenFunc && in, 
       Operation && op, Predicate && condition, OutFunc && out) 
 {
-  stream_iteration_multi_impl<
+  repeat_until_multi_impl<
     sequential_execution,
     parallel_execution_native
   >(e, std::forward<GenFunc>(in), std::forward<Operation>(op), 

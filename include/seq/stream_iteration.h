@@ -48,22 +48,22 @@ execution with a generator, a predicate, a consumer and a transformer.
 \param transform_op Transformer operation.
 */
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void stream_iteration(sequential_execution, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
+void repeat_until(sequential_execution, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
   for(;;) {
     auto item = generate_op();
     if (!item) break;
     auto val = *item;
     do {
       val = transform_op(val);
-    } while (predicate_op(val));
+    } while (!predicate_op(val));
     consume_op(val);
   }
 }
 
 
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void stream_iteration(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> & farm, Predicate && predicate_op, Consumer && consume_op){
-  stream_iteration(ex, std::forward<Generator>( generate_op ), std::forward<farm_info<sequential_execution, Transformer> &&>( farm ), 
+void repeat_until(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> & farm, Predicate && predicate_op, Consumer && consume_op){
+  repeat_until(ex, std::forward<Generator>( generate_op ), std::forward<farm_info<sequential_execution, Transformer> &&>( farm ), 
           std::forward<Predicate>( predicate_op), std::forward< Consumer >( consume_op ) );
 }
 
@@ -81,21 +81,21 @@ execution with a generator, a predicate, a consumer and a farm as a transformer.
 \param farm Composed farm object.
 */
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void stream_iteration(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
+void repeat_until(sequential_execution &ex, Generator && generate_op, farm_info<sequential_execution, Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
   for(;;) {
     auto item = generate_op();       
     if (!item) break;
     auto val = *item;
     do {
       val = farm.task(val);
-    } while (predicate_op(val));
+    } while (!predicate_op(val));
     consume_op(val);
   }
 }
 
 template<typename Generator, typename Predicate, typename Consumer, typename ...Stages>
-void stream_iteration(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> & pipe, Predicate && predicate_op, Consumer && consume_op){
-  stream_iteration(ex, std::forward<Generator>(generate_op), std::forward<pipeline_info<sequential_execution, Stages...> &&>( pipe ), std::forward<Predicate>(predicate_op), std::forward<Consumer>( consume_op ));
+void repeat_until(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> & pipe, Predicate && predicate_op, Consumer && consume_op){
+  repeat_until(ex, std::forward<Generator>(generate_op), std::forward<pipeline_info<sequential_execution, Stages...> &&>( pipe ), std::forward<Predicate>(predicate_op), std::forward<Consumer>( consume_op ));
 }
 
 /**
@@ -111,14 +111,14 @@ execution with a generator, a predicate, a consumer and a pipeline as a transfor
 \param pipe Composed pipeline object.
 */
 template<typename Generator, typename Predicate, typename Consumer, typename ...Stages>
-void stream_iteration(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> && pipe, Predicate && predicate_op, Consumer && consume_op){
+void repeat_until(sequential_execution &ex, Generator && generate_op, pipeline_info<sequential_execution, Stages...> && pipe, Predicate && predicate_op, Consumer && consume_op){
   for (;;) {
     auto item = generate_op();
     if (!item) break; 
     auto val = *item;
     do {
       val = composed_pipeline<typename std::result_of<Generator()>::type::value_type,0,Stages...>(val,std::forward<pipeline_info<sequential_execution, Stages...>>(pipe) );
-    } while (predicate_op(val));
+    } while (!predicate_op(val));
     consume_op(val);
   }
 }
