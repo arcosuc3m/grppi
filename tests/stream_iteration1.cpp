@@ -55,7 +55,7 @@ void iteration_example1() {
     std::atomic<int> output;
     output = 0;
 
-    stream_iteration(p,
+    repeat_until(p,
         // farm generator as lambda
         [&]() -> optional<int>{
             a--; 
@@ -71,7 +71,7 @@ void iteration_example1() {
               return l;
         }),
         [&](int l){
-           return l<100 ? true : false;
+           return l<100 ? false : true;
         },
         [&](int l){
             std::cout<<l<<std::endl;

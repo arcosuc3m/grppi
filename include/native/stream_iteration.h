@@ -54,7 +54,7 @@ execution with a generator, a predicate, a consumer and a pipeline as a transfor
 \param pipe Composed pipeline object.
 */
 template<typename Generator, typename Predicate, typename Consumer, typename ...MoreTransformers>
-void stream_iteration(parallel_execution_native &ex, Generator && generate_op, pipeline_info<parallel_execution_native , MoreTransformers...> && pipe, Predicate && predicate_op, Consumer && consume_op){
+void repeat_until(parallel_execution_native &ex, Generator && generate_op, pipeline_info<parallel_execution_native , MoreTransformers...> && pipe, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
   using generated_type = typename std::result_of<Generator()>::type;
   using pipeline_info_type = pipeline_info<parallel_execution_native , MoreTransformers...>;
@@ -93,7 +93,7 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, p
     }
     auto item{transformed_queue.pop()};
     //Check the predicate
-    if (!predicate_op(*item)) {
+    if (predicate_op(*item)) {
       num_elements--;
       consume_op(*item);
       //If the condition is not met reintroduce the element in the input queue
@@ -123,7 +123,7 @@ execution with a generator, a predicate, a consumer and a farm as a transformer.
 \param farm Composed farm object.
 */
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void stream_iteration(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
+void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
   using generated_type = typename std::result_of<Generator()>::type;
   auto generated_queue = ex.make_queue<generated_type>();
@@ -145,7 +145,7 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
       auto out = *item;
       do {
         out = farm.task(out);
-      } while (predicate_op(out));
+      } while (!predicate_op(out));
       transformed_queue.push(out);
       item = generated_queue.pop();
     }
@@ -167,7 +167,7 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, f
         auto out = *item;
         do {
           out = farm.task(out);
-        } while (predicate_op(out));
+        } while (!predicate_op(out));
         transformed_queue.push(out);
         item = generated_queue.pop();
       }
@@ -211,7 +211,7 @@ execution with a generator, a predicate, a transformer and a consumer.
 \param tranformer_op Tranformer operation.
 */
 template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void stream_iteration(parallel_execution_native &ex, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
+void repeat_until(parallel_execution_native &ex, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
   using namespace std;
   using namespace std::experimental;
   using generated_type = typename result_of<Generator()>::type;
@@ -239,7 +239,7 @@ void stream_iteration(parallel_execution_native &ex, Generator && generate_op, T
      auto val = *item;
      do {
        val = transform_op(val);
-     } while (predicate_op(val));
+     } while (!predicate_op(val));
      transformed_queue.push(val);
      item = generated_queue.pop();
     }

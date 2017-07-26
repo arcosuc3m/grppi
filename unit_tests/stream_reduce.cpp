@@ -53,6 +53,8 @@ public:
   std::atomic<int> invocations_reduce{0};
 
   void setup_empty() {
+    window = 3;
+    offset = 3;
   }
 
   void check_empty() {
