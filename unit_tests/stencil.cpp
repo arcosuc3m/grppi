@@ -42,8 +42,6 @@ public:
   vector<int> v{};
   vector<int> v2{};
   vector<int> w{};
-  vector<int> expected{};
-  int rowsize;
 
   // Invocation counter
   std::atomic<int> invocations_operation{0};
@@ -95,15 +93,15 @@ public:
   void setup_multiple() {
     v = { 1, 2, 3, 4, 5 };
     w = { 0, 0, 0, 0, 0 };
-    expected = { 3, 5, 7, 9, 5};
   }
 
   void check_multiple() {
     EXPECT_EQ(5, invocations_operation); 
     EXPECT_EQ(5, invocations_neighbour);
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
-
+    vector<int>expected{ 3, 5, 7, 9, 5};
+    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w)));
   }
+
   // Stencil on two sequences.
   // Each v[i] is made 
   //     v[i-2] + v[i-1] + v[i+1] + v[i+2] +
@@ -147,7 +145,6 @@ public:
   }
 
   void setup_single_ary() {
-    rowsize = 1;
     v = { 1 };
     v2 = { 1 };
     w = { 1 };
@@ -166,7 +163,13 @@ public:
       [i=100]() mutable { return i++; });
     fill_n(back_inserter(w), 10, 0);
 
-    expected = vector<int>{
+  }
+
+  void check_multiple_ary() {
+    EXPECT_EQ(10, invocations_operation);
+    EXPECT_EQ(10, invocations_neighbour);
+
+    vector<int> expected{
               1 + 2             + 101 + 102,
           0 + 2 + 3       + 100 + 102 + 103,
       0 + 1 + 3 + 4 + 100 + 101 + 103 + 104,
@@ -178,13 +181,8 @@ public:
       6 + 7 + 9     + 106 + 107 + 109      ,
       7 + 8         + 107 + 108            
     };
-  }
-
-  void check_multiple_ary() {
-    EXPECT_EQ(10, invocations_operation);
-    EXPECT_EQ(10, invocations_neighbour);
     EXPECT_EQ(expected.size(), w.size());
-    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w)));
+    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w), end(w)));
   }
 
 
@@ -277,7 +275,3 @@ TYPED_TEST(stencil_test, poly_multiple)
   this->run_unary(this->poly_execution_);
   this->check_multiple();
 }
-
-
-
-
