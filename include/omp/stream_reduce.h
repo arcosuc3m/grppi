@@ -35,7 +35,7 @@ namespace grppi{
 
 /**
 \addtogroup stream_reduce_pattern_omp OpenMP parallel stream reduce pattern
-OpenMP parallel implementation of the \ref md_stream-reduce pattern.
+\brief OpenMP parallel implementation of the \ref md_stream-reduce pattern.
 @{
 */
 

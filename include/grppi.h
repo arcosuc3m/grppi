@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -26,20 +26,28 @@
 #include "mapreduce.h"
 #include "reduce.h"
 #include "stencil.h"
+
+namespace grppi {
+
 /** 
 \defgroup data_patterns Data parallel patterns
 
 \brief Patterns for data parallel processing.
 */
 
+}
+
 // Includes for task patterns
 #include "divideconquer.h"
+
+namespace grppi {
 
 /** 
 \defgroup task_patterns Task parallel patterns
 
 \brief Patterns for task parallel processing.
 */
+}
 
 // Includes for streaming patterns
 #include "farm.h"
@@ -48,12 +56,14 @@
 #include "stream_iteration.h"
 #include "stream_reduce.h"
 
+namespace grppi {
+
 /** 
 \defgroup stream_patterns Streaming patterns
 
 \brief Patterns for data stream processing.
 */
 
-
+}
 
 #endif

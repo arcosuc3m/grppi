@@ -33,7 +33,7 @@ namespace grppi{
 \addtogroup map_pattern
 @{
 \addtogroup map_pattern_tbb TBB parallel map pattern.
-Implementation of map pattern for TBB parallel back-end.
+\brief Implementation of map pattern for TBB parallel back-end.
 @{
 */
 

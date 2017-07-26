@@ -37,7 +37,7 @@ namespace grppi
 
 /**
 \addtogroup farm_pattern_omp OpenMP parallel farm pattern
-OpenMP implementation of the \ref md_farm.
+\brief OpenMP implementation of the \ref md_farm.
 @{
 */
 

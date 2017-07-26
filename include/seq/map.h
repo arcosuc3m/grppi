@@ -32,7 +32,7 @@ namespace grppi{
 
 /**
 \addtogroup map_pattern_seq Sequential map pattern
-Sequential implementation of the \ref map-pattern
+\brief Sequential implementation of the \ref map-pattern
 @{
 */
 

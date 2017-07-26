@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -31,6 +31,8 @@
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
 
+namespace grppi {
+
 /**
 \addtogroup stream_patterns
 @{
@@ -38,8 +40,6 @@
 \brief Interface for applyinng the \ref md_pipeline
 @}
 */
-
-namespace grppi {
 
 /**
 \addtogroup pipeline_pattern

@@ -81,7 +81,7 @@ void stream_reduce_multi_impl(polymorphic_execution & ex, int windowsize, int of
 
 /**
 \addtogroup stream_reduce_pattern_poly Polymorphic parallel stream reduce pattern
-Polymorphic parallel implementation of the \ref md_stream-reduce pattern.
+\brief Polymorphic parallel implementation of the \ref md_stream-reduce pattern.
 @{
 */
 

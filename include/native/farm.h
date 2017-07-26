@@ -38,7 +38,7 @@ namespace grppi{
 
 /**
 \addtogroup farm_pattern_native Native parallel farm pattern
-Sequential implementation of the \ref md_farm.
+\brief Sequential implementation of the \ref md_farm.
 @{
 */
 

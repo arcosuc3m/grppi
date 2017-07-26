@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -27,6 +27,8 @@
 #include "tbb/divideconquer.h"
 #include "poly/divideconquer.h"
 
+namespace grppi {
+
 /** 
 \addtogroup task_patterns
 @{
@@ -35,5 +37,6 @@
 @}
 */
 
+}
 
 #endif

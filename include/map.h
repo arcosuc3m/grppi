@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -30,6 +30,8 @@
 #include "tbb/map.h"
 #include "poly/map.h"
 
+namespace grppi {
+
 /** 
 \addtogroup data_patterns
 @{
@@ -37,5 +39,7 @@
 \brief Interface for applyinng the \ref map-pattern.
 @}
 */
+
+}
 
 #endif

@@ -32,7 +32,7 @@ namespace grppi{
 
 /**
 \addtogroup farm_pattern_seq Sequential farm pattern
-Sequential implementation of the \ref md_farm.
+\brief Sequential implementation of the \ref md_farm.
 @{
 */
 

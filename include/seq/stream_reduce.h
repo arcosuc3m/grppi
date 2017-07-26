@@ -35,7 +35,7 @@ namespace grppi{
 
 /**
 \addtogroup stream_reduce_pattern_seq Sequential stream reduce pattern
-Sequential implementation of the \ref md_stream-reduce pattern.
+\brief Sequential implementation of the \ref md_stream-reduce pattern.
 @{
 */
 

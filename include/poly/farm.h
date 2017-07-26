@@ -103,7 +103,7 @@ void farm_multi_impl(polymorphic_execution & ex, Generator && generate_op,
 
 /**
 \addtogroup farm_pattern_poly Polymorphic execution farm pattern
-Polymorphic execution implementation of the \ref md_farm.
+\brief Polymorphic execution implementation of the \ref md_farm.
 @{
 */
 

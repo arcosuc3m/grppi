@@ -29,7 +29,7 @@ namespace grppi{
 \addtogroup map_pattern
 @{
 \addtogroup map_pattern_native Native parallel map pattern.
-Implementation of map pattern for native parallel back-end.
+\brief Implementation of map pattern for native parallel back-end.
 @{
 */
 

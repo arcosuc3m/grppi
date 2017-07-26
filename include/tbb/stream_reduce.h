@@ -37,7 +37,7 @@ namespace grppi{
 
 /**
 \addtogroup stream_reduce_pattern_tbb TBB parallel stream reduce pattern
-TBB parallel implementation of the \ref md_stream-reduce pattern.
+\brief TBB parallel implementation of the \ref md_stream-reduce pattern.
 @{
 */
 

@@ -28,6 +28,8 @@
 #include "tbb/stencil.h"
 #include "poly/stencil.h"
 
+namespace grppi {
+
 /**
 \addtogroup data_patterns
 @{
@@ -36,5 +38,6 @@
 @}
 */
 
+}
 
 #endif

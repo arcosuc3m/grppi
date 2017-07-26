@@ -38,7 +38,7 @@ namespace grppi{
 
 /**
 \addtogroup farm_pattern_tbb TBB parallel farm pattern
-TBB parallel implementation of the \ref md_farm.
+\brief TBB parallel implementation of the \ref md_farm.
 @{
 */
 

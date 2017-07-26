@@ -33,7 +33,7 @@ namespace grppi{
 
 /**
 \addtogroup stream_iteration_pattern_poly Polymorphic stream iteration pattern
-Sequential implementation of the \ref md_stream_iteration.
+\brief Sequential implementation of the \ref md_stream_iteration.
 @{
 */
 

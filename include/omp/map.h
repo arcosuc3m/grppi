@@ -54,7 +54,7 @@ void internal_map(parallel_execution_omp & ex,
 \addtogroup map_pattern
 @{
 \addtogroup map_pattern_omp OpenMP parallel map pattern.
-Implementation of map pattern for OpenMP parallel back-end.
+\brief Implementation of map pattern for OpenMP parallel back-end.
 @{
 */
 
