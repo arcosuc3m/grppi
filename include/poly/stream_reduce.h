@@ -44,7 +44,7 @@ void stream_reduce_multi_impl(polymorphic_execution & ex, int windowsize, int of
   stream_reduce_multi_impl<O...>(ex, 
     windowsize, offset, identity,
     std::forward<Generator>(gen), 
-    std::forward<Combiner>(cons), 
+    std::forward<Combiner>(comb), 
     std::forward<Consumer>(cons)
   );
 }
