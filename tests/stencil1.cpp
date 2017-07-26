@@ -54,7 +54,7 @@ void map_example1() {
    std::cout << (r-in.begin()) << " " << (in.end()-rowsize-in.begin()) << " " <<((r-in.begin()) % rowsize)<<"\n";
 
    stencil(p, in.begin(), in.end(), out.begin(),
-     [&](auto it, std::vector<int> &ng){
+     [&](auto it, std::vector<int> ng){
 
       if( (it-in.begin()) > rowsize 
        && (it-in.begin()) < (in.end()-rowsize-in.begin()) 
