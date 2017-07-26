@@ -18,8 +18,9 @@ Currently, **GrPPI** supports the following patterns:
   * Streaming patterns
     * [Pipeline](doc/pipeline.md)
     * [Farm](doc/farm.md)
-    * [Stream-filter](doc/stream-filter.md)
-    * [Stream-reduce](doc/stream-reduce.md)
+    * [Stream filter](doc/stream-filter.md)
+    * [Stream reduction](doc/stream-reduce.md)
+    * [Stream iteration](doc/stream-iteration.md)
 
 ## Install and compile instructions
 
