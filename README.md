@@ -18,8 +18,9 @@ Currently, **GrPPI** supports the following patterns:
   * Streaming patterns
     * [Pipeline](doc/pipeline.md)
     * [Farm](doc/farm.md)
-    * [Stream-filter](doc/stream-filter.md)
-    * [Stream-reduce](doc/stream-reduce.md)
+    * [Stream filter](doc/stream-filter.md)
+    * [Stream reduction](doc/stream-reduce.md)
+    * [Stream iteration](doc/stream-iteration.md)
 
 ## Install and compile instructions
 
@@ -38,3 +39,9 @@ Please cite this publication in any work using our library:
 
 * **A C++ Generic Parallel Pattern Interface for Stream Processing**. David Del Río Astorga, Manuel F. Dolz, Luis Miguel Sanchez, Javier Garcia Blas and J. Daniel Garcia. *16th International Conference on Algorithms and Architectures for Parallel Processing (ICA3PP)*. Granada, Spain. 14-16/12/2016. pp. 74-84. DOI: [10.1007/978-3-319-49583-5_5](http://dx.doi.org/10.1007/978-3-319-49583-5_5)
 
+### Acknowledgments
+
+The **GrPPI** library has been partially supproted by:
+
+* Project ICT 644235 *"REPHRASE: REfactoring Parallel Heterogeneous Resource-aware Applications"* funded by the European Comision through H2020 program (2015-2018).
+* Project TIN2016-79673-P *“Towards Unification of HPC and Big Data Paradigms”* funded by the Spanish Ministry of Economy and Comeptitiveness (2016-2019).
