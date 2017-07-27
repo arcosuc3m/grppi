@@ -24,6 +24,7 @@
 #include "sequential_execution.h"
 
 #include "../common/pack_traits.h"
+#include "../common/patterns.h"
 
 namespace grppi {
 
