@@ -47,8 +47,8 @@ The **StencilTransformer** is any C++ callable entity that takes
 one iterator to a data item and the result of a **Neighbourhood** operation and performs
 a transformation. 
 
-Thus, a **StencilTransfomer** is any operatoio `op`that give an iterator value `it`and 
-the result of a **Neighbourhood** operation `n` makes valid the following:
+Thus, a **StencilTransfomer** is any operation `op` that, given an iterator value `it`and 
+the result of a **Neighbourhood** operation `n`, makes valid the following:
 
 ~~~{.cpp}
 R r = op(it, n);
