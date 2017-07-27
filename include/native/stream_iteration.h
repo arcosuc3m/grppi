@@ -50,19 +50,24 @@ execution with a generator, a predicate, a consumer and a pipeline as a transfor
 \param consume_op Consumer operation.
 \param pipe Composed pipeline object.
 */
-template<typename Generator, typename Predicate, typename Consumer, typename ...MoreTransformers>
-void repeat_until(parallel_execution_native &ex, Generator && generate_op, pipeline_info<parallel_execution_native , MoreTransformers...> && pipe, Predicate && predicate_op, Consumer && consume_op){
+template<typename Generator, typename Predicate, typename Consumer, 
+         typename ...MoreTransformers>
+void repeat_until(parallel_execution_native & ex, 
+                  Generator && generate_op, 
+                  pipeline_info<parallel_execution_native, 
+                      MoreTransformers...> && pipe, 
+                  Predicate predicate_op, Consumer consume_op)
+{
   using namespace std;
-  using generated_type = typename std::result_of<Generator()>::type;
-  using pipeline_info_type = pipeline_info<parallel_execution_native , MoreTransformers...>;
+  using generated_type = typename result_of<Generator()>::type;
+  using pipeline_info_type = pipeline_info<parallel_execution_native, MoreTransformers...>;
 
   auto generated_queue = ex.make_queue<generated_type>();
   auto transformed_queue = ex.make_queue<generated_type>();
-  std::atomic<int> num_elements{0};
-  std::atomic<bool> send_finish{false};
-  //Stream generator
+  atomic<int> num_elements{0};
+  atomic<bool> send_finish{false};
+
   thread generator_task([&](){
-    // Register the thread in the execution model
     auto manager = ex.thread_manager();
     for (;;) {
       auto item{generate_op()};
@@ -76,9 +81,11 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, pipel
   });
 
   vector<thread> pipe_threads;
-  composed_pipeline< decltype(generated_queue), decltype(transformed_queue), 0, MoreTransformers ...>
-    (generated_queue, forward<pipeline_info_type>(pipe) , transformed_queue, pipe_threads); 
- 
+  composed_pipeline<decltype(generated_queue), 
+          decltype(transformed_queue), 0, MoreTransformers ...>(
+      generated_queue, 
+      forward<pipeline_info_type>(pipe), 
+      transformed_queue, pipe_threads); 
 
   auto manager = ex.thread_manager();
   for (;;) {
@@ -88,22 +95,20 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, pipel
       send_finish = false;
       break;
     }
+
     auto item{transformed_queue.pop()};
-    //Check the predicate
     if (predicate_op(*item)) {
       num_elements--;
       consume_op(*item);
-      //If the condition is not met reintroduce the element in the input queue
     }
     else {
+      //If the condition is not met reintroduce the element in the input queue
       generated_queue.push(item);
     }
+  }
 
-  }
   generator_task.join();
-  for(auto && t : pipe_threads){ 
-    t.join();
-  }
+  for (auto && t : pipe_threads) { t.join(); }
 }
 
 /**
@@ -119,24 +124,29 @@ execution with a generator, a predicate, a consumer and a farm as a transformer.
 \param consume_op Consumer operation.
 \param farm Composed farm object.
 */
-template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_info<parallel_execution_native,Transformer> && farm, Predicate && predicate_op, Consumer && consume_op){
+template<typename Generator, typename Transformer, typename Predicate, 
+         typename Consumer>
+void repeat_until(parallel_execution_native &ex, 
+                  Generator generate_op, 
+                  farm_info<parallel_execution_native,Transformer> && farm, 
+                  Predicate predicate_op, Consumer consume_op)
+{
   using namespace std;
-  using generated_type = typename std::result_of<Generator()>::type;
+  using generated_type = typename result_of<Generator()>::type;
   auto generated_queue = ex.make_queue<generated_type>();
   auto transformed_queue = ex.make_queue<generated_type>();
   atomic<int> done_threads{0};
   vector<thread> tasks;
-   //Stream generator
+
   thread generator_task([&](){
-    // Register the thread in the execution model
     auto manager = farm.exectype.thread_manager();
     for (;;) {
       auto item = generate_op();
       generated_queue.push(item);
       if (!item) break;
     }
-    //When generation is finished it starts working on the farm
+
+    //When generation is finished start working on the farm
     auto item{generated_queue.pop()};
     while (item) {
       auto out = *item;
@@ -157,7 +167,6 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_
   //Farm workers
   for(int th = 1; th < farm.exectype.concurrency_degree(); th++) {
     tasks.emplace_back([&]() {
-      // Register the thread in the execution model
       auto manager = farm.exectype.thread_manager();
       auto item{generated_queue.pop()};
       while (item) {
@@ -177,8 +186,8 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_
       }
     });
   }
-  //Output function
-  std::thread consumer_task([&](){
+
+  thread consumer_task([&](){
     auto manager = ex.thread_manager();
     for (;;){
      auto item{transformed_queue.pop()};
@@ -186,11 +195,10 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, farm_
        consume_op(*item);
      }
   });
-  //Join threads
+
   for(auto && t : tasks) { t.join(); }
   generator_task.join();
   consumer_task.join();
-
 }
 
 
@@ -207,20 +215,23 @@ execution with a generator, a predicate, a transformer and a consumer.
 \param consume_op Consumer operation.
 \param tranformer_op Tranformer operation.
 */
-template<typename Generator, typename Transformer, typename Predicate, typename Consumer>
-void repeat_until(parallel_execution_native &ex, Generator && generate_op, Transformer && transform_op, Predicate && predicate_op, Consumer && consume_op){
+template<typename Generator, typename Transformer, typename Predicate, 
+         typename Consumer>
+void repeat_until(parallel_execution_native &ex, 
+                  Generator generate_op, Transformer transform_op, 
+                  Predicate predicate_op, Consumer consume_op) 
+{
   using namespace std;
-  using namespace std::experimental;
+  using namespace experimental;
   using generated_type = typename result_of<Generator()>::type;
   using generated_value_type = typename generated_type::value_type;
-
-  using transformed_type = typename result_of<Transformer(generated_value_type)>::type;
+  using transformed_type = 
+      typename result_of<Transformer(generated_value_type)>::type;
   
   auto generated_queue = ex.make_queue<generated_type>();
   auto transformed_queue = ex.make_queue<generated_type>();
 
-
-  std::thread producer_task([&generate_op, &generated_queue, &ex](){
+  thread producer_task([&generate_op, &generated_queue, &ex](){
     auto manager = ex.thread_manager();
     for(;;) {
       auto item{generate_op()};
@@ -229,7 +240,8 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, Trans
     }
   });
   
-  std::thread transformer_task([&generated_queue,&transform_op,&predicate_op,&transformed_queue, &ex](){
+  thread transformer_task([&generated_queue,&transform_op,&predicate_op,
+          &transformed_queue, &ex](){
     auto manager = ex.thread_manager();
     auto item{generated_queue.pop()};
     while (item) {
@@ -243,7 +255,7 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, Trans
     transformed_queue.push({});
   });
 
-  std::thread consumer_task([&consume_op,&transformed_queue,&ex](){
+  thread consumer_task([&consume_op,&transformed_queue,&ex](){
     auto manager = ex.thread_manager();
     auto item{transformed_queue.pop()};
     while (item) {
@@ -251,10 +263,10 @@ void repeat_until(parallel_execution_native &ex, Generator && generate_op, Trans
       item=transformed_queue.pop();
     }
   });  
+
   producer_task.join();
   transformer_task.join();
   consumer_task.join();
-
 }
 
 }
