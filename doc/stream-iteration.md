@@ -65,7 +65,7 @@ callable entity that takes values of the result type of the **Transformer**.
 
 ### Stand-alone stream iteration 
 
-A stand alone **stream iteration** has four elements*:
+A stand alone **stream iteration** has four elements:
  
 * A **Generator** of values.
 * A **Transformer** of values.
