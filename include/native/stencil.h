@@ -25,101 +25,142 @@
 #include "../common/iterator.h"
 
 namespace grppi{
-template <typename InputIt, typename OutputIt, typename Operation, typename NFunc>
-void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor ) {
 
-    std::vector<std::thread> tasks;
-    int numElements = last - first;
-    int elemperthr = numElements/p.concurrency_degree();
+/**
+\addtogroup stencil_pattern
+@{
+*/
+
+/**
+\addtogroup stencil_pattern_native Native parallel stencil pattern
+\brief Native parallel implementation of the \ref md_stencil pattern.
+@{
+*/
+
+/**
+\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+native parallel execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\param ex Native parallel execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+*/
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood>
+void stencil(parallel_execution_native & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer transform_op, Neighbourhood neighbour_op) 
+{
+  using namespace std;
+
+  vector<thread> tasks;
+  int size = distance(first,last);
+  int elements_per_thread = size/ex.concurrency_degree();
  
-    for(int i=1;i<p.concurrency_degree();i++){
-       auto begin = first + (elemperthr * i);
-       auto end = first + (elemperthr * (i+1));
-      
-       if( i == p.concurrency_degree()-1) end = last;
+  for (int i=1; i<ex.concurrency_degree(); ++i) {
+    auto begin = first + (elements_per_thread * i);
+    auto end = (i==ex.concurrency_degree()-1)?
+        last :
+        next(first, elements_per_thread * (i+1));
 
-       auto out = firstOut + (elemperthr * i);
+    auto out = first_out + (elements_per_thread * i);
 
-       tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
-         auto manager = p.thread_manager();
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+      auto manager = ex.thread_manager();
 
-         while (begin!=end) {
-           auto neighbors = neighbor(begin);
-           *out = op(begin, neighbors);
-           begin++;
-           out++;
-         }
-       }, begin, end, out);
-    }
-   //MAIN 
-   auto end = first + elemperthr;
-   while(first!=end){
-      auto neighbors = neighbor(first);
-      *firstOut = op(first, neighbors);
-      first++;
-      firstOut++;
-   }
+      while (begin!=end) {
+        *out = transform_op(begin, neighbour_op(begin));
+        begin++;
+        out++;
+      }
+    }, 
+    begin, end, out);
+  }
 
-   //Join threads
-   for(int i=0;i<p.concurrency_degree()-1;i++){
-      tasks[i].join();
-   }
- 
+  auto end = first + elements_per_thread;
+  while(first!=end){
+    *first_out = transform_op(first, neighbour_op(first));
+    first++;
+    first_out++;
+  }
+
+  for (auto && t : tasks) { t.join(); }
 }
 
+/**
+\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+native parallel execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\tparam OtherInputIts Iterator types for additional input sequences.
+\param ex Native parallel execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+\param other_firsts Iterators to the first element of additional input sequences.
+*/
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood, typename ... OtherInputIts>
+void stencil(parallel_execution_native & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer transform_op, Neighbourhood neighbour_op, 
+             OtherInputIts ... other_firsts ) 
+{
+  using namespace std;
 
-template <typename InputIt, typename OutputIt, typename ... MoreIn, typename Operation, typename NFunc>
-void stencil(parallel_execution_native &p, InputIt first, InputIt last, OutputIt firstOut, Operation && op, NFunc && neighbor, MoreIn ... inputs ) {
+  vector<thread> tasks;
+  int size = last - first;
+  int elements_per_thread = size/ex.concurrency_degree();
 
-     std::vector<std::thread> tasks;
-     int numElements = last - first;
-     int elemperthr = numElements/p.concurrency_degree();
+  for (int i=1; i<ex.concurrency_degree(); i++){
+  auto begin = first + (elements_per_thread * i);
+  auto end = (i==ex.concurrency_degree()-1)?
+      last :
+      first + elements_per_thread * (i+1);
 
-     for(int i=1;i<p.concurrency_degree();i++){
-
-        auto begin = first + (elemperthr * i);
-        auto end = first + (elemperthr * (i+1));
-
-	if(i==p.concurrency_degree()-1) end = last;
-
-        auto out = firstOut + (elemperthr * i);
+  auto out = first_out + (elements_per_thread * i);
         
-        tasks.push_back(
-            std::thread( [&](InputIt begin, InputIt end, OutputIt out, int i, int n, MoreIn ... inputs){
-               auto manager = p.thread_manager();
+  tasks.emplace_back(
+    [&](InputIt begin, InputIt end, OutputIt out, int i, int n, OtherInputIts ... other_firsts){
+      auto manager = ex.thread_manager();
 
-               advance_iterators((n*i), inputs ...);
-               while(begin!=end){
-                 auto neighbors = neighbor(begin,inputs...);
-                 *out = op(begin, neighbors);
-                 begin++;
-                 advance_iterators( inputs ... );
-                 out++;
-               }
-            },
-            begin, end, out, i, elemperthr,inputs ...)
-       );
-    }
+      advance_iterators(n*i, other_firsts ...);
+      while (begin!=end) {
+        *out = transform_op(begin, neighbour_op(begin,other_firsts...));
+        begin++;
+        advance_iterators(other_firsts ... );
+        out++;
+      }
+    },
+    begin, end, out, i, elements_per_thread,other_firsts ...);
+  }
 
-   //MAIN 
-   auto end = first + elemperthr;
-   while(first!=end){
-      auto neighbors = neighbor(first,inputs...);
-      *firstOut = op(*first, neighbors);
-      first++;
-      advance_iterators( inputs ... );
-      firstOut++;
-   }
+  auto end = first + elements_per_thread;
+  while (first!=end) {
+    *first_out = transform_op(*first, neighbour_op(first,other_firsts...));
+    first++;
+    advance_iterators( other_firsts ... );
+    first_out++;
+  }
 
 
-   //Join threads
-   for(int i=0;i<p.concurrency_degree()-1;i++){
-      tasks[i].join();
-   }
-
+  for (auto && t : tasks) { t.join(); }
 }
 
-
+/**
+@}
+@}
+*/
 
 }
 #endif
