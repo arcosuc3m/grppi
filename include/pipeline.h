@@ -21,12 +21,12 @@
 #ifndef GRPPI_PIPELINE_H
 #define GRPPI_PIPELINE_H
 
-#include "common/patterns.h"
 #include "seq/pipeline.h"
 #include "native/pipeline.h"
 #include "omp/pipeline.h"
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
+#include "common/patterns.h"
 
 namespace grppi {
 
@@ -40,7 +40,7 @@ namespace grppi {
 
 /**
 \brief Build a composable \ref md_pipeline representation
-that can be inserted into another streaming pattern.
+that can be composed in other streaming patterns.
 \tparam Execution Execution policy type.
 \tparam Transformer Callable type for first transformation stage.
 \tparam MoreTransformers Callable type for each additional transformation stage.

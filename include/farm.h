@@ -40,8 +40,8 @@ namespace grppi {
 */
 
 /**
-\brief Invoke \ref md_farm on a data stream with sequential
-execution with a Transformer that can be composed in other patterns.
+\brief Invoke \ref md_farm on a data stream 
+that can be composed in other streaming patterns.
 \tparam Execution Execution policy type.
 \tparam Transformer Callable type for the transformation operation.
 \param ex Execution policy object.

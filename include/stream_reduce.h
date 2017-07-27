@@ -40,7 +40,8 @@ namespace grppi {
 */
 
 /**
-\brief Invoke \ref md_stream-reduce on a stream.
+\brief Invoke \ref md_stream-reduce on a stream
+that can be composed in other streaming patterns.
 \tparam Identity Type of the identity value used by the combiner.
 \tparam Combiner Callable type used for data items combination.
 \param ex Sequential execution policy object.
