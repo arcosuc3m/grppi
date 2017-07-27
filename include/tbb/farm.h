@@ -23,13 +23,13 @@
 
 #ifdef GRPPI_TBB
 
+#include "parallel_execution_tbb.h"
+
 #include <experimental/optional>
 
 #include <tbb/tbb.h>
 
-#include "parallel_execution_tbb.h"
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup farm_pattern

@@ -25,7 +25,7 @@
 
 #include "parallel_execution_omp.h"
 
-namespace grppi{
+namespace grppi {
 
 /** 
 \addtogroup filter_pattern

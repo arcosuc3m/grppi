@@ -25,7 +25,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 
-namespace grppi{
+namespace grppi {
 
 class thread_pool
 {

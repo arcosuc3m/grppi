@@ -24,7 +24,7 @@
 #include "parallel_execution_native.h"
 #include "../common/iterator.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stencil_pattern

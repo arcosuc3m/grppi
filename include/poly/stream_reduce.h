@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_STREAM_REDUCE_H
 #define GRPPI_POLY_STREAM_REDUCE_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename Identity, typename Combiner, typename Consumer, typename Generator>
 void stream_reduce_multi_impl(polymorphic_execution & ex, int window_size, int offset, 

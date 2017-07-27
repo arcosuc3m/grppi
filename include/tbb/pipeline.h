@@ -23,14 +23,13 @@
 
 #ifdef GRPPI_TBB
 
-#include <experimental/optional>
-
-#include <tbb/pipeline.h>
-#include <tbb/tbb.h>
-
 #include "parallel_execution_tbb.h"
 
-namespace grppi{
+#include <experimental/optional>
+
+#include <tbb/tbb.h>
+
+namespace grppi {
 
 // TODO: Input could be only a template argument with no function argument.
 

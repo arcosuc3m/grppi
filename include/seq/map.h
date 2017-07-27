@@ -23,7 +23,9 @@
 
 #include "sequential_execution.h"
 
-namespace grppi{
+#include "../common/iterator.h"
+
+namespace grppi {
 
 /**
 \addtogroup map_pattern

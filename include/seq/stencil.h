@@ -22,9 +22,10 @@
 #define GRPPI_SEQ_STENCIL_H
 
 #include "sequential_execution.h"
+
 #include "../common/iterator.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stencil_pattern

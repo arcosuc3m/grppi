@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_MAPREDUCE_H
 #define GRPPI_POLY_MAPREDUCE_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
 Identity map_reduce_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 

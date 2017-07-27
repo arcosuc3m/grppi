@@ -23,7 +23,7 @@
 
 #include "sequential_execution.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup divide_conquer_pattern

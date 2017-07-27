@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_REDUCE_H
 #define GRPPI_POLY_REDUCE_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename InputIt, typename Identity, typename Combiner>
 auto reduce_multi_impl(polymorphic_execution & ex, 

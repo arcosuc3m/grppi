@@ -21,14 +21,13 @@
 #ifndef GRPPI_TBB_PARALLEL_EXECUTION_TBB_H
 #define GRPPI_TBB_PARALLEL_EXECUTION_TBB_H
 
-// Only if compiled with TBB enabled
 #ifdef GRPPI_TBB
-
-#include <type_traits>
 
 #include "../common/mpmc_queue.h"
 
-namespace grppi{
+#include <type_traits>
+
+namespace grppi {
 
 /** 
  \brief TBB parallel execution policy.

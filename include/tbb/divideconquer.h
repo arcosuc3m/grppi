@@ -23,11 +23,11 @@
 
 #ifdef GRPPI_TBB
 
-#include <tbb/tbb.h>
-
 #include "parallel_execution_tbb.h"
 
-namespace grppi{
+#include <tbb/tbb.h>
+
+namespace grppi {
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 

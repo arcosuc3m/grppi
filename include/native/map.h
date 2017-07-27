@@ -22,8 +22,9 @@
 #define GRPPI_NATIVE_MAP_H
 
 #include "parallel_execution_native.h"
+#include "../common/iterator.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup map_pattern

@@ -21,9 +21,6 @@
 #ifndef GRPPI_MAP_H
 #define GRPPI_MAP_H
 
-
-#include "common/iterator.h"
-
 #include "seq/map.h"
 #include "native/map.h"
 #include "omp/map.h"

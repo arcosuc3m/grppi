@@ -21,8 +21,6 @@
 #ifndef GRPPI_STREAM_ITERATION_H
 #define GRPPI_STREAM_ITERATION_H
 
-#include "common/patterns.h"
-
 #include "seq/stream_iteration.h"
 #include "native/stream_iteration.h"
 #include "poly/stream_iteration.h"

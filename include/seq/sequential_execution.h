@@ -23,7 +23,7 @@
 
 #include <type_traits>
 
-namespace grppi{
+namespace grppi {
 
 /**
 \brief Sequential execution policy.

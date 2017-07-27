@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_MAP_H
 #define GRPPI_POLY_MAP_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename InputIt, typename OutputIt, typename Transformer>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 

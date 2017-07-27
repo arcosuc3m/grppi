@@ -21,13 +21,13 @@
 #ifndef GRPPI_NATIVE_STREAM_ITERATION_H
 #define GRPPI_NATIVE_STREAM_ITERATION_H
 
+#include "parallel_execution_native.h"
+
 #include <thread>
 #include <utility>
 #include <memory>
 
-#include "parallel_execution_native.h"
-
-namespace grppi{ 
+namespace grppi { 
 
 /**
 \addtogroup stream_iteration_pattern

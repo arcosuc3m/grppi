@@ -21,7 +21,6 @@
 #ifndef GRPPI_STENCIL_H 
 #define GRPPI_STENCIL_H
 
-
 #include "seq/stencil.h"
 #include "native/stencil.h"
 #include "omp/stencil.h"

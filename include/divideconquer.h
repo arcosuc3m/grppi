@@ -20,7 +20,6 @@
 #ifndef GRPPI_DIVIDECONQUER_H
 #define GRPPI_DIVIDECONQUER_H
 
-
 #include "seq/divideconquer.h"
 #include "native/divideconquer.h"
 #include "omp/divideconquer.h"

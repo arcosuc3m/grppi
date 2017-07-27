@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_STREAM_ITERATOR_H
 #define GRPPI_POLY_STREAM_ITERATOR_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template<typename GenFunc, typename Predicate, typename OutFunc,
          typename Transformer >

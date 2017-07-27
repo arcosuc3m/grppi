@@ -23,12 +23,10 @@
 
 #ifdef GRPPI_OMP
 
-#include <thread>
-
 #include "parallel_execution_omp.h"
+#include "reduce.h"
 
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern

@@ -21,15 +21,14 @@
 #ifndef GRPPI_NATIVE_FARM_H
 #define GRPPI_NATIVE_FARM_H
 
-#include <experimental/optional>
+#include "parallel_execution_native.h"
 
 #include <thread>
 #include <utility>
 #include <memory>
+#include <experimental/optional>
 
-#include "parallel_execution_native.h"
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup farm_pattern

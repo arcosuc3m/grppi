@@ -23,8 +23,7 @@
 
 #include "parallel_execution_native.h"
 
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup mapreduce_pattern

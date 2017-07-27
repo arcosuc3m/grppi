@@ -21,11 +21,12 @@
 #ifndef GRPPI_NATIVE_STREAM_REDUCE_H
 #define GRPPI_NATIVE_STREAM_REDUCE_H
 
+#include "parallel_execution_native.h"
+#include "reduce.h"
+
 #include <thread>
 
-#include "parallel_execution_native.h"
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stream_reduce_pattern

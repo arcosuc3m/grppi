@@ -21,12 +21,6 @@
 #ifndef GRPPI_REDUCE_H 
 #define GRPPI_REDUCE_H
 
-
-#include "common/iterator_traits.h"
-#include "common/iterator.h"
-
-
-
 #include "seq/reduce.h"
 #include "native/reduce.h"
 #include "omp/reduce.h"

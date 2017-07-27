@@ -22,10 +22,10 @@
 #ifndef GRPPI_POLY_FARM_H
 #define GRPPI_POLY_FARM_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename Generator, typename Consumer>
 void farm_multi_impl(polymorphic_execution & ex, Generator generate_op,

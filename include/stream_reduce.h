@@ -21,14 +21,13 @@
 #ifndef GRPPI_STREAM_REDUCE_H
 #define GRPPI_STREAM_REDUCE_H
 
-
-#include "common/patterns.h"
-
 #include "seq/stream_reduce.h"
 #include "native/stream_reduce.h"
 #include "omp/stream_reduce.h"
 #include "tbb/stream_reduce.h"
 #include "poly/stream_reduce.h"
+
+#include "common/patterns.h"
 
 namespace grppi {
 

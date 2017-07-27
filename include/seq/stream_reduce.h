@@ -21,12 +21,12 @@
 #ifndef GRPPI_SEQ_STREAM_REDUCE_H
 #define GRPPI_SEQ_STREAM_REDUCE_H
 
+#include "sequential_execution.h"
+#include "reduce.h"
+
 #include <vector>
 
-#include "sequential_execution.h"
-#include "../reduce.h"
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stream_reduce_pattern

@@ -21,14 +21,14 @@
 #ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 #define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
+#include "../common/mpmc_queue.h"
+#include "pool.h"
+
 #include <thread>
 #include <atomic>
 #include <algorithm>
 #include <vector>
 #include <type_traits>
-
-#include "pool.h"
-#include "../common/mpmc_queue.h"
 
 namespace grppi {
 

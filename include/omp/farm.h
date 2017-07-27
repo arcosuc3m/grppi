@@ -22,13 +22,12 @@
 #define GRPPI_OMP_FARM_H
 
 #ifdef GRPPI_OMP
-#include <experimental/optional>
 
 #include "parallel_execution_omp.h"
 
+#include <experimental/optional>
 
-namespace grppi
-{
+namespace grppi {
 
 /**
 \addtogroup farm_pattern

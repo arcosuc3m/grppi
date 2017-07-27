@@ -18,15 +18,15 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-
 #ifndef GRPPI_OMP_STREAM_REDUCE_H
 #define GRPPI_OMP_STREAM_REDUCE_H
 
 #ifdef GRPPI_OMP
 
 #include "parallel_execution_omp.h"
+#include "reduce.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stream_reduce_pattern

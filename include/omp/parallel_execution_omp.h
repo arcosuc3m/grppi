@@ -21,16 +21,16 @@
 #ifndef GRPPI_OMP_PARALLEL_EXECUTION_OMP_H
 #define GRPPI_OMP_PARALLEL_EXECUTION_OMP_H
 
-// Only if compiled with OpenMP enabled
 #ifdef GRPPI_OMP
+
+#include "../common/mpmc_queue.h"
 
 #include <type_traits>
 
 #include <omp.h>
 
-#include "../common/mpmc_queue.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \brief OpenMP parallel execution policy.

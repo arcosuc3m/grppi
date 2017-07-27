@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_DIVIDECONQUER_H
 #define GRPPI_POLY_DIVIDECONQUER_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 

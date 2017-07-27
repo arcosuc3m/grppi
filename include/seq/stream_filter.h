@@ -23,7 +23,7 @@
 
 #include "sequential_execution.h"
 
-namespace grppi{
+namespace grppi {
 
 /** 
 \addtogroup filter_pattern

@@ -21,12 +21,12 @@
 #ifndef GRPPI_NATIVE_DIVIDECONQUER_H
 #define GRPPI_NATIVE_DIVIDECONQUER_H
 
+#include "parallel_execution_native.h"
+
 #include <thread>
 #include <atomic>
 
-#include "parallel_execution_native.h"
-
-namespace grppi{
+namespace grppi {
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 

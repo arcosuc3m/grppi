@@ -21,12 +21,11 @@
 #ifndef GRPPI_NATIVE_REDUCE_H
 #define GRPPI_NATIVE_REDUCE_H
 
-#include <thread>
-#include <functional>
-
 #include "parallel_execution_native.h"
 
-namespace grppi{
+#include <thread>
+
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern

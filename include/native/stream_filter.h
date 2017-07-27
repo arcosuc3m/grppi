@@ -23,7 +23,7 @@
 
 #include "parallel_execution_native.h"
 
-namespace grppi{
+namespace grppi {
 
 /** 
 \addtogroup filter_pattern

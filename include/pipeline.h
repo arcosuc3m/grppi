@@ -21,9 +21,6 @@
 #ifndef GRPPI_PIPELINE_H
 #define GRPPI_PIPELINE_H
 
-
-#include "common/callable_traits.h"
-
 #include "common/patterns.h"
 #include "seq/pipeline.h"
 #include "native/pipeline.h"

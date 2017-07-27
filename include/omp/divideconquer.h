@@ -23,11 +23,9 @@
 
 #ifdef GRPPI_OMP
 
-#include <thread>
-
 #include "parallel_execution_omp.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 

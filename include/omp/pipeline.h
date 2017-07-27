@@ -23,13 +23,11 @@
 
 #ifdef GRPPI_OMP
 
-#include <experimental/optional>
-
-#include <boost/lockfree/spsc_queue.hpp>
-
 #include "parallel_execution_omp.h"
 
-namespace grppi{
+#include <experimental/optional>
+
+namespace grppi {
 
 //Last stage
 template <typename InQueue, typename Consumer>
@@ -109,7 +107,6 @@ void pipeline_impl_ordered(parallel_execution_omp & ex, InQueue & input_queue,
 {
   using namespace std;
   using namespace std::experimental;
-  vector<thread> tasks;
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
 
