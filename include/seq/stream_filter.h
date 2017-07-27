@@ -36,6 +36,8 @@ namespace grppi {
 /**
 \brief Invoke \ref md_stream-filter on a data
 sequence with sequential execution policy.
+This function keeps in the stream only those items
+that satisfy the predicate.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
 \tparam Consumer Callable type for value consumer.
@@ -60,6 +62,8 @@ void keep(sequential_execution, Generator generate_op,
 /**
 \brief Invoke \ref md_stream-filter on a data
 sequence with sequential execution policy.
+This function discards from the stream those items
+that satisfy the predicate.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
 \tparam Consumer Callable type for value consumer.

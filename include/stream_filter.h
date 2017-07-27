@@ -42,6 +42,8 @@ namespace grppi {
 /**
 \brief Invoke \ref md_stream-filter on a data stream
 that can be composed in other streaming patterns.
+This function keeps in the stream only those items
+that satisfy the predicate.
 \tparam Execution Execution policy.
 \tparam Predicate Callable type for filter predicate.
 \param ex Execution policy object.
@@ -57,6 +59,8 @@ auto keep(Execution & ex, Predicate && predicate_op)
 /**
 \brief Invoke \ref md_stream-filter on a data stream
 that can be composed in other streaming patterns.
+This function discards from the stream those items
+that satisfy the predicate.
 \tparam Execution Execution policy.
 \tparam Predicate Callable type for filter predicate.
 \param ex Execution policy object.
