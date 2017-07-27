@@ -23,11 +23,11 @@
 
 #ifdef GRPPI_TBB
 
-#include <tbb/tbb.h>
-
 #include "parallel_execution_tbb.h"
 
-namespace grppi{
+#include <tbb/tbb.h>
+
+namespace grppi {
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
@@ -92,16 +92,13 @@ internal_divide_conquer(parallel_execution_tbb & ex,
 /**
 \addtogroup divide_conquer_pattern
 @{
-*/
-
-/**
 \addtogroup divide_conquer_pattern_tbb TBB parallel divide/conquer pattern.
-\brief TBB parallel implementation of the \ref md_divide-conquer pattern.
+\brief TBB parallel implementation of the \ref md_divide-conquer.
 @{
 */
 
 /**
-\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with TBB 
+\brief Invoke \ref md_divide-conquer with TBB 
 parallel execution.
 \tparam Input Type used for the input problem.
 \tparam Divider Callable type for the divider operation.
@@ -188,6 +185,7 @@ divide_conquer(parallel_execution_tbb & ex,
 */
 
 }
+
 #endif
 
 #endif

@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -21,26 +21,27 @@
 #ifndef GRPPI_FARM_H
 #define GRPPI_FARM_H
 
-#include "common/patterns.h"
-
 #include "seq/farm.h"
 #include "native/farm.h"
 #include "omp/farm.h"
 #include "tbb/farm.h"
 #include "poly/farm.h"
 
+#include "common/patterns.h"
+
 namespace grppi {
 
 /** 
+\addtogroup stream_patterns
+@{
 \defgroup farm_pattern Farm pattern
-
-\brief Interface for applyinng the \ref md_farm pattern.
+\brief Interface for applyinng the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
-execution with a Transformer that can be composed in other patterns.
+\brief Invoke \ref md_farm on a data stream 
+that can be composed in other streaming patterns.
 \tparam Execution Execution policy type.
 \tparam Transformer Callable type for the transformation operation.
 \param ex Execution policy object.
@@ -54,6 +55,7 @@ auto farm(Execution & ex, Transformer && transform_op)
 }
 
 /**
+@}
 @}
 */
 

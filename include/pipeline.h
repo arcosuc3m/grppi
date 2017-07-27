@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -21,34 +21,26 @@
 #ifndef GRPPI_PIPELINE_H
 #define GRPPI_PIPELINE_H
 
-
-#include "common/callable_traits.h"
-
-#include "common/patterns.h"
 #include "seq/pipeline.h"
 #include "native/pipeline.h"
 #include "omp/pipeline.h"
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
+#include "common/patterns.h"
+
+namespace grppi {
 
 /**
 \addtogroup stream_patterns
 @{
 \defgroup pipeline_pattern Pipeline pattern
 \brief Interface for applyinng the \ref md_pipeline
-@}
-*/
-
-namespace grppi {
-
-/**
-\addtogroup pipeline_pattern
 @{
 */
 
 /**
-\brief Build a composable [pipeline pattern](@ref md_pipeline) representation
-that can be inserted into another streaming pattern.
+\brief Build a composable \ref md_pipeline representation
+that can be composed in other streaming patterns.
 \tparam Execution Execution policy type.
 \tparam Transformer Callable type for first transformation stage.
 \tparam MoreTransformers Callable type for each additional transformation stage.
@@ -71,6 +63,7 @@ pipeline(Execution & ex, Transformer && transform_op,
 
 
 /**
+@}
 @}
 */
 

@@ -22,23 +22,21 @@
 #define GRPPI_SEQ_STENCIL_H
 
 #include "sequential_execution.h"
+
 #include "../common/iterator.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stencil_pattern
 @{
-*/
-
-/**
 \addtogroup stencil_pattern_seq Sequential stencil pattern
-\brief Sequential implementation of the \ref md_stencil pattern.
+\brief Sequential implementation of the \ref md_stencil.
 @{
 */
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+\brief Invoke \ref md_stencil on a data sequence with 
 sequential execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence
@@ -66,7 +64,7 @@ void stencil(sequential_execution & ex,
 }
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+\brief Invoke \ref md_stencil on multiple data sequences with 
 sequential execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence

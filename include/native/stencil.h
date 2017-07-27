@@ -24,21 +24,18 @@
 #include "parallel_execution_native.h"
 #include "../common/iterator.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stencil_pattern
 @{
-*/
-
-/**
 \addtogroup stencil_pattern_native Native parallel stencil pattern
-\brief Native parallel implementation of the \ref md_stencil pattern.
+\brief Native parallel implementation of the \ref md_stencil.
 @{
 */
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on a data sequence with 
+\brief Invoke \ref md_stencil on a data sequence with 
 native parallel execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence
@@ -94,7 +91,7 @@ void stencil(parallel_execution_native & ex,
 }
 
 /**
-\brief Invoke [stencil pattern](\ref md_stencil) on multiple data sequences with 
+\brief Invoke \ref md_stencil on multiple data sequences with 
 native parallel execution.
 \tparam InputIt Iterator type used for the input sequence.
 \tparam OutputIt Iterator type used for the output sequence

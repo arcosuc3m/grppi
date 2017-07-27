@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -23,21 +23,20 @@
 
 #include "sequential_execution.h"
 
-namespace grppi{
+#include "../common/iterator.h"
+
+namespace grppi {
 
 /**
 \addtogroup map_pattern
 @{
-*/
-
-/**
 \addtogroup map_pattern_seq Sequential map pattern
-Sequential implementation of the \ref map-pattern
+\brief Sequential implementation of the \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+\brief Invoke \ref md_map on a data sequence with sequential
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -61,7 +60,7 @@ void map(sequential_execution & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with sequential
+\brief Invoke \ref md_map on a data sequence with sequential
 execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

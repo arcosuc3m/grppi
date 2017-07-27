@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -20,18 +20,22 @@
 #ifndef GRPPI_DIVIDECONQUER_H
 #define GRPPI_DIVIDECONQUER_H
 
-
 #include "seq/divideconquer.h"
 #include "native/divideconquer.h"
 #include "omp/divideconquer.h"
 #include "tbb/divideconquer.h"
 #include "poly/divideconquer.h"
 
-/** 
-\defgroup divide_conquer_pattern Divide/Conquer pattern
+namespace grppi {
 
+/** 
+\addtogroup task_patterns
+@{
+\defgroup divide_conquer_pattern Divide/Conquer pattern
 \brief Interface for applyinng the \ref md_divide-conquer.
+@}
 */
 
+}
 
 #endif

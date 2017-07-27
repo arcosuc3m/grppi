@@ -23,26 +23,21 @@
 
 #ifdef GRPPI_OMP
 
-#include <thread>
-
 #include "parallel_execution_omp.h"
+#include "reduce.h"
 
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern
 @{
-*/
-
-/**
 \addtogroup reduce_pattern_omp OpenMP parallel reduce pattern
-\brief OpenMP parallel implementation of the \ref md_reduce pattern
+\brief OpenMP parallel implementation of the \ref md_reduce.
 @{
 */
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+\brief Invoke \ref md_reduce with identity value
 on a data sequence with parallel OpenMP execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.

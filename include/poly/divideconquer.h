@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_DIVIDECONQUER_H
 #define GRPPI_POLY_DIVIDECONQUER_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 typename std::result_of<Solver(Input)>::type 
@@ -75,17 +75,14 @@ divide_conquer_multi_impl(polymorphic_execution & ex,
 /**
 \addtogroup divide_conquer_pattern
 @{
-*/
-
-/**
 \addtogroup divide_conquer_pattern_poly Polymorphic execution divide/conquer
 pattern.
-\brief Polymorphic execution implementation of the \ref md_divide-conquer pattern.
+\brief Polymorphic execution implementation of the \ref md_divide-conquer.
 @{
 */
 
 /**
-\brief Invoke [divide/conquer pattern](@ref md_divide-conquer) with polymorphic
+\brief Invoke \ref md_divide-conquer with polymorphic
 execution.
 \tparam Input Type used for the input input.
 \tparam Divider Callable type for the divider operation.

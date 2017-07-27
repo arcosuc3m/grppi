@@ -18,29 +18,26 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-
 #ifndef GRPPI_OMP_STREAM_REDUCE_H
 #define GRPPI_OMP_STREAM_REDUCE_H
 
 #ifdef GRPPI_OMP
 
 #include "parallel_execution_omp.h"
+#include "reduce.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup stream_reduce_pattern
 @{
-*/
-
-/**
 \addtogroup stream_reduce_pattern_omp OpenMP parallel stream reduce pattern
-OpenMP parallel implementation of the \ref md_stream-reduce pattern.
+\brief OpenMP parallel implementation of the \ref md_stream-reduce.
 @{
 */
 
 /**
-\brief Invoke [stream reduce pattern](@ref md_stream-reduce) on a stream with
+\brief Invoke \ref md_stream-reduce on a stream with
 OpenMP parallel execution.
 \tparam Generator Callable type used for generating data items.
 \tparam Combiner Callable type used for data items combination.

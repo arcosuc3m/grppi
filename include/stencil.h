@@ -21,20 +21,22 @@
 #ifndef GRPPI_STENCIL_H 
 #define GRPPI_STENCIL_H
 
-
 #include "seq/stencil.h"
 #include "native/stencil.h"
 #include "omp/stencil.h"
 #include "tbb/stencil.h"
 #include "poly/stencil.h"
 
+namespace grppi {
+
 /**
 \addtogroup data_patterns
 @{
 \defgroup stencil_pattern Stencil pattern
-\brief Interface for applyinng the \ref md_stencil pattern.
+\brief Interface for applyinng the \ref md_stencil.
 @}
 */
 
+}
 
 #endif

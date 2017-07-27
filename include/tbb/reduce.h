@@ -23,25 +23,22 @@
 
 #ifdef GRPPI_TBB
 
-#include <tbb/tbb.h>
-
 #include "parallel_execution_tbb.h"
 
-namespace grppi{
+#include <tbb/tbb.h>
+
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern
 @{
-*/
-
-/**
 \addtogroup reduce_pattern_tbb TBB parallel reduce pattern
-\brief TBB parallel implementation of the \ref md_reduce pattern
+\brief TBB parallel implementation of the \ref md_reduce.
 @{
 */
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+\brief Invoke \ref md_reduce with identity value
 on a data sequence with parallel TBB execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.

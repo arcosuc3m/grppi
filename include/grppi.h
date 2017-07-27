@@ -26,20 +26,26 @@
 #include "mapreduce.h"
 #include "reduce.h"
 #include "stencil.h"
+
+namespace grppi {
+
 /** 
 \defgroup data_patterns Data parallel patterns
-
 \brief Patterns for data parallel processing.
 */
+
+}
 
 // Includes for task patterns
 #include "divideconquer.h"
 
-/** 
-\defgroup trask_patterns Task parallel patterns
+namespace grppi {
 
+/** 
+\defgroup task_patterns Task parallel patterns
 \brief Patterns for task parallel processing.
 */
+}
 
 // Includes for streaming patterns
 #include "farm.h"
@@ -48,12 +54,13 @@
 #include "stream_iteration.h"
 #include "stream_reduce.h"
 
+namespace grppi {
+
 /** 
 \defgroup stream_patterns Streaming patterns
-
 \brief Patterns for data stream processing.
 */
 
-
+}
 
 #endif

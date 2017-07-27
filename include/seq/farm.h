@@ -23,21 +23,18 @@
 
 #include "sequential_execution.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup farm_pattern
 @{
-*/
-
-/**
 \addtogroup farm_pattern_seq Sequential farm pattern
-Sequential implementation of the \ref md_farm.
+\brief Sequential implementation of the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
+\brief Invoke \ref md_farm on a data stream with sequential
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Consumer Callable type for the consume operation.
@@ -57,7 +54,7 @@ void farm(sequential_execution ex,
 }
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with sequential
+\brief Invoke \ref md_farm on a data stream with sequential
 execution with a generator, a transformer, and a comsumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Transformer Callable type for the transformation operation.

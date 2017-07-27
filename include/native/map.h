@@ -22,19 +22,20 @@
 #define GRPPI_NATIVE_MAP_H
 
 #include "parallel_execution_native.h"
+#include "../common/iterator.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup map_pattern
 @{
-\addtogroup map_pattern_native Native parallel map pattern.
-Implementation of map pattern for native parallel back-end.
+\addtogroup map_pattern_native Native parallel map pattern
+\brief Native parallel implementation of \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with native
+\brief Invoke \ref md_map on a data sequence with native
 paralell execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -86,7 +87,7 @@ void map(parallel_execution_native & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with native
+\brief Invoke \ref md_map on a data sequence with native
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

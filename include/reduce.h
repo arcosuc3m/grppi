@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -21,23 +21,22 @@
 #ifndef GRPPI_REDUCE_H 
 #define GRPPI_REDUCE_H
 
-
-#include "common/iterator_traits.h"
-#include "common/iterator.h"
-
-
-
 #include "seq/reduce.h"
 #include "native/reduce.h"
 #include "omp/reduce.h"
 #include "tbb/reduce.h"
 #include "poly/reduce.h"
 
-/** 
-\defgroup reduce_pattern Reduce pattern
+namespace grppi {
 
+/** 
+\addtogroup data_patterns
+@{
+\defgroup reduce_pattern Reduce pattern
 \brief Interface for applyinng the \ref md_reduce.
+@}
 */
 
+}
 
 #endif

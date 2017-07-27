@@ -1,4 +1,4 @@
-/*
+/**
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -21,19 +21,22 @@
 #ifndef GRPPI_MAP_H
 #define GRPPI_MAP_H
 
-
-#include "common/iterator.h"
-
 #include "seq/map.h"
 #include "native/map.h"
 #include "omp/map.h"
 #include "tbb/map.h"
 #include "poly/map.h"
 
-/** 
-\defgroup map_pattern Map pattern
+namespace grppi {
 
-\brief Interface for applyinng the \ref map-pattern.
+/** 
+\addtogroup data_patterns
+@{
+\defgroup map_pattern Map pattern
+\brief Interface for applyinng the \ref md_map.
+@}
 */
+
+}
 
 #endif

@@ -23,27 +23,24 @@
 
 #ifdef GRPPI_TBB
 
+#include "parallel_execution_tbb.h"
+
 #include <experimental/optional>
 
 #include <tbb/tbb.h>
 
-#include "parallel_execution_tbb.h"
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup farm_pattern
 @{
-*/
-
-/**
 \addtogroup farm_pattern_tbb TBB parallel farm pattern
-TBB parallel implementation of the \ref md_farm.
+\brief TBB parallel implementation of the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with TBB parallel 
+\brief Invoke \ref md_farm on a data stream with TBB parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Consumer Callable type for the consume operation.
@@ -88,7 +85,7 @@ void farm(parallel_execution_tbb & ex, Generator generate_op,
 }
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with TBB parallel 
+\brief Invoke \ref md_farm on a data stream with TBB parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Tranformer Callable type for the tranformation operation.

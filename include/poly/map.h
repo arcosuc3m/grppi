@@ -21,10 +21,10 @@
 #ifndef GRPPI_POLY_MAP_H
 #define GRPPI_POLY_MAP_H
 
-#include "../common/support.h"
 #include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
 template <typename InputIt, typename OutputIt, typename Transformer>
 void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last, 
@@ -100,12 +100,12 @@ void map_multi_impl(polymorphic_execution & e, InputIt first, InputIt last,
 \addtogroup map_pattern
 @{
 \addtogroup map_pattern_poly Polymorphic execution map pattern.
-Implementation of map pattern for polymorphic execution back-end.
+\brief Polymorphic implementation of \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with
+\brief Invoke \ref map-pattern on a data sequence with
 polymorphic execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -130,7 +130,7 @@ void map(polymorphic_execution & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with
+\brief Invoke \ref map-pattern on a data sequence with
 polymorphic parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

@@ -22,7 +22,9 @@
 #define GRPPI_SEQ_PIPELINE_H
 
 #include "sequential_execution.h"
+
 #include "../common/pack_traits.h"
+#include "../common/patterns.h"
 
 namespace grppi {
 
@@ -112,16 +114,13 @@ void pipeline_impl(sequential_execution & ex, Item && item,
 /**
 \addtogroup pipeline_pattern
 @{
-*/
-
-/**
 \addtogroup pipeline_pattern_seq Sequential pipeline pattern
-\brief Sequential implementation of the \ref md_pipeline pattern
+\brief Sequential implementation of the \ref md_pipeline.
 @{
 */
 
 /**
-\brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
+\brief Invoke \ref md_pipeline on a data stream
 with sequential execution.
 \tparam Generator Callable type for the stream generator.
 \tparam Transformers Callable type for each transformation stage.
@@ -146,6 +145,7 @@ void pipeline(sequential_execution & ex, Generator && generator_op,
 @}
 @}
 */
+
 }
 
 #endif

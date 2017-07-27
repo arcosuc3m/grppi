@@ -21,29 +21,25 @@
 #ifndef GRPPI_NATIVE_FARM_H
 #define GRPPI_NATIVE_FARM_H
 
-#include <experimental/optional>
+#include "parallel_execution_native.h"
 
 #include <thread>
 #include <utility>
 #include <memory>
+#include <experimental/optional>
 
-#include "parallel_execution_native.h"
-
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup farm_pattern
 @{
-*/
-
-/**
 \addtogroup farm_pattern_native Native parallel farm pattern
-Sequential implementation of the \ref md_farm.
+\brief Sequential implementation of the \ref md_farm.
 @{
 */
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_farm on a data stream with native parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Consumer Callable type for the consume operation.
@@ -83,7 +79,7 @@ void farm(parallel_execution_native & ex, Generator generate_op,
 }
 
 /**
-\brief Invoke [farm pattern](@ref md_farm) on a data stream with native parallel 
+\brief Invoke \ref md_farm on a data stream with native parallel 
 execution with a generator and a consumer.
 \tparam Generator Callable type for the generation operation.
 \tparam Tranformer Callable type for the tranformation operation.

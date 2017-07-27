@@ -23,13 +23,11 @@
 
 #ifdef GRPPI_OMP
 
-#include <experimental/optional>
-
-#include <boost/lockfree/spsc_queue.hpp>
-
 #include "parallel_execution_omp.h"
 
-namespace grppi{
+#include <experimental/optional>
+
+namespace grppi {
 
 //Last stage
 template <typename InQueue, typename Consumer>
@@ -109,7 +107,6 @@ void pipeline_impl_ordered(parallel_execution_omp & ex, InQueue & input_queue,
 {
   using namespace std;
   using namespace std::experimental;
-  vector<thread> tasks;
   using input_type = typename InQueue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
 
@@ -387,16 +384,13 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
 /**
 \addtogroup pipeline_pattern
 @{
-*/
-
-/**
 \addtogroup pipeline_pattern_omp OpenMP parallel pipeline pattern
-\brief OpenMP parallel implementation of the \ref md_pipeline pattern
+\brief OpenMP parallel implementation of the \ref md_pipeline.
 @{
 */
 
 /**
-\brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
+\brief Invoke \ref md_pipeline on a data stream
 with OpenMP parallel execution.
 \tparam Generator Callable type for the stream generator.
 \tparam Transformers Callable type for each transformation stage.
@@ -441,6 +435,7 @@ void pipeline(parallel_execution_omp & ex, Generator && generate_op,
 */
 
 }
+
 #endif
 
 #endif

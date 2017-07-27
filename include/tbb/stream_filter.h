@@ -23,11 +23,11 @@
 
 #ifdef GRPPI_TBB
 
-#include <tbb/tbb.h>
-
 #include "parallel_execution_tbb.h"
 
-namespace grppi{
+#include <tbb/tbb.h>
+
+namespace grppi {
 
 /** 
 \addtogroup filter_pattern
@@ -36,13 +36,15 @@ namespace grppi{
 
 /**
 \addtogroup filter_pattern_tbb TBB parallel filter pattern.
-\brief TBB parallel implementation fo the \ref md_stream-filter pattern.
+\brief TBB parallel implementation fo the \ref md_stream-filter.
 @{
 */
 
 /**
-\brief Invoke [stream filter keep pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke \ref md_stream-filter on a data
 sequence with sequential execution policy.
+This function keeps in the stream only those items
+that satisfy the predicate.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
 \tparam Consumer Callable type for value consumer.
@@ -154,8 +156,10 @@ void keep(parallel_execution_tbb & ex, Generator generate_op,
 }
 
 /**
-\brief Invoke [stream filter discard pattern](@ref md_stream-filter pattern) on a data
+\brief Invoke \ref md_stream-filter pattern on a data
 sequence with sequential execution policy.
+This function discards from the stream those items
+that satisfy the predicate.
 \tparam Generator Callable type for value generator.
 \tparam Predicate Callable type for filter predicate.
 \tparam Consumer Callable type for value consumer.

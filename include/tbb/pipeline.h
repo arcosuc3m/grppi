@@ -23,14 +23,13 @@
 
 #ifdef GRPPI_TBB
 
-#include <experimental/optional>
-
-#include <tbb/pipeline.h>
-#include <tbb/tbb.h>
-
 #include "parallel_execution_tbb.h"
 
-namespace grppi{
+#include <experimental/optional>
+
+#include <tbb/tbb.h>
+
+namespace grppi {
 
 // TODO: Input could be only a template argument with no function argument.
 
@@ -152,16 +151,13 @@ auto pipeline_impl(parallel_execution_tbb & ex,
 /**
 \addtogroup pipeline_pattern
 @{
-*/
-
-/**
 \addtogroup pipeline_pattern_tbb TBB parallel pipeline pattern
-\brief TBB parallel implementation of the \ref md_pipeline pattern
+\brief TBB parallel implementation of the \ref md_pipeline. 
 @{
 */
 
 /**
-\brief Invoke [pipeline pattern](@ref md_pipeline) on a data stream
+\brief Invoke \ref md_pipeline on a data stream
 with TBB parallel execution.
 \tparam Generator Callable type for the stream generator.
 \tparam Transformers Callable type for each transformation stage.
