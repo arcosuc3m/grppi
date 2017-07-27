@@ -1,0 +1,16 @@
+<map id="farm.h" name="farm.h">
+<area shape="rect" id="node2" href="$seq_2farm_8h.html" title="seq/farm.h" alt="" coords="505,80,589,107"/>
+<area shape="rect" id="node5" href="$native_2farm_8h.html" title="native/farm.h" alt="" coords="838,155,937,181"/>
+<area shape="rect" id="node22" href="$omp_2farm_8h.html" title="omp/farm.h" alt="" coords="610,155,698,181"/>
+<area shape="rect" id="node25" href="$tbb_2farm_8h.html" title="tbb/farm.h" alt="" coords="723,155,804,181"/>
+<area shape="rect" id="node28" href="$poly_2farm_8h.html" title="poly/farm.h" alt="" coords="368,80,455,107"/>
+<area shape="rect" id="node32" href="$patterns_8h.html" title="common/patterns.h" alt="" coords="911,80,1045,107"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title="sequential_execution.h" alt="" coords="61,237,215,263"/>
+<area shape="rect" id="node6" href="$parallel__execution__native_8h.html" title="parallel_execution\l_native.h" alt="" coords="824,229,951,271"/>
+<area shape="rect" id="node7" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="468,319,645,345"/>
+<area shape="rect" id="node13" href="$pool_8h.html" title="pool.h" alt="" coords="859,319,916,345"/>
+<area shape="rect" id="node23" href="$parallel__execution__omp_8h.html" title="parallel_execution\l_omp.h" alt="" coords="331,229,457,271"/>
+<area shape="rect" id="node26" href="$parallel__execution__tbb_8h.html" title="parallel_execution\l_tbb.h" alt="" coords="481,229,608,271"/>
+<area shape="rect" id="node29" href="$polymorphic__execution_8h.html" title="polymorphic_execution.h" alt="" coords="328,155,495,181"/>
+<area shape="rect" id="node31" href="$support_8h.html" title="../common/support.h" alt="" coords="5,155,148,181"/>
+</map>

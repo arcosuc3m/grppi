@@ -1,0 +1,8 @@
+<map id="Map/reduce pattern" name="Map/reduce pattern">
+<area shape="rect" id="node1" href="$group__mapreduce__pattern__omp.html" title="OpenMP parallel implementation of the Map/reduce pattern. " alt="" coords="393,5,539,47"/>
+<area shape="rect" id="node2" href="$group__data__patterns.html" title="Patterns for data parallel processing. " alt="" coords="5,143,152,170"/>
+<area shape="rect" id="node4" href="$group__mapreduce__pattern__poly.html" title="Polymorphic implementation of the Map/reduce pattern. " alt="" coords="383,71,549,112"/>
+<area shape="rect" id="node5" href="$group__mapreduce__pattern__tbb.html" title="TBB parallel implementation of the Map/reduce pattern. " alt="" coords="383,136,549,177"/>
+<area shape="rect" id="node6" href="$group__mapreduce__pattern__seq.html" title="Sequential implementation of the Map/reduce pattern. " alt="" coords="389,201,543,243"/>
+<area shape="rect" id="node7" href="$group__mapreduce__pattern__native.html" title="Native parallel implementation of the Map/reduce pattern. " alt="" coords="399,267,533,308"/>
+</map>

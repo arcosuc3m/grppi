@@ -1,0 +1,16 @@
+<map id="stream_filter.h" name="stream_filter.h">
+<area shape="rect" id="node2" href="$seq_2stream__filter_8h.html" title="seq/stream_filter.h" alt="" coords="1108,155,1239,181"/>
+<area shape="rect" id="node5" href="$native_2stream__filter_8h.html" title="native/stream_filter.h" alt="" coords="481,80,625,107"/>
+<area shape="rect" id="node19" href="$omp_2stream__filter_8h.html" title="omp/stream_filter.h" alt="" coords="650,80,785,107"/>
+<area shape="rect" id="node22" href="$tbb_2stream__filter_8h.html" title="tbb/stream_filter.h" alt="" coords="809,80,935,107"/>
+<area shape="rect" id="node25" href="$poly_2stream__filter_8h.html" title="poly/stream_filter.h" alt="" coords="1011,80,1144,107"/>
+<area shape="rect" id="node30" href="$patterns_8h.html" title="common/patterns.h" alt="" coords="1278,80,1413,107"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title="sequential_execution.h" alt="" coords="1141,237,1296,263"/>
+<area shape="rect" id="node6" href="$parallel__execution__native_8h.html" title="parallel_execution\l_native.h" alt="" coords="490,229,617,271"/>
+<area shape="rect" id="node7" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="647,319,825,345"/>
+<area shape="rect" id="node13" href="$pool_8h.html" title="pool.h" alt="" coords="234,319,291,345"/>
+<area shape="rect" id="node20" href="$parallel__execution__omp_8h.html" title="parallel_execution\l_omp.h" alt="" coords="654,229,781,271"/>
+<area shape="rect" id="node23" href="$parallel__execution__tbb_8h.html" title="parallel_execution\l_tbb.h" alt="" coords="805,229,931,271"/>
+<area shape="rect" id="node26" href="$polymorphic__execution_8h.html" title="polymorphic_execution.h" alt="" coords="917,155,1083,181"/>
+<area shape="rect" id="node29" href="$support_8h.html" title="../common/support.h" alt="" coords="1262,155,1405,181"/>
+</map>

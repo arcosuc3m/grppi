@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['divideconquer_2eh',['divideconquer.h',['../seq_2divideconquer_8h.html',1,'']]],
+  ['farm_2eh',['farm.h',['../seq_2farm_8h.html',1,'']]],
+  ['map_2eh',['map.h',['../seq_2map_8h.html',1,'']]],
+  ['mapreduce_2eh',['mapreduce.h',['../seq_2mapreduce_8h.html',1,'']]],
+  ['pipeline_2eh',['pipeline.h',['../seq_2pipeline_8h.html',1,'']]],
+  ['reduce_2eh',['reduce.h',['../seq_2reduce_8h.html',1,'']]],
+  ['sequential_5fexecution_2eh',['sequential_execution.h',['../sequential__execution_8h.html',1,'']]],
+  ['stencil_2eh',['stencil.h',['../seq_2stencil_8h.html',1,'']]],
+  ['stencil_2eh',['stencil.h',['../stencil_8h.html',1,'']]],
+  ['stencil_2emd',['stencil.md',['../stencil_8md.html',1,'']]],
+  ['stream_2dfilter_2emd',['stream-filter.md',['../stream-filter_8md.html',1,'']]],
+  ['stream_2diteration_2emd',['stream-iteration.md',['../stream-iteration_8md.html',1,'']]],
+  ['stream_2dreduce_2emd',['stream-reduce.md',['../stream-reduce_8md.html',1,'']]],
+  ['stream_5ffilter_2eh',['stream_filter.h',['../stream__filter_8h.html',1,'']]],
+  ['stream_5ffilter_2eh',['stream_filter.h',['../seq_2stream__filter_8h.html',1,'']]],
+  ['stream_5fiteration_2eh',['stream_iteration.h',['../seq_2stream__iteration_8h.html',1,'']]],
+  ['stream_5fiteration_2eh',['stream_iteration.h',['../stream__iteration_8h.html',1,'']]],
+  ['stream_5freduce_2eh',['stream_reduce.h',['../seq_2stream__reduce_8h.html',1,'']]],
+  ['stream_5freduce_2eh',['stream_reduce.h',['../stream__reduce_8h.html',1,'']]],
+  ['support_2eh',['support.h',['../support_8h.html',1,'']]]
+];
