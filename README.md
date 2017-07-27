@@ -2,7 +2,7 @@
 
 ## Introduction ##
 
-**GrPPI** is an open source *generic and reusable parallel pattern programming interface* developed at Univ. Carlos III of Madrid. Basically, **GrPPI** accommodates a layer between developers and existing parallel programming frameworks targeted to multi-core processors, such as ISO C++ Threads, OpenMP and Intel TBB, and accelerators. To achieve this goal, the interface leverages modern C++ features, metaprogramming concepts, and template-based programming to act as switch between these frameworks. Furthermore, its compact design facilitates the development of parallel applications, hiding away the complexity behind the use of concurrency mechanisms. The parallel patterns supported by GrPPI are targeted for both stream processing and data-intensive applications and can be composed among them to match more complex constructions. In a nutshell, **GrPPI** advocates for a usable, simple, generic, and high-level parallel pattern interface, allowing users to implement parallel applications without having a deep understanding of today's parallel programming frameworks and third-party interfaces.
+**GrPPI** is an open source *generic and reusable parallel pattern programming interface* developed at Univ. Carlos III of Madrid. Basically, **GrPPI** accommodates a layer between developers and existing parallel programming frameworks targeted to multi-core processors, such as ISO C++ Threads, OpenMP and Intel TBB, and accelerators. To achieve this goal, the interface leverages modern C++ features, meta-programming concepts, and template-based programming to act as switch between these frameworks. Furthermore, its compact design facilitates the development of parallel applications, hiding away the complexity behind the use of concurrency mechanisms. The parallel patterns supported by GrPPI are targeted for both stream processing and data-intensive applications and can be composed among them to match more complex constructions. In a nutshell, **GrPPI** advocates for a usable, simple, generic, and high-level parallel pattern interface, allowing users to implement parallel applications without having a deep understanding of today's parallel programming frameworks and third-party interfaces.
 
 Currently, **GrPPI** supports the following patterns:
 
@@ -41,7 +41,7 @@ Please cite this publication in any work using our library:
 
 ### Acknowledgments
 
-The **GrPPI** library has been partially supproted by:
+The **GrPPI** library has been partially supported by:
 
-* Project ICT 644235 *"REPHRASE: REfactoring Parallel Heterogeneous Resource-aware Applications"* funded by the European Comision through H2020 program (2015-2018).
-* Project TIN2016-79673-P *“Towards Unification of HPC and Big Data Paradigms”* funded by the Spanish Ministry of Economy and Comeptitiveness (2016-2019).
+* Project ICT 644235 *"REPHRASE: REfactoring Parallel Heterogeneous Resource-aware Applications"* funded by the European Commission through H2020 program (2015-2018).
+* Project TIN2016-79673-P *“Towards Unification of HPC and Big Data Paradigms”* funded by the Spanish Ministry of Economy and Competitiveness (2016-2019).
