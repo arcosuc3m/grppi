@@ -7,7 +7,7 @@ set( TESTS_CPU_SEQ
      farm2                  farm3                  
      pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
-     stencil1               mapreduce1             divideandconquer1
+     stencil1               divideandconquer1
      divideandconquer-fibonacci 
      stream_iteration1      farm_sink
      stream_iteration_pipe
@@ -23,7 +23,7 @@ set( TESTS_CPU_OMP
      pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
      stencil1               divideandconquer1     
-     farm_sink 		    mapreduce1 
+     farm_sink 		    
      divideandconquer-fibonacci
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example         
@@ -33,7 +33,7 @@ set( TESTS_CPU_OMP
 set( TESTS_CPU_TBB                           
      pipeline1              pipeline2              farm1
      farm2                  farm3                   
-     pipeline+farm          map1                  mapreduce1 
+     pipeline+farm          map1                  
      reduce1                reduce2
      stencil1 divideandconquer1
      divideandconquer-fibonacci
@@ -47,7 +47,7 @@ set( TESTS_CPU_THR
      farm2                  farm3                  
      pipeline+farm          map1                   #map2
      map3                   reduce1                reduce2
-     stencil1               divideandconquer1      mapreduce1
+     stencil1               divideandconquer1      
      divideandconquer-fibonacci 
      stream_iteration1      farm_sink
      stream_iteration_pipe
