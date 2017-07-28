@@ -1,0 +1,7 @@
+<map id="Streaming patterns" name="Streaming patterns">
+<area shape="rect" id="node1" href="$group__pipeline__pattern.html" title="Interface for applyinng the Pipeline pattern. " alt="" coords="209,5,321,32"/>
+<area shape="rect" id="node2" href="$group__stream__iteration__pattern.html" title="Interface for applyinng the Stream iteration pattern. " alt="" coords="185,56,344,83"/>
+<area shape="rect" id="node4" href="$group__stream__reduce__pattern.html" title="Interface for applying the Stream reduction pattern. " alt="" coords="189,107,340,133"/>
+<area shape="rect" id="node5" href="$group__filter__pattern.html" title="Interface for applyinng the Filter pattern. " alt="" coords="196,157,333,184"/>
+<area shape="rect" id="node6" href="$group__farm__pattern.html" title="Interface for applyinng the Farm pattern. " alt="" coords="217,208,313,235"/>
+</map>

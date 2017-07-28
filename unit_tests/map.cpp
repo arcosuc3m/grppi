@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 
 #include "map.h"
-#include "common/polymorphic_execution.h"
+#include "poly/polymorphic_execution.h"
 
 #include "supported_executions.h"
 

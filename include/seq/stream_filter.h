@@ -18,25 +18,76 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAM_FILTER_SEQ_H
-#define GRPPI_STREAM_FILTER_SEQ_H
+#ifndef GRPPI_SEQ_STREAM_FILTER_H
+#define GRPPI_SEQ_STREAM_FILTER_H
 
-namespace grppi{
+#include "sequential_execution.h"
+
+namespace grppi {
+
+/** 
+\addtogroup filter_pattern
+@{
+\addtogroup filter_pattern_seq Sequential filter pattern.
+\brief Sequential implementation fo the \ref md_stream-filter.
+@{
+*/
+
+/**
+\brief Invoke \ref md_stream-filter on a data
+sequence with sequential execution policy.
+This function keeps in the stream only those items
+that satisfy the predicate.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex Sequential execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
 template <typename Generator, typename Predicate, typename Consumer>
-void stream_filter(sequential_execution, Generator && gen, Predicate && pred, Consumer && cons) {
-    while( 1 ) {
-        auto k = gen();
-        if( !k )
-            break;
-        if(pred(k.value()))
-            cons(k.value());
+void keep(sequential_execution, Generator generate_op, 
+          Predicate predicate_op, Consumer consume_op) 
+{
+  for (;;) {
+    auto item = generate_op();
+    if (!item) break;
+    if (predicate_op(*item)) {
+      consume_op(*item);
     }
+  }
 }
 
-template <typename Predicate>
-filter_info<sequential_execution, Predicate> stream_filter(sequential_execution &s, Predicate && pred){
-   return filter_info<sequential_execution, Predicate>(s, std::forward<Predicate>(pred));
+/**
+\brief Invoke \ref md_stream-filter on a data
+sequence with sequential execution policy.
+This function discards from the stream those items
+that satisfy the predicate.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex Sequential execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
+template <typename Generator, typename Predicate, typename Consumer>
+void discard(sequential_execution & ex, Generator generate_op, 
+             Predicate predicate_op, Consumer consume_op) 
+{
+  keep(ex, 
+    std::forward<Generator>(generate_op), 
+    [&](auto val) { return !predicate_op(val); },
+    std::forward<Consumer>(consume_op) 
+  );
 }
 
+/**
+@}
+@}
+*/
+
 }
+
 #endif

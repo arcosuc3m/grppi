@@ -67,7 +67,7 @@ void pipeline_example() {
     ifstream is("txt/file.txt");
     if (!is.good()) { cerr << "TXT file not found!" << endl; return; }
     int numchar = 0;
-    p.set_ordered(true);
+    p.enable_ordering();
     pipeline( p,
         // Pipeline stage 0
         [&]() -> optional<std::vector<int>>{

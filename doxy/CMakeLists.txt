@@ -12,7 +12,7 @@ if (DOXYGEN_FOUND)
         VERBATIM )
 
     add_custom_target( doc_doxygen
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/map-pattern.html ${CMAKE_BINARY_DIR}/doc/html/map_8md.html
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_map.html ${CMAKE_BINARY_DIR}/doc/html/map_8md.html
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_divide-conquer.html ${CMAKE_BINARY_DIR}/doc/html/divide-conquer_8md.html
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_farm.html ${CMAKE_BINARY_DIR}/doc/html/farm_8md.html
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/doc/html/md_map-reduce.html ${CMAKE_BINARY_DIR}/doc/html/map-reduce_8md.html

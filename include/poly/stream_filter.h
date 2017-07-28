@@ -21,68 +21,153 @@
 #ifndef GRPPI_POLY_STREAM_FILTER_H
 #define GRPPI_POLY_STREAM_FILTER_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void stream_filter_multi_impl(polymorphic_execution & e, GenFunc && in,  
-         FilterFunc && filter, OutFunc && out) 
+template <typename Generator, typename Predicate, typename Consumer>
+void keep_multi_impl(polymorphic_execution, Generator && generate_op,  
+                              Predicate predicate_op, Consumer consume_op)
 {
 }
 
-
-
 template <typename E, typename ... O,
-          typename GenFunc, typename FilterFunc, typename OutFunc,
+          typename Generator, typename Predicate, typename Consumer,
           internal::requires_execution_not_supported<E> = 0>
-void stream_filter_multi_impl(polymorphic_execution & e, GenFunc && in, 
-         FilterFunc && filter, OutFunc && out) 
+void keep_multi_impl(polymorphic_execution & ex, 
+                              Generator && generate_op, 
+                              Predicate && predicate_op, Consumer && consume_op) 
 {
-  stream_filter_multi_impl<O...>(e, std::forward<GenFunc>(in),
-    std::forward<FilterFunc>(filter), std::forward<OutFunc>(out));
+  keep_multi_impl<O...>(ex, std::forward<Generator>(generate_op),
+    std::forward<Predicate>(predicate_op), std::forward<Consumer>(consume_op));
 }
 
 
 
 template <typename E, typename ... O,
-          typename GenFunc, typename FilterFunc, typename OutFunc,
+          typename Generator, typename Predicate, typename Consumer,
           internal::requires_execution_supported<E> = 0>
-void stream_filter_multi_impl(polymorphic_execution & e, GenFunc && in, 
-         FilterFunc && filter, OutFunc && out) 
+void keep_multi_impl(polymorphic_execution & ex, 
+                              Generator && generate_op, 
+                              Predicate && predicate_op, 
+                              Consumer && consume_op) 
 {
-  if (typeid(E) == e.type()) {
-    stream_filter(*e.execution_ptr<E>(), 
-      std::forward<GenFunc>(in), std::forward<FilterFunc>(filter), 
-      std::forward<OutFunc>(out));
+  if (typeid(E) == ex.type()) {
+    keep(*ex.execution_ptr<E>(), 
+      std::forward<Generator>(generate_op), std::forward<Predicate>(predicate_op), 
+      std::forward<Consumer>(consume_op));
   }
   else {
-    stream_filter_multi_impl<O...>(e, std::forward<GenFunc>(in), std::forward<FilterFunc>(filter),
-      std::forward<OutFunc>(out));
+    keep_multi_impl<O...>(ex, std::forward<Generator>(generate_op),
+        std::forward<Predicate>(predicate_op), std::forward<Consumer>(consume_op));
   }
 }
 
 
-
-/// Runs a stream_filter pattern with a generator function, a filter function
-/// and a output function.
-/// GenFunc: Generator functor type.
-/// FilterFunc: Filter functor type.
-/// OutFunc: Output functor type.
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void stream_filter(polymorphic_execution & e, GenFunc && in, 
-         FilterFunc && filter, OutFunc && out) 
+template <typename Generator, typename Predicate, typename Consumer>
+void discard_multi_impl(polymorphic_execution, Generator && generate_op,  
+                              Predicate predicate_op, Consumer consume_op)
 {
-  stream_filter_multi_impl<
+}
+
+template <typename E, typename ... O,
+          typename Generator, typename Predicate, typename Consumer,
+          internal::requires_execution_not_supported<E> = 0>
+void discard_multi_impl(polymorphic_execution & ex, 
+                              Generator && generate_op, 
+                              Predicate && predicate_op, Consumer && consume_op) 
+{
+  discard_multi_impl<O...>(ex, std::forward<Generator>(generate_op),
+    std::forward<Predicate>(predicate_op), std::forward<Consumer>(consume_op));
+}
+
+
+
+template <typename E, typename ... O,
+          typename Generator, typename Predicate, typename Consumer,
+          internal::requires_execution_supported<E> = 0>
+void discard_multi_impl(polymorphic_execution & ex, 
+                              Generator && generate_op, 
+                              Predicate && predicate_op, 
+                              Consumer && consume_op) 
+{
+  if (typeid(E) == ex.type()) {
+    discard(*ex.execution_ptr<E>(), 
+      std::forward<Generator>(generate_op), std::forward<Predicate>(predicate_op), 
+      std::forward<Consumer>(consume_op));
+  }
+  else {
+    discard_multi_impl<O...>(ex, std::forward<Generator>(generate_op),
+        std::forward<Predicate>(predicate_op), std::forward<Consumer>(consume_op));
+  }
+}
+
+/** 
+\addtogroup filter_pattern
+@{
+\addtogroup filter_poly Polymorphic parallel filter pattern.
+\brief Polymorphic parallel implementation of the \ref md_stream-filter.
+@{
+*/
+
+/**
+\brief Invoke \ref md_stream-filter on a data
+sequence with polymorphic execution policy.
+This function keeps in the stream only those items
+that satisfy the predicate.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
+template <typename Generator, typename Predicate, typename Consumer>
+void keep(polymorphic_execution & ex, Generator && generate_op, 
+          Predicate && predicate_op, Consumer && consume_op) 
+{
+  keep_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<GenFunc>(in), std::forward<FilterFunc>(filter),
-      std::forward<OutFunc>(out));
+  >(ex, std::forward<Generator>(generate_op),
+      std::forward<Predicate>(predicate_op),
+      std::forward<Consumer>(consume_op));
 }
 
+/**
+\brief Invoke \ref md_stream-filter on a data
+sequence with polymorphic execution policy.
+This function discards from the stream those items
+that satisfy the predicate.
+\tparam Generator Callable type for value generator.
+\tparam Predicate Callable type for filter predicate.
+\tparam Consumer Callable type for value consumer.
+\param ex Polymorphic execution policy object.
+\param generate_op Generator callable object.
+\param predicate_op Predicate callable object.
+\param consume_op Consumer callable object.
+*/
+template <typename Generator, typename Predicate, typename Consumer>
+void discard(polymorphic_execution & ex, Generator && generate_op, 
+             Predicate && predicate_op, Consumer && consume_op) 
+{
+  discard_multi_impl<
+    sequential_execution,
+    parallel_execution_native,
+    parallel_execution_omp,
+    parallel_execution_tbb
+  >(ex, std::forward<Generator>(generate_op),
+      std::forward<Predicate>(predicate_op),
+      std::forward<Consumer>(consume_op));
+}
+/**
+@}
+@}
+*/
 
 
 } // end namespace grppi

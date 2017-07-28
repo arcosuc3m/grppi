@@ -23,6 +23,7 @@
 #include <chrono>
 #include <experimental/optional>
 
+#include <pipeline.h>
 #include <stream_reduce.h>
 
 using namespace std;
@@ -53,6 +54,10 @@ void reduce_example1(){
     int index = 0;
     int n=0;
     stream_reduce( p,
+        //Window size
+        1000000,
+        1000000,
+        0,
         // Reduce generator as lambda
         [&]() -> optional<int>{ 
             n++;
@@ -61,17 +66,13 @@ void reduce_example1(){
             else
               return {};
         },
-        //Window size
-        1000000,
-        1000000,
         // Reduce kernel as lambda
         std::plus<int>(),
         // Reduce join as lambda
         [&]( int a) {
             total += a;
             std::cout<<"PARTIAL REDUCE : "<<a<<" TOTAL " <<total<< std::endl;
-        },
-        0 
+        }
     );
 }
 

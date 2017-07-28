@@ -1,0 +1,8 @@
+<map id="Divide/Conquer pattern" name="Divide/Conquer pattern">
+<area shape="rect" id="node1" href="$group__divide__conquer__pattern__poly.html" title="Polymorphic execution implementation of the Divide/conquer pattern. " alt="" coords="412,5,567,47"/>
+<area shape="rect" id="node2" href="$group__divide__conquer__pattern__seq.html" title="Sequential implementation of the Divide/conquer pattern. " alt="" coords="404,71,575,112"/>
+<area shape="rect" id="node3" href="$group__divide__conquer__pattern__native.html" title="Native parallel implementation of the Divide/conquer pattern. " alt="" coords="418,136,561,177"/>
+<area shape="rect" id="node4" href="$group__task__patterns.html" title="Patterns for task parallel processing. " alt="" coords="5,143,152,170"/>
+<area shape="rect" id="node6" href="$group__divide__conquer__pattern__omp.html" title="OpenMP parallel implementation of the Divide/conquer pattern. " alt="" coords="411,201,567,243"/>
+<area shape="rect" id="node7" href="$group__divide__conquer__pattern__tbb.html" title="TBB parallel implementation of the Divide/conquer pattern. " alt="" coords="424,267,555,308"/>
+</map>

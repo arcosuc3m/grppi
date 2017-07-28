@@ -1,0 +1,8 @@
+<map id="Stream filter pattern" name="Stream filter pattern">
+<area shape="rect" id="node1" href="$group__filter__poly.html" title="Polymorphic parallel implementation of the Filter pattern. " alt="" coords="381,5,520,47"/>
+<area shape="rect" id="node2" href="$group__filter__pattern__tbb.html" title="TBB parallel implementation fo the Filter pattern. " alt="" coords="389,71,512,112"/>
+<area shape="rect" id="node3" href="$group__filter__pattern__native.html" title="Native parallel implementation fo the Filter pattern. " alt="" coords="383,136,518,177"/>
+<area shape="rect" id="node4" href="$group__filter__pattern__seq.html" title="Sequential implementation fo the Filter pattern. " alt="" coords="371,202,531,229"/>
+<area shape="rect" id="node5" href="$group__stream__patterns.html" title="Patterns for data stream processing. " alt="" coords="5,143,137,170"/>
+<area shape="rect" id="node6" href="$group__filter__pattern__omp.html" title="OpenMP parallel implementation fo the Filter pattern. " alt="" coords="377,253,524,295"/>
+</map>

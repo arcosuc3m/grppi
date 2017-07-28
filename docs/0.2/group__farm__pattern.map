@@ -1,0 +1,8 @@
+<map id="Farm pattern" name="Farm pattern">
+<area shape="rect" id="node1" href="$group__farm__pattern__tbb.html" title="TBB parallel implementation of the Farm pattern. " alt="" coords="329,5,496,32"/>
+<area shape="rect" id="node2" href="$group__farm__pattern__native.html" title="Sequential implementation of the Farm pattern. " alt="" coords="345,57,480,98"/>
+<area shape="rect" id="node3" href="$group__stream__patterns.html" title="Patterns for data stream processing. " alt="" coords="5,123,137,149"/>
+<area shape="rect" id="node4" href="$group__farm__pattern__seq.html" title="Sequential implementation of the Farm pattern. " alt="" coords="334,123,491,149"/>
+<area shape="rect" id="node5" href="$group__farm__pattern__poly.html" title="Polymorphic execution implementation of the Farm pattern. " alt="" coords="335,174,490,215"/>
+<area shape="rect" id="node6" href="$group__farm__pattern__omp.html" title="OpenMP implementation of the Farm pattern. " alt="" coords="339,239,487,281"/>
+</map>

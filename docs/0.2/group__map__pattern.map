@@ -1,0 +1,8 @@
+<map id="Map pattern" name="Map pattern">
+<area shape="rect" id="node1" href="$group__map__pattern__omp.html" title="OpenMP parallel implementation of the Map pattern. " alt="" coords="343,5,490,47"/>
+<area shape="rect" id="node4" href="$group__map__pattern__native.html" title="Native parallel implementation of Map pattern. " alt="" coords="349,71,484,112"/>
+<area shape="rect" id="node5" href="$group__map__pattern__poly.html" title="Polymorphic implementation of Map pattern. " alt="" coords="339,136,494,177"/>
+<area shape="rect" id="node6" href="$group__map__pattern__seq.html" title="Sequential implementation of the Map pattern. " alt="" coords="339,202,495,229"/>
+<area shape="rect" id="node7" href="$group__map__pattern__tbb.html" title="TBB parallel implementation of Map pattern. " alt="" coords="351,253,482,295"/>
+<area shape="rect" id="node3" href="$group__data__patterns.html" title="Patterns for data parallel processing. " alt="" coords="5,143,152,170"/>
+</map>

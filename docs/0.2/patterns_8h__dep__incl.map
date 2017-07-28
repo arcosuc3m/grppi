@@ -1,0 +1,8 @@
+<map id="patterns.h" name="patterns.h">
+<area shape="rect" id="node2" href="$farm_8h.html" title="farm.h" alt="" coords="5,155,64,181"/>
+<area shape="rect" id="node4" href="$seq_2pipeline_8h.html" title="pipeline.h" alt="" coords="72,80,149,107"/>
+<area shape="rect" id="node5" href="$pipeline_8h.html" title="pipeline.h" alt="" coords="88,155,165,181"/>
+<area shape="rect" id="node6" href="$stream__filter_8h.html" title="stream_filter.h" alt="" coords="189,155,294,181"/>
+<area shape="rect" id="node7" href="$stream__reduce_8h.html" title="stream_reduce.h" alt="" coords="275,80,394,107"/>
+<area shape="rect" id="node3" href="$grppi_8h.html" title="grppi.h" alt="" coords="153,229,215,256"/>
+</map>

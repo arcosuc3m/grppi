@@ -34,6 +34,10 @@ if(GRPPI_UNIT_TEST_ENABLE)
       ${Boost_LIBRARIES}
   )
   
+  if(GRPPI_HWLOC_ENABLE)
+    target_link_libraries(${PROJECT_TEST_NAME} hwloc)
+  endif()
+  
   GTEST_ADD_TESTS(${PROJECT_TEST_NAME} "" ${TEST_SRC_FILES})
 
   # Coverage options

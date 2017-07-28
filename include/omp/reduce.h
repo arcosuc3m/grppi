@@ -18,28 +18,26 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_OMP_H
-#define GRPPI_REDUCE_OMP_H
+#ifndef GRPPI_OMP_REDUCE_H
+#define GRPPI_OMP_REDUCE_H
 
 #ifdef GRPPI_OMP
 
-#include <thread>
+#include "parallel_execution_omp.h"
+#include "reduce.h"
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern
 @{
-*/
-
-/**
 \addtogroup reduce_pattern_omp OpenMP parallel reduce pattern
-\brief OpenMP parallel implementation of the \ref md_reduce pattern
+\brief OpenMP parallel implementation of the \ref md_reduce.
 @{
 */
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+\brief Invoke \ref md_reduce with identity value
 on a data sequence with parallel OpenMP execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.
@@ -57,20 +55,20 @@ auto reduce(parallel_execution_omp & ex,
             Combiner && combine_op)
 {
     int numElements = last - first;
-    int elemperthr = numElements/ex.num_threads;
+    int elemperthr = numElements/ex.concurrency_degree();
     auto identityVal = identity;
     //local output
-    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.num_threads);
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.concurrency_degree());
     //Create threads
     #pragma omp parallel
     {
     #pragma omp single nowait
     {
-    for(int i=1;i<ex.num_threads;i++){
+    for(int i=1;i<ex.concurrency_degree();i++){
 
       auto begin = first + (elemperthr * i);
       auto end = first + (elemperthr * (i+1));
-      if(i == ex.num_threads -1) end = last;
+      if(i == ex.concurrency_degree() -1) end = last;
 
          #pragma omp task firstprivate (begin, end,i)
          {

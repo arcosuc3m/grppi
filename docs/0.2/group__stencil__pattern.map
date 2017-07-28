@@ -1,0 +1,8 @@
+<map id="Stencil pattern" name="Stencil pattern">
+<area shape="rect" id="node1" href="$group__stencil__pattern__seq.html" title="Sequential implementation of the Stencil pattern. " alt="" coords="373,5,499,47"/>
+<area shape="rect" id="node2" href="$group__data__patterns.html" title="Patterns for data parallel processing. " alt="" coords="5,143,152,170"/>
+<area shape="rect" id="node3" href="$group__stencil__pattern__omp.html" title="OpenMP parallel implementation of the Stencil pattern. " alt="" coords="355,71,517,112"/>
+<area shape="rect" id="node4" href="$group__stencil__pattern__tbb.html" title="TBB parallel implementation of the Stencil pattern. " alt="" coords="367,136,505,177"/>
+<area shape="rect" id="node5" href="$group__stencil__pattern__native.html" title="Native parallel implementation of the Stencil pattern. " alt="" coords="363,201,509,243"/>
+<area shape="rect" id="node7" href="$group__stencil__pattern__poly.html" title="Polymorphic implementation of the Stencil pattern. " alt="" coords="368,267,504,308"/>
+</map>

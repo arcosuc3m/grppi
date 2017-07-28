@@ -21,68 +21,102 @@
 #ifndef GRPPI_POLY_STREAM_REDUCE_H
 #define GRPPI_POLY_STREAM_REDUCE_H
 
-#include "common/polymorphic_execution.h"
-#include "common/support.h"
+#include "polymorphic_execution.h"
+#include "../common/support.h"
 
-namespace grppi{
+namespace grppi {
 
-template <typename Generator, typename Combiner, typename Consumer , typename IdentityType>
- void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init)
+template <typename Identity, typename Combiner, typename Consumer, typename Generator>
+void stream_reduce_multi_impl(polymorphic_execution & ex, int window_size, int offset, 
+                              Identity identity, Generator && generate_op, 
+                              Combiner && combine_op, Consumer && consume_op)
 {
 }
 
-template <typename E, typename ... O, typename Generator, 
-          typename Combiner, typename Consumer, typename IdentityType,
+template <typename E, typename ... O, typename Identity, 
+          typename Generator, typename Combiner, typename Consumer,
           internal::requires_execution_not_supported<E> = 0>
-void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
+void stream_reduce_multi_impl(polymorphic_execution & ex, int windowsize, int offset, 
+                              Identity identity, Generator && gen, 
+                              Combiner && comb, Consumer && cons) 
 {
-  stream_reduce_multi_impl<O...>(e, std::forward<Generator>(gen),
-      windowsize, offset, std::forward<Combiner>(cons), 
-      std::forward<Consumer>(cons), init);
+  stream_reduce_multi_impl<O...>(ex, 
+    windowsize, offset, identity,
+    std::forward<Generator>(gen), 
+    std::forward<Combiner>(comb), 
+    std::forward<Consumer>(cons)
+  );
 }
 
-
-
-template <typename E, typename ... O,
-          typename Generator, typename Combiner, typename Consumer, typename IdentityType,
+template <typename E, typename ... O, typename Identity, 
+          typename Generator, typename Combiner, typename Consumer,
           internal::requires_execution_supported<E> = 0>
-void stream_reduce_multi_impl(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
+void stream_reduce_multi_impl(polymorphic_execution & ex, int windowsize, int offset,
+                              Identity identity, Generator && gen, 
+                              Combiner && comb, Consumer && cons) 
 {
-  if (typeid(E) == e.type()) {
-    stream_reduce(*e.execution_ptr<E>(), std::forward<Generator>(gen),
-      windowsize, offset, std::forward<Combiner>(comb), 
-      std::forward<Consumer>(cons),init);
+  if (typeid(E) == ex.type()) {
+    stream_reduce(*ex.execution_ptr<E>(), 
+      windowsize, offset, identity,
+      std::forward<Generator>(gen),
+      std::forward<Combiner>(comb), 
+      std::forward<Consumer>(cons)
+    );
   }
   else {
-    stream_reduce_multi_impl<O...>(e, std::forward<Generator>(gen),
-      windowsize, offset, std::forward<Combiner>(comb), 
-      std::forward<Consumer>(cons), init);
+    stream_reduce_multi_impl<O...>(ex, 
+      windowsize, offset, identity,
+      std::forward<Generator>(gen),
+      std::forward<Combiner>(comb), 
+      std::forward<Consumer>(cons)
+    );
   }
 }
 
-/// Runs a stream_reduce pattern with generator function, a reduce function
-/// an operation function and output type.
-/// GenFunc: Generator functor type.
-/// Operation: Operation functor type
-/// ReduceFunc: Reductor functor type.
-/// OutputType: Output type.
-template <typename Generator, typename Combiner, typename Consumer, typename IdentityType>
-void stream_reduce(polymorphic_execution & e, Generator && gen, 
-      int windowsize, int offset, Combiner && comb, Consumer && cons, IdentityType init) 
+/**
+\addtogroup stream_reduce_pattern
+@{
+\addtogroup stream_reduce_pattern_poly Polymorphic parallel stream reduce pattern
+\brief Polymorphic parallel implementation of the \ref md_stream-reduce.
+@{
+*/
+
+/**
+\brief Invoke \ref md_stream-reduce on a stream with
+polymorphic parallel execution.
+\tparam Identity Type of the identity value used by the combiner.
+\tparam Generator Callable type used for generating data items.
+\tparam Combiner Callable type used for data items combination.
+\tparam Consumer Callable type used for consuming data items.
+\param ex Polymorphic parallel execution policy object.
+\param window_size Number of consecutive items to be reduced.
+\param offset Number of items after of which a new reduction is started.
+\param identity Identity value for the combination.
+\param generate_op Generation operation.
+\param combine_op Combination operation.
+\param consume_op Consume operation.
+*/
+template <typename Identity, typename Generator, typename Combiner, typename Consumer>
+void stream_reduce(polymorphic_execution & ex, 
+      int windowsize, int offset, Identity identity,
+      Generator && gen, Combiner && comb, Consumer && cons) 
 {
   stream_reduce_multi_impl<
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
     parallel_execution_tbb
-  >(e, std::forward<Generator>(gen),
-      windowsize, offset, std::forward<Combiner>(comb), 
-      std::forward<Consumer>(cons),init);
+  >(ex, windowsize, offset, identity,
+      std::forward<Generator>(gen),
+      std::forward<Combiner>(comb), 
+      std::forward<Consumer>(cons)
+   );
 }
 
+/**
+@}
+@}
+*/
 
 } // end namespace grppi
 

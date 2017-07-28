@@ -1,0 +1,16 @@
+<map id="stencil.h" name="stencil.h">
+<area shape="rect" id="node2" href="$seq_2stencil_8h.html" title="seq/stencil.h" alt="" coords="403,80,499,107"/>
+<area shape="rect" id="node6" href="$native_2stencil_8h.html" title="native/stencil.h" alt="" coords="268,80,379,107"/>
+<area shape="rect" id="node20" href="$omp_2stencil_8h.html" title="omp/stencil.h" alt="" coords="985,155,1085,181"/>
+<area shape="rect" id="node23" href="$tbb_2stencil_8h.html" title="tbb/stencil.h" alt="" coords="803,80,897,107"/>
+<area shape="rect" id="node26" href="$poly_2stencil_8h.html" title="poly/stencil.h" alt="" coords="606,80,705,107"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title="sequential_execution.h" alt="" coords="370,237,525,263"/>
+<area shape="rect" id="node5" href="$iterator_8h.html" title="../common/iterator.h" alt="" coords="265,155,403,181"/>
+<area shape="rect" id="node7" href="$parallel__execution__native_8h.html" title="parallel_execution\l_native.h" alt="" coords="219,229,345,271"/>
+<area shape="rect" id="node8" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="708,319,885,345"/>
+<area shape="rect" id="node14" href="$pool_8h.html" title="pool.h" alt="" coords="276,319,333,345"/>
+<area shape="rect" id="node21" href="$parallel__execution__omp_8h.html" title="parallel_execution\l_omp.h" alt="" coords="937,229,1064,271"/>
+<area shape="rect" id="node24" href="$parallel__execution__tbb_8h.html" title="parallel_execution\l_tbb.h" alt="" coords="787,229,913,271"/>
+<area shape="rect" id="node27" href="$polymorphic__execution_8h.html" title="polymorphic_execution.h" alt="" coords="645,155,812,181"/>
+<area shape="rect" id="node30" href="$support_8h.html" title="../common/support.h" alt="" coords="479,155,621,181"/>
+</map>

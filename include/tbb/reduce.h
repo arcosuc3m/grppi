@@ -18,28 +18,27 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_TBB_H
-#define GRPPI_REDUCE_TBB_H
+#ifndef GRPPI_TBB_REDUCE_H
+#define GRPPI_TBB_REDUCE_H
 
 #ifdef GRPPI_TBB
 
+#include "parallel_execution_tbb.h"
+
 #include <tbb/tbb.h>
 
-namespace grppi{
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern
 @{
-*/
-
-/**
 \addtogroup reduce_pattern_tbb TBB parallel reduce pattern
-\brief TBB parallel implementation of the \ref md_reduce pattern
+\brief TBB parallel implementation of the \ref md_reduce.
 @{
 */
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+\brief Invoke \ref md_reduce with identity value
 on a data sequence with parallel TBB execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.

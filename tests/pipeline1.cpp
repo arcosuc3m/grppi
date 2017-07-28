@@ -49,7 +49,7 @@ void pipeline_example1() {
 #endif
     int a = 10;
     std::vector<string> output;
-    p.set_ordered(true);
+    p.enable_ordering();
     pipeline( p,
         // Pipeline stage 0
         [&]() -> optional<int> { 

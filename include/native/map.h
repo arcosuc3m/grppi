@@ -18,21 +18,24 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAP_THR_H
-#define GRPPI_MAP_THR_H
+#ifndef GRPPI_NATIVE_MAP_H
+#define GRPPI_NATIVE_MAP_H
 
-namespace grppi{
+#include "parallel_execution_native.h"
+#include "../common/iterator.h"
+
+namespace grppi {
 
 /**
 \addtogroup map_pattern
 @{
-\addtogroup map_pattern_native Native parallel map pattern.
-Implementation of map pattern for native parallel back-end.
+\addtogroup map_pattern_native Native parallel map pattern
+\brief Native parallel implementation of \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with native
+\brief Invoke \ref md_map on a data sequence with native
 paralell execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -50,31 +53,24 @@ void map(parallel_execution_native & ex,
 {
   std::vector<std::thread> tasks;
   int numElements = last - first; 
-  int elemperthr = numElements / ex.get_num_threads(); 
+  int elemperthr = numElements / ex.concurrency_degree(); 
 
-  for(int i=1;i<ex.get_num_threads();i++){
+  for(int i=1;i<ex.concurrency_degree();i++){
     auto begin = first + (elemperthr * i); 
     auto end = first + (elemperthr * (i+1)); 
 
-    if(i == ex.get_num_threads()-1 ) end= last;
+    if(i == ex.concurrency_degree()-1 ) end= last;
 
     auto out = first_out + (elemperthr * i);
-    tasks.push_back(
-      std::thread( [&](InputIt begin, InputIt end, OutputIt out){
-        // Register the thread in the execution model
-        ex.register_thread();
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+      auto manager = ex.thread_manager();
           
-        while(begin!=end){
-          *out = transf_op(*begin);
-          begin++;
-          out++;
-        }
-          
-        // Deregister the thread in the execution model
-        ex.deregister_thread();
-       },
-       begin, end, out)
-     );
+      while (begin!=end) {
+        *out = transf_op(*begin);
+        begin++;
+        out++;
+      }
+    }, begin, end, out);
   }
   //Map main threads
   auto end = first+elemperthr;
@@ -85,13 +81,13 @@ void map(parallel_execution_native & ex,
   }
 
   //Join threads
-  for(int i=0;i<ex.get_num_threads()-1;i++){
+  for(int i=0;i<ex.concurrency_degree()-1;i++){
     tasks[i].join();
   }
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with native
+\brief Invoke \ref md_map on a data sequence with native
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -115,38 +111,27 @@ void map(parallel_execution_native& ex,
 
   //Calculate number of elements per thread
   int numElements = last - first;
-  int elemperthr = numElements / ex.get_num_threads();
+  int elemperthr = numElements / ex.concurrency_degree();
 
   //Create tasks
-  for(int i=1;i<ex.get_num_threads();i++){
+  for(int i=1;i<ex.concurrency_degree();i++){
     //Calculate local input and output iterator 
     auto begin = first + (elemperthr * i);
     auto end = first + (elemperthr * (i+1));
-    if( i == ex.get_num_threads()-1) end = last;
+    if( i == ex.concurrency_degree()-1) end = last;
     auto out = first_out + (elemperthr * i);
     //Begin task
-    tasks.push_back(
-      std::thread{
-        [&](InputIt begin, InputIt end, OutputIt out, 
-            int tid, int
-            nelem, OtherInputIts ... more_inputs) {
-
-          // Register the thread in the execution model
-          ex.register_thread();
-
-          advance_iterators(nelem*tid, more_inputs ...);
-          while(begin!=end) {
-            *out = transf_op(*begin, *more_inputs ...);
-            advance_iterators(more_inputs ...);
-            begin++;
-            out++;
-          }
-
-          // Deregister the thread in the execution model
-          ex.deregister_thread();
-        },
-        begin, end, out, i, elemperthr, more_inputs...}
-    );
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out, 
+      int tid, int nelem, OtherInputIts ... more_inputs) {
+        auto manager = ex.thread_manager();
+      advance_iterators(nelem*tid, more_inputs ...);
+      while (begin!=end) {
+        *out = transf_op(*begin, *more_inputs ...);
+        advance_iterators(more_inputs ...);
+        begin++;
+        out++;
+      }
+    }, begin, end, out, i, elemperthr, more_inputs...);
     //End task
   }
 
@@ -160,7 +145,7 @@ void map(parallel_execution_native& ex,
   }
 
   //Join threads
-  for(int i=0;i<ex.get_num_threads()-1;i++) {
+  for(int i=0;i<ex.concurrency_degree()-1;i++) {
     tasks[i].join();
   }
 }

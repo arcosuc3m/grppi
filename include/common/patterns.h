@@ -18,9 +18,10 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_PATTERNS_H
-#define GRPPI_PATTERNS_H
+#ifndef GRPPI_COMMON_PATTERNS_H
+#define GRPPI_COMMON_PATTERNS_H
 
+#include <tuple> 
 
 namespace grppi{
 
@@ -30,16 +31,20 @@ class pipeline_info{
       E & exectype;
       std::tuple<Stage , Stages ...> stages;
       pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages{std::make_tuple(s, sts...)} {}
+      pipeline_info(E &p, std::tuple<Stage,Stages ...> st) : exectype{p} , stages{st} {}
 };
 
-template <typename E,class Operation, class RedFunc>
+template <typename E,class Combiner, typename Identity>
 class reduction_info
 {
    public:
-      Operation task;
-      RedFunc red;
+      Combiner combine_op;
+      int window_size;
+      int offset;
+      Identity identity;
       E & exectype;
-      reduction_info(E &s, Operation farm, RedFunc r) : task{farm}, red{r}, exectype{s} {}
+      reduction_info(E &s,int ws, int off, Identity iden, Combiner comb) : 
+        exectype{s}, window_size{ws}, offset{off}, identity{iden}, combine_op{comb} {}
 };
 
 template <typename E,class Operation>

@@ -18,24 +18,23 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_REDUCE_SEQ_H
-#define GRPPI_REDUCE_SEQ_H
+#ifndef GRPPI_SEQ_REDUCE_H
+#define GRPPI_SEQ_REDUCE_H
 
-namespace grppi{
+#include "sequential_execution.h"
+
+namespace grppi {
 
 /**
 \addtogroup reduce_pattern
 @{
-*/
-
-/**
 \addtogroup reduce_pattern_seq Sequential reduce pattern
-\brief Sequential implementation of the \ref md_reduce pattern
+\brief Sequential implementation of the \ref md_reduce.
 @{
 */
 
 /**
-\brief Invoke [reduce pattern](@ref md_reduce) with identity value
+\brief Invoke \ref md_reduce with identity value
 on a data sequence with sequential execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam Identity Type for the identity value.
@@ -65,4 +64,5 @@ auto reduce(sequential_execution & ex, InputIt first, InputIt last,
 */
 
 }
+
 #endif

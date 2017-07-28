@@ -1,0 +1,15 @@
+<map id="reduce.h" name="reduce.h">
+<area shape="rect" id="node2" href="$seq_2reduce_8h.html" title="seq/reduce.h" alt="" coords="837,80,934,107"/>
+<area shape="rect" id="node5" href="$native_2reduce_8h.html" title="native/reduce.h" alt="" coords="413,155,523,181"/>
+<area shape="rect" id="node19" href="$omp_2reduce_8h.html" title="omp/reduce.h" alt="" coords="568,80,669,107"/>
+<area shape="rect" id="node22" href="$tbb_2reduce_8h.html" title="tbb/reduce.h" alt="" coords="718,80,813,107"/>
+<area shape="rect" id="node25" href="$poly_2reduce_8h.html" title="poly/reduce.h" alt="" coords="958,80,1058,107"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title="sequential_execution.h" alt="" coords="1043,237,1197,263"/>
+<area shape="rect" id="node6" href="$parallel__execution__native_8h.html" title="parallel_execution\l_native.h" alt="" coords="405,229,531,271"/>
+<area shape="rect" id="node7" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="673,319,850,345"/>
+<area shape="rect" id="node13" href="$pool_8h.html" title="pool.h" alt="" coords="307,319,365,345"/>
+<area shape="rect" id="node20" href="$parallel__execution__omp_8h.html" title="parallel_execution\l_omp.h" alt="" coords="555,229,682,271"/>
+<area shape="rect" id="node23" href="$parallel__execution__tbb_8h.html" title="parallel_execution\l_tbb.h" alt="" coords="706,229,833,271"/>
+<area shape="rect" id="node26" href="$polymorphic__execution_8h.html" title="polymorphic_execution.h" alt="" coords="838,155,1005,181"/>
+<area shape="rect" id="node29" href="$support_8h.html" title="../common/support.h" alt="" coords="1150,155,1293,181"/>
+</map>

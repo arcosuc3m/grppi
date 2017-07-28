@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['divideconquer_2eh',['divideconquer.h',['../poly_2divideconquer_8h.html',1,'']]],
+  ['farm_2eh',['farm.h',['../poly_2farm_8h.html',1,'']]],
+  ['map_2eh',['map.h',['../poly_2map_8h.html',1,'']]],
+  ['mapreduce_2eh',['mapreduce.h',['../poly_2mapreduce_8h.html',1,'']]],
+  ['pack_5ftraits_2eh',['pack_traits.h',['../pack__traits_8h.html',1,'']]],
+  ['parallel_5fexecution_5fnative_2eh',['parallel_execution_native.h',['../parallel__execution__native_8h.html',1,'']]],
+  ['parallel_5fexecution_5fomp_2eh',['parallel_execution_omp.h',['../parallel__execution__omp_8h.html',1,'']]],
+  ['parallel_5fexecution_5ftbb_2eh',['parallel_execution_tbb.h',['../parallel__execution__tbb_8h.html',1,'']]],
+  ['patterns_2eh',['patterns.h',['../patterns_8h.html',1,'']]],
+  ['pipeline_2eh',['pipeline.h',['../pipeline_8h.html',1,'']]],
+  ['pipeline_2eh',['pipeline.h',['../poly_2pipeline_8h.html',1,'']]],
+  ['pipeline_2emd',['pipeline.md',['../pipeline_8md.html',1,'']]],
+  ['polymorphic_5fexecution_2eh',['polymorphic_execution.h',['../polymorphic__execution_8h.html',1,'']]],
+  ['pool_2eh',['pool.h',['../pool_8h.html',1,'']]],
+  ['reduce_2eh',['reduce.h',['../poly_2reduce_8h.html',1,'']]],
+  ['stencil_2eh',['stencil.h',['../poly_2stencil_8h.html',1,'']]],
+  ['stream_5ffilter_2eh',['stream_filter.h',['../poly_2stream__filter_8h.html',1,'']]],
+  ['stream_5fiteration_2eh',['stream_iteration.h',['../poly_2stream__iteration_8h.html',1,'']]],
+  ['stream_5freduce_2eh',['stream_reduce.h',['../poly_2stream__reduce_8h.html',1,'']]]
+];

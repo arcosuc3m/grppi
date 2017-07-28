@@ -18,44 +18,55 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_STREAMREDUCE_H
-#define GRPPI_STREAMREDUCE_H
+#ifndef GRPPI_STREAM_REDUCE_H
+#define GRPPI_STREAM_REDUCE_H
 
-#include "common/common.h"
 #include "seq/stream_reduce.h"
 #include "native/stream_reduce.h"
 #include "omp/stream_reduce.h"
 #include "tbb/stream_reduce.h"
 #include "poly/stream_reduce.h"
 
+#include "common/patterns.h"
 
-#if 0 /* START DOCUMENTATION */
-/* @defgroup StreamReduce
- *
- *  @brief Apply the stream reduce pattern for parallelizing the code section
- *
- *  The Stream Reduce pattern apply a boolean function 'filter' to every element
- *  of a data stream. If the function returns true for a given stream element
- *  then the 'out' function, that shows how to handle the output,
- *
- *  The Stream Filter has 3 steps:
- *    1) Read inputs from stream, as indicated with function 'in' (1 thread)
- *    2) Filter inputs, it is performed in parallel (N-1 threads)
- *    3) Handle output with function 'out' (1 thread)
- *  where N is the number of thread indicated by the user in 'exec'
- *  @{
- */
-/* @param exec   Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework.
- *  @param in     Generator function: This function determine how to read 
- *    the data before start the parallel stage.
- *  @param filter Filter function: Boolean function that contains the code 
- *    filter section. This code is going to be parallelize.
- *  @param out    Output Function: This function determine how to handle
- *    the filter output
- */
-template <typename GenFunc, typename FilterFunc, typename OutFunc>
-void StreamFilter(execution_model exec, GenFunc && in, FilterFunc && filter, OutFunc && out );
-/* @} */
-#endif  /* END DOCUMENTATION */
+namespace grppi {
+
+/** 
+\addtogroup stream_patterns
+@{
+\defgroup stream_reduce_pattern Stream reduce pattern
+\brief Interface for applying the \ref md_stream-reduce.
+@{
+*/
+
+/**
+\brief Invoke \ref md_stream-reduce on a stream
+that can be composed in other streaming patterns.
+\tparam Identity Type of the identity value used by the combiner.
+\tparam Combiner Callable type used for data items combination.
+\param ex Sequential execution policy object.
+\param window_size Number of consecutive items to be reduced.
+\param offset Number of items after of which a new reduction is started.
+\param identity Identity value for the combination.
+\param combine_op Combination operation.
+
+*/
+template <typename Execution, typename Identity, typename Combiner>
+auto stream_reduce(Execution & ex, 
+                   int window_size, int offset, 
+                   Identity identity, 
+                   Combiner && combine_op)
+{
+   return reduction_info<Execution, Combiner, Identity>(ex, 
+       window_size, offset, identity, 
+       std::forward<Combiner>(combine_op));
+}
+
+/**
+@}
+@}
+*/
+
+}
+
 #endif

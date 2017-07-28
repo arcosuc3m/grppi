@@ -18,61 +18,82 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAPREDUCE_THR_H
-#define GRPPI_MAPREDUCE_THR_H
+#ifndef GRPPI_NATIVE_MAPREDUCE_H
+#define GRPPI_NATIVE_MAPREDUCE_H
 
-#include "../reduce.h"
+#include "parallel_execution_native.h"
 
-namespace grppi{
+namespace grppi {
 
-template <typename InputIt, typename Transformer, class T, typename Combiner>
- T map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op, T init){
+/**
+\addtogroup mapreduce_pattern
+@{
+\addtogroup mapreduce_pattern_native Native parallel map/reduce pattern
+\brief Native parallel implementation of the \ref md_map-reduce.
+@{
+*/
 
-    using namespace std;
-    T out = init;
-    std::vector<T> partialOuts(p.get_num_threads());
-    std::vector<std::thread> tasks;
-    int numElements = last - first;
-    int elemperthr = numElements/p.get_num_threads();
-    sequential_execution s {};
+/**
+\brief Invoke \ref md_map-reduce on a data sequence with 
+native parallel execution.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam Result Result type of the reduction.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Native parallel execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Result value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename InputIt, typename Result, typename Transformer, 
+          typename Combiner>
+Result map_reduce(parallel_execution_native & ex, 
+                  InputIt first, InputIt last, Result identity, 
+                  Transformer && transform_op,  Combiner &&combine_op)
+{
+  using namespace std;
 
-    for(int i=1;i<p.get_num_threads();i++){    
-       auto begin = first + (elemperthr * i);
-       auto end = first + (elemperthr * (i+1));
-       if(i == p.get_num_threads() -1 ) end= last;
-       tasks.push_back(
-        std::thread( 
-         [&](InputIt beg, InputIt en, int id){
-            // Register thread
-            p.register_thread();
-            partialOuts[id] = map_reduce(s, beg, en, std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op),partialOuts[id]);
-            // Deregister thread
-            p.deregister_thread();
-         },
-         begin, end, i)
-       );
-    }
+  vector<Result> partial_results(ex.concurrency_degree());
 
-    partialOuts[0] = map_reduce(s, first,( first+elemperthr ), std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op), partialOuts[0] );
+  const int num_elements = last - first;
+  const int elements_per_thread = num_elements/ex.concurrency_degree();
+  sequential_execution seq{};
 
-    for(auto task = tasks.begin();task != tasks.end();task++){    
-       (*task).join();
-    }
-    for(auto & map : partialOuts){
-       out = combine_op(out, map);
-    } 
-    return out;
+  vector<thread> tasks;
+  for(int i=1;i<ex.concurrency_degree();i++){    
+    const auto begin = first + (elements_per_thread * i);
+    const auto end = (i==ex.concurrency_degree()-1) ? 
+        last : 
+        (first + elements_per_thread * (i+1));
+
+    tasks.emplace_back([&,begin,end,i](){
+        auto manager = ex.thread_manager();
+        partial_results[i] = map_reduce(seq, begin, end, partial_results[i], 
+            forward<Transformer>(transform_op), forward<Combiner>(combine_op));
+    });
+  }
+
+    partial_results[0] = map_reduce(seq, 
+        first,( first+elements_per_thread ), partial_results[0], 
+        forward<Transformer>(transform_op), 
+        forward<Combiner>(combine_op));
+
+    for (auto && t : tasks) { t.join(); }
+
+    Result result = identity;
+    for (auto && p : partial_results) { result = combine_op(result, p); } 
+
+    return result;
 }
 
+/**
+@}
+@}
+*/
 
-template <typename InputIt, typename Transformer, typename Combiner>
-auto map_reduce ( parallel_execution_native& p, InputIt first, InputIt last, Transformer &&  transform_op,  Combiner &&combine_op){
-
-    typename std::result_of<Combiner(
-    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type,
-    typename std::result_of<Transformer(typename std::iterator_traits<InputIt>::value_type)>::type)>::type init;
-
-    return map_reduce ( p, first, last, std::forward<Transformer>( transform_op ),  std::forward<Combiner>( combine_op ), init);
 }
-}
+
 #endif

@@ -1,0 +1,8 @@
+<map id="Stream reduce pattern" name="Stream reduce pattern">
+<area shape="rect" id="node1" href="$group__stream__reduce__pattern__poly.html" title="Polymorphic parallel implementation of the Stream reduction pattern. " alt="" coords="393,5,546,47"/>
+<area shape="rect" id="node2" href="$group__stream__reduce__pattern__seq.html" title="Sequential implementation of the Stream reduction pattern. " alt="" coords="384,71,555,112"/>
+<area shape="rect" id="node3" href="$group__stream__reduce__pattern__omp.html" title="OpenMP parallel implementation of the Stream reduction pattern. " alt="" coords="388,136,551,177"/>
+<area shape="rect" id="node4" href="$group__stream__patterns.html" title="Patterns for data stream processing. " alt="" coords="5,143,137,170"/>
+<area shape="rect" id="node6" href="$group__stream__reduce__pattern__tbb.html" title="TBB parallel implementation of the Stream reduction pattern. " alt="" coords="401,201,538,243"/>
+<area shape="rect" id="node7" href="$group__stream__reduce__pattern__native.html" title="Native parallel implementation of the Stream reduction pattern. " alt="" coords="395,267,544,308"/>
+</map>

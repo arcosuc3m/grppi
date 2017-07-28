@@ -21,44 +21,20 @@
 #ifndef GRPPI_STREAM_ITERATION_H
 #define GRPPI_STREAM_ITERATION_H
 
-#include "common/common.h"
-
 #include "seq/stream_iteration.h"
 #include "native/stream_iteration.h"
+#include "poly/stream_iteration.h"
 
-#ifdef OMP_ENABLE
-//	#include "omp/farm_omp.hpp"
-#endif
+namespace grppi {
 
-#ifdef TBB_ENABLE
-//	#include "tbb/farm_tbb.hpp"
-#endif
-#if 0 /* START DOCUMENTATION */
-/** @addtogroup BStreamPattern
- *  @{
- */
-/** @defgroup Farm
- *
- *  @brief Apply the farm pattern for parallelizing the code section
- *
- *  The Farm pattern apply a function 'op' to every independent element 
- *  returned by the generator function 'in'. The 'in' function read a data
- *	stream and forwards the result to the 'op' function. The task function
- *	is executed in parallel for as many thread as the user indicates in the
- *	'exec' variable.
- *  @{
- */
-/** @param exec Execution_model flag to indicates the type of execution
- *    (sequential or parallel) and the implementation framework
- *  @param in   Generator function: This function determine how to read the data
- *    before start the parallel stage
- *  @param op Task function: Function that contains the code section that 
- *    should be parallelize
- */
-template <typename GenFunc, typename Operation>
-void Farm(execution_model exec, GenFunc &&in, Operation && op);
-/** @} */
-/** @} */
-#endif /* END DOCUMENTATION */
+/**
+\addtogroup stream_patterns
+@{
+\defgroup stream_iteration_pattern Stream iteration pattern
+\brief Interface for applyinng the \ref md_stream-iteration.
+@}
+*/
+
+}
 
 #endif

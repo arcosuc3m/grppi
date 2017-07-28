@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 #include "reduce.h"
-#include "common/polymorphic_execution.h"
+#include "poly/polymorphic_execution.h"
 
 #include "supported_executions.h"
 

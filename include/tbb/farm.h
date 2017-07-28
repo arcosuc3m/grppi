@@ -18,114 +18,146 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FARM_TBB_H
-#define GRPPI_FARM_TBB_H
+#ifndef GRPPI_TBB_FARM_H
+#define GRPPI_TBB_FARM_H
 
 #ifdef GRPPI_TBB
+
+#include "parallel_execution_tbb.h"
+
 #include <experimental/optional>
 
 #include <tbb/tbb.h>
-namespace grppi{
-template <typename Generator, typename Operation, typename Consumer>
- void farm(parallel_execution_tbb &p, Generator &&gen, Operation && op , Consumer &&cons) {
 
-    tbb::task_group g;
-    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.queue_size,p.lockfree);
-    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.queue_size,p.lockfree);
-    //Create threads
-    std::atomic<int>nend(0);
-    for( int i = 0; i < p.get_num_threads(); i++ ) {
-       g.run(
-          [&](){
-             typename std::result_of<Generator()>::type item;
-             item = queue.pop(  );
-             while( item ) {
-               auto out = op( item.value() );
-               queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) ) ;
-               item = queue.pop(  );
-             }
-             nend++;
-             if(nend == p.num_threads)
-                 queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() );
+namespace grppi {
 
-         }
-      );
+/**
+\addtogroup farm_pattern
+@{
+\addtogroup farm_pattern_tbb TBB parallel farm pattern
+\brief TBB parallel implementation of the \ref md_farm.
+@{
+*/
+
+/**
+\brief Invoke \ref md_farm on a data stream with TBB parallel 
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex TBB parallel execution policy object.
+\param generate_op Generator operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Consumer>
+void farm(parallel_execution_tbb & ex, Generator generate_op, 
+          Consumer consume_op) 
+{
+  using namespace std;
+
+  using generated_type = typename result_of<Generator()>::type;
+  auto queue = ex.make_queue<generated_type>();
+
+  tbb::task_group g;
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
+    g.run([&](){
+      auto item{queue.pop()};
+      while (item) {
+        consume_op(*item);
+        item = queue.pop();
+      }
+    });
+  }
+
+  //Generate elements
+  for (;;) {
+    auto item{generate_op()};
+    queue.push(item);
+      if (!item) {
+        for (int i=1; i<ex.concurrency_degree(); i++) {
+          queue.push(item);
+        }
+        break;
+      }
     }
 
+    //Join threads
+    g.wait();
+}
 
-   //SINK 
-   std::thread sinkt(
-       [&](){
-          std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
-          item = queueout.pop(  );
-          while( item ) {
-            cons( item.value() );
-            item = queueout.pop(  );
-       }
-     }
-   );
+
+
+/**
+\brief Invoke \ref md_farm on a data stream with TBB parallel 
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Tranformer Callable type for the tranformation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex TBB parallel execution policy object.
+\param generate_op Generator operation.
+\param transform_op Transformer operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Transformer, typename Consumer>
+void farm(parallel_execution_tbb & ex, Generator generate_op, 
+          Transformer transform_op, Consumer consume_op) 
+{
+  using namespace std;
+  using namespace experimental;
+  using generated_type = typename result_of<Generator()>::type;
+  using generated_value_type = typename generated_type::value_type;
+  using transformed_value_type = 
+      typename result_of<Transformer(generated_value_type)>::type;
+  using transformed_type = optional<transformed_value_type>;
+
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<transformed_type>();
+
+  atomic<int>done_threads{0};
+  tbb::task_group generators;
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
+    generators.run([&](){
+      auto item{generated_queue.pop()};
+      while (item) {
+        auto result = transform_op(*item);
+        transformed_queue.push(transformed_type{result});
+        item = generated_queue.pop();
+      }
+      done_threads++;
+      if (done_threads==ex.concurrency_degree()) {
+        transformed_queue.push(transformed_type{});
+      }
+    });
+  }
+
+  thread consumer_thread([&](){
+    auto item {transformed_queue.pop()};
+    while (item) {
+      consume_op(*item);
+      item = transformed_queue.pop(  );
+    }
+  });
 
    //Generate elements
-    while( 1 ) {
-        auto k = gen();
-        queue.push( k ) ;
-        if( !k ) {
-            for( int i = 1; i < p.get_num_threads(); i++ ) {
-                queue.push( k ) ;
-            }
-            break;
-        }
+  for (;;) {
+    auto item = generate_op();
+    generated_queue.push(item) ;
+    if(!item) {
+      for (int i=1; i<ex.concurrency_degree(); ++i) {
+        generated_queue.push(item) ;
+      }
+      break;
     }
+  }
 
-    //Join threads
-    g.wait();
-    sinkt.join();
+  generators.wait();
+  consumer_thread.join();
 }
 
+/**
+@}
+@}
+*/
 
-
-
-template <typename Generator, typename Operation>
- void farm(parallel_execution_tbb &p, Generator &&gen, Operation && op ) {
-
-    tbb::task_group g;
-    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.queue_size, p.lockfree);
-    //Create threads
-    for( int i = 0; i < p.get_num_threads(); i++ ) {
-       g.run(
-          [&](){
-              typename std::result_of<Generator()>::type item;
-              item = queue.pop();
-              while( item ) {
-                op( item.value() );
-                item = queue.pop();
-              }
-          }
-       );
-    }
-
-    //Generate elements
-    while( 1 ) {
-        auto k = gen();
-        queue.push( k );
-        if( !k ) {
-            for( int i = 1; i < p.get_num_threads(); i++ ) {
-               queue.push( k );
-            }
-            break;
-        }
-    }
-
-    //Join threads
-    g.wait();
-}
-
-
-
-template <typename Operation>
-farm_info<parallel_execution_tbb,Operation> farm(parallel_execution_tbb &p, Operation && op){
-   return farm_info<parallel_execution_tbb, Operation>(p, std::forward<Operation>(op) );
-}
 }
 #endif
 

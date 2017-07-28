@@ -18,24 +18,27 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_MAP_TBB_H
-#define GRPPI_MAP_TBB_H
+#ifndef GRPPI_TBB_MAP_H
+#define GRPPI_TBB_MAP_H
 
 #ifdef GRPPI_TBB
 
+#include "parallel_execution_tbb.h"
+
 #include <tbb/tbb.h>
-namespace grppi{
+
+namespace grppi {
 
 /**
 \addtogroup map_pattern
 @{
-\addtogroup map_pattern_tbb TBB parallel map pattern.
-Implementation of map pattern for TBB parallel back-end.
+\addtogroup map_pattern_tbb TBB parallel \ref md_map pattern.
+\brief TBB parallel implementation of \ref md_map.
 @{
 */
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with TBB
+\brief Invoke \ref md_map on a data sequence with TBB
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
@@ -63,7 +66,7 @@ void map(parallel_execution_tbb & ex,
 }
 
 /**
-\brief Invoke [map pattern](@ref map-pattern) on a data sequence with TBB
+\brief Invoke \ref md_map on a data sequence with TBB
 parallel execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.

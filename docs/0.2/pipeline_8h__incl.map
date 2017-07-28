@@ -1,0 +1,18 @@
+<map id="pipeline.h" name="pipeline.h">
+<area shape="rect" id="node2" href="$seq_2pipeline_8h.html" title="seq/pipeline.h" alt="" coords="222,80,325,107"/>
+<area shape="rect" id="node6" href="$patterns_8h.html" title="../common/patterns.h" alt="" coords="5,162,152,189"/>
+<area shape="rect" id="node8" href="$native_2pipeline_8h.html" title="native/pipeline.h" alt="" coords="471,80,587,107"/>
+<area shape="rect" id="node24" href="$omp_2pipeline_8h.html" title="omp/pipeline.h" alt="" coords="1197,80,1304,107"/>
+<area shape="rect" id="node27" href="$tbb_2pipeline_8h.html" title="tbb/pipeline.h" alt="" coords="1031,80,1129,107"/>
+<area shape="rect" id="node30" href="$poly_2pipeline_8h.html" title="poly/pipeline.h" alt="" coords="690,80,795,107"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title="sequential_execution.h" alt="" coords="616,251,771,278"/>
+<area shape="rect" id="node5" href="$pack__traits_8h.html" title="../common/pack_traits.h" alt="" coords="227,162,389,189"/>
+<area shape="rect" id="node9" href="$parallel__execution__native_8h.html" title="parallel_execution\l_native.h" alt="" coords="465,244,591,285"/>
+<area shape="rect" id="node22" href="$callable__traits_8h.html" title="../common/callable\l_traits.h" alt="" coords="515,155,647,196"/>
+<area shape="rect" id="node10" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="918,333,1095,360"/>
+<area shape="rect" id="node16" href="$pool_8h.html" title="pool.h" alt="" coords="481,333,538,360"/>
+<area shape="rect" id="node25" href="$parallel__execution__omp_8h.html" title="parallel_execution\l_omp.h" alt="" coords="1183,244,1310,285"/>
+<area shape="rect" id="node28" href="$parallel__execution__tbb_8h.html" title="parallel_execution\l_tbb.h" alt="" coords="1033,244,1159,285"/>
+<area shape="rect" id="node31" href="$polymorphic__execution_8h.html" title="polymorphic_execution.h" alt="" coords="838,162,1005,189"/>
+<area shape="rect" id="node34" href="$support_8h.html" title="../common/support.h" alt="" coords="671,162,814,189"/>
+</map>

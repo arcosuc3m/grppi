@@ -18,151 +18,131 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FARM_THR_H
-#define GRPPI_FARM_THR_H
+#ifndef GRPPI_NATIVE_FARM_H
+#define GRPPI_NATIVE_FARM_H
 
-#include <experimental/optional>
+#include "parallel_execution_native.h"
 
 #include <thread>
 #include <utility>
 #include <memory>
+#include <experimental/optional>
 
-namespace grppi{
+namespace grppi {
 
-template <typename Generator, typename Operation, typename Consumer>
-void farm(parallel_execution_native &p, Generator &&gen, Operation && op , Consumer &&cons) {
+/**
+\addtogroup farm_pattern
+@{
+\addtogroup farm_pattern_native Native parallel farm pattern
+\brief Sequential implementation of the \ref md_farm.
+@{
+*/
 
-    p.register_thread();
-    std::vector<std::thread> tasks;
-    mpmc_queue< typename std::result_of<Generator()>::type > queue (p.get_queue_size(),p.is_lockfree());
-    mpmc_queue< std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > > queueout(p.get_queue_size(), p.is_lockfree());
-    std::atomic<int> nend(0);
-    //Create threads
-    for( int i = 0; i < p.get_num_threads(); i++ ) {
-        tasks.push_back(
-            std::thread(
-                [&](){
-                    // Register the thread in the execution model
-                    p.register_thread();
+/**
+\brief Invoke \ref md_farm on a data stream with native parallel 
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Consumer>
+void farm(parallel_execution_native & ex, Generator generate_op, 
+          Consumer consume_op) 
+{
+  using namespace std;
+  using result_type = typename result_of<Generator()>::type;
+  auto queue = ex.make_queue<result_type>();
 
-                    typename std::result_of<Generator()>::type item;
-                    item = queue.pop( ) ;
-                    //auto item = queue.pop( );
-                    while( item ) {
-                       auto out = op( item.value() );
-                       queueout.push( std::experimental::optional < typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >(out) );
-                       // item = queue.pop( );
-                       item = queue.pop( ) ;
-                    }
-                    queue.push(item);
-                    nend++;
-                    if(nend == p.get_num_threads())
-                        queueout.push( std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type >() ) ;
+  vector<thread> tasks;
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
+    tasks.emplace_back([&](){
+      auto manager = ex.thread_manager();
 
-                    // Deregister the thread in the execution model
-                    p.deregister_thread();
-                }
-            )
-        );
-    }
+      auto item{queue.pop()};
+      while(item) {
+        consume_op(*item);
+        item = queue.pop();
+      }
+      queue.push(item);
+    });
+  }
 
-    //SINK 
-    tasks.push_back(
-         std::thread(
-            [&](){
-                // Register the thread in the execution model
-                p.register_thread();
+  for (;;) {
+    auto item{generate_op()};
+    queue.push(item);
+    if (!item) break;
+  }
 
-                std::experimental::optional< typename std::result_of<Operation(typename std::result_of<Generator()>::type::value_type)>::type > item;
-                item = queueout.pop( ) ;
-                // auto item = queueout.pop(  ) ;
-                 while( item ) {
-                    cons( item.value() );
-//                  item = queueout.pop(  ) ;
-                    item = queueout.pop( );
-                 }
-
-                // Deregister the thread in the execution model
-                p.deregister_thread();
-             }
-        )
-    );
-
-   //Generate elements
-    while( 1 ) {
-        auto k = gen();
-        queue.push( k );
-        if( !k ) {
-/*            for( int i = 0; i < p.get_num_threads(); i++ ) {
-               queue.push( k );
-            }*/
-            break;
-        }
-    }
-
-    p.deregister_thread();
-    //Join threads
-    for( int i = 0; i < tasks.size(); i++ )
-       tasks[ i ].join();
-
-
-
+  for (auto && t : tasks) { t.join(); }
 }
 
-template <typename Generator, typename Operation>
- void farm(parallel_execution_native &p, Generator &&gen, Operation && op ) {
+/**
+\brief Invoke \ref md_farm on a data stream with native parallel 
+execution with a generator and a consumer.
+\tparam Generator Callable type for the generation operation.
+\tparam Tranformer Callable type for the tranformation operation.
+\tparam Consumer Callable type for the consume operation.
+\param ex Parallel native execution policy object.
+\param generate_op Generator operation.
+\param transform_op Transformer operation.
+\param consume_op Consumer operation.
+*/
+template <typename Generator, typename Transformer, typename Consumer>
+void farm(parallel_execution_native & ex, Generator generate_op, 
+          Transformer transform_op , Consumer consume_op) 
+{
+  using namespace std;
+  using namespace experimental;
+  using generated_type = typename result_of<Generator()>::type;
+  using generated_value_type = typename generated_type::value_type;
+  using transformed_value_type = 
+      typename result_of<Transformer(generated_value_type)>::type;
+  using transformed_type = optional<transformed_value_type>;
 
-    p.register_thread();
+  auto generated_queue = ex.make_queue<generated_type>();
+  auto transformed_queue = ex.make_queue<transformed_type>();
 
-    std::vector<std::thread> tasks;
-    mpmc_queue< typename std::result_of<Generator()>::type > queue(p.get_queue_size(),p.is_lockfree());
-    //Create threads
-//    std::atomic<int> nend(0);
-    for( int i = 0; i < p.get_num_threads(); i++ ) {
-        tasks.push_back(
-            std::thread(
-                [&](){
-                    // Register the thread in the execution model
-                    p.register_thread();
-                    typename std::result_of<Generator()>::type item;
-                    item = queue.pop( );
-                    while( item ) {
-                       op( item.value() );
-                       item = queue.pop( );
-                    }
-                    queue.push(item);
-                    // Deregister the thread in the execution model
-                    p.deregister_thread();
-                }
-            )
-        );
+  atomic<int> done_threads(0);
+  vector<thread> tasks;
+
+  for (int i=0; i<ex.concurrency_degree(); ++i) {
+    tasks.emplace_back([&](){
+      auto manager = ex.thread_manager();
+
+      auto item{generated_queue.pop()};
+      while (item) {
+        transformed_queue.push(transformed_type{transform_op(*item)});
+        item = generated_queue.pop();
+      }
+      generated_queue.push(item);
+      done_threads++;
+      if (done_threads==ex.concurrency_degree()) {
+        transformed_queue.push(transformed_type{});
+      }
+    });
+  }
+
+  tasks.emplace_back([&](){
+    auto manager = ex.thread_manager();
+
+    auto item{transformed_queue.pop()};
+    while (item) {
+      consume_op( item.value() );
+      item = transformed_queue.pop( );
     }
+  });
 
-    //Generate elements
-    while( 1 ) {
-        auto k = gen();
-        queue.push( k ) ;
-        if( !k ) {
-/*            for( int i = 0; i < p.get_num_threads(); i++ ) {
-                queue.push( k ) ;
-            }*/
-            break;
-        }
-    }
+  for (;;) {
+    auto  item{generate_op()};
+    generated_queue.push(item);
+    if(!item) break;
+  }
 
-    //Join threads
-    for( int i = 0; i < p.get_num_threads(); i++ )
-       tasks[ i ].join();
-
-    p.deregister_thread();
-}
-
-
-template <typename Operation>
-farm_info<parallel_execution_native,Operation> farm(parallel_execution_native &p, Operation && op){
-   
-   return farm_info<parallel_execution_native, Operation>(p, std::forward<Operation>(op) );
+  for (auto && t : tasks) { t.join(); }
 }
 
 }
+
 #endif

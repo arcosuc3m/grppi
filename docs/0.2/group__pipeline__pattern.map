@@ -1,0 +1,8 @@
+<map id="Pipeline pattern" name="Pipeline pattern">
+<area shape="rect" id="node1" href="$group__pipeline__pattern__seq.html" title="Sequential implementation of the Pipeline pattern. " alt="" coords="363,5,494,47"/>
+<area shape="rect" id="node2" href="$group__pipeline__pattern__tbb.html" title="TBB parallel implementation of the Pipeline pattern. " alt="" coords="358,71,499,112"/>
+<area shape="rect" id="node4" href="$group__pipeline__pattern__poly.html" title="Polymorphic implementation of the Pipeline pattern. " alt="" coords="357,136,500,177"/>
+<area shape="rect" id="node5" href="$group__pipeline__pattern__native.html" title="Native parallel implementation of the Pipeline pattern. " alt="" coords="352,201,505,243"/>
+<area shape="rect" id="node7" href="$group__pipeline__pattern__omp.html" title="OpenMP parallel implementation of the Pipeline pattern. " alt="" coords="345,267,512,308"/>
+<area shape="rect" id="node6" href="$group__stream__patterns.html" title="Patterns for data stream processing. " alt="" coords="5,143,137,170"/>
+</map>
