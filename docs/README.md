@@ -1,6 +1,6 @@
 # GrPPI: Generic Reusable Parallel Patterns Interface
 
-GrPPI is a C++14 library that tries to offer a simplified interface for common
+GrPPI is a C++14 library that aims to offer a simplified interface for common
 parallel patterns with different implementation back-ends.
 
 Currently, the following back ends are supported:
