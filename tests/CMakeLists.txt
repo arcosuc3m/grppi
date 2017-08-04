@@ -3,7 +3,7 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 # Set tests
 set( TESTS_CPU_SEQ
-     pipeline1              pipeline2              farm1
+     farm1
      farm2                  farm3                  
      pipeline+farm          
      stencil1               
@@ -11,40 +11,40 @@ set( TESTS_CPU_SEQ
      stream_iteration_pipe
 #     PPATtest               PPATfarm
 # Examples in the Deliverable
-     pipeline_example       farm_example           filter_example  
+     farm_example           filter_example  
      pipeline+filter_test_ppi_example
 )
 
 set( TESTS_CPU_OMP
-     pipeline1              pipeline2              farm1
+     farm1
      farm2                  farm3                  
      pipeline+farm          
      stencil1               
      farm_sink 		    
 # Examples in the Deliverable
-     pipeline_example       farm_example           filter_example         
+     farm_example           filter_example         
      stream_reduce_example  pipeline+filter_test_ppi_example 
 )
 
 set( TESTS_CPU_TBB                           
-     pipeline1              pipeline2              farm1
+     farm1
      farm2                  farm3                   
      pipeline+farm 
      stencil1 
 # Examples in the Deliverable
-     pipeline_example       farm_example           filter_example
+     farm_example           filter_example
      stream_reduce_example       farm_sink 
 )
 
 set( TESTS_CPU_THR                           
-     pipeline1              pipeline2              farm1
+     farm1
      farm2                  farm3                  
      pipeline+farm          
      stencil1               
      stream_iteration1      farm_sink
      stream_iteration_pipe
 # Examples in the Deliverable
-     pipeline_example       farm_example           filter_example
+     farm_example           filter_example
      stream_reduce_example  pipeline+filter_test_ppi_example
 )
 
