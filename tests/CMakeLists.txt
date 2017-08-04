@@ -11,8 +11,7 @@ set( TESTS_CPU_SEQ
      stream_iteration_pipe
 #     PPATtest               PPATfarm
 # Examples in the Deliverable
-     farm_example           filter_example  
-     pipeline+filter_test_ppi_example
+     farm_example           
 )
 
 set( TESTS_CPU_OMP
@@ -22,8 +21,8 @@ set( TESTS_CPU_OMP
      stencil1               
      farm_sink 		    
 # Examples in the Deliverable
-     farm_example           filter_example         
-     stream_reduce_example  pipeline+filter_test_ppi_example 
+     farm_example           
+     stream_reduce_example  
 )
 
 set( TESTS_CPU_TBB                           
@@ -32,7 +31,7 @@ set( TESTS_CPU_TBB
      pipeline+farm 
      stencil1 
 # Examples in the Deliverable
-     farm_example           filter_example
+     farm_example           
      stream_reduce_example       farm_sink 
 )
 
@@ -44,8 +43,8 @@ set( TESTS_CPU_THR
      stream_iteration1      farm_sink
      stream_iteration_pipe
 # Examples in the Deliverable
-     farm_example           filter_example
-     stream_reduce_example  pipeline+filter_test_ppi_example
+     farm_example           
+     stream_reduce_example  
 )
 
 # Determine tests related to libraries. Sequential and Thread are always generated.
