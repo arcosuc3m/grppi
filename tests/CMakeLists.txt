@@ -6,8 +6,7 @@ set( TESTS_CPU_SEQ
      pipeline1              pipeline2              farm1
      farm2                  farm3                  
      pipeline+farm          
-     stencil1               divideandconquer1
-     divideandconquer-fibonacci 
+     stencil1               
      stream_iteration1      farm_sink
      stream_iteration_pipe
 #     PPATtest               PPATfarm
@@ -20,9 +19,8 @@ set( TESTS_CPU_OMP
      pipeline1              pipeline2              farm1
      farm2                  farm3                  
      pipeline+farm          
-     stencil1               divideandconquer1     
+     stencil1               
      farm_sink 		    
-     divideandconquer-fibonacci
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example         
      stream_reduce_example  pipeline+filter_test_ppi_example 
@@ -32,8 +30,7 @@ set( TESTS_CPU_TBB
      pipeline1              pipeline2              farm1
      farm2                  farm3                   
      pipeline+farm 
-     stencil1 divideandconquer1
-     divideandconquer-fibonacci
+     stencil1 
 # Examples in the Deliverable
      pipeline_example       farm_example           filter_example
      stream_reduce_example       farm_sink 
@@ -43,8 +40,7 @@ set( TESTS_CPU_THR
      pipeline1              pipeline2              farm1
      farm2                  farm3                  
      pipeline+farm          
-     stencil1               divideandconquer1    
-     divideandconquer-fibonacci 
+     stencil1               
      stream_iteration1      farm_sink
      stream_iteration_pipe
 # Examples in the Deliverable
