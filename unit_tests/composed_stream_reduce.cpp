@@ -26,6 +26,8 @@
 #include "stream_reduce.h"
 #include "poly/polymorphic_execution.h"
 
+#include "supported_executions.h"
+
 
 using namespace std;
 using namespace grppi;
@@ -87,13 +89,7 @@ public:
   }
 };
 
-// Test for execution policies defined in supported_executions.h
-using executions = ::testing::Types<
-  grppi::parallel_execution_native,
-  grppi::parallel_execution_omp
->;
-
-TYPED_TEST_CASE(composed_reduce_test, executions);
+TYPED_TEST_CASE(composed_reduce_test, executions_notbb);
 
 TYPED_TEST(composed_reduce_test, static_window_offset)
 {

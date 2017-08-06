@@ -24,4 +24,15 @@ using executions = ::testing::Types<
 #endif
 >;
 
+using executions_notbb = ::testing::Types<
+
+  grppi::parallel_execution_native
+
+#ifdef GRPPI_OMP
+  ,
+  grppi::parallel_execution_omp
+#endif
+
+>;
+
 #endif
