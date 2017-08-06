@@ -144,7 +144,7 @@ void stencil(parallel_execution_native & ex,
 
   auto end = first + elements_per_thread;
   while (first!=end) {
-    *first_out = transform_op(*first, neighbour_op(first,other_firsts...));
+    *first_out = transform_op(first, neighbour_op(first,other_firsts...));
     first++;
     advance_iterators( other_firsts ... );
     first_out++;
