@@ -2,6 +2,7 @@
 add_subdirectory(map)
 add_subdirectory(reduce)
 add_subdirectory(map-reduce)
+add_subdirectory(stencil)
 
 # Task-parallel patterns
 add_subdirectory(divide-conquer)
