@@ -52,7 +52,7 @@ void map(sequential_execution & ex,
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer && transf_op) 
 {
-  while(first != last) {
+  while (first != last) {
     *first_out = transf_op(*first);
     first++;
     first_out++;
@@ -80,7 +80,7 @@ void map(sequential_execution & ex,
          Transformer && transf_op, 
          OtherInputIts ... other_firsts) 
 {
-  while( first != last ) {
+  while (first != last) {
     *first_out = transf_op(*first, *other_firsts...);
     advance_iterators(other_firsts...);
     first++;
