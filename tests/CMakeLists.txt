@@ -3,27 +3,20 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 # Set tests
 set( TESTS_CPU_SEQ
-     stream_iteration1      
-     stream_iteration_pipe
 #     PPATtest               PPATfarm
 # Examples in the Deliverable
 )
 
 set( TESTS_CPU_OMP
 # Examples in the Deliverable
-     stream_reduce_example  
 )
 
 set( TESTS_CPU_TBB                           
 # Examples in the Deliverable
-     stream_reduce_example
 )
 
 set( TESTS_CPU_THR                           
-     stream_iteration1     
-     stream_iteration_pipe
 # Examples in the Deliverable
-     stream_reduce_example  
 )
 
 # Determine tests related to libraries. Sequential and Thread are always generated.
