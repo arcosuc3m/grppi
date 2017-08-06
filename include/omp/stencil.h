@@ -160,7 +160,7 @@ void stencil(parallel_execution_omp & ex,
       auto out = first_out; 
       auto end = next(first, elements_per_thread);
       while (begin!=end) {
-        *out = transform_op(*begin, neighbour_op(begin,other_firsts...));
+        *out = transform_op(begin, neighbour_op(begin,other_firsts...));
         begin++;
         advance_iterators( other_firsts ... );
         out++;

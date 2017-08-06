@@ -27,26 +27,33 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
+#include "poly/polymorphic_execution.h"
+#include "map.h"
+#include "poly/map.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_pipeline(grppi::polymorphic_execution & e, int n) {
+void test_map(grppi::polymorphic_execution & e, int n) {
   using namespace std;
-  using namespace experimental;
 
-  grppi::farm(e, 
-    [x=1,n]() mutable -> optional<double> { 
-      if (x<=n) return x++;
-      else return {}; 
-    },
-    [](double x) {
-      return 1/(x*x);
-    },
-    [](double x) { cout << x << endl; }
-  );
+  vector<int> v1;
+  v1.reserve(n);
+  generate_n(back_inserter(v1), n,
+    [i=0]() mutable { return i++; });
+
+  vector<int> v2;
+  v2.reserve(n);
+  transform(begin(v1), end(v1), back_inserter(v2),
+    [](int x) { return x*x; });
+
+  vector<int> out(n);
+  grppi::map(e, begin(v1), end(v1), begin(out),
+    [](int x, int y) { return x+y; },
+    begin(v2));
+
+  copy(begin(out), end(out), ostream_iterator<int>(cout, " "));
+  cout << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
@@ -64,8 +71,6 @@ int main(int argc, char **argv) {
     
   using namespace std;
 
-  print_message(argv[0], "Not implemented waiting for fix of issue #231");
-
   if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");
     return -1;
@@ -77,7 +82,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (!run_test(argv[2], test_pipeline, n)) {
+  if (!run_test(argv[2], test_map, n)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

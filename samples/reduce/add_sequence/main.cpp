@@ -27,26 +27,30 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
+#include "reduce.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_pipeline(grppi::polymorphic_execution & e, int n) {
+void test_map(grppi::polymorphic_execution & e, int n) {
   using namespace std;
-  using namespace experimental;
+  using namespace chrono;
 
-  grppi::farm(e, 
-    [x=1,n]() mutable -> optional<double> { 
-      if (x<=n) return x++;
-      else return {}; 
-    },
-    [](double x) {
-      return 1/(x*x);
-    },
-    [](double x) { cout << x << endl; }
-  );
+  vector<long> v;
+  v.reserve(n);
+  generate_n(back_inserter(v), static_cast<long>(n),
+      [i=1]() mutable { return i++; });
+
+  auto t1 = system_clock::now();
+
+  auto r = grppi::reduce(e, begin(v), end(v), 0L,
+    [](auto x, auto y) { return x+y; });
+
+  auto t2 = system_clock::now();
+  auto diff = duration_cast<milliseconds>(t2-t1);
+
+  cout << "sum(0,...," << n << ")= " << r << endl;
+  cout << "Reduction time: " << diff.count() << " ms" << endl;  
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
@@ -64,8 +68,6 @@ int main(int argc, char **argv) {
     
   using namespace std;
 
-  print_message(argv[0], "Not implemented waiting for fix of issue #231");
-
   if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");
     return -1;
@@ -77,7 +79,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (!run_test(argv[2], test_pipeline, n)) {
+  if (!run_test(argv[2], test_map, n)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

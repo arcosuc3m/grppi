@@ -25,36 +25,38 @@
 #include <string>
 #include <numeric>
 #include <stdexcept>
+#include <random>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
+#include "divideconquer.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_pipeline(grppi::polymorphic_execution & e, int n) {
+void fibonacci(grppi::polymorphic_execution & exec, int n) {
   using namespace std;
-  using namespace experimental;
 
-  grppi::farm(e, 
-    [x=1,n]() mutable -> optional<double> { 
-      if (x<=n) return x++;
-      else return {}; 
+  auto res = grppi::divide_conquer(exec,
+    n,
+    [](int x) -> vector<int> {
+      if (x<2) { return {x}; }
+      else { return { x-1, x-2 }; }
     },
-    [](double x) {
-      return 1/(x*x);
-    },
-    [](double x) { cout << x << endl; }
+    [](int x) { return 1; },
+    [](int s1, int s2) {
+      return s1+s2;
+    }
   );
+
+  cout << "Fibonacci(" << n << ")= " << res << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
 
   cerr << msg << endl;
-  cerr << "Usage: " << prog << " size mode" << endl;
-  cerr << "  size: Integer value with problem size" << endl;
+  cerr << "Usage: " << prog << " n mode" << endl;
+  cerr << "  n: Order number in fibonacci series" << endl;
   cerr << "  mode:" << endl;
   print_available_modes(cerr);
 }
@@ -63,8 +65,6 @@ void print_message(const std::string & prog, const std::string & msg) {
 int main(int argc, char **argv) {
     
   using namespace std;
-
-  print_message(argv[0], "Not implemented waiting for fix of issue #231");
 
   if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (!run_test(argv[2], test_pipeline, n)) {
+  if (!run_test(argv[2], fibonacci, n)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

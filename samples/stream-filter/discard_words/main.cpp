@@ -20,6 +20,7 @@
 // Standard library
 #include <iostream>
 #include <vector>
+#include <iostream>
 #include <fstream>
 #include <chrono>
 #include <string>
@@ -27,34 +28,38 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
+#include <grppi.h>
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_pipeline(grppi::polymorphic_execution & e, int n) {
+void discard_words(grppi::polymorphic_execution & ex,
+                  std::istream & file)
+{
   using namespace std;
   using namespace experimental;
 
-  grppi::farm(e, 
-    [x=1,n]() mutable -> optional<double> { 
-      if (x<=n) return x++;
-      else return {}; 
+  keep(ex,
+    [&file]() -> optional<string> {
+      string word;
+      file >> word;
+      if (!file) { return {}; }
+      else { return word; }
     },
-    [](double x) {
-      return 1/(x*x);
-    },
-    [](double x) { cout << x << endl; }
+    [](string w) -> bool { return w.length() < 4; },
+    [](string w) {
+      cout << w << endl;
+    }
   );
+
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
 
   cerr << msg << endl;
-  cerr << "Usage: " << prog << " size mode" << endl;
-  cerr << "  size: Integer value with problem size" << endl;
+  cerr << "Usage: " << prog << " file_name mode" << endl;
+  cerr << "  file_name: Path to a plain text file" << endl;
   cerr << "  mode:" << endl;
   print_available_modes(cerr);
 }
@@ -64,20 +69,18 @@ int main(int argc, char **argv) {
     
   using namespace std;
 
-  print_message(argv[0], "Not implemented waiting for fix of issue #231");
-
   if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");
     return -1;
   }
 
-  int n = stoi(argv[1]);
-  if(n <= 0){
-    print_message(argv[0], "Invalid problem size. Use a positive number.");
+  ifstream file{argv[1]};
+  if (!file) {
+    print_message(argv[0], "Cannot open file "s + argv[1]);
     return -1;
   }
 
-  if (!run_test(argv[2], test_pipeline, n)) {
+  if (!run_test(argv[2], discard_words, file)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

@@ -109,13 +109,6 @@ endif( GRPPI_DOXY_ENABLE )
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
         FILES_MATCHING PATTERN "*.h")
 
-# Tests
-enable_testing()
-option( GRPPI_TESTS_ENABLE "Regular tests" OFF )
-if( GRPPI_TESTS_ENABLE )
-    add_subdirectory(tests)
-endif( GRPPI_TESTS_ENABLE )
-
 # Example applications
 option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" OFF )
 if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
@@ -123,6 +116,7 @@ if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 
 # Unit Tests
+enable_testing()
 option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
