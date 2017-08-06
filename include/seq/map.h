@@ -48,9 +48,9 @@ execution.
 \param transf_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(sequential_execution & ex, 
+void map(sequential_execution ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transf_op) 
+         Transformer transf_op) 
 {
   while (first != last) {
     *first_out = transf_op(*first);
@@ -75,9 +75,9 @@ execution.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts>
-void map(sequential_execution & ex, 
+void map(sequential_execution ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transf_op, 
+         Transformer transf_op, 
          OtherInputIts ... other_firsts) 
 {
   while (first != last) {
