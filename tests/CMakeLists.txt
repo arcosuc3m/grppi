@@ -3,7 +3,6 @@ include_directories( ${PROJECT_SOURCE_DIR} )
 
 # Set tests
 set( TESTS_CPU_SEQ
-     stencil1               
      stream_iteration1      
      stream_iteration_pipe
 #     PPATtest               PPATfarm
@@ -11,19 +10,16 @@ set( TESTS_CPU_SEQ
 )
 
 set( TESTS_CPU_OMP
-     stencil1               
 # Examples in the Deliverable
      stream_reduce_example  
 )
 
 set( TESTS_CPU_TBB                           
-     stencil1 
 # Examples in the Deliverable
      stream_reduce_example
 )
 
 set( TESTS_CPU_THR                           
-     stencil1               
      stream_iteration1     
      stream_iteration_pipe
 # Examples in the Deliverable
