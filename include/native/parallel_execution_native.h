@@ -232,6 +232,12 @@ public:
   void chunked_map(InputIterator first, OutputIterator first_out, 
                    int sequence_size, Transformer transf_op);
 
+  template <typename ... InputIterators, typename OutputIterator, 
+            typename Transformer>
+  void chunked_map_multi(std::tuple<InputIterators...> firsts,
+      OutputIterator first_out, 
+      int sequence_size, Transformer transf_op);
+
 public: 
   /**
   \brief Thread pool for lanching workers.
@@ -282,6 +288,71 @@ void parallel_execution_native::chunked_map(
   const auto chunk_last = next(first,sequence_size);
   const auto chunk_first_out = next(first_out, delta);
   process_chunk(chunk_first, chunk_last, chunk_first_out);
+
+  workers.wait();
+}
+
+template <typename F, typename T, std::size_t ... I>
+decltype(auto) apply_iterator_impl(F && f, T && t, std::index_sequence<I...>)
+{
+  return std::forward<F>(f)(*std::get<I>(std::forward<T>(t))++...);
+}
+
+template <typename F, typename T>
+decltype(auto) apply_iterator(F && f, T && t)
+{
+  constexpr std::size_t tsz = std::tuple_size<typename std::remove_reference<T>::type>::value;
+  return apply_iterator_impl(std::forward<F>(f), std::forward<T>(t),
+      std::make_index_sequence<tsz>());
+}
+
+template <typename T, std::size_t ... I>
+auto iterators_next_impl(T && t, int n, std::index_sequence<I...>) {
+  return make_tuple(
+    std::next(std::get<I>(t), n)...
+  );
+}
+
+template <typename T>
+auto iterators_next(T && t, int n) {
+  constexpr std::size_t size = std::tuple_size<typename std::remove_reference<T>::type>::value;
+  return iterators_next_impl(std::forward<T>(t), n,
+      std::make_index_sequence<size>());
+}
+
+template <typename ... InputIterators, typename OutputIterator, 
+          typename Transformer>
+void parallel_execution_native::chunked_map_multi(
+    std::tuple<InputIterators...> firsts,
+    OutputIterator first_out, 
+    int sequence_size, Transformer transf_op)
+{
+  concurrency_degree_ = 2;
+  using namespace std;
+
+  auto process_chunk =
+    [transf_op,firsts](tuple<InputIterators...> fins, int size, OutputIterator fout)
+  {
+    const auto l = next(get<0>(fins), size);
+    while (get<0>(fins)!=l) {
+      *fout++ = apply_iterator(transf_op, fins);
+    }
+  };
+
+  worker_pool workers{concurrency_degree_};
+  const int chunk_size = sequence_size / concurrency_degree_;
+  
+  for (int i=0; i!=concurrency_degree_-1; ++i) {
+    const int delta = chunk_size * i;
+    const auto chunk_firsts = iterators_next(firsts,delta);
+    const auto chunk_first_out = next(first_out, delta);
+    workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_first_out);
+  }
+
+  const int delta = chunk_size * (concurrency_degree_ - 1);
+  const auto chunk_firsts = iterators_next(firsts,delta);
+  const auto chunk_first_out = next(first_out, delta);
+  process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
 
   workers.wait();
 }

@@ -52,7 +52,7 @@ void map(parallel_execution_native & ex,
          Transformer && transf_op)
 {
   ex.chunked_map(first, first_out, std::distance(first,last),
-    [=](auto x) { return transf_op(x); });
+    transf_op);
 }
 
 /**
@@ -76,47 +76,9 @@ void map(parallel_execution_native& ex,
          Transformer && transf_op, 
          OtherInputIts ... more_inputs)
 {
-  std::vector<std::thread> tasks;
-
-  //Calculate number of elements per thread
-  int numElements = last - first;
-  int elemperthr = numElements / ex.concurrency_degree();
-
-  //Create tasks
-  for(int i=1;i<ex.concurrency_degree();i++){
-    //Calculate local input and output iterator 
-    auto begin = first + (elemperthr * i);
-    auto end = first + (elemperthr * (i+1));
-    if( i == ex.concurrency_degree()-1) end = last;
-    auto out = first_out + (elemperthr * i);
-    //Begin task
-    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out, 
-      int tid, int nelem, OtherInputIts ... more_inputs) {
-        auto manager = ex.thread_manager();
-      advance_iterators(nelem*tid, more_inputs ...);
-      while (begin!=end) {
-        *out = transf_op(*begin, *more_inputs ...);
-        advance_iterators(more_inputs ...);
-        begin++;
-        out++;
-      }
-    }, begin, end, out, i, elemperthr, more_inputs...);
-    //End task
-  }
-
-  //Map main thread
-  auto end = first + elemperthr;
-  while(first!=end) {
-    *first_out = transf_op(*first, *more_inputs ...);
-    advance_iterators(more_inputs ...);
-    first++;
-    first_out++;
-  }
-
-  //Join threads
-  for(int i=0;i<ex.concurrency_degree()-1;i++) {
-    tasks[i].join();
-  }
+  ex.chunked_map_multi(std::make_tuple(first,more_inputs...), first_out,
+      std::distance(first,last),
+      transf_op);
 }
 
 /**
