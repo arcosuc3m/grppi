@@ -21,8 +21,9 @@
 #ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 #define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
-#include "../common/mpmc_queue.h"
 #include "pool.h"
+#include "worker_pool.h"
+#include "../common/mpmc_queue.h"
 
 #include <thread>
 #include <atomic>
@@ -226,6 +227,11 @@ public:
     return {queue_size_, queue_mode_};
   }
 
+  template <typename InputIterator, typename OutputIterator, 
+            typename Transformer>
+  void chunked_map(InputIterator first, OutputIterator first_out, 
+                   int sequence_size, Transformer transf_op);
+
 public: 
   /**
   \brief Thread pool for lanching workers.
@@ -245,6 +251,42 @@ private:
 
   queue_mode queue_mode_ = queue_mode::blocking;
 };
+
+template <typename InputIterator, typename OutputIterator, 
+          typename Transformer>
+void parallel_execution_native::chunked_map(
+    const InputIterator first, const OutputIterator first_out, 
+    const int sequence_size, Transformer transf_op)
+{
+
+  auto process_chunk = 
+      [transf_op](InputIterator f, const InputIterator l, OutputIterator fout) 
+  {
+    while (f!=l) {
+      *fout++ = transf_op(*f++);
+    }
+  };
+
+  worker_pool workers{concurrency_degree_};
+  const int chunk_size = sequence_size / concurrency_degree_;
+  for (int i=0; i!=concurrency_degree_-1; ++i) {
+    const int delta = chunk_size * i;
+    const auto chunk_first = next(first,delta);
+    const auto chunk_last = next(chunk_first,chunk_size);
+    const auto chunk_first_out = next(first_out, delta);
+    workers.launch(*this, process_chunk, chunk_first, chunk_last, chunk_first_out);
+  }
+
+  const int delta = chunk_size * (concurrency_degree_ - 1);
+  const auto chunk_first = next(first,delta);
+  const auto chunk_last = next(first,sequence_size);
+  const auto chunk_first_out = next(first_out, delta);
+  process_chunk(chunk_first, chunk_last, chunk_first_out);
+
+  workers.wait();
+}
+
+
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_native

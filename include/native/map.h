@@ -51,39 +51,8 @@ void map(parallel_execution_native & ex,
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer && transf_op)
 {
-  std::vector<std::thread> tasks;
-  int numElements = last - first; 
-  int elemperthr = numElements / ex.concurrency_degree(); 
-
-  for(int i=1;i<ex.concurrency_degree();i++){
-    auto begin = first + (elemperthr * i); 
-    auto end = first + (elemperthr * (i+1)); 
-
-    if(i == ex.concurrency_degree()-1 ) end= last;
-
-    auto out = first_out + (elemperthr * i);
-    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
-      auto manager = ex.thread_manager();
-          
-      while (begin!=end) {
-        *out = transf_op(*begin);
-        begin++;
-        out++;
-      }
-    }, begin, end, out);
-  }
-  //Map main threads
-  auto end = first+elemperthr;
-  while(first!=end) {
-    *first_out = transf_op(*first);
-    first++;
-    first_out++;
-  }
-
-  //Join threads
-  for(int i=0;i<ex.concurrency_degree()-1;i++){
-    tasks[i].join();
-  }
+  ex.chunked_map(first, first_out, std::distance(first,last),
+    [=](auto x) { return transf_op(x); });
 }
 
 /**
