@@ -47,19 +47,19 @@ parallel execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transf_op Transformation operation.
+\param transform_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
 void map(parallel_execution_tbb & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Transformer && transf_op)
+         Transformer && transform_op)
 {
   tbb::parallel_for(
     static_cast<std::size_t>(0), 
     static_cast<std::size_t>(std::distance(first,last)), 
     [&] (std::size_t index){
-      first_out[index] = transf_op(first[index]);
+      first_out[index] = transform_op(first[index]);
     }
   );   
 }
@@ -83,14 +83,14 @@ template <typename InputIt, typename OutputIt,
           typename ... OtherInputIts>
 void map(parallel_execution_tbb & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transf_op, 
+         Transformer && transform_op, 
          OtherInputIts ... more_firsts)
 {
   tbb::parallel_for(
     static_cast<std::size_t>(0),
     static_cast<std::size_t>(std::distance(first,last)), 
     [&] (std::size_t index){
-      first_out[index] = transf_op(first[index], more_firsts[index]...);
+      first_out[index] = transform_op(first[index], more_firsts[index]...);
     }
  );   
 
