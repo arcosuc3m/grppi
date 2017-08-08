@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -24,8 +24,10 @@
 #ifdef GRPPI_OMP
 
 #include "../common/mpmc_queue.h"
+#include "../common/iterator.h"
 
 #include <type_traits>
+#include <tuple>
 
 #include <omp.h>
 
@@ -132,6 +134,27 @@ public:
     return result;
   }
 
+  /**
+  \brief Applies a trasnformation to multiple sequences leaving the result in
+  another sequence using available OpenMP parallelism
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam Transformer Callable object type for the transformation.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Transformation callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator, 
+            typename Transformer>
+  void apply_map(std::tuple<InputIterators...> firsts,
+      OutputIterator first_out, 
+      std::size_t sequence_size, Transformer transform_op) const;
+
+
 private:
 
   /**
@@ -161,6 +184,19 @@ private:
 
   queue_mode queue_mode_ = queue_mode::blocking;
 };
+
+template <typename ... InputIterators, typename OutputIterator, 
+          typename Transformer>
+void parallel_execution_omp::apply_map(
+    std::tuple<InputIterators...> firsts,
+    OutputIterator first_out, 
+    std::size_t sequence_size, Transformer transform_op) const
+{
+  #pragma omp parallel for
+  for (std::size_t i=0; i<sequence_size; ++i) {
+    first_out[i] = apply_iterators_indexed(transform_op, firsts, i);
+  }
+}
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_omp

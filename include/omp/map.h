@@ -25,30 +25,10 @@
 
 #include "parallel_execution_omp.h"
 
-namespace grppi {
+#include <tuple>
+#include <iterator>
 
-template <typename InputIt, typename OutputIt, typename Transformer,
-          typename ... OtherInputIts>
-void internal_map(parallel_execution_omp & ex, 
-                  InputIt first, InputIt last, 
-                  OutputIt first_out,
-                  Transformer && transf_op, 
-                  int i, 
-                  int elemperthr, OtherInputIts ... more_firsts)
-{
-  //Calculate local input and output iterator 
-  auto begin = first + (elemperthr * i);
-  auto end = first + (elemperthr * (i+1));
-  if( i == ex.concurrency_degree()-1) end = last;
-  auto out = first_out + (elemperthr * i);
-  advance_iterators(elemperthr*i, more_firsts ...);
-  while(begin!=end){
-    *out = transf_op(*begin, *more_firsts ...);
-    advance_iterators(more_firsts ...);
-    begin++;
-    out++;
-  }
-}
+namespace grppi {
 
 /**
 \addtogroup map_pattern
@@ -68,51 +48,16 @@ parallel execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transf_op Transformation operation.
+\param transform_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(parallel_execution_omp & ex, 
+void map(const parallel_execution_omp & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Transformer && transf_op)
+         Transformer && transform_op)
 {
-  int numElements = last - first;
-
-  int elemperthr = numElements/ex.concurrency_degree();
-
-  #pragma omp parallel
-  {
-   #pragma omp single nowait
-   {
-    for(int i=1;i<ex.concurrency_degree();i++){
-      
-
-
-      #pragma omp task firstprivate(i)
-      {
-        auto begin = first + (elemperthr * i);
-        auto end = first + (elemperthr * (i+1));
-        if(i == ex.concurrency_degree() -1 ) end = last;
-        auto out = first_out + (elemperthr * i);
-        while(begin!=end){
-          *out = transf_op(*begin);
-          begin++;
-          out++;
-        }
-      }
-     }
-      //Map main threads
-      auto beg =first;
-      auto out = first_out;
-      auto end = first+elemperthr;
-      while(beg!=end){
-            *out = transf_op(*beg);
-            beg++;
-            out++;
-      }
-      #pragma omp taskwait
-    }
-  }
+  ex.apply_map(make_tuple(first), first_out, std::distance(first,last),
+      transform_op);
 }
 
 /**
@@ -131,41 +76,14 @@ execution.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts>
-void map(parallel_execution_omp & ex, 
+void map(const parallel_execution_omp & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Transformer && transf_op, 
+         Transformer && transform_op, 
          OtherInputIts ... more_firsts)
 {
-  //Calculate number of elements per thread
-  int numElements = last - first;
-  int elemperthr = numElements/ex.concurrency_degree();
-
-  //Create tasks
-  #pragma omp parallel
-  {
-    #pragma omp single nowait
-    {
-      for(int i=1;i<ex.concurrency_degree();i++){
-
-      #pragma omp task firstprivate(i)
-      {
-        internal_map(ex, first, last, first_out,
-                     std::forward<Transformer>(transf_op) , i, elemperthr, 
-                     more_firsts ...);
-      }
-      //End task
-     }
-
-     //Map main thread
-     internal_map(ex, first,last, first_out, 
-                  std::forward<Transformer>(transf_op), 0, elemperthr, 
-                  more_firsts ...);
-
-    //Join threads
-    #pragma omp taskwait
-    }
-  }
+  ex.apply_map(make_tuple(first,more_firsts...), first_out, std::distance(first,last),
+      transform_op);
 }
 
 /**

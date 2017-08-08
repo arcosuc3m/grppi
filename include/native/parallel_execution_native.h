@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,14 +21,17 @@
 #ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 #define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
-#include "../common/mpmc_queue.h"
 #include "pool.h"
+#include "worker_pool.h"
+#include "../common/mpmc_queue.h"
+#include "../common/iterator.h"
 
 #include <thread>
 #include <atomic>
 #include <algorithm>
 #include <vector>
 #include <type_traits>
+#include <tuple>
 
 namespace grppi {
 
@@ -220,11 +223,32 @@ public:
   \brief Makes a communication queue for elements of type T.
   Constructs a queue using the attributes that can be set via 
   set_queue_attributes(). The value is returned via move semantics.
+  \tparam T Element type for the queue.
   */
   template <typename T>
   mpmc_queue<T> make_queue() const {
     return {queue_size_, queue_mode_};
   }
+
+  /**
+  \brief Applies a trasnformation to multiple sequences leaving the result in
+  another sequence by chunks according to concurrency degree.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam Transformer Callable object type for the transformation.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Transformation callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator, 
+            typename Transformer>
+  void apply_map(std::tuple<InputIterators...> firsts,
+      OutputIterator first_out, 
+      std::size_t sequence_size, Transformer transform_op);
 
 public: 
   /**
@@ -245,6 +269,44 @@ private:
 
   queue_mode queue_mode_ = queue_mode::blocking;
 };
+
+template <typename ... InputIterators, typename OutputIterator, 
+          typename Transformer>
+void parallel_execution_native::apply_map(
+    std::tuple<InputIterators...> firsts,
+    OutputIterator first_out, 
+    std::size_t sequence_size, Transformer transform_op)
+{
+  using namespace std;
+
+  auto process_chunk =
+    [transform_op](tuple<InputIterators...> fins, int size, OutputIterator fout)
+  {
+    const auto l = next(get<0>(fins), size);
+    while (get<0>(fins)!=l) {
+      *fout++ = apply_iterators_increment(transform_op, fins);
+    }
+  };
+
+  worker_pool workers{concurrency_degree_};
+  const int chunk_size = sequence_size / concurrency_degree_;
+  
+  // One chunk per thread
+  for (int i=0; i!=concurrency_degree_-1; ++i) {
+    const int delta = chunk_size * i;
+    const auto chunk_firsts = iterators_next(firsts,delta);
+    const auto chunk_first_out = next(first_out, delta);
+    workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_first_out);
+  }
+
+  // Last chunk in main thread
+  const int delta = chunk_size * (concurrency_degree_ - 1);
+  const auto chunk_firsts = iterators_next(firsts,delta);
+  const auto chunk_first_out = next(first_out, delta);
+  process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
+
+  workers.wait();
+}
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_native
