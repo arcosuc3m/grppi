@@ -53,10 +53,10 @@ void map(parallel_execution_omp & ex,
          OutputIt first_out, 
          Transformer && transf_op)
 {
-  const int sequence_size = std::distance(first, last);
+  const std::size_t sequence_size = std::distance(first, last);
   #pragma parallel for
-  for (int i=0; i<sequence_size; ++i) {
-    *first_out++ = transf_op(*first++);
+  for (std::size_t i=0; i<sequence_size; ++i) {
+    first_out[i] = transf_op(first[i]);
   }
 }
 
@@ -82,42 +82,11 @@ void map(parallel_execution_omp & ex,
          Transformer && transf_op, 
          OtherInputIts ... more_firsts)
 {
-  const int sequence_size = std::distance(first, last);
+  const std::size_t sequence_size = std::distance(first, last);
   #pragma parallel for
-  for (int i=0; i<sequence_size; ++i) {
-    *first_out++ = transf_op(*first++,*more_firsts++...);
+  for (std::size_t i=0; i<sequence_size; ++i) {
+    first_out[i] = transf_op(first[i], more_firsts[i]...);
   }
-/*
-  //Calculate number of elements per thread
-  int numElements = last - first;
-  int elemperthr = numElements/ex.concurrency_degree();
-
-  //Create tasks
-  #pragma omp parallel
-  {
-    #pragma omp single nowait
-    {
-      for(int i=1;i<ex.concurrency_degree();i++){
-
-      #pragma omp task firstprivate(i)
-      {
-        internal_map(ex, first, last, first_out,
-                     std::forward<Transformer>(transf_op) , i, elemperthr, 
-                     more_firsts ...);
-      }
-      //End task
-     }
-
-     //Map main thread
-     internal_map(ex, first,last, first_out, 
-                  std::forward<Transformer>(transf_op), 0, elemperthr, 
-                  more_firsts ...);
-
-    //Join threads
-    #pragma omp taskwait
-    }
-  }
-*/
 }
 
 /**
