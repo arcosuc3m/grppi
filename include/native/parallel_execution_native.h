@@ -222,22 +222,32 @@ public:
   \brief Makes a communication queue for elements of type T.
   Constructs a queue using the attributes that can be set via 
   set_queue_attributes(). The value is returned via move semantics.
+  \tparam T Element type for the queue.
   */
   template <typename T>
   mpmc_queue<T> make_queue() const {
     return {queue_size_, queue_mode_};
   }
 
-  template <typename InputIterator, typename OutputIterator, 
-            typename Transformer>
-  void chunked_map(InputIterator first, OutputIterator first_out, 
-                   int sequence_size, Transformer transf_op);
-
+  /**
+  \brief Applies a trasnformation to multiple sequences leaving the result in
+  another sequence by chunks according to concurrency degree.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam Transformer Callable object type for the transformation.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Transformation callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
-  void chunked_map_multi(std::tuple<InputIterators...> firsts,
+  void chunked_map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
-      int sequence_size, Transformer transf_op);
+      int sequence_size, Transformer transform_op);
 
 public: 
   /**
@@ -259,62 +269,28 @@ private:
   queue_mode queue_mode_ = queue_mode::blocking;
 };
 
-template <typename InputIterator, typename OutputIterator, 
-          typename Transformer>
-void parallel_execution_native::chunked_map(
-    const InputIterator first, const OutputIterator first_out, 
-    const int sequence_size, Transformer transf_op)
-{
-
-  auto process_chunk = 
-      [transf_op](InputIterator f, const InputIterator l, OutputIterator fout) 
-  {
-    while (f!=l) {
-      *fout++ = transf_op(*f++);
-    }
-  };
-
-  worker_pool workers{concurrency_degree_};
-  const int chunk_size = sequence_size / concurrency_degree_;
-  for (int i=0; i!=concurrency_degree_-1; ++i) {
-    const int delta = chunk_size * i;
-    const auto chunk_first = next(first,delta);
-    const auto chunk_last = next(chunk_first,chunk_size);
-    const auto chunk_first_out = next(first_out, delta);
-    workers.launch(*this, process_chunk, chunk_first, chunk_last, chunk_first_out);
-  }
-
-  const int delta = chunk_size * (concurrency_degree_ - 1);
-  const auto chunk_first = next(first,delta);
-  const auto chunk_last = next(first,sequence_size);
-  const auto chunk_first_out = next(first_out, delta);
-  process_chunk(chunk_first, chunk_last, chunk_first_out);
-
-  workers.wait();
-}
-
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
-void parallel_execution_native::chunked_map_multi(
+void parallel_execution_native::chunked_map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
-    int sequence_size, Transformer transf_op)
+    int sequence_size, Transformer transform_op)
 {
-  concurrency_degree_ = 2;
   using namespace std;
 
   auto process_chunk =
-    [transf_op,firsts](tuple<InputIterators...> fins, int size, OutputIterator fout)
+    [transform_op](tuple<InputIterators...> fins, int size, OutputIterator fout)
   {
     const auto l = next(get<0>(fins), size);
     while (get<0>(fins)!=l) {
-      *fout++ = apply_iterators_increment(transf_op, fins);
+      *fout++ = apply_iterators_increment(transform_op, fins);
     }
   };
 
   worker_pool workers{concurrency_degree_};
   const int chunk_size = sequence_size / concurrency_degree_;
   
+  // One chunk per thread
   for (int i=0; i!=concurrency_degree_-1; ++i) {
     const int delta = chunk_size * i;
     const auto chunk_firsts = iterators_next(firsts,delta);
@@ -322,6 +298,7 @@ void parallel_execution_native::chunked_map_multi(
     workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_first_out);
   }
 
+  // Last chunk in main thread
   const int delta = chunk_size * (concurrency_degree_ - 1);
   const auto chunk_firsts = iterators_next(firsts,delta);
   const auto chunk_first_out = next(first_out, delta);
@@ -329,8 +306,6 @@ void parallel_execution_native::chunked_map_multi(
 
   workers.wait();
 }
-
-
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_native

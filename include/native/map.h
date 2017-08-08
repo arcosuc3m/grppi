@@ -51,7 +51,7 @@ void map(parallel_execution_native & ex,
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer && transf_op)
 {
-  ex.chunked_map(first, first_out, std::distance(first,last),
+  ex.chunked_map(std::make_tuple(first), first_out, std::distance(first,last),
     transf_op);
 }
 
@@ -76,9 +76,8 @@ void map(parallel_execution_native& ex,
          Transformer && transf_op, 
          OtherInputIts ... more_inputs)
 {
-  ex.chunked_map_multi(std::make_tuple(first,more_inputs...), first_out,
-      std::distance(first,last),
-      transf_op);
+  ex.chunked_map(std::make_tuple(first,more_inputs...), first_out,
+      std::distance(first,last), transf_op);
 }
 
 /**
