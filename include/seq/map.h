@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -41,19 +41,19 @@ execution.
 \tparam InputIt Iterator type used for input sequence.
 \tparam OtuputIt Iterator type used for the output sequence.
 \tparam Transformer Callable type for the transformation operation.
-\param ex Sequential execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transf_op Transformation operation.
+\param transform_op Transformation operation.
+\note The sequential_execution object acts exclusively as a tag type.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(sequential_execution ex, 
+void map(sequential_execution , 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer transf_op) 
+         Transformer transform_op) 
 {
   while (first != last) {
-    *first_out = transf_op(*first);
+    *first_out = transform_op(*first);
     first++;
     first_out++;
   }
@@ -66,22 +66,22 @@ execution.
 \tparam OtuputIt Iterator type used for the output sequence.
 \tparam Transformer Callable type for the transformation operation.
 \tparam OtherInputIts Iterator types used for additional input sequences.
-\param ex Sequential execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transf_op Transformation operation.
+\param transform_op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
+\note The sequential_execution object acts exclusively as a tag type.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts>
-void map(sequential_execution ex, 
+void map(sequential_execution , 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer transf_op, 
+         Transformer transform_op, 
          OtherInputIts ... other_firsts) 
 {
   while (first != last) {
-    *first_out = transf_op(*first, *other_firsts...);
+    *first_out = transform_op(*first, *other_firsts...);
     advance_iterators(other_firsts...);
     first++;
     first_out++;

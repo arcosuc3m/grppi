@@ -44,15 +44,15 @@ paralell execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transf_op Transformation operation.
+\param transform_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
 void map(parallel_execution_native & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transf_op)
+         Transformer && transform_op)
 {
   ex.chunked_map(std::make_tuple(first), first_out, std::distance(first,last),
-    transf_op);
+    transform_op);
 }
 
 /**
@@ -66,18 +66,18 @@ parallel execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transf_op Transformation operation.
+\param transform_op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts> 
 void map(parallel_execution_native& ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transf_op, 
+         Transformer && transform_op, 
          OtherInputIts ... more_inputs)
 {
   ex.chunked_map(std::make_tuple(first,more_inputs...), first_out,
-      std::distance(first,last), transf_op);
+      std::distance(first,last), transform_op);
 }
 
 /**
