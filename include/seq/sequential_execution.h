@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,11 @@
 #ifndef GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 #define GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 
+#include "../common/iterator.h"
+
 #include <type_traits>
+#include <tuple>
+
 
 namespace grppi {
 
@@ -64,7 +68,41 @@ public:
   \note Sequential execution is always ordered.
   */
   bool is_ordered() const noexcept { return true; }
+
+  /**
+  \brief Applies a trasnformation to multiple sequences leaving the result in
+  another sequence.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam Transformer Callable object type for the transformation.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Transformation callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator, 
+            typename Transformer>
+  void apply_map(std::tuple<InputIterators...> firsts,
+      OutputIterator first_out, 
+      std::size_t sequence_size, Transformer transform_op) const;
+  
 };
+
+template <typename ... InputIterators, typename OutputIterator, 
+          typename Transformer>
+void sequential_execution::apply_map(
+    std::tuple<InputIterators...> firsts,
+    OutputIterator first_out, 
+    std::size_t sequence_size, Transformer transform_op) const
+{
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
+  while (std::get<0>(firsts) != last) {
+    *first_out++ = apply_iterators_increment(transform_op, firsts);
+  }
+}
 
 /// Determine if a type is a sequential execution policy.
 template <typename E>

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <vector>
 #include <type_traits>
+#include <tuple>
 
 namespace grppi {
 
@@ -245,9 +246,9 @@ public:
   */
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
-  void chunked_map(std::tuple<InputIterators...> firsts,
+  void apply_map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
-      int sequence_size, Transformer transform_op);
+      std::size_t sequence_size, Transformer transform_op);
 
 public: 
   /**
@@ -271,10 +272,10 @@ private:
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
-void parallel_execution_native::chunked_map(
+void parallel_execution_native::apply_map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
-    int sequence_size, Transformer transform_op)
+    std::size_t sequence_size, Transformer transform_op)
 {
   using namespace std;
 

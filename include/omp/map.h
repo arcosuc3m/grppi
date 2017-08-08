@@ -25,6 +25,9 @@
 
 #include "parallel_execution_omp.h"
 
+#include <tuple>
+#include <iterator>
+
 namespace grppi {
 
 /**
@@ -48,16 +51,13 @@ parallel execution.
 \param transform_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(parallel_execution_omp & ex, 
+void map(const parallel_execution_omp & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
          Transformer && transform_op)
 {
-  const std::size_t sequence_size = std::distance(first, last);
-  #pragma parallel for
-  for (std::size_t i=0; i<sequence_size; ++i) {
-    first_out[i] = transform_op(first[i]);
-  }
+  ex.apply_map(make_tuple(first), first_out, std::distance(first,last),
+      transform_op);
 }
 
 /**
@@ -76,17 +76,14 @@ execution.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts>
-void map(parallel_execution_omp & ex, 
+void map(const parallel_execution_omp & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
          Transformer && transform_op, 
          OtherInputIts ... more_firsts)
 {
-  const std::size_t sequence_size = std::distance(first, last);
-  #pragma parallel for
-  for (std::size_t i=0; i<sequence_size; ++i) {
-    first_out[i] = transform_op(first[i], more_firsts[i]...);
-  }
+  ex.apply_map(make_tuple(first,more_firsts...), first_out, std::distance(first,last),
+      transform_op);
 }
 
 /**

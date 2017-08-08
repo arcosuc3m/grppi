@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -61,6 +61,46 @@ decltype(auto) apply_iterators_increment(F && f, T & t)
   constexpr std::size_t size = std::tuple_size<tuple_raw_type>::value;
   return internal::apply_iterator_increment_impl(std::forward<F>(f), t,
       std::make_index_sequence<size>());
+}
+
+namespace internal {
+
+template <typename F, typename T, std::size_t ... I>
+decltype(auto) apply_iterators_indexed_impl(F && f, T && t, std::size_t i,
+    std::index_sequence<I...>)
+{
+  return std::forward<F>(f)(std::get<I>(t)[i]...);
+}
+
+} // namespace internal
+
+/**
+\brief Applies a callable object to the values obtained from the iterators in a tuple
+by indexing.
+This function takes callable object `f`, a tuple-like with iterators (e.g.
+the result of `make_tuple(it1, it2, it3)`) and an integral index `i`.
+
+and performs the action
+
+~~~{.cpp}
+f(it1[i], it2[i], it3[i]);
+~~~
+
+\tparam F Type of the callable object.
+\tparam T Tuple type containing a tuple of iterators
+\param f Callable object to be invoked.
+\param t Tuple of iterators.
+\param i Integral index to apply to each interator.
+\post All iterators in t have been incremented
+\post `f` has been invoked with the contents of the iterator in the tuple.
+*/
+template <typename F, typename T>
+decltype(auto) apply_iterators_indexed(F && f, T && t, std::size_t i)
+{
+  using tuple_raw_type = std::decay_t<T>;
+  constexpr std::size_t size = std::tuple_size<tuple_raw_type>::value;
+  return internal::apply_iterators_indexed_impl(std::forward<F>(f), 
+      std::forward<T>(t), i, std::make_index_sequence<size>());
 }
 
 namespace internal {

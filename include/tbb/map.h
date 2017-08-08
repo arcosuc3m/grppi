@@ -1,5 +1,5 @@
 /*
-* @version    GrPPI v0.2
+* @version    GrPPI v0.3
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,8 @@
 
 #include "parallel_execution_tbb.h"
 
-#include <tbb/tbb.h>
+#include <tuple>
+#include <iterator>
 
 namespace grppi {
 
@@ -50,18 +51,13 @@ parallel execution.
 \param transform_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(parallel_execution_tbb & ex, 
+void map(const parallel_execution_tbb & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
          Transformer && transform_op)
 {
-  tbb::parallel_for(
-    static_cast<std::size_t>(0), 
-    static_cast<std::size_t>(std::distance(first,last)), 
-    [&] (std::size_t index){
-      first_out[index] = transform_op(first[index]);
-    }
-  );   
+  ex.apply_map(make_tuple(first), first_out, std::distance(first,last),
+      transform_op);
 }
 
 /**
@@ -81,19 +77,13 @@ parallel execution.
 template <typename InputIt, typename OutputIt, 
           typename Transformer,
           typename ... OtherInputIts>
-void map(parallel_execution_tbb & ex, 
+void map(const parallel_execution_tbb & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer && transform_op, 
          OtherInputIts ... more_firsts)
 {
-  tbb::parallel_for(
-    static_cast<std::size_t>(0),
-    static_cast<std::size_t>(std::distance(first,last)), 
-    [&] (std::size_t index){
-      first_out[index] = transform_op(first[index], more_firsts[index]...);
-    }
- );   
-
+  ex.apply_map(make_tuple(first,more_firsts...), first_out, std::distance(first,last),
+      transform_op);
 }
 
 }
