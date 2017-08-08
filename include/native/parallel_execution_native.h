@@ -24,6 +24,7 @@
 #include "pool.h"
 #include "worker_pool.h"
 #include "../common/mpmc_queue.h"
+#include "../common/iterator.h"
 
 #include <thread>
 #include <atomic>
@@ -292,34 +293,6 @@ void parallel_execution_native::chunked_map(
   workers.wait();
 }
 
-template <typename F, typename T, std::size_t ... I>
-decltype(auto) apply_iterator_impl(F && f, T && t, std::index_sequence<I...>)
-{
-  return std::forward<F>(f)(*std::get<I>(std::forward<T>(t))++...);
-}
-
-template <typename F, typename T>
-decltype(auto) apply_iterator(F && f, T && t)
-{
-  constexpr std::size_t tsz = std::tuple_size<typename std::remove_reference<T>::type>::value;
-  return apply_iterator_impl(std::forward<F>(f), std::forward<T>(t),
-      std::make_index_sequence<tsz>());
-}
-
-template <typename T, std::size_t ... I>
-auto iterators_next_impl(T && t, int n, std::index_sequence<I...>) {
-  return make_tuple(
-    std::next(std::get<I>(t), n)...
-  );
-}
-
-template <typename T>
-auto iterators_next(T && t, int n) {
-  constexpr std::size_t size = std::tuple_size<typename std::remove_reference<T>::type>::value;
-  return iterators_next_impl(std::forward<T>(t), n,
-      std::make_index_sequence<size>());
-}
-
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_native::chunked_map_multi(
@@ -335,7 +308,7 @@ void parallel_execution_native::chunked_map_multi(
   {
     const auto l = next(get<0>(fins), size);
     while (get<0>(fins)!=l) {
-      *fout++ = apply_iterator(transf_op, fins);
+      *fout++ = apply_iterators_increment(transf_op, fins);
     }
   };
 
