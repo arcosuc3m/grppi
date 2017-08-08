@@ -27,29 +27,6 @@
 
 namespace grppi {
 
-template <typename InputIt, typename OutputIt, typename Transformer,
-          typename ... OtherInputIts>
-void internal_map(parallel_execution_omp & ex, 
-                  InputIt first, InputIt last, 
-                  OutputIt first_out,
-                  Transformer && transf_op, 
-                  int i, 
-                  int elemperthr, OtherInputIts ... more_firsts)
-{
-  //Calculate local input and output iterator 
-  auto begin = first + (elemperthr * i);
-  auto end = first + (elemperthr * (i+1));
-  if( i == ex.concurrency_degree()-1) end = last;
-  auto out = first_out + (elemperthr * i);
-  advance_iterators(elemperthr*i, more_firsts ...);
-  while(begin!=end){
-    *out = transf_op(*begin, *more_firsts ...);
-    advance_iterators(more_firsts ...);
-    begin++;
-    out++;
-  }
-}
-
 /**
 \addtogroup map_pattern
 @{
@@ -76,42 +53,10 @@ void map(parallel_execution_omp & ex,
          OutputIt first_out, 
          Transformer && transf_op)
 {
-  int numElements = last - first;
-
-  int elemperthr = numElements/ex.concurrency_degree();
-
-  #pragma omp parallel
-  {
-   #pragma omp single nowait
-   {
-    for(int i=1;i<ex.concurrency_degree();i++){
-      
-
-
-      #pragma omp task firstprivate(i)
-      {
-        auto begin = first + (elemperthr * i);
-        auto end = first + (elemperthr * (i+1));
-        if(i == ex.concurrency_degree() -1 ) end = last;
-        auto out = first_out + (elemperthr * i);
-        while(begin!=end){
-          *out = transf_op(*begin);
-          begin++;
-          out++;
-        }
-      }
-     }
-      //Map main threads
-      auto beg =first;
-      auto out = first_out;
-      auto end = first+elemperthr;
-      while(beg!=end){
-            *out = transf_op(*beg);
-            beg++;
-            out++;
-      }
-      #pragma omp taskwait
-    }
+  const int sequence_size = std::distance(first, last);
+  #pragma parallel for
+  for (int i=0; i<sequence_size; ++i) {
+    *first_out++ = transf_op(*first++);
   }
 }
 
@@ -137,6 +82,12 @@ void map(parallel_execution_omp & ex,
          Transformer && transf_op, 
          OtherInputIts ... more_firsts)
 {
+  const int sequence_size = std::distance(first, last);
+  #pragma parallel for
+  for (int i=0; i<sequence_size; ++i) {
+    *first_out++ = transf_op(*first++,*more_firsts++...);
+  }
+/*
   //Calculate number of elements per thread
   int numElements = last - first;
   int elemperthr = numElements/ex.concurrency_degree();
@@ -166,6 +117,7 @@ void map(parallel_execution_omp & ex,
     #pragma omp taskwait
     }
   }
+*/
 }
 
 /**
