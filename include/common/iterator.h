@@ -22,6 +22,7 @@
 #define GRPPI_COMMON_ITERATOR_H
 
 #include <utility>
+#include <tuple>
 
 namespace grppi{
 
