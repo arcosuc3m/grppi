@@ -57,10 +57,9 @@ void map(parallel_execution_tbb & ex,
 {
   tbb::parallel_for(
     static_cast<std::size_t>(0), 
-    static_cast<std::size_t>((last-first)), 
+    static_cast<std::size_t>(std::distance(first,last)), 
     [&] (std::size_t index){
-      auto current = (first_out+index);
-      *current = transf_op(*(first+index));
+      first_out[index] = transf_op(first[index]);
     }
   );   
 }
@@ -89,10 +88,9 @@ void map(parallel_execution_tbb & ex,
 {
   tbb::parallel_for(
     static_cast<std::size_t>(0),
-    static_cast<std::size_t>((last-first)), 
+    static_cast<std::size_t>(std::distance(first,last)), 
     [&] (std::size_t index){
-      auto current = (first_out+index);
-      *current = transf_op(*(first+index), *(more_firsts+index)...);
+      first_out[index] = transf_op(first[index], more_firsts[index]...);
     }
  );   
 
