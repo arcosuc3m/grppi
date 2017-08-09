@@ -25,6 +25,7 @@
 
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
+#include "../seq/sequential_execution.h"
 
 #include <type_traits>
 #include <tuple>
@@ -154,6 +155,21 @@ public:
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
 
+  /**
+  \brief Applies a reduction to a sequence of data items. 
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The reduction result
+  */
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce(InputIterator first, InputIterator last, Identity && identity,
+              Combiner && combine_op) const;
 
 private:
 
@@ -196,6 +212,51 @@ void parallel_execution_omp::apply_map(
   for (std::size_t i=0; i<sequence_size; ++i) {
     first_out[i] = apply_iterators_indexed(transform_op, firsts, i);
   }
+}
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto parallel_execution_omp::reduce(
+    InputIterator first, InputIterator last, Identity && identity,
+    Combiner && combine_op) const
+{
+  sequential_execution seq;
+
+  auto sequence_size = std::distance(first,last);
+  auto chunk_size = sequence_size/concurrency_degree_;
+
+  using result_type = std::decay_t<Identity>;
+  std::vector<result_type> partial_results(concurrency_degree_);
+
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
+    {
+      for (int i=0 ;i<concurrency_degree_-1; ++i) {
+        auto delta = chunk_size * i;
+        auto begin = std::next(first,delta);
+        auto end = std::next(begin, chunk_size);
+
+        #pragma omp task firstprivate (begin, end,i)
+        {
+          partial_results[i] = seq.reduce(begin, end, 
+              std::forward<Identity>(identity),
+              std::forward<Combiner>(combine_op));
+        }
+      }
+    
+      //Main thread
+      auto delta = chunk_size * (concurrency_degree_ - 1);
+      auto begin = std::next(first,delta);
+      auto end = last;
+      partial_results[concurrency_degree_-1] = seq.reduce(begin,end,
+          std::forward<Identity>(identity),
+          std::forward<Combiner>(combine_op));
+      #pragma omp taskwait
+    }
+  }
+
+  return seq.reduce(next(begin(partial_results)), end(partial_results),
+      partial_results[0], std::forward<Combiner>(combine_op));
 }
 
 /**
