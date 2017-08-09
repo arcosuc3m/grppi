@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 
 #include "sequential_execution.h"
 
+#include <utility>
+
 namespace grppi {
 
 /**
@@ -37,25 +39,23 @@ namespace grppi {
 \brief Invoke \ref md_reduce with identity value
 on a data sequence with sequential execution.
 \tparam InputIt Iterator type used for input sequence.
-\tparam Identity Type for the identity value.
+\tparam Result Type for the identity value.
 \tparam Combiner Callable type for the combiner operation.
 \param ex Sequential execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param identity Identity value for the combiner operation.
 \param combiner_op Combiner operation for the reduction.
+\return The result of the reduction.
 */
-template <typename InputIt, typename Identity, typename Combiner>
-auto reduce(sequential_execution & ex, InputIt first, InputIt last, 
-            Identity identity,
+template <typename InputIt, typename Result, typename Combiner>
+auto reduce(const sequential_execution & ex, 
+            InputIt first, InputIt last, 
+            Result && identity,
             Combiner && combine_op)
 {
-  auto result = identity;
-  while (first != last) {
-    result = combine_op(result, *first);
-    first++;
-  }
-  return result;
+  return ex.reduce(first, last, std::forward<Result>(identity),
+      std::forward<Combiner>(combine_op));
 }
 
 /**
