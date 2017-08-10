@@ -135,6 +135,23 @@ public:
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
 
+  /**
+  \brief Applies a reduction to a sequence of data items. 
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The reduction result.
+  */
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce(InputIterator first, InputIterator last, Identity && identity,
+              Combiner && combine_op) const;
+
+
 private:
 
   constexpr static int default_concurrency_degree = 4;
@@ -165,6 +182,20 @@ void parallel_execution_tbb::apply_map(
     }
  );   
 
+}
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto parallel_execution_tbb::reduce(
+    InputIterator first, InputIterator last, 
+    Identity && identity,
+    Combiner && combine_op) const
+{
+  sequential_execution seq;
+  return tbb::parallel_reduce(tbb::blocked_range<InputIterator>(first, last), identity,
+      [combine_op,seq](const auto & range, auto value) {
+        return seq.reduce(range.begin(), range.end(), value, combine_op);
+      },
+      combine_op);
 }
 
 /**

@@ -23,7 +23,7 @@
 
 #include "parallel_execution_native.h"
 
-#include <thread>
+#include <utility>
 
 namespace grppi {
 
@@ -48,48 +48,13 @@ on a data sequence with parallel native execution.
 \param combiner_op Combiner operation for the reduction.
 */
 template < typename InputIt, typename Identity, typename Combiner>
-auto reduce(parallel_execution_native & ex,
+auto reduce(const parallel_execution_native & ex,
             InputIt first, InputIt last, 
-            Identity identity,
+            Identity && identity,
             Combiner && combine_op)
 {
-    auto identityVal = identity;
-
-    int numElements = last - first;
-    int elemperthr = numElements/ex.concurrency_degree();
-    std::atomic<int> finishedTask(1);
-    //local output
-    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.concurrency_degree());
-    //Create threads
-    for(int i=1;i<ex.concurrency_degree();i++){
-      auto begin = first + (elemperthr * i);
-      auto end = first + (elemperthr * (i+1));
-      if(i == ex.concurrency_degree() -1) end = last;
-      ex.pool.create_task(boost::bind<void>(
-           [&](InputIt begin, InputIt end, int tid){
-               out[tid] = identityVal;
-               for( ; begin != end; begin++ ) {
-                   out[tid] = combine_op(out[tid], *begin );
-               }
-               finishedTask++;
-            },
-            std::move(begin), std::move(end), i
-      ));
-    }
-    //Main thread
-    auto end = first + elemperthr;
-    out[0] = identityVal;
-    for(;first!=end;first++){
-         out[0] = combine_op( out[0], *first);
-    }
-
-    while(finishedTask.load()!=ex.concurrency_degree());
-
-    auto outVal = out[0];
-    for(unsigned int i = 1; i < out.size(); i++){
-       outVal = combine_op(outVal, out[i]);
-    }
-    return outVal;
+  return ex.reduce(first, last, std::forward<Identity>(identity),
+      std::forward<Combiner>(combine_op));
 }
 
 /**

@@ -25,7 +25,7 @@
 
 #include "parallel_execution_tbb.h"
 
-#include <tbb/tbb.h>
+#include <utility>
 
 namespace grppi {
 
@@ -50,26 +50,13 @@ on a data sequence with parallel TBB execution.
 \param combiner_op Combiner operation for the reduction.
 */
 template < typename InputIt, typename Identity, typename Combiner>
-auto reduce(parallel_execution_tbb & ex, 
+auto reduce(const parallel_execution_tbb & ex, 
             InputIt first, InputIt last, 
-            Identity identity,
+            Identity && identity,
             Combiner && combine_op)
 {
-   auto identityVal = identity;
-   return tbb::parallel_reduce(tbb::blocked_range<InputIt>( first, last ), identityVal,
-              [&](const tbb::blocked_range<InputIt> &r,typename std::iterator_traits<InputIt>::value_type  temp){
-                 for(InputIt i=r.begin(); i!= r.end(); ++i){
-                   temp = combine_op( temp, *i);
-                 }
-                 return temp;
-              },
-              [&](typename std::iterator_traits<InputIt>::value_type a, typename std::iterator_traits<InputIt>::value_type b) -> typename std::iterator_traits<InputIt>::value_type
-              {
-                a = combine_op(a,b);
-                return a;
-              }
-          );
-   
+  return ex.reduce(first,last, std::forward<Identity>(identity),
+      std::forward<Combiner>(combine_op));
 }
 
 /**

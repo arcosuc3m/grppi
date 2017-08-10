@@ -89,9 +89,25 @@ public:
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
   
+  /**
+  \brief Applies a reduction to a sequence of data items. 
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The reduction result
+  */
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce(InputIterator first, InputIterator last,
+              Identity && identity,
+              Combiner && combine_op) const;
 };
 
-template <typename ... InputIterators, typename OutputIterator, 
+template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
 void sequential_execution::apply_map(
     std::tuple<InputIterators...> firsts,
@@ -102,6 +118,19 @@ void sequential_execution::apply_map(
   while (std::get<0>(firsts) != last) {
     *first_out++ = apply_iterators_increment(transform_op, firsts);
   }
+}
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto sequential_execution::reduce(
+    InputIterator first, InputIterator last,
+    Identity && identity,
+    Combiner && combine_op) const
+{
+  auto result{identity};
+  while (first != last) {
+    result = combine_op(result, *first++);
+  }
+  return result;
 }
 
 /// Determine if a type is a sequential execution policy.

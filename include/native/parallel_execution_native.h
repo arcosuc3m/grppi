@@ -21,7 +21,6 @@
 #ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 #define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
-#include "pool.h"
 #include "worker_pool.h"
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
@@ -166,9 +165,7 @@ public:
   parallel_execution_native(int concurrency_degree, bool ordering=true) noexcept :
     concurrency_degree_{concurrency_degree},
     ordering_{ordering}
-  {
-    pool.initialise(concurrency_degree_);
-  }
+  {}
 
   /**
   \brief Set number of grppi threads.
@@ -199,7 +196,7 @@ public:
   \brief Get a manager object for registration/deregistration in the
   thread index table for current thread.
   */
-  native_thread_manager thread_manager() { 
+  native_thread_manager thread_manager() const { 
     return native_thread_manager{thread_registry_}; 
   }
 
@@ -250,16 +247,24 @@ public:
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op);
 
-public: 
   /**
-  \brief Thread pool for lanching workers.
-  \note This member is temporary and is likely to be deprecated or even removed 
-        in a future version of GrPPI.
+  \brief Applies a reduction to a sequence of data items. 
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The reduction result
   */
-  thread_pool pool;
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce(InputIterator first, InputIterator last, Identity && identity,
+              Combiner && combine_op) const;
 
 private: 
-  thread_registry thread_registry_;
+  mutable thread_registry thread_registry_;
 
   int concurrency_degree_;
   bool ordering_;
@@ -308,6 +313,43 @@ void parallel_execution_native::apply_map(
   workers.wait();
 }
 
+template <typename InputIterator, typename Identity, typename Combiner>
+auto parallel_execution_native::reduce(
+    InputIterator first, InputIterator last, 
+    Identity && identity,
+    Combiner && combine_op) const
+{
+  worker_pool workers{concurrency_degree_};
+  auto sequence_size = std::distance(first,last);
+  auto chunk_size = sequence_size / concurrency_degree_;
+
+  using result_type = std::decay_t<Identity>;
+  std::vector<result_type> partial_results(concurrency_degree_);
+
+  sequential_execution seq;
+  auto reduce_chunk = [&](InputIterator f, InputIterator l, std::size_t id) {
+    partial_results[id] = seq.reduce(f,l, std::forward<Identity>(identity), 
+        std::forward<Combiner>(combine_op));
+  };
+
+  for (int i=0; i<concurrency_degree_-1; ++i) {
+    auto delta = chunk_size * i;
+    auto begin = std::next(first,delta);
+    auto end = std::next(begin, chunk_size);
+
+    workers.launch(*this, reduce_chunk, begin, end, i);
+  }
+
+  auto delta = chunk_size * (concurrency_degree_-1);
+  auto begin = std::next(first, delta);
+  reduce_chunk(begin, last, concurrency_degree_-1);
+
+  workers.wait();
+
+  return seq.reduce(std::next(partial_results.begin()), partial_results.end(), 
+      partial_results[0], combine_op);
+}
+
 /**
 \brief Metafunction that determines if type E is parallel_execution_native
 \tparam Execution policy type.
@@ -332,8 +374,6 @@ constexpr bool is_supported<parallel_execution_native>() {
   return true;
 }
 
-
 } // end namespace grppi
-
 
 #endif
