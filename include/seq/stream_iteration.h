@@ -148,7 +148,7 @@ void repeat_until(sequential_execution & ex,
   repeat_until(ex, 
       forward<Generator>(generate_op), 
       forward<pipeline_info<sequential_execution, 
-              Transformers...> &&>(pipe), 
+              Transformers...> &&>(pipe_obj), 
       forward<Predicate>(predicate_op), 
       forward<Consumer>(consume_op));
 }
