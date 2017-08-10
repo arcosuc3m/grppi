@@ -199,7 +199,7 @@ public:
   \brief Get a manager object for registration/deregistration in the
   thread index table for current thread.
   */
-  native_thread_manager thread_manager() { 
+  native_thread_manager thread_manager() const { 
     return native_thread_manager{thread_registry_}; 
   }
 
@@ -250,16 +250,37 @@ public:
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op);
 
+  /**
+  \brief Applies a reduction to a sequence of data items. 
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The reduction result
+  */
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce(InputIterator first, InputIterator last, Identity && identity,
+              Combiner && combine_op) const;
+
+  // TODO: Remove?
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce_pool(InputIterator first, InputIterator last, Identity && identity,
+              Combiner && combine_op) const;
+
 public: 
   /**
   \brief Thread pool for lanching workers.
   \note This member is temporary and is likely to be deprecated or even removed 
         in a future version of GrPPI.
   */
-  thread_pool pool;
+  mutable thread_pool pool;
 
 private: 
-  thread_registry thread_registry_;
+  mutable thread_registry thread_registry_;
 
   int concurrency_degree_;
   bool ordering_;
@@ -306,6 +327,84 @@ void parallel_execution_native::apply_map(
   process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
 
   workers.wait();
+}
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto parallel_execution_native::reduce_pool(
+    InputIterator first, InputIterator last, 
+    Identity && identity,
+    Combiner && combine_op) const
+{
+  sequential_execution seq;
+
+  auto sequence_size = std::distance(first,last);
+  auto chunk_size = sequence_size / concurrency_degree_;
+  std::atomic<int> done_threads(1);
+
+  using result_type = std::decay_t<Identity>;
+  std::vector<result_type> partial_results(concurrency_degree_);
+
+  for (int i=0; i<concurrency_degree_-1; ++i) {
+    auto delta = chunk_size * i;
+    auto begin = std::next(first,delta);
+    auto end = std::next(begin, chunk_size);
+
+    pool.create_task(boost::bind<void>(
+      [&](InputIterator begin, InputIterator end, int tid){
+        partial_results[tid] = seq.reduce(begin, end,
+            std::forward<Identity>(identity), 
+            std::forward<Combiner>(combine_op));
+        done_threads++;
+      },
+      std::move(begin), std::move(end), i));
+  }
+
+  auto delta = chunk_size * (concurrency_degree_-1);
+  auto begin = std::next(first, delta);
+  partial_results[concurrency_degree_-1] = seq.reduce(first, last, 
+      std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
+
+  while (done_threads.load()!=concurrency_degree_);
+
+  return seq.reduce(std::next(partial_results.begin()), partial_results.end(), 
+      partial_results[0], combine_op);
+}
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto parallel_execution_native::reduce(
+    InputIterator first, InputIterator last, 
+    Identity && identity,
+    Combiner && combine_op) const
+{
+  worker_pool workers{concurrency_degree_};
+  auto sequence_size = std::distance(first,last);
+  auto chunk_size = sequence_size / concurrency_degree_;
+
+  using result_type = std::decay_t<Identity>;
+  std::vector<result_type> partial_results(concurrency_degree_);
+
+  sequential_execution seq;
+  auto reduce_chunk = [&](InputIterator f, InputIterator l, std::size_t id) {
+    partial_results[id] = seq.reduce(f,l, std::forward<Identity>(identity), 
+        std::forward<Combiner>(combine_op));
+  };
+
+  for (int i=0; i<concurrency_degree_-1; ++i) {
+    auto delta = chunk_size * i;
+    auto begin = std::next(first,delta);
+    auto end = std::next(begin, chunk_size);
+
+    workers.launch(*this, reduce_chunk, begin, end, i);
+  }
+
+  auto delta = chunk_size * (concurrency_degree_-1);
+  auto begin = std::next(first, delta);
+  reduce_chunk(begin, last, concurrency_degree_-1);
+
+  workers.wait();
+
+  return seq.reduce(std::next(partial_results.begin()), partial_results.end(), 
+      partial_results[0], combine_op);
 }
 
 /**
