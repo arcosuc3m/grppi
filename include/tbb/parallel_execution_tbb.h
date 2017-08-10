@@ -195,9 +195,7 @@ auto parallel_execution_tbb::reduce(
       [combine_op,seq](const auto & range, auto value) {
         return seq.reduce(range.begin(), range.end(), value, combine_op);
       },
-      combine_op
-  );
-
+      combine_op);
 }
 
 /**

@@ -25,7 +25,7 @@
 
 #include "parallel_execution_tbb.h"
 
-#include <tbb/tbb.h>
+#include <utility>
 
 namespace grppi {
 

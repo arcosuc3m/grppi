@@ -431,8 +431,6 @@ constexpr bool is_supported<parallel_execution_native>() {
   return true;
 }
 
-
 } // end namespace grppi
-
 
 #endif
