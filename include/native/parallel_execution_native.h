@@ -21,7 +21,6 @@
 #ifndef GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 #define GRPPI_NATIVE_PARALLEL_EXECUTION_NATIVE_H
 
-#include "pool.h"
 #include "worker_pool.h"
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
@@ -166,9 +165,7 @@ public:
   parallel_execution_native(int concurrency_degree, bool ordering=true) noexcept :
     concurrency_degree_{concurrency_degree},
     ordering_{ordering}
-  {
-    pool.initialise(concurrency_degree_);
-  }
+  {}
 
   /**
   \brief Set number of grppi threads.
@@ -266,19 +263,6 @@ public:
   auto reduce(InputIterator first, InputIterator last, Identity && identity,
               Combiner && combine_op) const;
 
-  // TODO: Remove?
-  template <typename InputIterator, typename Identity, typename Combiner>
-  auto reduce_pool(InputIterator first, InputIterator last, Identity && identity,
-              Combiner && combine_op) const;
-
-public: 
-  /**
-  \brief Thread pool for lanching workers.
-  \note This member is temporary and is likely to be deprecated or even removed 
-        in a future version of GrPPI.
-  */
-  mutable thread_pool pool;
-
 private: 
   mutable thread_registry thread_registry_;
 
@@ -327,47 +311,6 @@ void parallel_execution_native::apply_map(
   process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
 
   workers.wait();
-}
-
-template <typename InputIterator, typename Identity, typename Combiner>
-auto parallel_execution_native::reduce_pool(
-    InputIterator first, InputIterator last, 
-    Identity && identity,
-    Combiner && combine_op) const
-{
-  sequential_execution seq;
-
-  auto sequence_size = std::distance(first,last);
-  auto chunk_size = sequence_size / concurrency_degree_;
-  std::atomic<int> done_threads(1);
-
-  using result_type = std::decay_t<Identity>;
-  std::vector<result_type> partial_results(concurrency_degree_);
-
-  for (int i=0; i<concurrency_degree_-1; ++i) {
-    auto delta = chunk_size * i;
-    auto begin = std::next(first,delta);
-    auto end = std::next(begin, chunk_size);
-
-    pool.create_task(boost::bind<void>(
-      [&](InputIterator begin, InputIterator end, int tid){
-        partial_results[tid] = seq.reduce(begin, end,
-            std::forward<Identity>(identity), 
-            std::forward<Combiner>(combine_op));
-        done_threads++;
-      },
-      std::move(begin), std::move(end), i));
-  }
-
-  auto delta = chunk_size * (concurrency_degree_-1);
-  auto begin = std::next(first, delta);
-  partial_results[concurrency_degree_-1] = seq.reduce(first, last, 
-      std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
-
-  while (done_threads.load()!=concurrency_degree_);
-
-  return seq.reduce(std::next(partial_results.begin()), partial_results.end(), 
-      partial_results[0], combine_op);
 }
 
 template <typename InputIterator, typename Identity, typename Combiner>
