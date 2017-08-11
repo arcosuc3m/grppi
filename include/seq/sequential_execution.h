@@ -105,6 +105,28 @@ public:
   auto reduce(InputIterator first, InputIterator last,
               Identity && identity,
               Combiner && combine_op) const;
+
+  /**
+  \brief Applies a map/reduce operation to a sequence of data items.
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Transformer Callable object type for the transformation.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param transform_op Transformation callable object.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The map/reduce result.
+  */
+  template <typename ... InputIterators, typename Identity, 
+            typename Transformer, typename Combiner>
+  auto map_reduce(std::tuple<InputIterators...> first, 
+                  std::size_t sequence_size,
+                  Identity && identity,
+                  Transformer && transform_op, Combiner && combine_op) const;
+
 };
 
 template <typename ... InputIterators, typename OutputIterator,
@@ -129,6 +151,22 @@ auto sequential_execution::reduce(
   auto result{identity};
   while (first != last) {
     result = combine_op(result, *first++);
+  }
+  return result;
+}
+
+template <typename ... InputIterators, typename Identity, 
+          typename Transformer, typename Combiner>
+auto sequential_execution::map_reduce(
+    std::tuple<InputIterators...> firsts,
+    std::size_t sequence_size, 
+    Identity && identity,
+    Transformer && transform_op, Combiner && combine_op) const
+{
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
+  auto result{identity};
+  while (std::get<0>(firsts) != last) {
+    result = combine_op(result, apply_iterators_increment(transform_op, firsts));
   }
   return result;
 }
