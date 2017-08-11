@@ -54,11 +54,11 @@ template <typename InputIt, typename Identity,
           typename Transformer, typename Combiner>
 auto map_reduce(parallel_execution_native & ex, 
                 InputIt first, InputIt last, 
-                Result && identity, 
+                Identity && identity, 
                 Transformer && transform_op,  Combiner &&combine_op)
 {
   return ex.map_reduce(first, last, 
-      std::forward<Result>(identity),
+      std::forward<Identity>(identity),
       std::forward<Transformer>(transform_op), 
       std::forward<Combiner>(combine_op));
 }

@@ -58,7 +58,7 @@ auto map_reduce(const sequential_execution & ex,
                 Transformer &&  transform_op, Combiner && combine_op)
 {
   return ex.map_reduce(first, last, 
-      std::forward<Result>(identity),
+      std::forward<Identity>(identity),
       std::forward<Transformer>(transform_op), 
       std::forward<Combiner>(combine_op));
 }
