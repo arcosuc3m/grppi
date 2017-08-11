@@ -38,7 +38,7 @@ namespace grppi {
 /**
 \brief Invoke \ref md_map-reduce on a data sequence with 
 sequential execution.
-\tparam InputIt Iterator type used for the input sequence.
+\tparam InputIterator Iterator type used for the input sequence.
 \tparam Identity Type for the identity value.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
@@ -50,14 +50,46 @@ sequential execution.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename InputIt, typename Identity, 
+template <typename InputIterator, typename Identity, 
           typename Transformer, typename Combiner>
 auto map_reduce(const sequential_execution & ex, 
-                InputIt first, InputIt last, 
+                InputIterator first, InputIterator last, 
                 Identity && identity, 
                 Transformer &&  transform_op, Combiner && combine_op)
 {
-  return ex.map_reduce(first, last, 
+  return ex.map_reduce(make_tuple(first), 
+      std::distance(first,last), 
+      std::forward<Identity>(identity),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Combiner>(combine_op));
+}
+
+/**
+\brief Invoke \ref md_map-reduce on multiple data sequences with 
+sequential execution.
+\tparam InputIterator Iterator type used for the input sequence.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename InputIterator, typename Identity, 
+          typename Transformer, typename Combiner,
+          typename ... OtherInputIterators>
+auto map_reduce(const sequential_execution & ex, 
+                InputIterator first, InputIterator last, 
+                Identity && identity, 
+                Transformer &&  transform_op, Combiner && combine_op,
+                OtherInputIterators ... other_firsts)
+{
+  return ex.map_reduce(make_tuple(first, other_firsts...), 
+      std::distance(first,last), 
       std::forward<Identity>(identity),
       std::forward<Transformer>(transform_op), 
       std::forward<Combiner>(combine_op));

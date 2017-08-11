@@ -185,9 +185,10 @@ public:
   \pre Iterators in the range `[first,last)` are valid. 
   \return The map/reduce result.
   */
-  template <typename InputIterator, typename Identity, 
+  template <typename ... InputIterators, typename Identity, 
             typename Transformer, typename Combiner>
-  auto map_reduce(InputIterator first, InputIterator last,
+  auto map_reduce(std::tuple<InputIterators...> firsts, 
+                  std::size_t sequence_size,
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
 
@@ -279,10 +280,11 @@ auto parallel_execution_omp::reduce(
       partial_results[0], std::forward<Combiner>(combine_op));
 }
 
-template <typename InputIterator, typename Identity, 
+template <typename ... InputIterators, typename Identity, 
           typename Transformer, typename Combiner>
 auto parallel_execution_omp::map_reduce(
-    InputIterator first, InputIterator last,
+    std::tuple<InputIterators...> firsts,
+    std::size_t sequence_size,
     Identity && identity,
     Transformer && transform_op, Combiner && combine_op) const
 {
@@ -290,33 +292,33 @@ auto parallel_execution_omp::map_reduce(
   std::vector<result_type> partial_results(concurrency_degree_);
   sequential_execution seq{};
 
+  const auto chunk_size = sequence_size / concurrency_degree_;
+  auto process_chunk = [&](auto f, std::size_t sz, std::size_t i) {
+    partial_results[i] = seq.map_reduce(
+        f, sz, partial_results[i],
+        std::forward<Transformer>(transform_op), 
+        std::forward<Combiner>(combine_op));
+  };
+
   #pragma omp parallel
   {
     #pragma omp single nowait
     {
-      auto sequence_size = std::distance(first,last);
-      auto chunk_size = sequence_size / concurrency_degree_;
 
       for (int i=0;i<concurrency_degree_-1;++i) {    
         #pragma omp task firstprivate(i)
         {
           auto delta = chunk_size * i;
-          auto begin = std::next(first,delta);
-          auto end = std::next(begin, chunk_size);
-          partial_results[i] = seq.map_reduce( 
-              begin, end, partial_results[i], 
-              std::forward<Transformer>(transform_op), 
-              std::forward<Combiner>(combine_op));
+          auto begin = iterators_next(firsts,delta);
+          auto end = std::next(std::get<0>(begin), chunk_size);
+          process_chunk(begin, chunk_size, i);
         }
       }
 
       auto delta = chunk_size * (concurrency_degree_ - 1);
-      auto begin = std::next(first,delta);
-      auto end = last;
-      partial_results[0] = seq.map_reduce(begin, end, 
-          partial_results[0], 
-          std::forward<Transformer>(transform_op), 
-          std::forward<Combiner>(combine_op));
+      auto begin = iterators_next(firsts,delta);
+      auto end = std::next(std::get<0>(firsts), sequence_size);
+      process_chunk(begin, std::distance(std::get<0>(begin), end), concurrency_degree_ - 1);
       #pragma omp taskwait
     }
   }

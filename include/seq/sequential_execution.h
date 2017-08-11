@@ -120,9 +120,10 @@ public:
   \pre Iterators in the range `[first,last)` are valid. 
   \return The map/reduce result.
   */
-  template <typename InputIterator, typename Identity, 
+  template <typename ... InputIterators, typename Identity, 
             typename Transformer, typename Combiner>
-  auto map_reduce(InputIterator first, InputIterator last,
+  auto map_reduce(std::tuple<InputIterators...> first, 
+                  std::size_t sequence_size,
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
 
@@ -154,16 +155,18 @@ auto sequential_execution::reduce(
   return result;
 }
 
-template <typename InputIterator, typename Identity, 
+template <typename ... InputIterators, typename Identity, 
           typename Transformer, typename Combiner>
 auto sequential_execution::map_reduce(
-    InputIterator first, InputIterator last,
+    std::tuple<InputIterators...> firsts,
+    std::size_t sequence_size, 
     Identity && identity,
     Transformer && transform_op, Combiner && combine_op) const
 {
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
   auto result{identity};
-  while (first != last) {
-    result = combine_op(result, transform_op(*first++));
+  while (std::get<0>(firsts) != last) {
+    result = combine_op(result, apply_iterators_increment(transform_op, firsts));
   }
   return result;
 }

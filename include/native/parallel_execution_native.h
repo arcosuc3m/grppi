@@ -277,9 +277,10 @@ public:
   \pre Iterators in the range `[first,last)` are valid. 
   \return The map/reduce result.
   */
-  template <typename InputIterator, typename Identity, 
+  template <typename ... InputIterators, typename Identity, 
             typename Transformer, typename Combiner>
-  auto map_reduce(InputIterator first, InputIterator last,
+  auto map_reduce(std::tuple<InputIterators...> firsts, 
+                  std::size_t sequence_size,
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
 
@@ -370,10 +371,11 @@ auto parallel_execution_native::reduce(
       partial_results[0], combine_op);
 }
 
-template <typename InputIterator, typename Identity, 
+template <typename ... InputIterators, typename Identity, 
           typename Transformer, typename Combiner>
 auto parallel_execution_native::map_reduce(
-    InputIterator first, InputIterator last,
+    std::tuple<InputIterators...> firsts, 
+    std::size_t sequence_size,
     Identity && identity,
     Transformer && transform_op, Combiner && combine_op) const
 {
@@ -381,27 +383,26 @@ auto parallel_execution_native::map_reduce(
   std::vector<result_type> partial_results(concurrency_degree_);
 
   sequential_execution seq;
-  auto map_reduce_chunk = [&](InputIterator f, InputIterator l, std::size_t id) {
-    partial_results[id] = seq.map_reduce(f,l, 
+  auto map_reduce_chunk = [&](auto f, std::size_t sz, std::size_t id) {
+    partial_results[id] = seq.map_reduce(f, sz,
         std::forward<Identity>(partial_results[id]), 
         std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
   };
 
-  const auto sequence_size = std::distance(first,last);
   const auto chunk_size = sequence_size/concurrency_degree_;
 
   worker_pool workers{concurrency_degree_};
   for(int i=0;i<concurrency_degree_-1;++i){    
     auto delta = chunk_size * i;
-    auto begin = std::next(first,delta);
-    auto end = std::next(begin, chunk_size);
+    auto begin = iterators_next(firsts,delta);
 
-    workers.launch(*this, map_reduce_chunk, begin, end, i);
+    workers.launch(*this, map_reduce_chunk, begin, chunk_size, i);
   }
 
   auto delta = chunk_size * (concurrency_degree_-1);
-  auto begin = std::next(first, delta);
-  partial_results[concurrency_degree_-1] = seq.map_reduce(begin, last, 
+  auto begin = iterators_next(firsts, delta);
+  partial_results[concurrency_degree_-1] = seq.map_reduce(begin, 
+        sequence_size - delta,
         partial_results[concurrency_degree_-1], 
         std::forward<Transformer>(transform_op), 
         std::forward<Combiner>(combine_op));
