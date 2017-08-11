@@ -171,6 +171,26 @@ public:
   auto reduce(InputIterator first, InputIterator last, Identity && identity,
               Combiner && combine_op) const;
 
+  /**
+  \brief Applies a map/reduce operation to a sequence of data items.
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Transformer Callable object type for the transformation.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param transform_op Transformation callable object.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The map/reduce result.
+  */
+  template <typename InputIterator, typename Identity, 
+            typename Transformer, typename Combiner>
+  auto map_reduce(InputIterator first, InputIterator last,
+                  Identity && identity,
+                  Transformer && transform_op, Combiner && combine_op) const;
+
 private:
 
   /**
@@ -250,6 +270,52 @@ auto parallel_execution_omp::reduce(
       auto end = last;
       partial_results[concurrency_degree_-1] = seq.reduce(begin,end,
           std::forward<Identity>(identity),
+          std::forward<Combiner>(combine_op));
+      #pragma omp taskwait
+    }
+  }
+
+  return seq.reduce(next(begin(partial_results)), end(partial_results),
+      partial_results[0], std::forward<Combiner>(combine_op));
+}
+
+template <typename InputIterator, typename Identity, 
+          typename Transformer, typename Combiner>
+auto parallel_execution_omp::map_reduce(
+    InputIterator first, InputIterator last,
+    Identity && identity,
+    Transformer && transform_op, Combiner && combine_op) const
+{
+  using result_type = std::decay_t<Identity>;
+  std::vector<result_type> partial_results(concurrency_degree_);
+  sequential_execution seq{};
+
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
+    {
+      auto sequence_size = std::distance(first,last);
+      auto chunk_size = sequence_size / concurrency_degree_;
+
+      for (int i=0;i<concurrency_degree_-1;++i) {    
+        #pragma omp task firstprivate(i)
+        {
+          auto delta = chunk_size * i;
+          auto begin = std::next(first,delta);
+          auto end = std::next(begin, chunk_size);
+          partial_results[i] = seq.map_reduce( 
+              begin, end, partial_results[i], 
+              std::forward<Transformer>(transform_op), 
+              std::forward<Combiner>(combine_op));
+        }
+      }
+
+      auto delta = chunk_size * (concurrency_degree_ - 1);
+      auto begin = std::next(first,delta);
+      auto end = last;
+      partial_results[0] = seq.map_reduce(begin, end, 
+          partial_results[0], 
+          std::forward<Transformer>(transform_op), 
           std::forward<Combiner>(combine_op));
       #pragma omp taskwait
     }

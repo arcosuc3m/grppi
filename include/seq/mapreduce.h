@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 
 #include "sequential_execution.h"
 
+#include <utility>
+
 namespace grppi {
 
 /**
@@ -37,7 +39,7 @@ namespace grppi {
 \brief Invoke \ref md_map-reduce on a data sequence with 
 sequential execution.
 \tparam InputIt Iterator type used for the input sequence.
-\tparam Result Result type of the reduction.
+\tparam Identity Type for the identity value.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex Sequential execution policy object.
@@ -48,24 +50,17 @@ sequential execution.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename InputIt, typename Result, typename Transformer, 
-          typename Combiner>
-Result map_reduce(sequential_execution &, 
-                  InputIt first, InputIt last, 
-                  Result identity, 
-                  Transformer &&  transform_op, Combiner && combine_op)
+template <typename InputIt, typename Identity, 
+          typename Transformer, typename Combiner>
+auto map_reduce(const sequential_execution & ex, 
+                InputIt first, InputIt last, 
+                Identity && identity, 
+                Transformer &&  transform_op, Combiner && combine_op)
 {
-  Result out = identity;
-
-  using namespace std;
-
-  while (first!=last) {
-    auto x = transform_op(*first);
-    out = combine_op(out,x);
-    first++;
-  }
-
-  return out;
+  return ex.map_reduce(first, last, 
+      std::forward<Result>(identity),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Combiner>(combine_op));
 }
 
 }

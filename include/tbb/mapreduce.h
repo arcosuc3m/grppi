@@ -25,7 +25,7 @@
 
 #include "parallel_execution_tbb.h"
 
-#include <tbb/tbb.h>
+#include <utility>
 
 namespace grppi {
 
@@ -52,39 +52,20 @@ TBB parallel execution.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
-Identity map_reduce ( parallel_execution_tbb& p, InputIt first, InputIt last, Identity identity, Transformer && transform_op, Combiner && combine_op){
-
-    using namespace std;
-    tbb::task_group g;
-
-    Identity out = identity;
-    std::vector<Identity> partialOuts(p.concurrency_degree());
-    int numElements = last - first;
-    int elemperthr = numElements/p.concurrency_degree();
-    sequential_execution s{};
-    for(int i=1;i<p.concurrency_degree();i++){    
-       auto begin = first + (elemperthr * i);
-       auto end = first + (elemperthr * (i+1));
-       if(i == p.concurrency_degree() -1 ) end= last;
-       g.run(
-         [&, begin, end, i](){
-            partialOuts[i] = map_reduce(s, begin, end, partialOuts[i], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
-         }
-         
-       );
-    }
-
-    partialOuts[0] = map_reduce(s, first, (first+elemperthr), partialOuts[0], std::forward<Transformer>(transform_op), std::forward<Combiner>(combine_op));
-    g.wait();
-    
-    for( auto & res : partialOuts){
-       out = combine_op(out, res);
-    }
-    return out;
+template <typename InputIt, typename Identity, 
+          typename Transformer, typename Combiner>
+auto map_reduce (parallel_execution_tbb & ex, InputIt first, InputIt last, 
+                 Identity && identity, 
+                 Transformer && transform_op, Combiner && combine_op)
+{
+  return ex.map_reduce(first, last,
+      std::forward<Identity>(identity),
+      std::forward<Transformer>(transform_op),
+      std::forward<Combiner>(combine_op));
 }
 
 }
+
 #endif
 
 #endif
