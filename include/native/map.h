@@ -49,12 +49,12 @@ paralell execution.
 \param transform_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(parallel_execution_native & ex, 
+void map(const parallel_execution_native & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer && transform_op)
 {
   ex.map(std::make_tuple(first), first_out, std::distance(first,last),
-    transform_op);
+    std::forward<Transformer>(transform_op));
 }
 
 /**
@@ -79,7 +79,7 @@ void map(parallel_execution_native& ex,
          OtherInputIts ... more_inputs)
 {
   ex.map(std::make_tuple(first,more_inputs...), first_out,
-      std::distance(first,last), transform_op);
+      std::distance(first,last), std::forward<Transformer>(transform_op));
 }
 
 /**

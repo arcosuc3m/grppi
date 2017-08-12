@@ -245,7 +245,7 @@ public:
             typename Transformer>
   void map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
-      std::size_t sequence_size, Transformer transform_op);
+      std::size_t sequence_size, Transformer transform_op) const;
 
   /**
   \brief Applies a reduction to a sequence of data items. 
@@ -324,7 +324,7 @@ template <typename ... InputIterators, typename OutputIterator,
 void parallel_execution_native::map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
-    std::size_t sequence_size, Transformer transform_op)
+    std::size_t sequence_size, Transformer transform_op) const
 {
   using namespace std;
 
