@@ -231,7 +231,7 @@ auto parallel_execution_tbb::reduce(
     Identity && identity,
     Combiner && combine_op) const
 {
-  sequential_execution seq;
+  constexpr sequential_execution seq;
   return tbb::parallel_reduce(tbb::blocked_range<InputIterator>(first, last), identity,
       [combine_op,seq](const auto & range, auto value) {
         return seq.reduce(range.begin(), range.end(), value, combine_op);
@@ -254,7 +254,7 @@ auto parallel_execution_tbb::map_reduce(
 
   auto chunk_size = sequence_size/concurrency_degree_;
   
-  sequential_execution seq;
+  constexpr sequential_execution seq;
 
   for(int i=0; i<concurrency_degree_-1;++i) {    
     auto delta = chunk_size * i;
@@ -290,7 +290,7 @@ void parallel_execution_tbb::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  sequential_execution seq{};
+  constexpr sequential_execution seq{};
   const auto chunk_size = sequence_size / concurrency_degree_;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t delta) {
     seq.stencil(f, std::next(first_out,delta), sz,

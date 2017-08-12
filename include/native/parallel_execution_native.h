@@ -370,7 +370,7 @@ auto parallel_execution_native::reduce(
   using result_type = std::decay_t<Identity>;
   std::vector<result_type> partial_results(concurrency_degree_);
 
-  sequential_execution seq;
+  constexpr sequential_execution seq;
   auto reduce_chunk = [&](InputIterator f, InputIterator l, std::size_t id) {
     partial_results[id] = seq.reduce(f,l, std::forward<Identity>(identity), 
         std::forward<Combiner>(combine_op));
@@ -405,7 +405,7 @@ auto parallel_execution_native::map_reduce(
   using result_type = std::decay_t<Identity>;
   std::vector<result_type> partial_results(concurrency_degree_);
 
-  sequential_execution seq;
+  constexpr sequential_execution seq;
   auto map_reduce_chunk = [&](auto f, std::size_t sz, std::size_t id) {
     partial_results[id] = seq.map_reduce(f, sz,
         std::forward<Identity>(partial_results[id]), 
@@ -445,7 +445,7 @@ void parallel_execution_native::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  sequential_execution seq;
+  constexpr sequential_execution seq;
   auto process_chunk =
     [&transform_op, &neighbour_op,seq](auto fins, std::size_t sz, auto fout)
   {

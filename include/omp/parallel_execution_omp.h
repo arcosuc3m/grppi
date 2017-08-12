@@ -263,7 +263,7 @@ auto parallel_execution_omp::reduce(
     InputIterator first, InputIterator last, Identity && identity,
     Combiner && combine_op) const
 {
-  sequential_execution seq;
+  constexpr sequential_execution seq;
 
   auto sequence_size = std::distance(first,last);
   auto chunk_size = sequence_size/concurrency_degree_;
@@ -313,7 +313,7 @@ auto parallel_execution_omp::map_reduce(
 {
   using result_type = std::decay_t<Identity>;
   std::vector<result_type> partial_results(concurrency_degree_);
-  sequential_execution seq{};
+  constexpr sequential_execution seq;
 
   const auto chunk_size = sequence_size / concurrency_degree_;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t i) {
@@ -358,7 +358,7 @@ void parallel_execution_omp::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  sequential_execution seq{};
+  constexpr sequential_execution seq;
   const auto chunk_size = sequence_size / concurrency_degree_;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t delta) {
     seq.stencil(f, std::next(first_out,delta), sz,
