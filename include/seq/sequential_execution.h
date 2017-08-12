@@ -37,37 +37,37 @@ class sequential_execution {
 public:
 
   /// \brief Default constructor.
-  sequential_execution() {}
+  constexpr sequential_execution() noexcept = default;
 
   /**
   \brief Set number of grppi threads.
   \note Setting concurrency degree is ignored for sequential execution.
   */
-  void set_concurrency_degree(int n) const noexcept {}
+  constexpr void set_concurrency_degree(int n) const noexcept {}
 
   /**
   \brief Get number of grppi trheads.
   \note Getting concurrency degree is always 1 for sequential execution.
   */
-  int concurrency_degree() const noexcept { return 1; }
+  constexpr int concurrency_degree() const noexcept { return 1; }
 
   /**
   \brief Enable ordering.
   \note Enabling ordering of sequential execution is always ignored.
   */
-  void enable_ordering() const noexcept {}
+  constexpr void enable_ordering() const noexcept {}
 
   /**
   \brief Disable ordering.
   \note Disabling ordering of sequential execution is always ignored.
   */
-  void disable_ordering() const noexcept {}
+  constexpr void disable_ordering() const noexcept {}
 
   /**
   \brief Is execution ordered.
   \note Sequential execution is always ordered.
   */
-  bool is_ordered() const noexcept { return true; }
+  constexpr bool is_ordered() const noexcept { return true; }
 
   /**
   \brief Applies a trasnformation to multiple sequences leaving the result in
@@ -85,7 +85,7 @@ public:
   */
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
-  void apply_map(std::tuple<InputIterators...> firsts,
+  constexpr void apply_map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
   
@@ -102,7 +102,7 @@ public:
   \return The reduction result
   */
   template <typename InputIterator, typename Identity, typename Combiner>
-  auto reduce(InputIterator first, InputIterator last,
+  constexpr auto reduce(InputIterator first, InputIterator last,
               Identity && identity,
               Combiner && combine_op) const;
 
@@ -122,7 +122,7 @@ public:
   */
   template <typename ... InputIterators, typename Identity, 
             typename Transformer, typename Combiner>
-  auto map_reduce(std::tuple<InputIterators...> firsts, 
+  constexpr auto map_reduce(std::tuple<InputIterators...> firsts, 
                   std::size_t sequence_size,
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
@@ -145,7 +145,7 @@ public:
   */
   template <typename ... InputIterators, typename OutputIterator,
             typename StencilTransformer, typename Neighbourhood>
-  void stencil(std::tuple<InputIterators...> firsts, OutputIterator first_out,
+  constexpr void stencil(std::tuple<InputIterators...> firsts, OutputIterator first_out,
                std::size_t sequence_size,
                StencilTransformer && transform_op,
                Neighbourhood && neighbour_op) const;
@@ -153,7 +153,7 @@ public:
 
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
-void sequential_execution::apply_map(
+constexpr void sequential_execution::apply_map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
     std::size_t sequence_size, Transformer transform_op) const
@@ -165,7 +165,7 @@ void sequential_execution::apply_map(
 }
 
 template <typename InputIterator, typename Identity, typename Combiner>
-auto sequential_execution::reduce(
+constexpr auto sequential_execution::reduce(
     InputIterator first, InputIterator last,
     Identity && identity,
     Combiner && combine_op) const
@@ -179,7 +179,7 @@ auto sequential_execution::reduce(
 
 template <typename ... InputIterators, typename Identity, 
           typename Transformer, typename Combiner>
-auto sequential_execution::map_reduce(
+constexpr auto sequential_execution::map_reduce(
     std::tuple<InputIterators...> firsts,
     std::size_t sequence_size, 
     Identity && identity,
@@ -195,7 +195,7 @@ auto sequential_execution::map_reduce(
 
 template <typename ... InputIterators, typename OutputIterator,
           typename StencilTransformer, typename Neighbourhood>
-void sequential_execution::stencil(
+constexpr void sequential_execution::stencil(
     std::tuple<InputIterators...> firsts, OutputIterator first_out,
     std::size_t sequence_size,
     StencilTransformer && transform_op,
