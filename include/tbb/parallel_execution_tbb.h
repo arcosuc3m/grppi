@@ -172,6 +172,27 @@ public:
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
 
+  /**
+  \brief Applies a trasnformation to multiple sequences leaving the result in
+  another sequence.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam Transformer Callable object type for the transformation.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Transformation callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator,
+            typename StencilTransformer, typename Neighbourhood>
+  void stencil(std::tuple<InputIterators...> firsts, OutputIterator first_out,
+               std::size_t sequence_size,
+               StencilTransformer && transform_op,
+               Neighbourhood && neighbour_op) const;
+
 private:
 
   constexpr static int default_concurrency_degree = 4;
@@ -259,6 +280,39 @@ auto parallel_execution_tbb::map_reduce(
 
   return seq.reduce(std::next(std::begin(partial_results)), std::end(partial_results),
       partial_results[0], std::forward<Combiner>(combine_op));
+}
+
+template <typename ... InputIterators, typename OutputIterator,
+          typename StencilTransformer, typename Neighbourhood>
+void parallel_execution_tbb::stencil(
+    std::tuple<InputIterators...> firsts, OutputIterator first_out,
+    std::size_t sequence_size,
+    StencilTransformer && transform_op,
+    Neighbourhood && neighbour_op) const
+{
+  sequential_execution seq{};
+  const auto chunk_size = sequence_size / concurrency_degree_;
+  auto process_chunk = [&](auto f, std::size_t sz, std::size_t delta) {
+    seq.stencil(f, std::next(first_out,delta), sz,
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
+  };
+
+  tbb::task_group g;
+  for (int i=0; i<concurrency_degree_-1; ++i) {
+    g.run([=](){
+      auto delta = chunk_size * i;
+      auto begin = iterators_next(firsts,delta);
+      process_chunk(begin, chunk_size, delta);
+    });
+  }
+
+  auto delta = chunk_size * (concurrency_degree_ - 1);
+  auto begin = iterators_next(firsts,delta);
+  auto end = std::next(std::get<0>(firsts), sequence_size);
+  process_chunk(begin, std::distance(std::get<0>(begin), end), delta);
+
+  g.wait();
 }
 
 /**

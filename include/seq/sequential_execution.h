@@ -122,11 +122,33 @@ public:
   */
   template <typename ... InputIterators, typename Identity, 
             typename Transformer, typename Combiner>
-  auto map_reduce(std::tuple<InputIterators...> first, 
+  auto map_reduce(std::tuple<InputIterators...> firsts, 
                   std::size_t sequence_size,
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
 
+  /**
+  \brief Applies a stencil to multiple sequences leaving the result in
+  another sequence.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam StencilTransformer Callable object type for the stencil transformation.
+  \tparam Neighbourhood Callable object for generating neighbourhoods.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Stencil transformation callable object.
+  \param neighbour_op Neighbourhood callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator,
+            typename StencilTransformer, typename Neighbourhood>
+  void stencil(std::tuple<InputIterators...> firsts, OutputIterator first_out,
+               std::size_t sequence_size,
+               StencilTransformer && transform_op,
+               Neighbourhood && neighbour_op) const;
 };
 
 template <typename ... InputIterators, typename OutputIterator,
@@ -138,7 +160,7 @@ void sequential_execution::apply_map(
 {
   const auto last = std::next(std::get<0>(firsts), sequence_size);
   while (std::get<0>(firsts) != last) {
-    *first_out++ = apply_iterators_increment(transform_op, firsts);
+    *first_out++ = apply_deref_increment(transform_op, firsts);
   }
 }
 
@@ -166,9 +188,25 @@ auto sequential_execution::map_reduce(
   const auto last = std::next(std::get<0>(firsts), sequence_size);
   auto result{identity};
   while (std::get<0>(firsts) != last) {
-    result = combine_op(result, apply_iterators_increment(transform_op, firsts));
+    result = combine_op(result, apply_deref_increment(transform_op, firsts));
   }
   return result;
+}
+
+template <typename ... InputIterators, typename OutputIterator,
+          typename StencilTransformer, typename Neighbourhood>
+void sequential_execution::stencil(
+    std::tuple<InputIterators...> firsts, OutputIterator first_out,
+    std::size_t sequence_size,
+    StencilTransformer && transform_op,
+    Neighbourhood && neighbour_op) const
+{
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
+  while (std::get<0>(firsts) != last) {
+    auto f = std::get<0>(firsts);
+    *first_out++ = transform_op(f, 
+        apply_increment(std::forward<Neighbourhood>(neighbour_op), firsts));
+  }
 }
 
 /// Determine if a type is a sequential execution policy.

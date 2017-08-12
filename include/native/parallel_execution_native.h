@@ -284,6 +284,29 @@ public:
                   Identity && identity,
                   Transformer && transform_op, Combiner && combine_op) const;
 
+  /**
+  \brief Applies a stencil to multiple sequences leaving the result in
+  another sequence.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam StencilTransformer Callable object type for the stencil transformation.
+  \tparam Neighbourhood Callable object for generating neighbourhoods.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Stencil transformation callable object.
+  \param neighbour_op Neighbourhood callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator,
+            typename StencilTransformer, typename Neighbourhood>
+  void stencil(std::tuple<InputIterators...> firsts, OutputIterator first_out,
+               std::size_t sequence_size,
+               StencilTransformer && transform_op,
+               Neighbourhood && neighbour_op) const;
+
 private: 
   mutable thread_registry thread_registry_;
 
@@ -310,7 +333,7 @@ void parallel_execution_native::apply_map(
   {
     const auto l = next(get<0>(fins), size);
     while (get<0>(fins)!=l) {
-      *fout++ = apply_iterators_increment(transform_op, fins);
+      *fout++ = apply_deref_increment(transform_op, fins);
     }
   };
 
@@ -412,6 +435,41 @@ auto parallel_execution_native::map_reduce(
   return seq.reduce(std::next(partial_results.begin()), partial_results.end(),
       partial_results[0],
       std::forward<Combiner>(combine_op));
+}
+
+template <typename ... InputIterators, typename OutputIterator,
+          typename StencilTransformer, typename Neighbourhood>
+void parallel_execution_native::stencil(
+    std::tuple<InputIterators...> firsts, OutputIterator first_out,
+    std::size_t sequence_size,
+    StencilTransformer && transform_op,
+    Neighbourhood && neighbour_op) const
+{
+  sequential_execution seq;
+  auto process_chunk =
+    [&transform_op, &neighbour_op,seq](auto fins, std::size_t sz, auto fout)
+  {
+    seq.stencil(fins, fout, sz,
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
+  };
+
+  worker_pool workers{concurrency_degree_};
+
+  const int chunk_size = sequence_size / concurrency_degree_;
+  for (int i=0; i!=concurrency_degree_-1; ++i) {
+    const int delta = chunk_size * i;
+    const auto chunk_firsts = iterators_next(firsts,delta);
+    const auto chunk_out = std::next(first_out,delta);
+    workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_out);
+  }
+
+  const int delta = chunk_size * (concurrency_degree_ - 1);
+  const auto chunk_firsts = iterators_next(firsts,delta);
+  const auto chunk_out = std::next(first_out,delta);
+  process_chunk(chunk_firsts, sequence_size - delta, chunk_out);
+
+  workers.wait();
 }
 
 /**
