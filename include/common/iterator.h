@@ -28,16 +28,20 @@ namespace grppi{
 
 namespace internal {
 
-template <typename F, typename T, std::size_t ... I>
-decltype(auto) apply_iterator_increment_impl(F && f, T & t, std::index_sequence<I...>)
+template <typename F, typename ... Iterators, template<typename...> class T, std::size_t ... I>
+decltype(auto) apply_deref_increment(
+    F && f, 
+    T<Iterators...> & iterators, 
+    std::index_sequence<I...>)
 {
-  return std::forward<F>(f)(*std::get<I>(t)++...);
+  return std::forward<F>(f)(*std::get<I>(iterators)++...);
 }
 
 } // namespace internal
 
 /**
-\brief Applies a callable object to the values obtained from the interators in a tuple.
+\brief Applies a callable object to the values obtained from the iterators in 
+a tuple-like object.
 This function takes callable object `f` and a tuple-like with iterators (e.g.
 the result of `make_tuple(it1, it2, it3)`)
 
@@ -47,19 +51,64 @@ and performs the action
 f(*it1++, *it2++, *it3++);
 ~~~
 
-\tparam Type of the callable object.
-\tparam T Tuple type containing a tuple of iterators
+\tparam F Type of the callable object.
+\tparam Iterators Pack of iterator types.
+\tparam T Tuple-like type containing the iterators
 \param f Callable object to be invoked.
-\param t Tuple of iterators.
+\param iterators Iterators to be used.
 \post All iterators in t have been incremented
-\post `f` has been invoked with the contents of the iterator in the tuple.
+\return The result of callable invocation.
 */
-template <typename F, typename T>
-decltype(auto) apply_iterators_increment(F && f, T & t)
+template <typename F, typename ... Iterators, template <typename ...> class T>
+decltype(auto) apply_deref_increment(
+    F && f, 
+    T<Iterators...> & iterators)
 {
-  using tuple_raw_type = std::decay_t<T>;
-  constexpr std::size_t size = std::tuple_size<tuple_raw_type>::value;
-  return internal::apply_iterator_increment_impl(std::forward<F>(f), t,
+  constexpr std::size_t size = sizeof...(Iterators);
+  return internal::apply_deref_increment(std::forward<F>(f), iterators,
+      std::make_index_sequence<size>());
+}
+
+namespace internal {
+
+template <typename F, typename ... Iterators, template <typename...> class T,
+          std::size_t ... I>
+decltype(auto) apply_increment(
+    F && f,
+    T<Iterators...> & iterators,
+    std::index_sequence<I...>)
+{
+  return std::forward<F>(f)(std::get<I>(iterators)++...);
+}
+
+}
+
+/**
+\brief Applies a callable object to the iterators in a tuple like-object and
+the increments those iterators.
+This function takes callable object `f` and a tuple-like object with iterators (e.g.
+the result of `make_tuple(it1, it2, it3)`)
+
+and performs the action
+
+~~~{.cpp}
+f(it1++, it2++, it3++);
+~~~
+
+\tparam Type of the callable object.
+\tparam Iterators Pack of iterator types.
+\tparam T Tuple-like type containing the iterators
+\param f Callable object to be invoked.
+\param iterators Iterators to be used.
+\post All iterators in t have been incremented
+*/
+template <typename F, typename ... Iterators, template <typename...> class T>
+decltype(auto) apply_increment(
+    F && f,
+    T<Iterators...> & iterators) 
+{
+  constexpr std::size_t size = sizeof...(Iterators);
+  return internal::apply_increment(std::forward<F>(f), iterators,
       std::make_index_sequence<size>());
 }
 
