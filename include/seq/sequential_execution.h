@@ -87,7 +87,7 @@ public:
             typename Transformer>
   constexpr void map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
-      std::size_t sequence_size, Transformer transform_op) const;
+      std::size_t sequence_size, Transformer && transform_op) const;
   
   /**
   \brief Applies a reduction to a sequence of data items. 
@@ -156,11 +156,13 @@ template <typename ... InputIterators, typename OutputIterator,
 constexpr void sequential_execution::map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
-    std::size_t sequence_size, Transformer transform_op) const
+    std::size_t sequence_size, 
+    Transformer && transform_op) const
 {
   const auto last = std::next(std::get<0>(firsts), sequence_size);
   while (std::get<0>(firsts) != last) {
-    *first_out++ = apply_deref_increment(transform_op, firsts);
+    *first_out++ = apply_deref_increment(
+        std::forward<Transformer>(transform_op), firsts);
   }
 }
 
@@ -188,7 +190,8 @@ constexpr auto sequential_execution::map_reduce(
   const auto last = std::next(std::get<0>(firsts), sequence_size);
   auto result{identity};
   while (std::get<0>(firsts) != last) {
-    result = combine_op(result, apply_deref_increment(transform_op, firsts));
+    result = combine_op(result, apply_deref_increment(
+        std::forward<Transformer>(transform_op), firsts));
   }
   return result;
 }
