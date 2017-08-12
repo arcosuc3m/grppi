@@ -85,7 +85,7 @@ public:
   */
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
-  constexpr void apply_map(std::tuple<InputIterators...> firsts,
+  constexpr void map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
   
@@ -153,7 +153,7 @@ public:
 
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
-constexpr void sequential_execution::apply_map(
+constexpr void sequential_execution::map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
     std::size_t sequence_size, Transformer transform_op) const

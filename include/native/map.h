@@ -53,7 +53,7 @@ void map(parallel_execution_native & ex,
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer && transform_op)
 {
-  ex.apply_map(std::make_tuple(first), first_out, std::distance(first,last),
+  ex.map(std::make_tuple(first), first_out, std::distance(first,last),
     transform_op);
 }
 
@@ -78,7 +78,7 @@ void map(parallel_execution_native& ex,
          Transformer && transform_op, 
          OtherInputIts ... more_inputs)
 {
-  ex.apply_map(std::make_tuple(first,more_inputs...), first_out,
+  ex.map(std::make_tuple(first,more_inputs...), first_out,
       std::distance(first,last), transform_op);
 }
 
@@ -86,6 +86,7 @@ void map(parallel_execution_native& ex,
 @}
 @}
 */
+
 }
 
 #endif

@@ -243,7 +243,7 @@ public:
   */
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
-  void apply_map(std::tuple<InputIterators...> firsts,
+  void map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op);
 
@@ -321,7 +321,7 @@ private:
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
-void parallel_execution_native::apply_map(
+void parallel_execution_native::map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
     std::size_t sequence_size, Transformer transform_op)
