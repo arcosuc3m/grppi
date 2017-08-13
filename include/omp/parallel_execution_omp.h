@@ -178,7 +178,7 @@ public:
   \tparam Transformer Callable object type for the transformation.
   \tparam Combiner Callable object type for the combination.
   \param first Iterator to the first element of the sequence.
-  \param last Iterator to one past the end of the sequence.
+  \param sequence_size Size of the input sequence.
   \param identity Identity value for the reduction.
   \param transform_op Transformation callable object.
   \param combine_op Combination callable object.
