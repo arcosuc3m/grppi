@@ -86,8 +86,8 @@ public:
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
   constexpr void map(std::tuple<InputIterators...> firsts,
-      OutputIterator first_out, 
-      std::size_t sequence_size, Transformer && transform_op) const;
+      OutputIterator first_out, std::size_t sequence_size, 
+      Transformer && transform_op) const;
   
   /**
   \brief Applies a reduction to a sequence of data items. 
@@ -102,7 +102,7 @@ public:
   \return The reduction result
   */
   template <typename InputIterator, typename Identity, typename Combiner>
-  constexpr auto reduce(InputIterator first, InputIterator last,
+  constexpr auto reduce(InputIterator first, std::size_t sequence_size,
               Identity && identity,
               Combiner && combine_op) const;
 
@@ -168,10 +168,12 @@ constexpr void sequential_execution::map(
 
 template <typename InputIterator, typename Identity, typename Combiner>
 constexpr auto sequential_execution::reduce(
-    InputIterator first, InputIterator last,
+    InputIterator first, 
+    std::size_t sequence_size,
     Identity && identity,
     Combiner && combine_op) const
 {
+  const auto last = std::next(first, sequence_size);
   auto result{identity};
   while (first != last) {
     result = combine_op(result, *first++);

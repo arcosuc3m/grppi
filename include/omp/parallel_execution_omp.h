@@ -161,15 +161,15 @@ public:
   \tparam Identity Type for the identity value.
   \tparam Combiner Callable object type for the combination.
   \param first Iterator to the first element of the sequence.
-  \param last Iterator to one past the end of the sequence.
+  \param sequence_size Size of the input sequence.
   \param identity Identity value for the reduction.
   \param combine_op Combination callable object.
   \pre Iterators in the range `[first,last)` are valid. 
   \return The reduction result
   */
   template <typename InputIterator, typename Identity, typename Combiner>
-  auto reduce(InputIterator first, InputIterator last, Identity && identity,
-              Combiner && combine_op) const;
+  auto reduce(InputIterator first, std::size_t sequence_size, 
+              Identity && identity, Combiner && combine_op) const;
 
   /**
   \brief Applies a map/reduce operation to a sequence of data items.
@@ -260,7 +260,7 @@ void parallel_execution_omp::map(
 
 template <typename InputIterator, typename Identity, typename Combiner>
 auto parallel_execution_omp::reduce(
-    InputIterator first, InputIterator last, 
+    InputIterator first, std::size_t sequence_size,
     Identity && identity,
     Combiner && combine_op) const
 {
@@ -268,12 +268,11 @@ auto parallel_execution_omp::reduce(
 
   using result_type = std::decay_t<Identity>;
   std::vector<result_type> partial_results(concurrency_degree_);
-  auto process_chunk = [&](InputIterator f, InputIterator l, std::size_t id) {
-    partial_results[id] = seq.reduce(f,l, std::forward<Identity>(identity), 
+  auto process_chunk = [&](InputIterator f, std::size_t sz, std::size_t id) {
+    partial_results[id] = seq.reduce(f, sz, std::forward<Identity>(identity), 
         std::forward<Combiner>(combine_op));
   };
 
-  const auto sequence_size = std::distance(first,last);
   const auto chunk_size = sequence_size/concurrency_degree_;
 
   #pragma omp parallel
@@ -283,24 +282,24 @@ auto parallel_execution_omp::reduce(
       for (int i=0 ;i<concurrency_degree_-1; ++i) {
         const auto delta = chunk_size * i;
         const auto chunk_first = std::next(first,delta);
-        const auto chunk_last = std::next(chunk_first, chunk_size);
 
-        #pragma omp task firstprivate (chunk_first, chunk_last, i)
+        #pragma omp task firstprivate (chunk_first, chunk_size, i)
         {
-          process_chunk(chunk_first, chunk_last, i);
+          process_chunk(chunk_first, chunk_size, i);
         }
       }
     
       //Main thread
       const auto delta = chunk_size * (concurrency_degree_ - 1);
       const auto chunk_first= std::next(first,delta);
-      const auto chunk_last = last;
-      process_chunk(chunk_first, chunk_last, concurrency_degree_-1);
+      const auto chunk_sz = sequence_size - delta;
+      process_chunk(chunk_first, chunk_sz, concurrency_degree_-1);
       #pragma omp taskwait
     }
   }
 
-  return seq.reduce(next(begin(partial_results)), end(partial_results),
+  return seq.reduce(std::next(partial_results.begin()), 
+      partial_results.size()-1,
       partial_results[0], std::forward<Combiner>(combine_op));
 }
 
@@ -351,7 +350,8 @@ auto parallel_execution_omp::map_reduce(
     }
   }
 
-  return seq.reduce(next(begin(partial_results)), end(partial_results),
+  return seq.reduce(std::next(partial_results.begin()), 
+      partial_results.size()-1,
       partial_results[0], std::forward<Combiner>(combine_op));
 }
 

@@ -54,8 +54,8 @@ auto reduce(const sequential_execution & ex,
             Result && identity,
             Combiner && combine_op)
 {
-  return ex.reduce(first, last, std::forward<Result>(identity),
-      std::forward<Combiner>(combine_op));
+  return ex.reduce(first, std::distance(first,last), 
+      std::forward<Result>(identity), std::forward<Combiner>(combine_op));
 }
 
 /**

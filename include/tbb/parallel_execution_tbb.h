@@ -141,6 +141,7 @@ public:
   \tparam Identity Type for the identity value.
   \tparam Combiner Callable object type for the combination.
   \param first Iterator to the first element of the sequence.
+  \param sequence_size Size of the input sequence.
   \param last Iterator to one past the end of the sequence.
   \param identity Identity value for the reduction.
   \param combine_op Combination callable object.
@@ -148,8 +149,8 @@ public:
   \return The reduction result.
   */
   template <typename InputIterator, typename Identity, typename Combiner>
-  auto reduce(InputIterator first, InputIterator last, Identity && identity,
-              Combiner && combine_op) const;
+  auto reduce(InputIterator first, std::size_t sequence_size, 
+              Identity && identity, Combiner && combine_op) const;
 
   /**
   \brief Applies a map/reduce operation to a sequence of data items.
@@ -227,14 +228,17 @@ void parallel_execution_tbb::map(
 
 template <typename InputIterator, typename Identity, typename Combiner>
 auto parallel_execution_tbb::reduce(
-    InputIterator first, InputIterator last, 
+    InputIterator first, 
+    std::size_t sequence_size,
     Identity && identity,
     Combiner && combine_op) const
 {
   constexpr sequential_execution seq;
-  return tbb::parallel_reduce(tbb::blocked_range<InputIterator>(first, last), identity,
+  return tbb::parallel_reduce(
+      tbb::blocked_range<InputIterator>(first, std::next(first,sequence_size)),
+      identity,
       [combine_op,seq](const auto & range, auto value) {
-        return seq.reduce(range.begin(), range.end(), value, combine_op);
+        return seq.reduce(range.begin(), range.size(), value, combine_op);
       },
       combine_op);
 }
@@ -278,7 +282,7 @@ auto parallel_execution_tbb::map_reduce(
 
   g.wait(); 
 
-  return seq.reduce(std::next(std::begin(partial_results)), std::end(partial_results),
+  return seq.reduce(std::next(partial_results.begin()), partial_results.size()-1,
       partial_results[0], std::forward<Combiner>(combine_op));
 }
 
