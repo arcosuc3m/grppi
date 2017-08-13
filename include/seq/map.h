@@ -54,7 +54,7 @@ void map(const sequential_execution & ex,
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer transform_op) 
 {
-  ex.apply_map(make_tuple(first), first_out,
+  ex.map(make_tuple(first), first_out,
       std::distance(first, last), transform_op);
 }
 
@@ -80,7 +80,7 @@ void map(const sequential_execution & ex,
          Transformer transform_op, 
          OtherInputIts ... other_firsts) 
 {
-  ex.apply_map(make_tuple(first,other_firsts...), first_out,
+  ex.map(make_tuple(first,other_firsts...), first_out,
       std::distance(first,last), transform_op);
 }
 

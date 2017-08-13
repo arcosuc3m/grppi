@@ -131,7 +131,7 @@ public:
   */
   template <typename ... InputIterators, typename OutputIterator, 
             typename Transformer>
-  void apply_map(std::tuple<InputIterators...> firsts,
+  void map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
 
@@ -141,6 +141,7 @@ public:
   \tparam Identity Type for the identity value.
   \tparam Combiner Callable object type for the combination.
   \param first Iterator to the first element of the sequence.
+  \param sequence_size Size of the input sequence.
   \param last Iterator to one past the end of the sequence.
   \param identity Identity value for the reduction.
   \param combine_op Combination callable object.
@@ -148,8 +149,8 @@ public:
   \return The reduction result.
   */
   template <typename InputIterator, typename Identity, typename Combiner>
-  auto reduce(InputIterator first, InputIterator last, Identity && identity,
-              Combiner && combine_op) const;
+  auto reduce(InputIterator first, std::size_t sequence_size, 
+              Identity && identity, Combiner && combine_op) const;
 
   /**
   \brief Applies a map/reduce operation to a sequence of data items.
@@ -158,7 +159,7 @@ public:
   \tparam Transformer Callable object type for the transformation.
   \tparam Combiner Callable object type for the combination.
   \param first Iterator to the first element of the sequence.
-  \param last Iterator to one past the end of the sequence.
+  \param sequence_size Size of the input sequence.
   \param identity Identity value for the reduction.
   \param transform_op Transformation callable object.
   \param combine_op Combination callable object.
@@ -211,7 +212,7 @@ private:
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
-void parallel_execution_tbb::apply_map(
+void parallel_execution_tbb::map(
     std::tuple<InputIterators...> firsts,
     OutputIterator first_out, 
     std::size_t sequence_size, Transformer transform_op) const
@@ -227,14 +228,17 @@ void parallel_execution_tbb::apply_map(
 
 template <typename InputIterator, typename Identity, typename Combiner>
 auto parallel_execution_tbb::reduce(
-    InputIterator first, InputIterator last, 
+    InputIterator first, 
+    std::size_t sequence_size,
     Identity && identity,
     Combiner && combine_op) const
 {
-  sequential_execution seq;
-  return tbb::parallel_reduce(tbb::blocked_range<InputIterator>(first, last), identity,
+  constexpr sequential_execution seq;
+  return tbb::parallel_reduce(
+      tbb::blocked_range<InputIterator>(first, std::next(first,sequence_size)),
+      identity,
       [combine_op,seq](const auto & range, auto value) {
-        return seq.reduce(range.begin(), range.end(), value, combine_op);
+        return seq.reduce(range.begin(), range.size(), value, combine_op);
       },
       combine_op);
 }
@@ -247,38 +251,38 @@ auto parallel_execution_tbb::map_reduce(
     Identity && identity,
     Transformer && transform_op, Combiner && combine_op) const
 {
+  constexpr sequential_execution seq;
   tbb::task_group g;
 
   using result_type = std::decay_t<Identity>;
   std::vector<result_type> partial_results(concurrency_degree_);
 
-  auto chunk_size = sequence_size/concurrency_degree_;
-  
-  sequential_execution seq;
+  auto process_chunk = [&](auto fins, std::size_t sz, std::size_t i) {
+    partial_results[i] = seq.map_reduce(fins, sz,
+        std::forward<result_type>(partial_results[i]),
+        std::forward<Transformer>(transform_op), 
+        std::forward<Combiner>(combine_op));
+  };
+
+  const auto chunk_size = sequence_size/concurrency_degree_;
 
   for(int i=0; i<concurrency_degree_-1;++i) {    
-    auto delta = chunk_size * i;
-    auto begin = iterators_next(firsts,delta);
-    auto end = std::next(std::get<0>(begin), chunk_size);
+    const auto delta = chunk_size * i;
+    const auto chunk_firsts = iterators_next(firsts,delta);
+    const auto chunk_last = std::next(std::get<0>(chunk_firsts), chunk_size);
 
-    g.run([&, begin, end, i]() {
-      partial_results[i] = seq.map_reduce(begin, chunk_size, 
-          std::forward<result_type>(partial_results[i]), 
-          std::forward<Transformer>(transform_op), 
-          std::forward<Combiner>(combine_op));
+    g.run([&, chunk_firsts, chunk_last, i]() {
+      process_chunk(chunk_firsts, chunk_size, i);
     });
   }
 
-  auto delta = chunk_size * (concurrency_degree_ - 1);
-  auto begin = iterators_next(firsts,delta);
-  partial_results[concurrency_degree_-1] = seq.map_reduce(begin,
-      sequence_size - delta,
-      partial_results[concurrency_degree_-1], 
-      std::forward<Transformer>(transform_op), 
-      std::forward<Combiner>(combine_op));
-  g.wait();
+  const auto delta = chunk_size * (concurrency_degree_ - 1);
+  const auto chunk_firsts = iterators_next(firsts,delta);
+  process_chunk(chunk_firsts, sequence_size - delta, concurrency_degree_-1);
 
-  return seq.reduce(std::next(std::begin(partial_results)), std::end(partial_results),
+  g.wait(); 
+
+  return seq.reduce(std::next(partial_results.begin()), partial_results.size()-1,
       partial_results[0], std::forward<Combiner>(combine_op));
 }
 
@@ -290,7 +294,7 @@ void parallel_execution_tbb::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  sequential_execution seq{};
+  constexpr sequential_execution seq{};
   const auto chunk_size = sequence_size / concurrency_degree_;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t delta) {
     seq.stencil(f, std::next(first_out,delta), sz,
@@ -301,16 +305,17 @@ void parallel_execution_tbb::stencil(
   tbb::task_group g;
   for (int i=0; i<concurrency_degree_-1; ++i) {
     g.run([=](){
-      auto delta = chunk_size * i;
-      auto begin = iterators_next(firsts,delta);
-      process_chunk(begin, chunk_size, delta);
+      const auto delta = chunk_size * i;
+      const auto chunk_firsts = iterators_next(firsts,delta);
+      process_chunk(chunk_firsts, chunk_size, delta);
     });
   }
 
-  auto delta = chunk_size * (concurrency_degree_ - 1);
-  auto begin = iterators_next(firsts,delta);
-  auto end = std::next(std::get<0>(firsts), sequence_size);
-  process_chunk(begin, std::distance(std::get<0>(begin), end), delta);
+  const auto delta = chunk_size * (concurrency_degree_ - 1);
+  const auto chunk_firsts = iterators_next(firsts,delta);
+  const auto chunk_last = std::next(std::get<0>(firsts), sequence_size);
+  process_chunk(chunk_firsts, 
+      std::distance(std::get<0>(chunk_firsts), chunk_last), delta);
 
   g.wait();
 }

@@ -53,8 +53,8 @@ auto reduce(const parallel_execution_native & ex,
             Identity && identity,
             Combiner && combine_op)
 {
-  return ex.reduce(first, last, std::forward<Identity>(identity),
-      std::forward<Combiner>(combine_op));
+  return ex.reduce(first, std::distance(first,last), 
+      std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
 }
 
 /**
