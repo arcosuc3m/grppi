@@ -343,13 +343,13 @@ void parallel_execution_native::map(
   {
     worker_pool workers{concurrency_degree_};
     for (int i=0; i!=concurrency_degree_-1; ++i) {
-      const int delta = chunk_size * i;
+      const auto delta = chunk_size * i;
       const auto chunk_firsts = iterators_next(firsts,delta);
       const auto chunk_first_out = next(first_out, delta);
       workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_first_out);
     }
 
-    const int delta = chunk_size * (concurrency_degree_ - 1);
+    const auto delta = chunk_size * (concurrency_degree_ - 1);
     const auto chunk_firsts = iterators_next(firsts,delta);
     const auto chunk_first_out = next(first_out, delta);
     process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
@@ -371,20 +371,20 @@ auto parallel_execution_native::reduce(
         std::forward<Combiner>(combine_op));
   };
 
-  auto sequence_size = std::distance(first,last);
-  auto chunk_size = sequence_size / concurrency_degree_;
+  const auto sequence_size = std::distance(first,last);
+  const auto chunk_size = sequence_size / concurrency_degree_;
 
   { 
     worker_pool workers{concurrency_degree_};
     for (int i=0; i<concurrency_degree_-1; ++i) {
-      auto delta = chunk_size * i;
-      auto chunk_first = std::next(first,delta);
-      auto chunk_last = std::next(begin, chunk_size);
+      const auto delta = chunk_size * i;
+      const auto chunk_first = std::next(first,delta);
+      const auto chunk_last = std::next(chunk_first, chunk_size);
       workers.launch(*this, process_chunk, chunk_first, chunk_last, i);
     }
 
-    auto delta = chunk_size * (concurrency_degree_-1);
-    auto chunk_first = std::next(first, delta);
+    const auto delta = chunk_size * (concurrency_degree_-1);
+    const auto chunk_first = std::next(first, delta);
     process_chunk(chunk_first, last, concurrency_degree_-1);
   } // Pool synch
 
@@ -416,13 +416,13 @@ auto parallel_execution_native::map_reduce(
   {
     worker_pool workers{concurrency_degree_};
     for(int i=0;i<concurrency_degree_-1;++i){    
-      auto delta = chunk_size * i;
-      auto chunk_firsts = iterators_next(firsts,delta);
+      const auto delta = chunk_size * i;
+      const auto chunk_firsts = iterators_next(firsts,delta);
       workers.launch(*this, process_chunk, chunk_firsts, chunk_size, i);
     }
 
-    auto delta = chunk_size * (concurrency_degree_-1);
-    auto chunk_firsts = iterators_next(firsts, delta);
+    const auto delta = chunk_size * (concurrency_degree_-1);
+    const auto chunk_firsts = iterators_next(firsts, delta);
     process_chunk(chunk_firsts, sequence_size - delta, concurrency_degree_-1);
   } // Pool synch
 

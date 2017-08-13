@@ -206,7 +206,7 @@ constexpr void sequential_execution::stencil(
 {
   const auto last = std::next(std::get<0>(firsts), sequence_size);
   while (std::get<0>(firsts) != last) {
-    auto f = std::get<0>(firsts);
+    const auto f = std::get<0>(firsts);
     *first_out++ = transform_op(f, 
         apply_increment(std::forward<Neighbourhood>(neighbour_op), firsts));
   }
