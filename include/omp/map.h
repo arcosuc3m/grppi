@@ -56,7 +56,7 @@ void map(const parallel_execution_omp & ex,
          OutputIt first_out, 
          Transformer && transform_op)
 {
-  ex.apply_map(make_tuple(first), first_out, std::distance(first,last),
+  ex.map(make_tuple(first), first_out, std::distance(first,last),
       transform_op);
 }
 
@@ -82,7 +82,7 @@ void map(const parallel_execution_omp & ex,
          Transformer && transform_op, 
          OtherInputIts ... more_firsts)
 {
-  ex.apply_map(make_tuple(first,more_firsts...), first_out, std::distance(first,last),
+  ex.map(make_tuple(first,more_firsts...), first_out, std::distance(first,last),
       transform_op);
 }
 
@@ -90,6 +90,7 @@ void map(const parallel_execution_omp & ex,
 @}
 @}
 */
+
 }
 
 #endif
