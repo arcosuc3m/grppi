@@ -126,7 +126,9 @@ divide_conquer(parallel_execution_native & ex,
                    Divider && divide_op, Solver && solve_op, 
                    Combiner && combine_op) 
 {
-
+  ex.divide_conquer(problem, std::forward<Divider>(divide_op),
+      std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+/*
   // Sequential execution fo internal implementation
   sequential_execution seq;
   std::atomic<int> num_threads{ex.concurrency_degree()-1};
@@ -186,6 +188,7 @@ divide_conquer(parallel_execution_native & ex,
   else {
     return solve_op(problem);
   }
+*/
 }
 
 /**

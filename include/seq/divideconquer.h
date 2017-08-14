@@ -47,12 +47,15 @@ execution.
 \param combiner_op Combiner operation.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
-typename std::result_of<Solver(Input)>::type 
-divide_conquer(sequential_execution & ex, 
-                   Input & input, 
-                   Divider && divider_op, Solver && solver_op, 
-                   Combiner && combiner_op) 
+auto divide_conquer(const sequential_execution & ex, 
+                    const Input & input, 
+                    Divider && divider_op, Solver && solver_op, 
+                    Combiner && combiner_op) 
 {
+  return ex.divide_conquer(input, 
+        std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
+        std::forward<Combiner>(combiner_op));
+/*
   auto subproblems = divider_op(input);
 
   if (subproblems.size()<=1) return solver_op(input);
@@ -73,6 +76,7 @@ divide_conquer(sequential_execution & ex,
     out = combiner_op(out,partials[i]);
   }
   return out;
+*/
 }
 
 /**
