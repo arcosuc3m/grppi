@@ -165,7 +165,7 @@ public:
   */
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
-  auto divide_conquer(const Input & input, 
+  auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
@@ -237,14 +237,14 @@ constexpr void sequential_execution::stencil(
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto sequential_execution::divide_conquer(
-    const Input & input, 
+    Input && input, 
     Divider && divide_op, 
     Solver && solve_op, 
     Combiner && combine_op) const
 {
 
-  auto subproblems = divide_op(input);
-  if (subproblems.size()<=1) return solve_op(input);
+  auto subproblems = divide_op(std::forward<Input>(input));
+  if (subproblems.size()<=1) { return solve_op(std::forward<Input>(input)); }
 
   using subproblem_type = 
       std::decay_t<typename std::result_of<Solver(Input)>::type>;

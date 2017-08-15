@@ -320,7 +320,7 @@ public:
   \param combine_op Combiner operation.
   */
   template <typename Input, typename Divider, typename Solver, typename Combiner>
-  auto divide_conquer(const Input & input, 
+  auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
@@ -328,7 +328,7 @@ public:
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
-  auto divide_conquer(const Input & input, 
+  auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
                       Combiner && combine_op,
@@ -413,8 +413,9 @@ auto parallel_execution_native::reduce(
     process_chunk(chunk_first, chunk_sz, concurrency_degree_-1);
   } // Pool synch
 
-  return seq.reduce(std::next(partial_results.begin()), partial_results.size()-1,
-      partial_results[0], std::forward<Combiner>(combine_op));
+  return seq.reduce(std::next(partial_results.begin()), 
+      partial_results.size()-1, std::forward<result_type>(partial_results[0]), 
+      std::forward<Combiner>(combine_op));
 }
 
 template <typename ... InputIterators, typename Identity, 
@@ -451,8 +452,9 @@ auto parallel_execution_native::map_reduce(
     process_chunk(chunk_firsts, sequence_size - delta, concurrency_degree_-1);
   } // Pool synch
 
-  return seq.reduce(std::next(partial_results.begin()), partial_results.size()-1,
-      partial_results[0], std::forward<Combiner>(combine_op));
+  return seq.reduce(std::next(partial_results.begin()), 
+     partial_results.size()-1, std::forward<result_type>(partial_results[0]), 
+     std::forward<Combiner>(combine_op));
 }
 
 template <typename ... InputIterators, typename OutputIterator,
@@ -492,14 +494,14 @@ void parallel_execution_native::stencil(
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto parallel_execution_native::divide_conquer(
-    const Input & problem, 
+    Input && problem, 
     Divider && divide_op, 
     Solver && solve_op, 
     Combiner && combine_op) const
 {
   std::atomic<int> num_threads{concurrency_degree_-1};
 
-  return divide_conquer(problem, std::forward<Divider>(divide_op), 
+  return divide_conquer(std::forward<Input>(problem), std::forward<Divider>(divide_op), 
         std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op),
         num_threads);
 }
@@ -529,9 +531,10 @@ constexpr bool is_supported<parallel_execution_native>() {
 }
 
 // PRIVATE MEMBERS
+
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto parallel_execution_native::divide_conquer(
-    const Input & input, 
+    Input && input, 
     Divider && divide_op, 
     Solver && solve_op, 
     Combiner && combine_op,
@@ -539,12 +542,13 @@ auto parallel_execution_native::divide_conquer(
 {
   constexpr sequential_execution seq;
   if (num_threads.load() <=0) {
-    return seq.divide_conquer(input, std::forward<Divider>(divide_op), 
-        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+    return seq.divide_conquer(std::forward<Input>(input), 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
   }
 
-  auto subproblems = divide_op(input);
-  if (subproblems.size()<=1) { return solve_op(input); }
+  auto subproblems = divide_op(std::forward<Input>(input));
+  if (subproblems.size()<=1) { return solve_op(std::forward<Input>(input)); }
 
   using subresult_type = 
       std::decay_t<typename std::result_of<Solver(Input)>::type>;
@@ -552,9 +556,9 @@ auto parallel_execution_native::divide_conquer(
 
   auto process_subproblem = [&,this](auto it, std::size_t div) {
     auto manager = this->thread_manager();
-    partials[div] = this->divide_conquer(*it, std::forward<Divider>(divide_op), 
-        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op), 
-        num_threads);
+    partials[div] = this->divide_conquer(std::forward<Input>(*it), 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op), num_threads);
   };
 
   int division = 0;
@@ -566,18 +570,19 @@ auto parallel_execution_native::divide_conquer(
   }
 
   while (i!=subproblems.end()) {
-    partials[division] = seq.divide_conquer(*i++, 
+    partials[division] = seq.divide_conquer(std::forward<Input>(*i++), 
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
         std::forward<Combiner>(combine_op));
   }
 
-  auto subresult = divide_conquer(*subproblems.begin(), 
+  auto subresult = divide_conquer(std::forward<Input>(*subproblems.begin()), 
       std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
       std::forward<Combiner>(combine_op), num_threads);
 
   for (auto && t : tasks) { t. join(); }
 
-  return seq.reduce(partials.begin(), partials.size(), subresult, combine_op);
+  return seq.reduce(partials.begin(), partials.size(), 
+      std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
 }
 
 } // end namespace grppi

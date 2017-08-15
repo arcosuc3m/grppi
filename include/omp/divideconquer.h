@@ -52,12 +52,13 @@ parallel execution.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto divide_conquer(const parallel_execution_omp & ex, 
-                    const Input & input, 
+                    Input && input, 
                     Divider && divide_op, Solver && solve_op, 
                     Combiner && combine_op) 
 {
-  return ex.divide_conquer(input, std::forward<Divider>(divide_op), 
-        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+  return ex.divide_conquer(std::forward<Input>(input), 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
 }
 
 /**

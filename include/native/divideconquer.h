@@ -50,7 +50,7 @@ parallel execution.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto divide_conquer(const parallel_execution_native & ex, 
-                   const Input & problem,
+                   Input && problem,
                    Divider && divide_op, Solver && solve_op, 
                    Combiner && combine_op) 
 {

@@ -228,7 +228,7 @@ public:
   \param combine_op Combiner operation.
   */
   template <typename Input, typename Divider, typename Solver, typename Combiner>
-  auto divide_conquer(const Input & input, 
+  auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
@@ -236,7 +236,7 @@ public:
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
-  auto divide_conquer(const Input & input, 
+  auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
                       Combiner && combine_op,
@@ -424,15 +424,16 @@ void parallel_execution_omp::stencil(
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto parallel_execution_omp::divide_conquer(
-    const Input & input, 
+    Input && input, 
     Divider && divide_op, 
     Solver && solve_op, 
     Combiner && combine_op) const
 {
   std::atomic<int> num_threads{concurrency_degree_-1};
   
-  return divide_conquer(input, std::forward<Divider>(divide_op),
-      std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op),
+  return divide_conquer(std::forward<Input>(input), 
+      std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+      std::forward<Combiner>(combine_op),
       num_threads);
 }
 
@@ -464,7 +465,7 @@ constexpr bool is_supported<parallel_execution_omp>() {
 // PRIVATE MEMBERS
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto parallel_execution_omp::divide_conquer(
-    const Input & input, 
+    Input && input, 
     Divider && divide_op, 
     Solver && solve_op, 
     Combiner && combine_op,
@@ -472,19 +473,20 @@ auto parallel_execution_omp::divide_conquer(
 {
   constexpr sequential_execution seq;
   if (num_threads.load()<=0) {
-    return seq.divide_conquer(input, std::forward<Divider>(divide_op), 
-        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op));
+    return seq.divide_conquer(std::forward<Input>(input), 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op));
   }
 
-  auto subproblems = divide_op(input);
-  if (subproblems.size()<=1) { return solve_op(input); }
+  auto subproblems = divide_op(std::forward<Input>(input));
+  if (subproblems.size()<=1) { return solve_op(std::forward<Input>(input)); }
 
   using subresult_type = 
       std::decay_t<typename std::result_of<Solver(Input)>::type>;
   std::vector<subresult_type> partials(subproblems.size()-1);
 
   auto process_subproblems = [&,this](auto it, std::size_t div) {
-    partials[div] = this->divide_conquer(*it, 
+    partials[div] = this->divide_conquer(std::forward<Input>(*it), 
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
         std::forward<Combiner>(combine_op), num_threads);
   };
@@ -509,26 +511,27 @@ auto parallel_execution_omp::divide_conquer(
       }
 
       while (i!=subproblems.end()) { 
-        partials[division] = seq.divide_conquer(*i++, 
+        partials[division] = seq.divide_conquer(std::forward<Input>(*i++), 
           std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
           std::forward<Combiner>(combine_op));
       }
 
       //Main thread works on the first subproblem.
       if (num_threads.load()>0) {
-        subresult = divide_conquer(*subproblems.begin(), 
+        subresult = divide_conquer(std::forward<Input>(*subproblems.begin()), 
             std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
             std::forward<Combiner>(combine_op), num_threads);
       }
       else {
-        subresult = seq.divide_conquer(*subproblems.begin(), 
+        subresult = seq.divide_conquer(std::forward<Input>(*subproblems.begin()), 
             std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
             std::forward<Combiner>(combine_op));
       }
       #pragma omp taskwait
     }
   }
-  return seq.reduce(partials.begin(), partials.size(), subresult, combine_op);
+  return seq.reduce(partials.begin(), partials.size(), 
+      std::forward<subresult_type>(subresult), combine_op);
 }
 
 } // end namespace grppi

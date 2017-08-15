@@ -50,11 +50,11 @@ execution.
 */
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto divide_conquer(const sequential_execution & ex, 
-                    const Input & input, 
+                    Input && input, 
                     Divider && divider_op, Solver && solver_op, 
                     Combiner && combiner_op) 
 {
-  return ex.divide_conquer(input, 
+  return ex.divide_conquer(std::forward<Input>(input), 
         std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
         std::forward<Combiner>(combiner_op));
 }
