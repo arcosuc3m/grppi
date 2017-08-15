@@ -235,8 +235,7 @@ TYPED_TEST(pipeline_test, poly_three_stages)
   this->check_three_stages();
 }
 
-
-
+/*
 TYPED_TEST(pipeline_test, static_three_stages_composed)
 {
   this->setup_composed();
@@ -273,3 +272,4 @@ TYPED_TEST(pipeline_test, static_three_stages_composed)
 
   this->check_composed();
 }
+*/

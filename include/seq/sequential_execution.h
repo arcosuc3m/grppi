@@ -170,6 +170,18 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  template <typename Generator, typename ... Transformers>
+  void pipeline(Generator && generate_op, 
+                Transformers && ... transform_op) const;
+
+private:
+
+  template <typename Item, typename Transformer, typename ... OtherTransformers>
+  void do_pipeline( Item && item, Transformer && transform_op,
+    OtherTransformers && ... other_ops) const;
+
+  template <typename Item, typename Transformer>
+  void do_pipeline( Item && item, Transformer && transform_op) const;
 };
 
 template <typename ... InputIterators, typename OutputIterator,
@@ -257,6 +269,37 @@ auto sequential_execution::divide_conquer(
   return reduce(std::next(solutions.begin()), solutions.size()-1, solutions[0],
       std::forward<Combiner>(combine_op));
 }
+
+template <typename Generator, typename ... Transformers>
+void sequential_execution::pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops) const
+{
+  for (;;) {
+    auto x = generate_op();
+    if (!x) break;
+    do_pipeline(*x, std::forward<Transformers>(transform_ops)...);
+  }
+}
+
+template <typename Item, typename Transformer, typename ... OtherTransformers>
+void sequential_execution::do_pipeline(
+    Item && item,
+    Transformer && transform_op,
+    OtherTransformers && ... other_ops) const
+{
+  do_pipeline(transform_op(std::forward<Item>(item)), 
+      std::forward<OtherTransformers>(other_ops)...);
+}
+
+template <typename Item, typename Transformer>
+void sequential_execution::do_pipeline(
+    Item && item,
+    Transformer && transform_op) const
+{
+  transform_op(std::forward<Item>(item));
+}
+
 
 /// Determine if a type is a sequential execution policy.
 template <typename E>

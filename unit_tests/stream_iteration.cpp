@@ -24,8 +24,9 @@
 
 #include "farm.h"
 #include "pipeline.h"
-#include "stream_iteration.h"
+//#include "stream_iteration.h"
 
+/*
 
 using namespace std;
 using namespace grppi;
@@ -289,5 +290,5 @@ TYPED_TEST(stream_iteration_test, poly_composed_farm)
   this->check_composed_farm();
 }
 
-
+*/
 

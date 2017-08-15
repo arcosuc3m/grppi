@@ -28,6 +28,7 @@
 
 #include "supported_executions.h"
 
+/*
 using namespace std;
 using namespace grppi;
 template <typename T>
@@ -627,3 +628,4 @@ TYPED_TEST(stream_filter_test, static_multiple_composed_discard)
   this->check_multiple_odd();
 }
 
+*/

@@ -31,6 +31,7 @@
 #include <vector>
 #include <type_traits>
 #include <tuple>
+#include <experimental/optional>
 
 namespace grppi {
 
@@ -325,6 +326,10 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  template <typename Generator, typename ... Transformers>
+  void pipeline(Generator && generate_op, 
+                Transformers && ... transform_op) const;
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -333,6 +338,14 @@ private:
                       Solver && solve_op, 
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const; 
+
+  template <typename Queue, typename Transformer, typename ... OtherTransformers>
+  void do_pipeline(Queue & input_queue, Transformer && transform_op,
+    OtherTransformers && ... other_ops) const;
+
+  template <typename Queue, typename Consumer>
+  void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
+
 private: 
   mutable thread_registry thread_registry_;
 
@@ -506,6 +519,34 @@ auto parallel_execution_native::divide_conquer(
         num_threads);
 }
 
+template <typename Generator, typename ... Transformers>
+void parallel_execution_native::pipeline(
+    Generator && generate_op, 
+    Transformers && ... transform_ops) const
+{
+  using namespace std;
+
+  using result_type = decay_t<typename result_of<Generator()>::type>;
+  using output_type = pair<result_type,long>;
+  auto output_queue = make_queue<output_type>();
+
+  thread generator_task([&,this]() {
+    auto manager = thread_manager();
+
+    long order = 0;
+    for (;;) {
+      auto item{generate_op()};
+      output_queue.push(make_pair(item, order));
+      order++;
+      if (!item) break;
+    }
+  });
+
+  do_pipeline(output_queue, forward<Transformers>(transform_ops)...);
+  generator_task.join();
+}
+
+
 /**
 \brief Metafunction that determines if type E is parallel_execution_native
 \tparam Execution policy type.
@@ -583,6 +624,94 @@ auto parallel_execution_native::divide_conquer(
 
   return seq.reduce(partials.begin(), partials.size(), 
       std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
+}
+
+template <typename Queue, typename Transformer, typename ... OtherTransformers>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue, 
+    Transformer && transform_op,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Queue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+  using transform_result_type = 
+      decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
+  using output_item_value_type = optional<transform_result_type>;
+  using output_item_type = pair<output_item_value_type,long>;
+
+  auto output_queue = make_queue<output_item_type>();
+
+  thread task([&,this]() {
+    auto manager = thread_manager();
+
+    long order = 0;
+    for (;;) {
+      auto item{input_queue.pop()};
+      if (!item.first) break;
+      auto out = output_item_value_type{transform_op(*item.first)};
+      output_queue.push(make_pair(out, item.second));
+    }
+    output_queue.push(make_pair(output_item_value_type{},-1));
+  });
+
+  do_pipeline(output_queue, 
+      forward<OtherTransformers>(other_transform_ops)...);
+  task.join();
+}
+
+template <typename Queue, typename Consumer>
+void parallel_execution_native::do_pipeline(
+  Queue & input_queue, 
+  Consumer && consume_op) const
+{
+  using namespace std;
+  using input_type = typename Queue::value_type;
+
+  auto manager = thread_manager();
+
+  if (!is_ordered()) {
+    for (;;) {
+      auto item = input_queue.pop();
+      if (!item.first) break;
+      consume_op(*item.first);
+    }
+  }
+  vector<input_type> elements;
+  long current = 0;
+  for (;;) {
+    auto item = input_queue.pop();
+    if (!item.first) break;
+    if(current == item.second){
+      consume_op(*item.first);
+      current ++;
+    }
+    else {
+      elements.push_back(item);
+    }
+    // TODO: Probably find_if() + erase 
+    for (auto it=elements.begin(); it!=elements.end(); it++) {
+      if(it->second == current) {
+        consume_op(*it->first);
+        elements.erase(it);
+        current++;
+        break;
+      }
+    }
+  }
+  while (elements.size()>0) {
+    // TODO: Probably find_if() + erase
+    for (auto it = elements.begin(); it != elements.end(); it++) {
+      if(it->second == current) {
+        consume_op(*it->first);
+        elements.erase(it);
+        current++;
+        break;
+      }
+    }
+  }
 }
 
 } // end namespace grppi

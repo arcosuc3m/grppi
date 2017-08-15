@@ -30,6 +30,7 @@
 
 namespace grppi{
 
+/*
 template <typename InQueue, typename OutQueue, int Index, 
           typename ... MoreTransformers,
           internal::requires_index_last<Index,MoreTransformers...> = 0>
@@ -476,6 +477,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
       forward<MoreTransformers>(more_transform_ops)...);
   task.join();
 }
+*/
 
 /**
 \addtogroup pipeline_pattern
@@ -500,6 +502,9 @@ template <typename Generator, typename ... Transformers,
 void pipeline(parallel_execution_native & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
+  ex.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
+/*
   using namespace std;
 
   using result_type = typename result_of<Generator()>::type;
@@ -522,6 +527,7 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
 
   pipeline_impl(ex, first_queue, forward<Transformers>(transform_ops)...);
   generator_task.join();
+*/
 }
 
 /**
