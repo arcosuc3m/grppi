@@ -555,17 +555,17 @@ auto parallel_execution_native::divide_conquer(
   std::vector<subresult_type> partials(subproblems.size()-1);
 
   auto process_subproblem = [&,this](auto it, std::size_t div) {
-    auto manager = this->thread_manager();
     partials[div] = this->divide_conquer(std::forward<Input>(*it), 
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
         std::forward<Combiner>(combine_op), num_threads);
   };
 
   int division = 0;
-  std::vector<std::thread> tasks;
+
+  worker_pool workers{num_threads.load()};
   auto i = subproblems.begin() + 1;
   while (i!=subproblems.end() && num_threads.load()>0) {
-    tasks.emplace_back(process_subproblem, i++, division++);
+    workers.launch(*this,process_subproblem, i++, division++);
     num_threads--;
   }
 
@@ -579,7 +579,7 @@ auto parallel_execution_native::divide_conquer(
       std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
       std::forward<Combiner>(combine_op), num_threads);
 
-  for (auto && t : tasks) { t. join(); }
+  workers.wait();
 
   return seq.reduce(partials.begin(), partials.size(), 
       std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
