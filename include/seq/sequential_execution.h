@@ -242,6 +242,7 @@ auto sequential_execution::divide_conquer(
     Solver && solve_op, 
     Combiner && combine_op) const
 {
+
   auto subproblems = divide_op(input);
   if (subproblems.size()<=1) return solve_op(input);
 
@@ -253,7 +254,7 @@ auto sequential_execution::divide_conquer(
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
         std::forward<Combiner>(combine_op)));
   }
-  return reduce(std::next(solutions.begin()), solutions.end(), solutions[0],
+  return reduce(std::next(solutions.begin()), solutions.size()-1, solutions[0],
       std::forward<Combiner>(combine_op));
 }
 

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,6 +22,8 @@
 #define GRPPI_SEQ_DIVIDECONQUER_H
 
 #include "sequential_execution.h"
+
+#include <utility>
 
 namespace grppi {
 
@@ -55,28 +57,6 @@ auto divide_conquer(const sequential_execution & ex,
   return ex.divide_conquer(input, 
         std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
         std::forward<Combiner>(combiner_op));
-/*
-  auto subproblems = divider_op(input);
-
-  if (subproblems.size()<=1) return solver_op(input);
-
-  using Output = typename std::result_of<Solver(Input)>::type;
-  std::vector<Output> partials;
-  // FORK
-  for (auto && item : subproblems) {
-    //THREAD
-    partials.push_back(divide_conquer(ex, item, 
-        std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
-        std::forward<Combiner>(combiner_op)));
-    //END THREAD
-  }
-  Output out = partials[0] ;
-  //JOIN
-  for(int i = 1; i<partials.size();i++){
-    out = combiner_op(out,partials[i]);
-  }
-  return out;
-*/
 }
 
 /**
