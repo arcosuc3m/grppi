@@ -72,24 +72,51 @@ constexpr size_t callable_arity() {
   return typename callable<T>::arity();
 }
 
-// Meta-function for determining if a callable has arguments
-template <typename F>
-constexpr bool has_arguments() {
-  return typename callable<F>::arity() != 0;
+// Meta-function for determining if a callable returns void
+template <typename G>
+constexpr bool has_void_return() {
+  return std::is_same<void,
+      typename std::result_of<G()>::type
+  >::value;
+}
+
+template <typename F, typename I>
+constexpr bool has_void_return() {
+  return std::is_same<void,
+        typename std::result_of<F(I)>::type
+      >::value;
 }
 
 } // end namespace internal
 
+// Meta-function for determining if a callable has arguments
+template <typename F>
+constexpr bool has_arguments() {
+  return typename internal::callable<F>::arity() != 0;
+}
+
+// Meta-function for determining if F is consumer of I
+template <typename F, typename I>
+constexpr bool is_consumer = internal::has_void_return<F,I>();
+
+// Meta-function for determining if G is a generator
+template <typename G>
+constexpr bool is_generator = !internal::has_void_return<G>();
+
 // Concept emulation requiring a callable with no arguments
 template <typename F>
 using requires_no_arguments =
-  typename std::enable_if_t<!internal::has_arguments<F>(), int>;
+  typename std::enable_if_t<!has_arguments<F>(), int>;
 
 // Concept emulation requiring a callable with one or more arguments
 template <typename F>
 using requires_arguments =
-  typename std::enable_if_t<internal::has_arguments<F>(), int>;
+  typename std::enable_if_t<has_arguments<F>(), int>;
 
+// Concept emulation requiring a callable consuming values
+template <typename F, typename I>
+using requires_consumer =
+  typename std::enable_if_t<internal::has_void_return<F(I)>(), int>;
 
 
 
