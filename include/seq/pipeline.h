@@ -132,7 +132,7 @@ with sequential execution.
 */
 template <typename Generator, 
           typename ... Transformers>
-void pipeline(sequential_execution & ex, Generator && generate_op, 
+void pipeline(const sequential_execution & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
   ex.pipeline(std::forward<Generator>(generate_op),

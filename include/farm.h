@@ -50,7 +50,7 @@ that can be composed in other streaming patterns.
 template <typename Execution, typename Transformer>
 auto farm(Execution & ex, Transformer && transform_op)
 {
-   return farm_info<Execution,Transformer>{ex,
+   return farm_t<Execution,Transformer>{ex,
        std::forward<Transformer>(transform_op)};
 }
 

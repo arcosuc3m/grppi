@@ -42,6 +42,7 @@ execution with a generator and a consumer.
 \param generate_op Gnerator operation.
 \param consume_op Consumer operation.
 */
+/*
 template <typename Generator, typename Consumer>
 void farm(sequential_execution ex, 
           Generator generate_op, Consumer consume_op) 
@@ -52,7 +53,7 @@ void farm(sequential_execution ex,
     consume_op(*item);
   }
 }
-
+*/
 /**
 \brief Invoke \ref md_farm on a data stream with sequential
 execution with a generator, a transformer, and a comsumer.
@@ -64,6 +65,7 @@ execution with a generator, a transformer, and a comsumer.
 \param transform_op Transformer operation.
 \param consume_op Consumer operation.
 */
+/*
 template <typename Generator, typename Transformer, typename Consumer>
 void farm(sequential_execution ex, 
           Generator generate_op, Transformer transform_op, Consumer consume_op)
@@ -74,6 +76,6 @@ void farm(sequential_execution ex,
     consume_op(transform_op(*item));
   }
 }
-
+*/
 }
 #endif

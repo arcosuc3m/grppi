@@ -22,6 +22,8 @@
 #define GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 
 #include "../common/iterator.h"
+#include "../common/farm_pattern.h"
+#include "../common/callable_traits.h"
 
 #include <type_traits>
 #include <tuple>
@@ -177,11 +179,11 @@ public:
 private:
 
   template <typename Item, typename Transformer, typename ... OtherTransformers>
-  void do_pipeline( Item && item, Transformer && transform_op,
+  void do_pipeline(Item && item, Transformer && transform_op,
     OtherTransformers && ... other_ops) const;
 
-  template <typename Item, typename Transformer>
-  void do_pipeline( Item && item, Transformer && transform_op) const;
+  template <typename Item, typename Consumer>
+  void do_pipeline(Item && item, Consumer && consume_op) const;
 };
 
 template <typename ... InputIterators, typename OutputIterator,
@@ -275,6 +277,8 @@ void sequential_execution::pipeline(
     Generator && generate_op,
     Transformers && ... transform_ops) const
 {
+  static_assert(is_generator<Generator>,
+    "First pipeline stage must be a generator");
   for (;;) {
     auto x = generate_op();
     if (!x) break;
@@ -288,16 +292,20 @@ void sequential_execution::do_pipeline(
     Transformer && transform_op,
     OtherTransformers && ... other_ops) const
 {
+  static_assert(!is_consumer<Transformer,Item>,
+    "Itermediate pipeline stage cannot be a consumer");
   do_pipeline(transform_op(std::forward<Item>(item)), 
       std::forward<OtherTransformers>(other_ops)...);
 }
 
-template <typename Item, typename Transformer>
+template <typename Item, typename Consumer>
 void sequential_execution::do_pipeline(
     Item && item,
-    Transformer && transform_op) const
+    Consumer && consume_op) const
 {
-  transform_op(std::forward<Item>(item));
+  static_assert(is_consumer<Consumer,Item>, 
+      "Pipeline must end with consumer operation");
+  consume_op(std::forward<Item>(item));
 }
 
 

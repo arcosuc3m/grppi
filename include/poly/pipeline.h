@@ -30,7 +30,7 @@ template <typename Execution, typename Transformer,
           typename ... MoreTransformers,
           requires_arguments<Transformer> = 0>
 pipeline_info<Execution,Transformer,MoreTransformers...>
-transform_pipeline(Execution & ex, std::tuple<Transformer, MoreTransformers ...> && transform_ops)
+transform_pipeline(const Execution & ex, std::tuple<Transformer, MoreTransformers ...> && transform_ops)
 {
     return pipeline_info<Execution,Transformer, MoreTransformers...> (ex,std::forward<std::tuple<Transformer,MoreTransformers...>>(transform_ops));
 }
@@ -39,7 +39,7 @@ transform_pipeline(Execution & ex, std::tuple<Transformer, MoreTransformers ...>
 
 
 template <typename Generator, typename ... Transformers>
-void pipeline_multi_impl(polymorphic_execution &, Generator &&, 
+void pipeline_multi_impl(const polymorphic_execution &, Generator &&, 
                          Transformers && ...) 
 {
 
@@ -48,7 +48,7 @@ void pipeline_multi_impl(polymorphic_execution &, Generator &&,
 template <typename E, typename ... O,
           typename Generator, typename ... Transformers,
           internal::requires_execution_not_supported<E> = 0>
-void pipeline_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+void pipeline_multi_impl(const polymorphic_execution & ex, Generator && generate_op, 
                          Transformers && ... transform_ops) 
 {
   pipeline_multi_impl<O...>(ex, std::forward<Generator>(generate_op), 
@@ -58,7 +58,7 @@ void pipeline_multi_impl(polymorphic_execution & ex, Generator && generate_op,
 template <typename E, typename ... O,
           typename Generator, typename ... Transformers,
           internal::requires_execution_supported<E> = 0>
-void pipeline_multi_impl(polymorphic_execution & ex, Generator && generate_op, 
+void pipeline_multi_impl(const polymorphic_execution & ex, Generator && generate_op, 
                          Transformers && ... transform_ops) 
 {
   if (typeid(E) == ex.type()) {
@@ -91,7 +91,7 @@ with polymorphic execution.
 */
 template <typename Generator, typename ... Transformers,
           requires_no_arguments<Generator> = 0>
-void pipeline(polymorphic_execution & ex, Generator && generate_op, 
+void pipeline(const polymorphic_execution & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
   pipeline_multi_impl<
