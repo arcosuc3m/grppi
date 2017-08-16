@@ -212,6 +212,10 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  template <typename Generator, typename ... Transformers>
+  void pipeline(Generator && generate_op, 
+                Transformers && ... transform_op) const;
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -220,6 +224,14 @@ private:
                       Solver && solve_op, 
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const; 
+
+  template <typename Input, typename Transformer, typename ... OtherTransformers>
+  auto do_pipeline(Transformer && transform_op,
+    OtherTransformers && ... other_ops) const;
+
+  template <typename Input, typename Consumer>
+  auto do_pipeline(Consumer && consume_op) const;
+
 private:
 
   constexpr static int default_concurrency_degree = 4;
@@ -360,6 +372,39 @@ auto parallel_execution_tbb::divide_conquer(
         std::forward<Combiner>(combine_op), num_threads);
 }
 
+template <typename Generator, typename ... Transformers>
+void parallel_execution_tbb::pipeline(
+    Generator && generate_op, 
+    Transformers && ... transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using result_type = decay_t<typename result_of<Generator()>::type>;
+  using output_value_type = typename result_type::value_type;
+  using output_type = optional<output_value_type>;
+
+  const auto generator = tbb::make_filter<void, output_type>(
+    tbb::filter::serial_in_order, 
+    [&](tbb::flow_control & fc) -> output_type {
+      auto item =  generate_op();
+      if (item) {
+        return *item;
+      }
+      else {
+        fc.stop();
+        return {};
+      }
+    }
+  );
+
+  tbb::task_group_context context;
+  tbb::parallel_pipeline(tokens(), 
+    generator 
+    & 
+    do_pipeline<output_value_type>(forward<Transformers>(transform_ops)...));
+}
+
 /**
 \brief Metafunction that determines if type E is parallel_execution_tbb
 \tparam Execution policy type.
@@ -439,6 +484,40 @@ auto parallel_execution_tbb::divide_conquer(
       std::forward<subresult_type>(out), std::forward<Combiner>(combine_op));
 }
 
+template <typename Input, typename Transformer, 
+          typename ... OtherTransformers>
+auto parallel_execution_tbb::do_pipeline(
+    Transformer && transform_op,
+    OtherTransformers && ... other_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+  using input_type = optional<Input>;
+  using output_value_type = decay_t<typename result_of<Transformer(Input)>::type>;
+  using output_type = optional<output_value_type>;
+
+  return tbb::make_filter<input_type, output_type>( 
+      tbb::filter::serial_in_order,
+      [&](input_type item) {
+        return (item) ? transform_op(*item) : output_type{};
+      }) 
+      & 
+      do_pipeline<output_value_type>(forward<OtherTransformers>(other_ops)...);
+
+}
+
+template <typename Input, typename Consumer>
+auto parallel_execution_tbb::do_pipeline(
+    Consumer && consume_op) const
+{
+  using namespace std;
+  using namespace experimental;
+  return tbb::make_filter<optional<Input>, void>(
+      tbb::filter::serial_in_order,
+      [&](optional<Input> item) { 
+        if(item) consume_op(*item);
+      });
+}
 
 } // end namespace grppi
 
