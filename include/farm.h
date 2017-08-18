@@ -21,13 +21,7 @@
 #ifndef GRPPI_FARM_H
 #define GRPPI_FARM_H
 
-#include "seq/farm.h"
-#include "native/farm.h"
-#include "omp/farm.h"
-#include "tbb/farm.h"
-#include "poly/farm.h"
-
-#include "common/patterns.h"
+#include "common/farm_pattern.h"
 
 namespace grppi {
 
