@@ -253,6 +253,16 @@ private:
   template <typename Queue, typename Consumer>
   void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
 
+  template <typename Queue, typename FarmTransformer>
+  void do_pipeline(Queue & input_queue, 
+                   farm_t<FarmTransformer> && farm_obj) const;
+
+  template <typename Queue, typename FarmTransformer, 
+            typename ... OtherTransformers>
+  void do_pipeline(Queue & input_queue, 
+       farm_t<FarmTransformer> && farm_obj,
+       OtherTransformers && ... other_transform_ops) const;
+
 private:
 
   /**
@@ -651,6 +661,69 @@ void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consum
     }
   }
 }
+
+template <typename Queue, typename FarmTransformer>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    farm_t<FarmTransformer> && farm_obj) const
+{
+  using namespace std;
+  using namespace experimental;
+  using input_type = typename Queue::value_type;
+  using input_value_type = typename input_type::first_type::value_type;
+ 
+  for (int i=0; i<farm_obj.cardinality(); ++i) {
+    #pragma omp task shared(farm_obj,input_queue)
+    {
+      auto item = input_queue.pop();
+      while (item.first) {
+        farm_obj(*item.first);
+        item = input_queue.pop();
+      }
+      input_queue.push(item);
+    }              
+  }
+  #pragma omp taskwait
+}
+
+template <typename Queue, typename FarmTransformer, 
+          typename ... OtherTransformers>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    farm_t<FarmTransformer> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+  using input_type = typename Queue::value_type;
+  using input_value_type = typename input_type::first_type::value_type;
+  using result_type = 
+      decay_t<typename result_of<FarmTransformer(input_value_type)>::type>;
+  using output_value_type = optional<result_type>;
+  using output_type = pair<output_value_type,long>;
+ 
+  auto output_queue = make_queue<output_type>();
+  atomic<int> done_threads{0};
+  for (int i=0; i<farm_obj.cardinality(); ++i) {
+    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue)
+    {
+      auto item = input_queue.pop();
+      while (item.first) {
+        auto out = output_value_type{farm_obj(*item.first)};
+        output_queue.push(make_pair(out,item.second));
+        item = input_queue.pop();
+      }
+      input_queue.push(item);
+      done_threads++;
+      if (done_threads==farm_obj.cardinality()) {
+        output_queue.push(make_pair(output_value_type{}, -1));
+      }
+    }              
+  }
+  do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
+  #pragma omp taskwait
+}
+
 
 } // end namespace grppi
 

@@ -403,7 +403,7 @@ with OpenMP parallel execution.
 */
 template <typename Generator, typename ... Transformers,
           requires_no_arguments<Generator> = 0>
-void pipeline(parallel_execution_omp & ex, Generator && generate_op, 
+void pipeline(const parallel_execution_omp & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
   ex.pipeline(std::forward<Generator>(generate_op),
