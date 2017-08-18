@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -47,10 +47,10 @@ that can be composed in other streaming patterns.
 \param ex Execution policy object.
 \param transform_op Transformer operation.
 */
-template <typename Execution, typename Transformer>
-auto farm(Execution & ex, Transformer && transform_op)
+template <typename Transformer>
+auto farm(int ntasks, Transformer && transform_op)
 {
-   return farm_t<Execution,Transformer>{ex,
+   return farm_t<Transformer>{ntasks,
        std::forward<Transformer>(transform_op)};
 }
 

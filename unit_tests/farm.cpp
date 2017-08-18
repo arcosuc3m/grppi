@@ -71,7 +71,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](int x) {
           invocations_op++;
           return x;
@@ -95,7 +95,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](int x) {
           invocations_op++;
           return x;
@@ -121,7 +121,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](tuple<int,int,int> x) {
           invocations_op++;
         })
@@ -142,7 +142,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](int x) {
           invocations_op++;
           return x;
@@ -175,7 +175,7 @@ public:
         } else
           return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](int x) {
           invocations_op++;
           w[idx_out] = x * 2;
@@ -206,7 +206,7 @@ public:
         } 
         else return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](int x) {
           invocations_op++;
           return x*2;
@@ -246,7 +246,7 @@ public:
                        v3[idx_in-1]);
         } else return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](tuple<int,int,int> x) {
           invocations_op++;
           w[idx_out] = get<0>(x) + get<1>(x) + get<2>(x);
@@ -279,7 +279,7 @@ public:
       } 
       else return {};
     },
-    grppi::farm(e,
+    grppi::farm(4,
       [this](tuple<int,int,int> x) {
         invocations_op++;
         return get<0>(x) + get<1>(x) + get<2>(x);;
@@ -313,7 +313,7 @@ public:
           return v[idx_in-1];
         } else return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](int x) {
           invocations_op++;
           output += x * 2;
@@ -342,10 +342,11 @@ public:
           return v[idx_in-1];
         } else return {};
       },
-      grppi::farm(e, [this](int x) {
-        invocations_op++;
-        return x * 2;
-      }),
+      grppi::farm(4, 
+        [this](int x) {
+          invocations_op++;
+          return x * 2;
+        }),
       [this](int x) {
         invocations_sk++;
         output +=x;
@@ -380,7 +381,7 @@ public:
                        v3[idx_in-1]);
         } else return {};
       },
-      grppi::farm(e,
+      grppi::farm(4,
         [this](tuple<int,int,int> x) {
           invocations_op++;
           output += get<0>(x) + get<1>(x) + get<2>(x);
@@ -412,10 +413,10 @@ public:
       } 
       else return {};
     },
-    grppi::farm(e,
+    grppi::farm(4,
       [this](tuple<int,int,int> x) {
         invocations_op++;
-        return get<0>(x) + get<1>(x) + get<2>(x);;
+        return get<0>(x) + get<1>(x) + get<2>(x);
       }),
     [this](int x) {
       invocations_sk++;
@@ -435,7 +436,10 @@ public:
 // Test for execution policies defined in supported_executions.h
 //TYPED_TEST_CASE(farm_test, executions);
 //TODO: Temporary hack
-TYPED_TEST_CASE(farm_test, ::testing::Types<grppi::sequential_execution>);
+using executions_tmp = ::testing::Types<
+  grppi::sequential_execution,
+  grppi::parallel_execution_native>;
+TYPED_TEST_CASE(farm_test, executions_tmp);
 
 TYPED_TEST(farm_test, static_empty)
 {
@@ -600,7 +604,7 @@ TYPED_TEST(farm_test, static_multiple_ary_sink)
 
 TYPED_TEST(farm_test, poly_multiple_ary_sink)
 {
-  this->setup_multiple_ary();
+  this->setup_multiple_ary_sink();
   this->run_multiple_ary_sink(this->poly_execution_);
   this->check_multiple_ary_sink();
 }

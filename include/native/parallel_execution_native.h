@@ -343,6 +343,16 @@ private:
   void do_pipeline(Queue & input_queue, Transformer && transform_op,
     OtherTransformers && ... other_ops) const;
 
+  template <typename Queue, typename FarmTransformer>
+  void do_pipeline( Queue & input_queue, 
+    farm_t<FarmTransformer> && farm_obj) const;
+
+  template <typename Queue, typename FarmTransformer, 
+            typename ... OtherTransformers>
+  void do_pipeline(Queue & input_queue, 
+       farm_t<FarmTransformer> && farm_obj,
+       OtherTransformers && ... other_transform_ops) const;
+
   template <typename Queue, typename Consumer>
   void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
 
@@ -525,7 +535,6 @@ void parallel_execution_native::pipeline(
     Transformers && ... transform_ops) const
 {
   using namespace std;
-
   using result_type = decay_t<typename result_of<Generator()>::type>;
   using output_type = pair<result_type,long>;
   auto output_queue = make_queue<output_type>();
@@ -545,7 +554,6 @@ void parallel_execution_native::pipeline(
   do_pipeline(output_queue, forward<Transformers>(transform_ops)...);
   generator_task.join();
 }
-
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_native
@@ -641,7 +649,6 @@ void parallel_execution_native::do_pipeline(
       decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
   using output_item_value_type = optional<transform_result_type>;
   using output_item_type = pair<output_item_value_type,long>;
-
   auto output_queue = make_queue<output_item_type>();
 
   thread task([&,this]() {
@@ -662,6 +669,79 @@ void parallel_execution_native::do_pipeline(
   task.join();
 }
 
+template <typename Queue, typename FarmTransformer>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue, 
+    farm_t<FarmTransformer> && farm_obj) const
+{
+  using namespace std;
+  using input_item_type = typename Queue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+  using transform_result_type = 
+      decay_t<typename result_of<FarmTransformer(input_item_value_type)>::type>;
+  using output_item_value_type = experimental::optional<transform_result_type>;
+  using output_item_type = pair<output_item_value_type,long>;
+
+  auto farm_task = [&](int nt) {
+    long order = 0;
+    auto item{input_queue.pop()}; 
+    while (item.first) {
+      farm_obj(*item.first);
+      item = input_queue.pop();
+    }
+    input_queue.push(item);
+  };
+
+  auto ntasks = farm_obj.cardinality();
+  worker_pool workers{ntasks};
+  workers.launch_tasks(*this, farm_task, ntasks);  
+  workers.wait();
+}
+
+template <typename Queue, typename FarmTransformer, 
+          typename ... OtherTransformers>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue, 
+    farm_t<FarmTransformer> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Queue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+  using transform_result_type = 
+      decay_t<typename result_of<FarmTransformer(input_item_value_type)>::type>;
+  using output_item_value_type = experimental::optional<transform_result_type>;
+  using output_item_type = pair<output_item_value_type,long>;
+
+  auto output_queue = make_queue<output_item_type>();
+  atomic<int> done_threads{0};
+  auto farm_task = [&](int nt) {
+    long order = 0;
+    auto item{input_queue.pop()}; 
+    while (item.first) {
+      auto out = output_item_value_type{farm_obj(*item.first)};
+      output_queue.push(make_pair(out,item.second)) ;
+      item = input_queue.pop(); 
+    }
+    input_queue.push(item);
+    done_threads++;
+    if (done_threads == nt) {
+      output_queue.push(make_pair(output_item_value_type{}, -1));
+    }
+  };
+
+  auto ntasks = farm_obj.cardinality();
+  worker_pool workers{ntasks};
+  workers.launch_tasks(*this, farm_task, ntasks);  
+
+  do_pipeline(output_queue, 
+      forward<OtherTransformers>(other_transform_ops)... );
+
+  workers.wait();
+}
+
 template <typename Queue, typename Consumer>
 void parallel_execution_native::do_pipeline(
   Queue & input_queue, 
@@ -669,6 +749,7 @@ void parallel_execution_native::do_pipeline(
 {
   using namespace std;
   using input_type = typename Queue::value_type;
+  using input_value_type = typename input_type::first_type;
 
   auto manager = thread_manager();
 

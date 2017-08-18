@@ -154,7 +154,7 @@ TYPED_TEST(pipeline_test, static_two_stages)
           return this->counter;
         }
     },
-    [this]( auto x ) {
+    [this](int x ) {
       this->invocations_last++;
       this->out += x;
     }
