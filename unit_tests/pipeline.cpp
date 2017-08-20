@@ -198,11 +198,11 @@ TYPED_TEST(pipeline_test, static_three_stages)
           return this->counter;
         }
     },
-    [this]( auto x ) {
+    [this](int x ) {
       this->invocations_intermediate++;
       return x*2;
     },
-    [this]( auto y ) {
+    [this](int y ) {
       this->invocations_last++;
       this->out += y;
     }

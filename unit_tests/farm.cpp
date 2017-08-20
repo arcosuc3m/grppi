@@ -181,7 +181,7 @@ public:
           w[idx_out] = x * 2;
           idx_out++;
         })
-  );
+    );
   }
 
   void check_single() {
@@ -197,7 +197,7 @@ public:
 
   template <typename E>
   void run_single_sink(const E & e) {
-    grppi::pipeline(this->execution_,
+    grppi::pipeline(e,
       [this]() -> optional<int> {
         invocations_in++;
         if (idx_in < v.size() ) {
@@ -270,25 +270,25 @@ public:
 
   template <typename E>
   void run_single_ary_sink(const E & e) {
-  grppi::pipeline(e,
-    [this]() -> optional<tuple<int,int,int>> {
-      invocations_in++;
-      if (idx_in < v.size()) {
-        idx_in++;
-        return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-      } 
-      else return {};
-    },
-    grppi::farm(4,
-      [this](tuple<int,int,int> x) {
-        invocations_op++;
-        return get<0>(x) + get<1>(x) + get<2>(x);;
-      }),
-    [this](int x) {
-      invocations_sk++;
-      w[idx_out] = x;
-      idx_out++;
-    });
+    grppi::pipeline(e,
+      [this]() -> optional<tuple<int,int,int>> {
+        invocations_in++;
+        if (idx_in < v.size()) {
+          idx_in++;
+          return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
+        } 
+        else return {};
+      },
+      grppi::farm(4,
+        [this](tuple<int,int,int> x) {
+          invocations_op++;
+          return get<0>(x) + get<1>(x) + get<2>(x);;
+        }),
+      [this](int x) {
+        invocations_sk++;
+        w[idx_out] = x;
+        idx_out++;
+      });
   }
 
   void check_single_ary_sink() {
@@ -434,14 +434,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-//TYPED_TEST_CASE(farm_test, executions);
-//TODO: Temporary hack
-using executions_tmp = ::testing::Types<
-  grppi::sequential_execution,
-  grppi::parallel_execution_native,
-  grppi::parallel_execution_omp>;
-
-TYPED_TEST_CASE(farm_test, executions_tmp);
+TYPED_TEST_CASE(farm_test, executions);
 
 TYPED_TEST(farm_test, static_empty)
 {

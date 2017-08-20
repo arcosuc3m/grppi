@@ -25,6 +25,8 @@
 
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
+#include "../common/patterns.h"
+#include "../common/farm_pattern.h"
 
 #include <type_traits>
 #include <tuple>
@@ -225,12 +227,26 @@ private:
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const; 
 
-  template <typename Input, typename Transformer, typename ... OtherTransformers>
-  auto do_pipeline(Transformer && transform_op,
-    OtherTransformers && ... other_ops) const;
+  template <typename Input, typename Transformer, 
+            requires_no_pattern<Transformer> = 0>
+  auto make_filter(Transformer && transform_op) const;
 
-  template <typename Input, typename Consumer>
-  auto do_pipeline(Consumer && consume_op) const;
+  template <typename Input, typename Transformer, typename ... OtherTransformers,
+            requires_no_pattern<Transformer> = 0>
+  auto make_filter(Transformer && transform_op,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Input, typename FarmTransformer,
+            template <typename> class Farm,
+            requires_farm<Farm<FarmTransformer>> = 0>
+  auto make_filter(Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Input, typename FarmTransformer, 
+            template <typename> class Farm,
+            typename ... OtherTransformers,
+            requires_farm<Farm<FarmTransformer>> = 0>
+  auto make_filter(Farm<FarmTransformer> && farm_obj,
+                   OtherTransformers && ... other_transform_ops) const;
 
 private:
 
@@ -384,7 +400,7 @@ void parallel_execution_tbb::pipeline(
   using output_value_type = typename result_type::value_type;
   using output_type = optional<output_value_type>;
 
-  const auto generator = tbb::make_filter<void, output_type>(
+  auto generator = tbb::make_filter<void, output_type>(
     tbb::filter::serial_in_order, 
     [&](tbb::flow_control & fc) -> output_type {
       auto item =  generate_op();
@@ -398,11 +414,15 @@ void parallel_execution_tbb::pipeline(
     }
   );
 
+  auto rest =
+    this->template make_filter<output_value_type>(forward<Transformers>(transform_ops)...);
+
+
   tbb::task_group_context context;
   tbb::parallel_pipeline(tokens(), 
-    generator 
+    generator
     & 
-    do_pipeline<output_value_type>(forward<Transformers>(transform_ops)...));
+    rest);
 }
 
 /**
@@ -484,39 +504,104 @@ auto parallel_execution_tbb::divide_conquer(
       std::forward<subresult_type>(out), std::forward<Combiner>(combine_op));
 }
 
-template <typename Input, typename Transformer, 
-          typename ... OtherTransformers>
-auto parallel_execution_tbb::do_pipeline(
-    Transformer && transform_op,
-    OtherTransformers && ... other_ops) const
+template <typename Input, typename Transformer,
+          requires_no_pattern<Transformer> = 0>
+auto parallel_execution_tbb::make_filter(
+    Transformer && transform_op) const
 {
   using namespace std;
   using namespace experimental;
-  using input_type = optional<Input>;
-  using output_value_type = decay_t<typename result_of<Transformer(Input)>::type>;
-  using output_type = optional<output_value_type>;
 
-  return tbb::make_filter<input_type, output_type>( 
-      tbb::filter::serial_in_order,
-      [&](input_type item) {
-        return (item) ? transform_op(*item) : output_type{};
-      }) 
-      & 
-      do_pipeline<output_value_type>(forward<OtherTransformers>(other_ops)...);
+  using input_value_type = Input; 
+  using input_type = optional<input_value_type>;
 
+  return tbb::make_filter<input_type, void>( 
+      tbb::filter::serial_in_order, 
+      [=](input_type item) {
+          transform_op(*item);
+      });
 }
 
-template <typename Input, typename Consumer>
-auto parallel_execution_tbb::do_pipeline(
-    Consumer && consume_op) const
+template <typename Input, typename Transformer, typename ... OtherTransformers,
+          requires_no_pattern<Transformer> = 0>
+auto parallel_execution_tbb::make_filter(
+    Transformer && transform_op,
+    OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
   using namespace experimental;
-  return tbb::make_filter<optional<Input>, void>(
-      tbb::filter::serial_in_order,
-      [&](optional<Input> item) { 
-        if(item) consume_op(*item);
+
+  using input_value_type = Input; 
+  static_assert(!is_void<input_value_type>::value, 
+      "Transformer must take non-void argument");
+  using input_type = optional<input_value_type>;
+  using output_value_type = 
+    decay_t<typename result_of<Transformer(input_value_type)>::type>;
+  static_assert(!is_void<output_value_type>::value,
+      "Transformer must return a non-void result");
+  using output_type = optional<output_value_type>;
+
+
+  return 
+      tbb::make_filter<input_type, output_type>(
+          tbb::filter::serial_in_order, 
+          [=](input_type item) -> output_type {
+              if (item) return transform_op(*item);
+              else return {};
+          })
+    &
+      this->template make_filter<output_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+template <typename Input, typename FarmTransformer,
+          template <typename> class Farm,
+          requires_farm<Farm<FarmTransformer>> = 0>
+auto parallel_execution_tbb::make_filter(
+    Farm<FarmTransformer> && farm_obj) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input; 
+  using input_type = optional<input_value_type>;
+
+  return tbb::make_filter<input_type, void>(
+      tbb::filter::parallel,
+      [=](input_type item) {
+        farm_obj(*item);
       });
+}
+
+template <typename Input, typename FarmTransformer, 
+          template <typename> class Farm,
+          typename ... OtherTransformers,
+          requires_farm<Farm<FarmTransformer>> = 0>
+auto parallel_execution_tbb::make_filter(
+    Farm<FarmTransformer> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input;
+  static_assert(!is_void<input_value_type>::value, 
+      "Farm must take non-void argument");
+  using input_type = optional<input_value_type>;
+  using output_value_type = decay_t<typename result_of<FarmTransformer(input_value_type)>::type>;
+  static_assert(!is_void<output_value_type>::value,
+      "Farm must return a non-void result");
+  using output_type = optional<output_value_type>;
+
+  return tbb::make_filter<input_type, output_type>(
+      tbb::filter::parallel,
+      [&](input_type item) -> output_type {
+        if (item) return farm_obj(*item);
+        else return {};
+      })
+    &
+      this->template make_filter<output_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
 }
 
 } // end namespace grppi
