@@ -21,6 +21,8 @@
 #ifndef GRPPI_COMMON_CALLABLE_TRAITS_H
 #define GRPPI_COMMON_CALLABLE_TRAITS_H
 
+#include <type_traits>
+
 namespace grppi {
 
 namespace internal {
@@ -88,6 +90,7 @@ constexpr bool has_void_return() {
 }
 
 } // end namespace internal
+
 
 // Meta-function for determining if a callable has arguments
 template <typename F>
