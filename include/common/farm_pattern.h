@@ -21,9 +21,6 @@
 #define GRPPI_COMMON_FARM_PATTERN_H
 
 #include <type_traits>
-#include <atomic>
-
-#include "../native/worker_pool.h"
 
 namespace grppi {
 
@@ -35,6 +32,8 @@ Represents a farm of n replicas from a transformer.
 template <typename Transformer>
 class farm_t {
 public:
+
+  using transformer_type = Transformer;
 
   /**
   \brief Constructs a farm with a cardinality and a transformer.
@@ -65,6 +64,26 @@ private:
   int cardinality_;
   Transformer transformer_;
 };
+
+namespace internal {
+
+template<typename T>
+struct is_farm {
+  static constexpr bool value = false;
+};
+
+template<typename T>
+struct is_farm<farm_t<T>> {
+  static constexpr bool value = true;
+};
+
+} // namespace internal
+
+template <typename T>
+static constexpr bool is_farm = internal::is_farm<T>::value;
+
+template <typename T>
+using requires_farm = typename std::enable_if_t<is_farm<T>, int>;
 
 }
 

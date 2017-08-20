@@ -23,6 +23,8 @@
 
 #include <tuple> 
 
+#include "farm_pattern.h"
+
 namespace grppi{
 
 template <typename E,typename Stage, typename ... Stages>
@@ -66,6 +68,13 @@ class filter_info
       int filtertype;
       filter_info(E &s,Operation f) : task{f}, exectype{s}, filtertype{} {};
 };
+
+template <typename T>
+constexpr bool is_no_pattern =
+  !is_farm<T>;
+
+template <typename T>
+using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
 
 } // end namespace grppi
 
