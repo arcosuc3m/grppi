@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -224,11 +224,21 @@ public:
 
 // Test for execution policies defined in supported_executions.h
 //TYPED_TEST_CASE(stream_filter_test, executions);
-TYPED_TEST_CASE(stream_filter_test, ::testing::Types<grppi::sequential_execution>);
+using executions_tmp = ::testing::Types<grppi::sequential_execution,grppi::parallel_execution_native>;
+TYPED_TEST_CASE(stream_filter_test, executions_tmp);
 
-TYPED_TEST(stream_filter_test, static_keep_empty)
+TYPED_TEST(stream_filter_test, static_ordered_keep_empty)
 {
   this->setup_empty();
+  this->execution_.enable_ordering();
+  this->run_keep_empty(this->execution_);
+  this->check_keep_empty();
+}
+
+TYPED_TEST(stream_filter_test, static_unordered_keep_empty)
+{
+  this->setup_empty();
+  this->execution_.disable_ordering();
   this->run_keep_empty(this->execution_);
   this->check_keep_empty();
 }

@@ -339,22 +339,42 @@ private:
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const; 
 
-  template <typename Queue, typename Transformer, typename ... OtherTransformers>
-  void do_pipeline(Queue & input_queue, Transformer && transform_op,
-    OtherTransformers && ... other_ops) const;
+  template <typename Queue, typename Consumer,
+            requires_no_pattern<Consumer> = 0>
+  void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
 
-  template <typename Queue, typename FarmTransformer>
+  template <typename Queue, typename Transformer, typename ... OtherTransformers,
+            requires_no_pattern<Transformer> = 0>
+  void do_pipeline(Queue & input_queue, Transformer && transform_op,
+      OtherTransformers && ... other_ops) const;
+
+  template <typename Queue, typename FarmTransformer,
+            template <typename> class Farm,
+            requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline( Queue & input_queue, 
-    farm_t<FarmTransformer> && farm_obj) const;
+      Farm<FarmTransformer> && farm_obj) const;
 
   template <typename Queue, typename FarmTransformer, 
-            typename ... OtherTransformers>
+            template <typename> class Farm,
+            typename ... OtherTransformers,
+            requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline(Queue & input_queue, 
-       farm_t<FarmTransformer> && farm_obj,
-       OtherTransformers && ... other_transform_ops) const;
+      Farm<FarmTransformer> && farm_obj,
+      OtherTransformers && ... other_transform_ops) const;
 
-  template <typename Queue, typename Consumer>
-  void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
+  template <typename Queue, typename Predicate, 
+            template <typename> class Filter,
+            requires_filter<Filter<Predicate>> =0>
+  void do_pipeline(Queue & input_queue, 
+      Filter<Predicate> && farm_obj) const;
+
+  template <typename Queue, typename Predicate, 
+            template <typename> class Filter,
+            typename ... OtherTransformers,
+            requires_filter<Filter<Predicate>> =0>
+  void do_pipeline(Queue & input_queue, 
+      Filter<Predicate> && farm_obj,
+      OtherTransformers && ... other_transform_ops) const;
 
 private: 
   mutable thread_registry thread_registry_;
@@ -634,7 +654,64 @@ auto parallel_execution_native::divide_conquer(
       std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
 }
 
-template <typename Queue, typename Transformer, typename ... OtherTransformers>
+template <typename Queue, typename Consumer,
+          requires_no_pattern<Consumer> = 0>
+void parallel_execution_native::do_pipeline(
+  Queue & input_queue, 
+  Consumer && consume_op) const
+{
+  using namespace std;
+  using input_type = typename Queue::value_type;
+  using input_value_type = typename input_type::first_type;
+
+  auto manager = thread_manager();
+
+  if (!is_ordered()) {
+    for (;;) {
+      auto item = input_queue.pop();
+      if (!item.first) break;
+      consume_op(*item.first);
+    }
+    return;
+  }
+  vector<input_type> elements;
+  long current = 0;
+  for (;;) {
+    auto item = input_queue.pop();
+    if (!item.first) break;
+    if(current == item.second){
+      consume_op(*item.first);
+      current ++;
+    }
+    else {
+      elements.push_back(item);
+    }
+    // TODO: Probably find_if() + erase 
+    for (auto it=elements.begin(); it!=elements.end(); it++) {
+      if(it->second == current) {
+        consume_op(*it->first);
+        elements.erase(it);
+        current++;
+        break;
+      }
+    }
+  }
+  while (elements.size()>0) {
+    // TODO: Probably find_if() + erase
+    for (auto it = elements.begin(); it != elements.end(); it++) {
+      if(it->second == current) {
+        consume_op(*it->first);
+        elements.erase(it);
+        current++;
+        break;
+      }
+    }
+  }
+}
+
+template <typename Queue, typename Transformer, 
+          typename ... OtherTransformers,
+          requires_no_pattern<Transformer> =0>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Transformer && transform_op,
@@ -669,10 +746,12 @@ void parallel_execution_native::do_pipeline(
   task.join();
 }
 
-template <typename Queue, typename FarmTransformer>
+template <typename Queue, typename FarmTransformer,
+          template <typename> class Farm,
+          requires_farm<Farm<FarmTransformer>> =0>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
-    farm_t<FarmTransformer> && farm_obj) const
+    Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
   using input_item_type = typename Queue::value_type;
@@ -699,10 +778,12 @@ void parallel_execution_native::do_pipeline(
 }
 
 template <typename Queue, typename FarmTransformer, 
-          typename ... OtherTransformers>
+          template <typename> class Farm,
+          typename ... OtherTransformers,
+          requires_farm<Farm<FarmTransformer>> =0>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
-    farm_t<FarmTransformer> && farm_obj,
+    Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
@@ -742,56 +823,121 @@ void parallel_execution_native::do_pipeline(
   workers.wait();
 }
 
-template <typename Queue, typename Consumer>
+template <typename Queue, typename Predicate, 
+          template <typename> class Filter,
+          requires_filter<Filter<Predicate>> =0>
 void parallel_execution_native::do_pipeline(
-  Queue & input_queue, 
-  Consumer && consume_op) const
+    Queue & input_queue, 
+    Filter<Predicate> && filter_obj) const
 {
   using namespace std;
-  using input_type = typename Queue::value_type;
-  using input_value_type = typename input_type::first_type;
+  using namespace experimental;
 
-  auto manager = thread_manager();
+  using input_item_type = typename Queue::value_type;
+  using input_value_type = typename input_item_type::first_type;
 
-  if (!is_ordered()) {
-    for (;;) {
-      auto item = input_queue.pop();
-      if (!item.first) break;
-      consume_op(*item.first);
+  auto filter_task = [&,this]() {
+    auto manager = thread_manager();
+    auto item{input_queue.pop()};
+    while (item.first) {
+      filter_obj(*item.first);
+      item = input_queue.pop();
     }
-  }
-  vector<input_type> elements;
-  long current = 0;
-  for (;;) {
-    auto item = input_queue.pop();
-    if (!item.first) break;
-    if(current == item.second){
-      consume_op(*item.first);
-      current ++;
-    }
-    else {
-      elements.push_back(item);
-    }
-    // TODO: Probably find_if() + erase 
-    for (auto it=elements.begin(); it!=elements.end(); it++) {
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
+  };
+}
+
+template <typename Queue, typename Predicate, 
+          template <typename> class Filter,
+          typename ... OtherTransformers,
+          requires_filter<Filter<Predicate>> =0>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue, 
+    Filter<Predicate> && filter_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Queue::value_type;
+  using input_value_type = typename input_item_type::first_type;
+  auto filter_queue = make_queue<input_item_type>();
+
+  auto filter_task = [&,this]() {
+    auto manager = thread_manager();
+    auto item{input_queue.pop()};
+    while (item.first) {
+      if (filter_obj(*item.first)) {
+        filter_queue.push(item);
       }
-    }
-  }
-  while (elements.size()>0) {
-    // TODO: Probably find_if() + erase
-    for (auto it = elements.begin(); it != elements.end(); it++) {
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
+      else {
+        filter_queue.push(make_pair(input_value_type{}, item.second));
       }
+      item = input_queue.pop();
     }
+    filter_queue.push(make_pair(input_value_type{}, -1));
+  };
+  thread filter_thread{filter_task};
+
+  auto output_queue = make_queue<input_item_type>();
+  thread ordering_thread;
+  if (is_ordered()) {
+    auto ordering_task = [&]() {
+      auto manager = thread_manager();
+      vector<input_item_type> elements;
+      int current = 0;
+      long order = 0;
+      auto item{filter_queue.pop()};
+      for (;;) {
+        if(!item.first && item.second == -1) break; 
+        if (item.second == current) {
+          if (item.first) {
+            output_queue.push(make_pair(item.first,order));
+            order++;
+          }
+          current++;
+        }
+        else {
+          elements.push_back(item);
+        }
+        // TODO: Probably find_if() + erase 
+        for (auto it=elements.begin(); it<elements.end(); it++) {
+          if (it->second == current) {
+            if (it->first) {
+              output_queue.push(make_pair(it->first,order));
+              order++;
+            }
+            elements.erase(it);
+            current++;
+            break;
+          }
+        }
+        item = filter_queue.pop();
+      }
+      while (elements.size()>0) {
+        // TODO: Probably find_if() + erase 
+        for (auto it=elements.begin(); it<elements.end(); it++) {
+          if (it->second == current) {
+            if(it->first) { 
+              output_queue.push(make_pair(it->first,order));
+              order++;
+            }
+            elements.erase(it);
+            current++;
+            break;
+          }
+        }
+      }
+      output_queue.push(item);
+    };
+
+    ordering_thread = thread{ordering_task};
+    do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
+    filter_thread.join();
+    ordering_thread.join();
+  }
+  else {
+    do_pipeline(filter_queue, forward<OtherTransformers>(other_transform_ops)...);
+    filter_thread.join();
   }
 }
 
