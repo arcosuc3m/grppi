@@ -1,0 +1,119 @@
+/*
+ * Author: Marco Aldinucci, University of Torino
+ * Date: August 4, 2016
+ *
+ * TODO: change to typed ff_node to ensure a better static type checking at the interface level
+ */
+
+
+#ifndef FF_NODE_WRAP_HPP
+#define FF_NODE_WRAP_HPP
+
+#include <ff/node.hpp>
+#include <ff/allocator.hpp>
+
+#include <optional>
+//#include "../common/common.hpp"
+
+#ifndef FF_ALLOCATOR_IN_USE
+//static ff::ff_allocator * ffalloc = 0;
+#define FF_MALLOC(size)   (FFAllocator::instance()->malloc(size))
+#define FF_FREE(ptr) (FFAllocator::instance()->free(ptr))
+#define FF_ALLOCATOR_IN_USE 1
+#endif
+
+
+namespace ff {
+
+static bool outer_ff_pattern = true;
+
+// Here it is assumed that result is an object with value_type public field
+
+// Middle stage (worker node)
+template <typename TSin, typename TSout, typename L>
+struct PMINode : ff_node {
+    L callable;
+    PMINode(L const &lf,bool streamitem=true):callable(lf) {};
+    inline void * svc(void *t) {
+        //typedef typename TSin::value_type in_type;
+        void * outslot = FF_MALLOC(sizeof(TSout));
+        TSout * out = new (outslot) TSout();
+        TSin * input_item = (TSin *) t;
+        //std::cout << "Middle stage " << *input_item << "\n";
+        *out = std::move(callable(*input_item));
+        input_item->~TSin();
+        FF_FREE(input_item);
+        return(outslot);
+    }
+};
+
+
+// First stage
+template <typename TSout, typename L >
+struct PMINode<void,TSout,L> : ff_node {
+    L callable;
+    PMINode(L const &lf):callable(lf) {};
+    inline void * svc(void *) {
+        // grppi::optional<TSout> ret;
+    	std::optional<TSout> ret;
+        void * outslot = FF_MALLOC(sizeof(TSout));
+        TSout * out = new (outslot) TSout();
+        ret = std::move(callable());
+        //*out = ret.elem;
+        *out = ret;
+
+        // FT: according to previous custom implementation:
+        // if ret has a value, end is false but its
+        // boolean evaluation returns true
+        if( ret.has_value() ) {
+            //std::cout << "EOS\n";
+            return EOS;
+        }
+        else {
+            //std::cout << "Res " << *out << "\n";
+            return(outslot);
+        }
+        // No GO_ON
+    }
+};
+
+// Filter
+template <typename TSin, typename L>
+struct PMINodeFilter : ff_node {
+    L cond;
+    PMINodeFilter (L const &c):cond(c) {};
+    inline void * svc(void *t) {
+        void * outslot = GO_ON;
+        TSin * input_item = (TSin *) t;
+        if (cond(*input_item)) {
+            input_item->~TSin();
+            FF_FREE(input_item);
+            //std::cout << "Filter drop " << *input_item << "\n";
+        } else {
+            outslot = t;
+        }
+        return(outslot);
+    }
+};
+
+
+// Last stage
+template <typename TSin, typename L >
+struct PMINode<TSin,void,L> : ff_node {
+    L callable;
+    PMINode(L const &lf):callable(lf) {};
+    inline void * svc(void *t) {
+        TSin * input_item = (TSin *) t;
+        callable(*input_item);
+        input_item->~TSin();
+        FF_FREE(input_item);
+        //delete input_item;
+        return GO_ON;
+    }
+};
+
+
+}
+
+
+#endif // FF_NODE_WRAP_HPP

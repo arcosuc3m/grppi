@@ -31,6 +31,8 @@ grppi::polymorphic_execution execution_mode(const std::string & opt) {
     return make_polymorphic_execution<parallel_execution_omp>();
   if ("tbb" == opt) 
     return make_polymorphic_execution<parallel_execution_tbb>();
+  if ("ff" == opt)
+      return make_polymorphic_execution<parallel_execution_ff>();
   return polymorphic_execution{};
 }
 
@@ -62,6 +64,10 @@ void print_available_modes(std::ostream & os) {
 
   if (is_supported<parallel_execution_omp>()) {
     os << "    omp -> OpenMP backend" << endl;
+  }
+
+  if (is_supported<parallel_execution_ff>()) {
+      os << "    ff -> FastFlow backend" << endl;
   }
 }
 

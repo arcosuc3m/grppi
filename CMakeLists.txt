@@ -99,6 +99,17 @@ if( GRPPI_OMP_ENABLE )
     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
 endif( GRPPI_OMP_ENABLE )
 
+# Fastflow - to be managed
+option( GRPPI_FF_ENABLE "Require FastFlow framework" OFF )
+message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE} )
+if( GRPPI_FF_ENABLE )
+    include_directories( ${PROJECT_SOURCE_DIR}/ff )
+    # file ( APPEND ${HEADER_FILE} "\n#define FF_ENABLE ON")
+    add_definitions( "-DGRPPI_FF" )
+    set( FFPATH ${PROJECT_SOURCE_DIR}/ff )
+    message( STATUS "FastFlow Path is: " ${FFPATH} )
+endif( GRPPI_FF_ENABLE )
+
 # Doxygen Documentation
 option( GRPPI_DOXY_ENABLE "Require Doxygen library" OFF )
 if( GRPPI_DOXY_ENABLE )
@@ -108,6 +119,7 @@ endif( GRPPI_DOXY_ENABLE )
 # Installation
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
         FILES_MATCHING PATTERN "*.h")
+install( DIRECTORY ${PROJECT_SOURCE_DIR}/ff DESTINATION "${CMAKE_PROJECT_NAME}" )
 
 # Tests
 enable_testing()
@@ -117,7 +129,7 @@ if( GRPPI_TESTS_ENABLE )
 endif( GRPPI_TESTS_ENABLE )
 
 # Example applications
-option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" OFF )
+option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" ON )
 if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
     add_subdirectory(samples)
 endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )

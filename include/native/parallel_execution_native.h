@@ -75,30 +75,30 @@ private:
 inline void thread_registry::register_thread() noexcept 
 {
   using namespace std;
-  while (lock_.test_and_set(memory_order_acquire)) {}
+  while (lock_.test_and_set(std::memory_order_acquire)) {}
   auto this_id = this_thread::get_id();
   ids_.push_back(this_id);
-  lock_.clear(memory_order_release);
+  lock_.clear(std::memory_order_release);
 }
 
 inline void thread_registry::deregister_thread() noexcept
 {
   using namespace std;
-  while (lock_.test_and_set(memory_order_acquire)) {}
+  while (lock_.test_and_set(std::memory_order_acquire)) {}
   auto this_id = this_thread::get_id();
   auto current = find(begin(ids_), end(ids_), this_id);
   *current = {}; //Empty thread
-  lock_.clear(memory_order_release);
+  lock_.clear(std::memory_order_release);
 }
 
 inline int thread_registry::current_index() const noexcept
 {
   using namespace std;
-  while (lock_.test_and_set(memory_order_acquire)) {}
+  while (lock_.test_and_set(std::memory_order_acquire)) {}
   auto this_id = this_thread::get_id();
   auto current = find(begin(ids_), end(ids_), this_id);
   auto index = distance(begin(ids_), current);
-  lock_.clear(memory_order_release);
+  lock_.clear(std::memory_order_release);
   return index;
 };
 

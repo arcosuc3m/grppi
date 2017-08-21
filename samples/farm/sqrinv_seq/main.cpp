@@ -37,23 +37,16 @@ void test_pipeline(grppi::polymorphic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
-  auto pipe = grppi::pipeline(e,
-      [](double x) -> double { return x*x; },
-      [](double x) -> double { return 1/x; }
-  );
-
-  // TODO: Fix once issue #231 is handled
-/*
   grppi::farm(e, 
-    [n]() mutable -> optional<double> { 
-      static int x = 1;
+    [x=1,n]() mutable -> optional<double> { 
       if (x<=n) return x++;
       else return {}; 
     },
-    pipe,
+    [](double x) {
+      return 1/(x*x);
+    },
     [](double x) { cout << x << endl; }
   );
-*/
 }
 
 void print_message(const std::string & prog, const std::string & msg) {

@@ -1,0 +1,2 @@
+add_subdirectory(average_env)
+add_subdirectory(matrix_mult)

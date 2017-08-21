@@ -27,6 +27,8 @@
 #include "tbb/map.h"
 #include "poly/map.h"
 
+#include "ff/map.h"
+
 namespace grppi {
 
 /** 
