@@ -28,7 +28,6 @@
 
 #include "supported_executions.h"
 
-/*
 using namespace std;
 using namespace grppi;
 template <typename T>
@@ -59,7 +58,47 @@ public:
   void setup_empty() {
   }
 
-  void check_empty() {
+  template <typename E>
+  void run_keep_empty(const E & e) {
+    grppi::pipeline(e,
+      [this]() -> optional<int> { 
+        invocations_in++;
+        return {}; 
+    },
+    grppi::keep(
+      [this](int x) { 
+        this->invocations_op++; 
+        return true; 
+      }),
+    [this](int x) { 
+      this->invocations_out++; 
+    });
+  }
+
+  template <typename E>
+  void run_discard_empty(const E & e) {
+    grppi::pipeline(e,
+      [this]() -> optional<int> { 
+        invocations_in++;
+        return {}; 
+    },
+    grppi::discard(
+      [this](int x) { 
+        this->invocations_op++; 
+        return true; 
+      }),
+    [this](int x) { 
+      this->invocations_out++; 
+    });
+  }
+
+  void check_keep_empty() {
+    ASSERT_EQ(1, invocations_in); // Functor in was invoked only once
+    ASSERT_EQ(0, invocations_op); // Functor op was not invoked
+    ASSERT_EQ(0, invocations_out); // Functor out was not invoked
+  }
+
+  void check_discard_empty() {
     ASSERT_EQ(1, invocations_in); // Functor in was invoked only once
     ASSERT_EQ(0, invocations_op); // Functor op was not invoked
     ASSERT_EQ(0, invocations_out); // Functor out was not invoked
@@ -70,14 +109,52 @@ public:
     w = vector<int>{99};
   }
 
-  void check_single_even() {
+  template <typename E>
+  void run_keep_single(const E & e) {
+    grppi::pipeline (this->execution_,
+    [this]() -> optional<int> {
+      invocations_in++;
+      if(idx_in < v.size() ) return v[idx_in++];
+      else return {};
+    },
+    grppi::keep(
+      [this](int x) {
+        invocations_op++;
+        return x % 2 == 0; 
+      }),
+    [this](int x) {
+      invocations_out++;
+      w[idx_out++] = x;
+    });
+  }
+
+  template <typename E>
+  void run_discard_single(const E & e) {
+    grppi::pipeline (this->execution_,
+    [this]() -> optional<int> {
+      invocations_in++;
+      if(idx_in < v.size() ) return v[idx_in++];
+      else return {};
+    },
+    grppi::discard(
+      [this](int x) {
+        invocations_op++;
+        return x % 2 == 0; 
+      }),
+    [this](int x) {
+      invocations_out++;
+      w[idx_out++] = x;
+    });
+  }
+
+  void check_keep_single() {
     EXPECT_EQ(2, this->invocations_in); // two invocation
     EXPECT_EQ(1, this->invocations_op); // one invocation
     EXPECT_EQ(1, this->invocations_out); // one invocation
     EXPECT_EQ(42, this->w[0]);
   }
 
-  void check_single_odd() {
+  void check_discard_single() {
     EXPECT_EQ(2, this->invocations_in); // two invocation
     EXPECT_EQ(1, this->invocations_op); // one invocation
     EXPECT_EQ(0, this->invocations_out); // not invoked
@@ -91,14 +168,52 @@ public:
     expected_odd = vector<int>{1,3,5};
   }
 
-  void check_multiple_even() {
+  template <typename E>
+  void run_keep_multiple(const E & e) {
+    grppi::pipeline(this->execution_,
+      [this]() -> optional<int> {
+        this->invocations_in++;
+        if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
+        else return {};
+      },
+      grppi::keep(
+        [this](int x) {
+        this->invocations_op++;
+        return x % 2 == 0;
+      }),
+      [this](int x) {
+        this->invocations_out++;
+        this->w[this->idx_out++] = x;
+      });
+  }
+
+  template <typename E>
+  void run_discard_multiple(const E & e) {
+    grppi::pipeline(this->execution_,
+      [this]() -> optional<int> {
+        this->invocations_in++;
+        if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
+        else return {};
+      },
+      grppi::discard(
+        [this](int x) {
+        this->invocations_op++;
+        return x % 2 == 0;
+      }),
+      [this](int x) {
+        this->invocations_out++;
+        this->w[this->idx_out++] = x;
+      });
+  }
+
+  void check_keep_multiple() {
     EXPECT_EQ(6, this->invocations_in); // six invocations
     EXPECT_EQ(5, this->invocations_op); // five invocations
     EXPECT_EQ(2, this->invocations_out); // two invocations
     EXPECT_TRUE(equal(begin(this->expected_even), end(this->expected_even), begin(this->w)));
   }
 
-  void check_multiple_odd() {
+  void check_discard_multiple() {
     EXPECT_EQ(6, this->invocations_in); // six invocations
     EXPECT_EQ(5, this->invocations_op); // five invocations
     EXPECT_EQ(3, this->invocations_out); // two invocations
@@ -108,524 +223,101 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stream_filter_test, executions);
+//TYPED_TEST_CASE(stream_filter_test, executions);
+TYPED_TEST_CASE(stream_filter_test, ::testing::Types<grppi::sequential_execution>);
 
-TYPED_TEST(stream_filter_test, static_empty_keep)
+TYPED_TEST(stream_filter_test, static_keep_empty)
 {
   this->setup_empty();
-  grppi::keep(this->execution_,
-    [this]() -> optional<int> { 
-      this->invocations_in++;
-      return {}; 
-    },
-    [this](int x) { 
-      this->invocations_op++; 
-      return true; 
-    },
-    [this](int x) { 
-      this->invocations_out++; 
-    }
-  );
-  this->check_empty();
+  this->run_keep_empty(this->execution_);
+  this->check_keep_empty();
 }
 
-TYPED_TEST(stream_filter_test, static_single_filtered_keep)
-{
-  this->setup_single();
-  grppi::keep(this->execution_,
-    [this]() ->optional<int> {
-      this->invocations_in++;
-      if(this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0; 
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_even();
-}
-
-TYPED_TEST(stream_filter_test, static_single_unfiltered_keep)
-{
-  this->setup_single();
-  grppi::keep(this->execution_,
-    [this]() ->optional<int> {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 != 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_odd();
-}
-
-
-TYPED_TEST(stream_filter_test, static_multiple_keep)
-{
-  this->setup_multiple();
-  grppi::keep(this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple_even();
-}
-
-
-TYPED_TEST(stream_filter_test, poly_empty_keep)
+/*
+TYPED_TEST(stream_filter_test, poly_keep_empty)
 {
   this->setup_empty();
-  grppi::keep(this->poly_execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return true;
-    },
-    [this](int x) {
-      this->invocations_out++;
-    }
-  );
-  this->check_empty();
+  this->run_keep_empty(this->poly_execution_);
+  this->check_keep_empty();
 }
+*/
 
-TYPED_TEST(stream_filter_test, poly_single_filtered_keep)
-{
-  this->setup_single();
-  grppi::keep(this->poly_execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_even();
-}
-
-TYPED_TEST(stream_filter_test, poly_single_unfiltered_keep)
-{
-  this->setup_single();
-  grppi::keep(this->poly_execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      if( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 != 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_odd();
-}
-
-
-TYPED_TEST(stream_filter_test, poly_multiple_keep)
-{
-  this->setup_multiple();
-  grppi::keep(this->poly_execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple_even();
-}
-
-
-TYPED_TEST(stream_filter_test, static_empty_composed_keep)
+TYPED_TEST(stream_filter_test, static_discard_empty)
 {
   this->setup_empty();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      return {};
-    },
-    grppi::keep(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return true;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-    }
-  );
-  this->check_empty();
+  this->run_discard_empty(this->execution_);
+  this->check_discard_empty();
 }
 
-TYPED_TEST(stream_filter_test, static_single_filtered_composed_keep)
-{
-  this->setup_single();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++]; 
-      else return {};
-    },
-    grppi::keep(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 == 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_even();
-}
-
-TYPED_TEST(stream_filter_test, static_single_unfiltered_composed_keep)
-{
-  this->setup_single();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    grppi::keep(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-         
-        return x % 2 != 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_odd();
-}
-
-TYPED_TEST(stream_filter_test, static_multiple_composed_keep)
-{
-  this->setup_multiple();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    grppi::keep(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 == 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple_even();
-}
-
-TYPED_TEST(stream_filter_test, static_empty_discard)
+/*
+TYPED_TEST(stream_filter_test, poly_discard_empty)
 {
   this->setup_empty();
-  grppi::discard(this->execution_,
-    [this]() -> optional<int> { 
-      this->invocations_in++;
-      return {}; 
-    },
-    [this](int x) { 
-      this->invocations_op++; 
-      return true; 
-    },
-    [this](int x) { 
-      this->invocations_out++; 
-    }
-  );
-  this->check_empty();
+  this->run_discard_empty(this->poly_execution_);
+  this->check_discard_empty();
 }
+*/
 
-TYPED_TEST(stream_filter_test, static_single_filtered_discard)
+TYPED_TEST(stream_filter_test, static_keep_single)
 {
   this->setup_single();
-  grppi::discard(this->execution_,
-    [this]() ->optional<int> {
-      this->invocations_in++;
-      if(this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0; 
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_odd();
+  this->run_keep_single(this->execution_);
+  this->check_keep_single();
 }
 
-TYPED_TEST(stream_filter_test, static_single_unfiltered_discard)
+/*
+TYPED_TEST(stream_filter_test, poly_keep_single)
 {
   this->setup_single();
-  grppi::discard(this->execution_,
-    [this]() ->optional<int> {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 != 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_even();
+  this->run_keep_single(this->poly_execution_);
+  this->check_keep_single();
+}
+*/
+
+TYPED_TEST(stream_filter_test, static_discard_single)
+{
+  this->setup_single();
+  this->run_discard_single(this->execution_);
+  this->check_discard_single();
 }
 
+/*
+TYPED_TEST(stream_filter_test, poly_discard_single)
+{
+  this->setup_single();
+  this->run_discard_single(this->poly_execution_);
+  this->check_discard_single();
+}
+*/
 
-TYPED_TEST(stream_filter_test, static_multiple_discard)
+TYPED_TEST(stream_filter_test, static_keep_multiple)
 {
   this->setup_multiple();
-  grppi::discard(this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple_odd();
+  this->run_keep_multiple(this->execution_);
+  this->check_keep_multiple();
 }
 
-
-TYPED_TEST(stream_filter_test, poly_empty_discard)
-{
-  this->setup_empty();
-  grppi::discard(this->poly_execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return true;
-    },
-    [this](int x) {
-      this->invocations_out++;
-    }
-  );
-  this->check_empty();
-}
-
-TYPED_TEST(stream_filter_test, poly_single_filtered_discard)
-{
-  this->setup_single();
-  grppi::discard(this->poly_execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_odd();
-}
-
-TYPED_TEST(stream_filter_test, poly_single_unfiltered_discard)
-{
-  this->setup_single();
-  grppi::discard(this->poly_execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      if( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 != 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_even();
-}
-
-
-TYPED_TEST(stream_filter_test, poly_multiple_discard)
+/*
+TYPED_TEST(stream_filter_test, poly_keep_multiple)
 {
   this->setup_multiple();
-  grppi::discard(this->poly_execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    [this](int x) {
-      this->invocations_op++;
-      return x % 2 == 0;
-    },
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple_odd();
+  this->run_keep_multiple(this->poly_execution_);
+  this->check_keep_multiple();
 }
+*/
 
-
-TYPED_TEST(stream_filter_test, static_empty_composed_discard)
-{
-  this->setup_empty();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      return {};
-    },
-    grppi::discard(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return true;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-    }
-  );
-  this->check_empty();
-}
-
-TYPED_TEST(stream_filter_test, static_single_filtered_composed_discard)
-{
-  this->setup_single();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++]; 
-      else return {};
-    },
-    grppi::discard(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 == 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_odd();
-}
-
-TYPED_TEST(stream_filter_test, static_single_unfiltered_composed_discard)
-{
-  this->setup_single();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int> {
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    grppi::discard(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-         
-        return x % 2 != 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_single_even();
-}
-
-TYPED_TEST(stream_filter_test, static_multiple_composed_discard)
+TYPED_TEST(stream_filter_test, static_discard_multiple)
 {
   this->setup_multiple();
-  grppi::pipeline(this->execution_,
-    [this]() -> optional<int>{
-      this->invocations_in++;
-      if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
-      else return {};
-    },
-    grppi::discard(this->execution_,
-      [this](int x) {
-        this->invocations_op++;
-        return x % 2 == 0;
-      }
-    ),
-    [this](int x) {
-      this->invocations_out++;
-      this->w[this->idx_out++] = x;
-    }
-  );
-  this->check_multiple_odd();
+  this->run_discard_multiple(this->execution_);
+  this->check_discard_multiple();
 }
 
+/*
+TYPED_TEST(stream_filter_test, poly_discard_multiple)
+{
+  this->setup_multiple();
+  this->run_discard_multiple(this->poly_execution_);
+  this->check_discard_multiple();
+}
 */

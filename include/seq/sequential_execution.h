@@ -22,8 +22,8 @@
 #define GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 
 #include "../common/iterator.h"
-#include "../common/farm_pattern.h"
 #include "../common/callable_traits.h"
+#include "../common/patterns.h"
 
 #include <type_traits>
 #include <tuple>
@@ -178,12 +178,35 @@ public:
 
 private:
 
-  template <typename Item, typename Transformer, typename ... OtherTransformers>
+  template <typename Item, typename Consumer,
+            requires_no_pattern<Consumer> = 0>
+  void do_pipeline(Item && item, Consumer && consume_op) const;
+
+  template <typename Item, typename Transformer, typename ... OtherTransformers,
+            requires_no_pattern<Transformer> = 0>
   void do_pipeline(Item && item, Transformer && transform_op,
     OtherTransformers && ... other_ops) const;
 
-  template <typename Item, typename Consumer>
-  void do_pipeline(Item && item, Consumer && consume_op) const;
+  template <typename Item, typename FarmTransformer,
+            template <typename> class Farm,
+            requires_farm<Farm<FarmTransformer>> = 0>
+  void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Item, typename FarmTransformer,
+            template <typename> class Farm,
+            typename... OtherTransformers,
+            requires_farm<Farm<FarmTransformer>> = 0>
+  void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Item, typename Predicate,
+            template <typename> class Filter,
+            typename ... OtherTransformers,
+            requires_filter<Filter<Predicate>> = 0>
+  void do_pipeline(Item && item, Filter<Predicate> && filter_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  
 };
 
 template <typename ... InputIterators, typename OutputIterator,
@@ -286,7 +309,8 @@ void sequential_execution::pipeline(
   }
 }
 
-template <typename Item, typename Transformer, typename ... OtherTransformers>
+template <typename Item, typename Transformer, typename ... OtherTransformers,
+            requires_no_pattern<Transformer> = 0>
 void sequential_execution::do_pipeline(
     Item && item,
     Transformer && transform_op,
@@ -298,7 +322,8 @@ void sequential_execution::do_pipeline(
       std::forward<OtherTransformers>(other_ops)...);
 }
 
-template <typename Item, typename Consumer>
+template <typename Item, typename Consumer,
+          requires_no_pattern<Consumer> = 0>
 void sequential_execution::do_pipeline(
     Item && item,
     Consumer && consume_op) const
@@ -306,6 +331,48 @@ void sequential_execution::do_pipeline(
   static_assert(is_consumer<Consumer,Item>, 
       "Pipeline must end with consumer operation");
   consume_op(std::forward<Item>(item));
+}
+
+template <typename Item, typename FarmTransformer,
+          template <typename> class Farm,
+          requires_farm<Farm<FarmTransformer>> = 0>
+void sequential_execution::do_pipeline(
+    Item && item, 
+    Farm<FarmTransformer> && farm_obj) const
+{
+  static_assert(is_consumer<Farm<FarmTransformer>,Item>, 
+      "Pipeline must end with consumer operation");
+  farm_obj(std::forward<Item>(item));
+}
+
+template <typename Item, typename FarmTransformer,
+          template <typename> class Farm,
+          typename... OtherTransformers,
+          requires_farm<Farm<FarmTransformer>> = 0>
+void sequential_execution::do_pipeline(
+    Item && item, 
+    Farm<FarmTransformer> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  static_assert(!is_consumer<Farm<FarmTransformer>,Item>,
+    "Itermediate pipeline stage cannot be a consumer");
+  do_pipeline(farm_obj(std::forward<Item>(item)), 
+      std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+template <typename Item, typename Predicate,
+          template <typename> class Filter,
+          typename ... OtherTransformers,
+          requires_filter<Filter<Predicate>> = 0>
+void sequential_execution::do_pipeline(
+    Item && item, 
+    Filter<Predicate> && filter_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  if (filter_obj(std::forward<Item>(item))) {
+    do_pipeline(std::forward<Item>(item),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
 }
 
 
