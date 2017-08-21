@@ -50,29 +50,6 @@ endif()
 # GrPPI library
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
-# BOOST library
-set(Boost_USE_STATIC_LIBS ON) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME ON) 
-
-set(Boost_LIBRARIES system thread)
-find_package(Boost 1.5 REQUIRED ${Boost_LIBRARIES})
-
-if(Boost_FOUND)
-	include_directories(${Boost_INCLUDE_DIRS})
-	set( CMAKE_BOOST_FLAGS "-lboost_system -lboost_thread" )
-	set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_BOOST_FLAGS}" )
-	# Windows
-	if (WIN32)
-  		# disable autolinking in boost
-  		add_definitions( -DBOOST_ALL_NO_LIB )
-		# maybe not needed
-		add_definitions( -DBOOST_ALL_DYN_LINK )
-	endif()
-else()
-	message( FATAL_ERROR "Boost library is not installed in your system" )    
-endif()
-
 # TBB Library
 find_package( TBB ) 
 if( TBB_FOUND )
@@ -121,13 +98,6 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PR
         FILES_MATCHING PATTERN "*.h")
 install( DIRECTORY ${PROJECT_SOURCE_DIR}/ff DESTINATION "${CMAKE_PROJECT_NAME}" )
 
-# Tests
-enable_testing()
-option( GRPPI_TESTS_ENABLE "Regular tests" OFF )
-if( GRPPI_TESTS_ENABLE )
-    add_subdirectory(tests)
-endif( GRPPI_TESTS_ENABLE )
-
 # Example applications
 option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" ON )
 if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
@@ -135,6 +105,7 @@ if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 
 # Unit Tests
+enable_testing()
 option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)

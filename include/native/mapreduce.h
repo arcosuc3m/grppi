@@ -23,6 +23,9 @@
 
 #include "parallel_execution_native.h"
 
+#include <tuple>
+#include <utility>
+
 namespace grppi {
 
 /**
@@ -37,7 +40,7 @@ namespace grppi {
 \brief Invoke \ref md_map-reduce on a data sequence with 
 native parallel execution.
 \tparam InputIt Iterator type used for the input sequence.
-\tparam Result Result type of the reduction.
+\tparam Identity Result type of the reduction.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex Native parallel execution policy object.
@@ -48,45 +51,49 @@ native parallel execution.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename InputIt, typename Result, typename Transformer, 
-          typename Combiner>
-Result map_reduce(parallel_execution_native & ex, 
-                  InputIt first, InputIt last, Result identity, 
-                  Transformer && transform_op,  Combiner &&combine_op)
+template <typename InputIt, typename Identity, 
+          typename Transformer, typename Combiner>
+auto map_reduce(parallel_execution_native & ex, 
+                InputIt first, InputIt last, 
+                Identity && identity, 
+                Transformer && transform_op,  Combiner &&combine_op)
 {
-  using namespace std;
+  return ex.map_reduce(std::make_tuple(first), 
+      std::distance(first,last), 
+      std::forward<Identity>(identity),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Combiner>(combine_op));
+}
 
-  vector<Result> partial_results(ex.concurrency_degree());
-
-  const int num_elements = last - first;
-  const int elements_per_thread = num_elements/ex.concurrency_degree();
-  sequential_execution seq{};
-
-  vector<thread> tasks;
-  for(int i=1;i<ex.concurrency_degree();i++){    
-    const auto begin = first + (elements_per_thread * i);
-    const auto end = (i==ex.concurrency_degree()-1) ? 
-        last : 
-        (first + elements_per_thread * (i+1));
-
-    tasks.emplace_back([&,begin,end,i](){
-        auto manager = ex.thread_manager();
-        partial_results[i] = map_reduce(seq, begin, end, partial_results[i], 
-            forward<Transformer>(transform_op), forward<Combiner>(combine_op));
-    });
-  }
-
-    partial_results[0] = map_reduce(seq, 
-        first,( first+elements_per_thread ), partial_results[0], 
-        forward<Transformer>(transform_op), 
-        forward<Combiner>(combine_op));
-
-    for (auto && t : tasks) { t.join(); }
-
-    Result result = identity;
-    for (auto && p : partial_results) { result = combine_op(result, p); } 
-
-    return result;
+/**
+\brief Invoke \ref md_map-reduce on multiple data sequences with 
+native parallel execution.
+\tparam InputIterator Iterator type used for the input sequence.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Native execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename InputIterator, typename Identity, 
+          typename Transformer, typename Combiner,
+          typename ... OtherInputIterators>
+auto map_reduce(const parallel_execution_native & ex, 
+                InputIterator first, InputIterator last, 
+                Identity && identity, 
+                Transformer &&  transform_op, Combiner && combine_op,
+                OtherInputIterators ... other_firsts)
+{
+  return ex.map_reduce(make_tuple(first, other_firsts...), 
+      std::distance(first,last), 
+      std::forward<Identity>(identity),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Combiner>(combine_op));
 }
 
 /**

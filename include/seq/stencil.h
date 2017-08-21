@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,8 @@
 
 #include "sequential_execution.h"
 
-#include "../common/iterator.h"
+#include <tuple>
+#include <utility>
 
 namespace grppi {
 
@@ -51,16 +52,16 @@ sequential execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood>
-void stencil(sequential_execution & ex, 
-             InputIt first, InputIt last, OutputIt out, 
-             StencilTransformer transform_op, 
-             Neighbourhood neighbour_op) 
+void stencil(
+    const sequential_execution & ex, 
+    InputIt first, InputIt last, OutputIt out, 
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op) 
 {
-  while (first!=last) {
-    *out = transform_op(first, neighbour_op(first));
-    first++;
-    out++;
-  }
+  ex.stencil(std::make_tuple(first), out,
+      std::distance(first,last),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
 }
 
 /**
@@ -81,17 +82,17 @@ sequential execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood, typename ... OtherInputIts>
-void stencil(sequential_execution & ex, 
-             InputIt first, InputIt last, OutputIt out, 
-             StencilTransformer transform_op, 
-             Neighbourhood neighbour_op, OtherInputIts ... other_firsts) 
+void stencil(
+    const sequential_execution & ex, 
+    InputIt first, InputIt last, OutputIt out, 
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op, 
+    OtherInputIts ... other_firsts) 
 {
-  while (first!=last) {
-    *out = transform_op(first, neighbour_op(first, other_firsts ...));
-    advance_iterators(other_firsts...);
-    first++;
-    out++;
-  }
+  ex.stencil(std::make_tuple(first,other_firsts...), out,
+      std::distance(first,last),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
 }
 
 /**

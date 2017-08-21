@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,11 @@
 #ifndef GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 #define GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 
+#include "../common/iterator.h"
+
 #include <type_traits>
+#include <tuple>
+
 
 namespace grppi {
 
@@ -33,38 +37,226 @@ class sequential_execution {
 public:
 
   /// \brief Default constructor.
-  sequential_execution() {}
+  constexpr sequential_execution() noexcept = default;
 
   /**
   \brief Set number of grppi threads.
   \note Setting concurrency degree is ignored for sequential execution.
   */
-  void set_concurrency_degree(int n) const noexcept {}
+  constexpr void set_concurrency_degree(int n) const noexcept {}
 
   /**
   \brief Get number of grppi trheads.
   \note Getting concurrency degree is always 1 for sequential execution.
   */
-  int concurrency_degree() const noexcept { return 1; }
+  constexpr int concurrency_degree() const noexcept { return 1; }
 
   /**
   \brief Enable ordering.
   \note Enabling ordering of sequential execution is always ignored.
   */
-  void enable_ordering() const noexcept {}
+  constexpr void enable_ordering() const noexcept {}
 
   /**
   \brief Disable ordering.
   \note Disabling ordering of sequential execution is always ignored.
   */
-  void disable_ordering() const noexcept {}
+  constexpr void disable_ordering() const noexcept {}
 
   /**
   \brief Is execution ordered.
   \note Sequential execution is always ordered.
   */
-  bool is_ordered() const noexcept { return true; }
+  constexpr bool is_ordered() const noexcept { return true; }
+
+  /**
+  \brief Applies a trasnformation to multiple sequences leaving the result in
+  another sequence.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam Transformer Callable object type for the transformation.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Transformation callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator, 
+            typename Transformer>
+  constexpr void map(std::tuple<InputIterators...> firsts,
+      OutputIterator first_out, std::size_t sequence_size, 
+      Transformer && transform_op) const;
+  
+  /**
+  \brief Applies a reduction to a sequence of data items. 
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param sequence_size Size of the input sequence.
+  \param last Iterator to one past the end of the sequence.
+  \param identity Identity value for the reduction.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The reduction result
+  */
+  template <typename InputIterator, typename Identity, typename Combiner>
+  constexpr auto reduce(InputIterator first, std::size_t sequence_size,
+              Identity && identity,
+              Combiner && combine_op) const;
+
+  /**
+  \brief Applies a map/reduce operation to a sequence of data items.
+  \tparam InputIterator Iterator type for the input sequence.
+  \tparam Identity Type for the identity value.
+  \tparam Transformer Callable object type for the transformation.
+  \tparam Combiner Callable object type for the combination.
+  \param first Iterator to the first element of the sequence.
+  \param sequence_size Size of the input sequence.
+  \param identity Identity value for the reduction.
+  \param transform_op Transformation callable object.
+  \param combine_op Combination callable object.
+  \pre Iterators in the range `[first,last)` are valid. 
+  \return The map/reduce result.
+  */
+  template <typename ... InputIterators, typename Identity, 
+            typename Transformer, typename Combiner>
+  constexpr auto map_reduce(std::tuple<InputIterators...> firsts, 
+                  std::size_t sequence_size,
+                  Identity && identity,
+                  Transformer && transform_op, Combiner && combine_op) const;
+
+  /**
+  \brief Applies a stencil to multiple sequences leaving the result in
+  another sequence.
+  \tparam InputIterators Iterator types for input sequences.
+  \tparam OutputIterator Iterator type for the output sequence.
+  \tparam StencilTransformer Callable object type for the stencil transformation.
+  \tparam Neighbourhood Callable object for generating neighbourhoods.
+  \param firsts Tuple of iterators to input sequences.
+  \param first_out Iterator to the output sequence.
+  \param sequence_size Size of the input sequences.
+  \param transform_op Stencil transformation callable object.
+  \param neighbour_op Neighbourhood callable object.
+  \pre For every I iterators in the range 
+       `[get<I>(firsts), next(get<I>(firsts),sequence_size))` are valid.
+  \pre Iterators in the range `[first_out, next(first_out,sequence_size)]` are valid.
+  */
+  template <typename ... InputIterators, typename OutputIterator,
+            typename StencilTransformer, typename Neighbourhood>
+  constexpr void stencil(std::tuple<InputIterators...> firsts, OutputIterator first_out,
+               std::size_t sequence_size,
+               StencilTransformer && transform_op,
+               Neighbourhood && neighbour_op) const;
+
+  /**
+  \brief Invoke \ref md_divide-conquer.
+  \tparam Input Type used for the input problem.
+  \tparam Divider Callable type for the divider operation.
+  \tparam Solver Callable type for the solver operation.
+  \tparam Combiner Callable type for the combiner operation.
+  \param ex Sequential execution policy object.
+  \param input Input problem to be solved.
+  \param divider_op Divider operation.
+  \param solver_op Solver operation.
+  \param combine_op Combiner operation.
+  */
+
+  template <typename Input, typename Divider, typename Solver, typename Combiner>
+  auto divide_conquer(Input && input, 
+                      Divider && divide_op, 
+                      Solver && solve_op, 
+                      Combiner && combine_op) const; 
+
 };
+
+template <typename ... InputIterators, typename OutputIterator,
+          typename Transformer>
+constexpr void sequential_execution::map(
+    std::tuple<InputIterators...> firsts,
+    OutputIterator first_out, 
+    std::size_t sequence_size, 
+    Transformer && transform_op) const
+{
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
+  while (std::get<0>(firsts) != last) {
+    *first_out++ = apply_deref_increment(
+        std::forward<Transformer>(transform_op), firsts);
+  }
+}
+
+template <typename InputIterator, typename Identity, typename Combiner>
+constexpr auto sequential_execution::reduce(
+    InputIterator first, 
+    std::size_t sequence_size,
+    Identity && identity,
+    Combiner && combine_op) const
+{
+  const auto last = std::next(first, sequence_size);
+  auto result{identity};
+  while (first != last) {
+    result = combine_op(result, *first++);
+  }
+  return result;
+}
+
+template <typename ... InputIterators, typename Identity, 
+          typename Transformer, typename Combiner>
+constexpr auto sequential_execution::map_reduce(
+    std::tuple<InputIterators...> firsts,
+    std::size_t sequence_size, 
+    Identity && identity,
+    Transformer && transform_op, Combiner && combine_op) const
+{
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
+  auto result{identity};
+  while (std::get<0>(firsts) != last) {
+    result = combine_op(result, apply_deref_increment(
+        std::forward<Transformer>(transform_op), firsts));
+  }
+  return result;
+}
+
+template <typename ... InputIterators, typename OutputIterator,
+          typename StencilTransformer, typename Neighbourhood>
+constexpr void sequential_execution::stencil(
+    std::tuple<InputIterators...> firsts, OutputIterator first_out,
+    std::size_t sequence_size,
+    StencilTransformer && transform_op,
+    Neighbourhood && neighbour_op) const
+{
+  const auto last = std::next(std::get<0>(firsts), sequence_size);
+  while (std::get<0>(firsts) != last) {
+    const auto f = std::get<0>(firsts);
+    *first_out++ = transform_op(f, 
+        apply_increment(std::forward<Neighbourhood>(neighbour_op), firsts));
+  }
+}
+
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+auto sequential_execution::divide_conquer(
+    Input && input, 
+    Divider && divide_op, 
+    Solver && solve_op, 
+    Combiner && combine_op) const
+{
+
+  auto subproblems = divide_op(std::forward<Input>(input));
+  if (subproblems.size()<=1) { return solve_op(std::forward<Input>(input)); }
+
+  using subproblem_type = 
+      std::decay_t<typename std::result_of<Solver(Input)>::type>;
+  std::vector<subproblem_type> solutions;
+  for (auto && sp : subproblems) {
+    solutions.push_back(divide_conquer(sp, 
+        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+        std::forward<Combiner>(combine_op)));
+  }
+  return reduce(std::next(solutions.begin()), solutions.size()-1, solutions[0],
+      std::forward<Combiner>(combine_op));
+}
 
 /// Determine if a type is a sequential execution policy.
 template <typename E>

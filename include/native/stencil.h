@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,9 @@
 #define GRPPI_NATIVE_STENCIL_H
 
 #include "parallel_execution_native.h"
-#include "../common/iterator.h"
+
+#include <tuple>
+#include <utility>
 
 namespace grppi {
 
@@ -50,44 +52,16 @@ native parallel execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood>
-void stencil(parallel_execution_native & ex, 
-             InputIt first, InputIt last, OutputIt first_out, 
-             StencilTransformer transform_op, Neighbourhood neighbour_op) 
+void stencil(
+    const parallel_execution_native & ex, 
+    InputIt first, InputIt last, OutputIt first_out, 
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op) 
 {
-  using namespace std;
-
-  vector<thread> tasks;
-  int size = distance(first,last);
-  int elements_per_thread = size/ex.concurrency_degree();
- 
-  for (int i=1; i<ex.concurrency_degree(); ++i) {
-    auto begin = first + (elements_per_thread * i);
-    auto end = (i==ex.concurrency_degree()-1)?
-        last :
-        next(first, elements_per_thread * (i+1));
-
-    auto out = first_out + (elements_per_thread * i);
-
-    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
-      auto manager = ex.thread_manager();
-
-      while (begin!=end) {
-        *out = transform_op(begin, neighbour_op(begin));
-        begin++;
-        out++;
-      }
-    }, 
-    begin, end, out);
-  }
-
-  auto end = first + elements_per_thread;
-  while(first!=end){
-    *first_out = transform_op(first, neighbour_op(first));
-    first++;
-    first_out++;
-  }
-
-  for (auto && t : tasks) { t.join(); }
+  ex.stencil(std::make_tuple(first), first_out,
+      std::distance(first,last),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
 }
 
 /**
@@ -108,50 +82,17 @@ native parallel execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood, typename ... OtherInputIts>
-void stencil(parallel_execution_native & ex, 
-             InputIt first, InputIt last, OutputIt first_out, 
-             StencilTransformer transform_op, Neighbourhood neighbour_op, 
-             OtherInputIts ... other_firsts ) 
+void stencil(
+    const parallel_execution_native & ex, 
+    InputIt first, InputIt last, OutputIt first_out, 
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op, 
+    OtherInputIts ... other_firsts) 
 {
-  using namespace std;
-
-  vector<thread> tasks;
-  int size = last - first;
-  int elements_per_thread = size/ex.concurrency_degree();
-
-  for (int i=1; i<ex.concurrency_degree(); i++){
-  auto begin = first + (elements_per_thread * i);
-  auto end = (i==ex.concurrency_degree()-1)?
-      last :
-      first + elements_per_thread * (i+1);
-
-  auto out = first_out + (elements_per_thread * i);
-        
-  tasks.emplace_back(
-    [&](InputIt begin, InputIt end, OutputIt out, int i, int n, OtherInputIts ... other_firsts){
-      auto manager = ex.thread_manager();
-
-      advance_iterators(n*i, other_firsts ...);
-      while (begin!=end) {
-        *out = transform_op(begin, neighbour_op(begin,other_firsts...));
-        begin++;
-        advance_iterators(other_firsts ... );
-        out++;
-      }
-    },
-    begin, end, out, i, elements_per_thread,other_firsts ...);
-  }
-
-  auto end = first + elements_per_thread;
-  while (first!=end) {
-    *first_out = transform_op(*first, neighbour_op(first,other_firsts...));
-    first++;
-    advance_iterators( other_firsts ... );
-    first_out++;
-  }
-
-
-  for (auto && t : tasks) { t.join(); }
+  ex.stencil(std::make_tuple(first, other_firsts...), first_out,
+      std::distance(first,last),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
 }
 
 /**
