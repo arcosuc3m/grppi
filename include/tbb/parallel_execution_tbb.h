@@ -245,13 +245,13 @@ private:
             template <typename> class Farm,
             typename ... OtherTransformers,
             requires_farm<Farm<FarmTransformer>> = 0>
-  auto make_filter(Filter<Predicate> && filter_obj,
+  auto make_filter(Farm<FarmTransformer> && filter_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Input, typename Predicate,
             template <typename> class Filter,
             requires_filter<Filter<Predicate>> = 0>
-  auto make_filter(Farm<FarmTransformer> && farm_obj) const;
+  auto make_filter(Filter<Predicate> && farm_obj) const;
 
   template <typename Input, typename Predicate, 
             template <typename> class Filter,
@@ -530,7 +530,7 @@ auto parallel_execution_tbb::make_filter(
   return tbb::make_filter<input_type, void>( 
       tbb::filter::serial_in_order, 
       [=](input_type item) {
-          transform_op(*item);
+          if (item) transform_op(*item);
       });
 }
 
@@ -581,7 +581,7 @@ auto parallel_execution_tbb::make_filter(
   return tbb::make_filter<input_type, void>(
       tbb::filter::parallel,
       [=](input_type item) {
-        farm_obj(*item);
+        if (item) farm_obj(*item);
       });
 }
 
@@ -613,6 +613,52 @@ auto parallel_execution_tbb::make_filter(
       })
     &
       this->template make_filter<output_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+template <typename Input, typename Predicate,
+          template <typename> class Filter,
+          requires_filter<Filter<Predicate>> = 0>
+auto parallel_execution_tbb::make_filter(
+    Filter<Predicate> && farm_obj) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input; 
+  using input_type = optional<input_value_type>;
+
+  return tbb::make_filter<input_type, void>(
+      tbb::filter::parallel,
+      [=](input_type item) {
+        if (item) filter_obj(*item);
+      });
+}
+
+template <typename Input, typename Predicate, 
+          template <typename> class Filter,
+          typename ... OtherTransformers,
+          requires_filter<Filter<Predicate>> = 0>
+auto parallel_execution_tbb::make_filter(
+    Filter<Predicate> && filter_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input;
+  static_assert(!is_void<input_value_type>::value, 
+      "Filter must take non-void argument");
+  using input_type = optional<input_value_type>;
+
+  return tbb::make_filter<input_type, input_type>(
+      tbb::filter::parallel,
+      [&](input_type item) -> input_type {
+        if (item && filter_obj(*item)) return item;
+        else return {};
+      })
+    &
+      this->template make_filter<input_value_type>(
           std::forward<OtherTransformers>(other_transform_ops)...);
 }
 
