@@ -245,7 +245,19 @@ private:
             template <typename> class Farm,
             typename ... OtherTransformers,
             requires_farm<Farm<FarmTransformer>> = 0>
-  auto make_filter(Farm<FarmTransformer> && farm_obj,
+  auto make_filter(Filter<Predicate> && filter_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Input, typename Predicate,
+            template <typename> class Filter,
+            requires_filter<Filter<Predicate>> = 0>
+  auto make_filter(Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Input, typename Predicate, 
+            template <typename> class Filter,
+            typename ... OtherTransformers,
+            requires_filter<Filter<Predicate>> = 0>
+  auto make_filter(Filter<Predicate> && filter_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
 private:
