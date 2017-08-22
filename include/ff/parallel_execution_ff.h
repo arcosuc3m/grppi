@@ -22,6 +22,7 @@ namespace grppi {
 This policy uses FastFlow as implementation back-end.
 */
 class parallel_execution_ff {
+public:
 
 	  /**
 	  \brief Default construct a FF parallel execution policy.

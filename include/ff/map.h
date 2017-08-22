@@ -25,7 +25,7 @@ inline void map(parallel_execution_ff & ex,
 		InputIt first,
 		InputIt last,
 		OutputIt firstOut,
-		Transformer const & taskf){
+		Transformer const & taskf) {
 
 	ssize_t total_parfor_size = last-first;
 	ff::ParallelFor pf;
@@ -44,7 +44,7 @@ inline void map(parallel_execution_ff & ex,
 		InputIt last,
 		OutputIt firstOut,
 		Transformer const & taskf,
-		MoreIn ... inputs ){
+		MoreIn ... inputs ) {
 	//bool notnested = ff::outer_ff_pattern;
 	//ff::outer_ff_pattern=false;
 
@@ -59,9 +59,9 @@ inline void map(parallel_execution_ff & ex,
 	},ex.concurrency_degree());
 }
 
+}
 
-
-#endif
+#endif /* GRPPI_FF */
 
 
 

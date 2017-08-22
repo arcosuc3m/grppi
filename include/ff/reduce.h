@@ -8,7 +8,7 @@
 #ifndef GRPPI_FF_REDUCE_H
 #define GRPPI_FF_REDUCE_H
 
-#ifdef GRPPI_FF
+//#ifdef GRPPI_FF
 
 #include "parallel_execution_ff.h"
 
@@ -28,10 +28,13 @@ auto reduce(parallel_execution_ff & ex,
 
 	ssize_t total_parfor_size = last-first;
 	ff::ParallelForReduce<Identity> pfr;
-	Identity vaR; //, vaR_identity;
 
-	pfr.parallel_reduce(vaR, identity, first, last, 1, total_parfor_size/ex.concurrency_degree(), combine_op,
-			combine_op, ex.concurrency_degree());
+	auto vaR_identity = identity;
+	auto vaR = identity;
+	//, vaR_identity;
+
+	pfr.parallel_reduce(vaR, vaR_identity, first, last, 1, total_parfor_size/ex.concurrency_degree(),
+			combine_op, combine_op, ex.concurrency_degree());
 
 	//std::cout << "[REDUCE_FF] vaR: " << vaR << " identity: " << identity << std::endl;
 
@@ -47,7 +50,7 @@ auto reduce(parallel_execution_ff & ex,
 
 }
 
-#endif
+#endif /* GRPPI_FF */
 
 
 

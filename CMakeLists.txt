@@ -77,13 +77,13 @@ if( GRPPI_OMP_ENABLE )
 endif( GRPPI_OMP_ENABLE )
 
 # Fastflow - to be managed
-option( GRPPI_FF_ENABLE "Require FastFlow framework" OFF )
+option( GRPPI_FF_ENABLE "Require FastFlow framework" ON )
 message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE} )
 if( GRPPI_FF_ENABLE )
-    include_directories( ${PROJECT_SOURCE_DIR}/ff )
+    include_directories( ${PROJECT_SOURCE_DIR}/fastflow )
     # file ( APPEND ${HEADER_FILE} "\n#define FF_ENABLE ON")
     add_definitions( "-DGRPPI_FF" )
-    set( FFPATH ${PROJECT_SOURCE_DIR}/ff )
+    set( FFPATH ${PROJECT_SOURCE_DIR}/fastflow )
     message( STATUS "FastFlow Path is: " ${FFPATH} )
 endif( GRPPI_FF_ENABLE )
 
@@ -96,7 +96,7 @@ endif( GRPPI_DOXY_ENABLE )
 # Installation
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
         FILES_MATCHING PATTERN "*.h")
-install( DIRECTORY ${PROJECT_SOURCE_DIR}/ff DESTINATION "${CMAKE_PROJECT_NAME}" )
+install( DIRECTORY ${PROJECT_SOURCE_DIR}/fastflow DESTINATION "${CMAKE_PROJECT_NAME}" )
 
 # Example applications
 option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" ON )
