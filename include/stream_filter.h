@@ -46,7 +46,6 @@ that satisfy the predicate.
 template <typename Predicate>
 auto keep(Predicate && predicate_op)
 {
-  std::cerr << "filter()\n";
   return filter_t<Predicate>{std::forward<Predicate>(predicate_op)};
 }
 
@@ -63,7 +62,6 @@ that satisfy the predicate.
 template <typename Predicate>
 auto discard(Predicate && predicate_op)
 {
-  std::cerr << "keep()\n";
   return keep([&](auto val) { return !predicate_op(val); });
 }
 

@@ -246,21 +246,41 @@ private:
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const; 
 
-  template <typename Queue, typename Transformer, typename ... OtherTransformers>
+  template <typename Queue, typename Consumer,
+            requires_no_pattern<Consumer> = 0>
+  void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
+
+  template <typename Queue, typename Transformer, typename ... OtherTransformers,
+            requires_no_pattern<Transformer> = 0>
   void do_pipeline(Queue & input_queue, Transformer && transform_op,
     OtherTransformers && ... other_ops) const;
 
-  template <typename Queue, typename Consumer>
-  void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
-
-  template <typename Queue, typename FarmTransformer>
+  template <typename Queue, typename FarmTransformer,
+            template <typename> class Farm,
+            requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline(Queue & input_queue, 
-                   farm_t<FarmTransformer> && farm_obj) const;
+                   Farm<FarmTransformer> && farm_obj) const;
 
   template <typename Queue, typename FarmTransformer, 
-            typename ... OtherTransformers>
+            template <typename> class Farm,
+            typename ... OtherTransformers,
+            requires_farm<Farm<FarmTransformer>> =0>
   void do_pipeline(Queue & input_queue, 
-       farm_t<FarmTransformer> && farm_obj,
+       Farm<FarmTransformer> && farm_obj,
+       OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename Predicate,
+            template <typename> class Filter,
+            requires_filter<Filter<Predicate>> = 0>
+  void do_pipeline(Queue & input_queue, 
+                   Filter<Predicate> && filter_obj) const;
+
+  template <typename Queue, typename Predicate, 
+            template <typename> class Filter,
+            typename ... OtherTransformers,
+            requires_filter<Filter<Predicate>> =0>
+  void do_pipeline(Queue & input_queue, 
+       Filter<Predicate> && filter_obj,
        OtherTransformers && ... other_transform_ops) const;
 
 private:
@@ -585,36 +605,8 @@ auto parallel_execution_omp::divide_conquer(
       std::forward<subresult_type>(subresult), combine_op);
 }
 
-template <typename Queue, typename Transformer, typename ... OtherTransformers>
-void parallel_execution_omp::do_pipeline(
-    Queue & input_queue, 
-    Transformer && transform_op,
-    OtherTransformers && ... other_ops) const
-{
-  using namespace std;
-  using input_type = typename Queue::value_type;
-  using input_value_type = typename input_type::first_type::value_type;
-  using result_type = typename result_of<Transformer(input_value_type)>::type;
-  using output_value_type = experimental::optional<result_type>;
-  using output_type = pair<output_value_type,long>;
-  auto output_queue = make_queue<output_type>();
-
-  #pragma omp task shared(transform_op, input_queue, output_queue)
-  {
-    for (;;) {
-      auto item = input_queue.pop(); 
-      if (!item.first) break;
-      auto out = output_value_type{transform_op(*item.first)};
-      output_queue.push(make_pair(out, item.second));
-    }
-    output_queue.push(make_pair(output_value_type{}, -1));
-  }
-
-  do_pipeline(output_queue, 
-      forward<OtherTransformers>(other_ops)...);
-}
-
-template <typename Queue, typename Consumer>
+template <typename Queue, typename Consumer,
+          requires_no_pattern<Consumer> =0>
 void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consume_op) const
 {
   using namespace std;
@@ -662,10 +654,42 @@ void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consum
   }
 }
 
-template <typename Queue, typename FarmTransformer>
+template <typename Queue, typename Transformer, typename ... OtherTransformers,
+          requires_no_pattern<Transformer> =0>
 void parallel_execution_omp::do_pipeline(
     Queue & input_queue, 
-    farm_t<FarmTransformer> && farm_obj) const
+    Transformer && transform_op,
+    OtherTransformers && ... other_ops) const
+{
+  using namespace std;
+  using input_type = typename Queue::value_type;
+  using input_value_type = typename input_type::first_type::value_type;
+  using result_type = typename result_of<Transformer(input_value_type)>::type;
+  using output_value_type = experimental::optional<result_type>;
+  using output_type = pair<output_value_type,long>;
+  auto output_queue = make_queue<output_type>();
+
+  #pragma omp task shared(transform_op, input_queue, output_queue)
+  {
+    for (;;) {
+      auto item = input_queue.pop(); 
+      if (!item.first) break;
+      auto out = output_value_type{transform_op(*item.first)};
+      output_queue.push(make_pair(out, item.second));
+    }
+    output_queue.push(make_pair(output_value_type{}, -1));
+  }
+
+  do_pipeline(output_queue, 
+      forward<OtherTransformers>(other_ops)...);
+}
+
+template <typename Queue, typename FarmTransformer,
+          template <typename> class Farm,
+          requires_farm<Farm<FarmTransformer>> =0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
   using namespace experimental;
@@ -687,10 +711,12 @@ void parallel_execution_omp::do_pipeline(
 }
 
 template <typename Queue, typename FarmTransformer, 
-          typename ... OtherTransformers>
+          template <typename> class Farm,
+          typename ... OtherTransformers,
+          requires_farm<Farm<FarmTransformer>> =0>
 void parallel_execution_omp::do_pipeline(
     Queue & input_queue, 
-    farm_t<FarmTransformer> && farm_obj,
+    Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
@@ -724,6 +750,130 @@ void parallel_execution_omp::do_pipeline(
   #pragma omp taskwait
 }
 
+
+template <typename Queue, typename Predicate,
+          template <typename> class Filter,
+          requires_filter<Filter<Predicate>> = 0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    Filter<Predicate> && filter_obj) const
+{
+}
+
+template <typename Queue, typename Predicate, 
+          template <typename> class Filter,
+          typename ... OtherTransformers,
+          requires_filter<Filter<Predicate>> =0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    Filter<Predicate> && filter_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using input_type = typename Queue::value_type;
+  using input_value_type = typename input_type::first_type;
+  auto filter_queue = make_queue<input_type>();
+
+  if (is_ordered()) {
+    auto filter_task = [&]() {
+      {
+        auto item{input_queue.pop()};
+        while (item.first) {
+          if(filter_obj(*item.first)) {
+            filter_queue.push(item);
+          }
+          else {
+            filter_queue.push(make_pair(input_value_type{} ,item.second));
+          }
+          item = input_queue.pop();
+        }
+        filter_queue.push (make_pair(input_value_type{}, -1));
+      }
+    };
+
+    auto output_queue = make_queue<input_type>();
+    auto reorder_task = [&]() {
+      vector<input_type> elements;
+      int current = 0;
+      long order = 0;
+      auto item = filter_queue.pop();
+      for (;;) {
+        if (!item.first && item.second == -1) break;
+        if (item.second == current) {
+          if (item.first) {
+            output_queue.push(make_pair(item.first, order++));
+          }
+          current++;
+        }
+        else {
+          elements.push_back(item);
+        }
+        for (auto it=elements.begin(); it<elements.end(); it++) {
+          if ((*it).second==current) {
+            if((*it).first){
+              output_queue.push(make_pair((*it).first,order++));
+            }
+            elements.erase(it);
+            current++;
+            break;
+          }
+        }
+        item = filter_queue.pop();
+      }
+
+      while (elements.size()>0) {
+        for (auto it=elements.begin(); it<elements.end(); it++) {
+          if ((*it).second == current) {
+            if((*it).first) {
+              output_queue.push(make_pair((*it).first,order++));
+            }
+            elements.erase(it);
+            current++;
+            break;
+          }
+        }
+      }
+
+      output_queue.push(item);
+    };
+
+    
+    #pragma omp task shared(filter_queue,filter_obj,input_queue)
+    {
+      filter_task();
+    }
+    
+    #pragma omp task shared (output_queue,filter_queue)
+    {
+      reorder_task();
+    }
+
+    do_pipeline(output_queue, 
+        forward<OtherTransformers>(other_transform_ops)...);
+
+    #pragma omp taskwait
+  }
+  else {
+    auto filter_task = [&]() {
+      auto item = input_queue.pop( ) ;
+      while (item.first) {
+        if (filter_obj(*item.first)) {
+          filter_queue.push(item);
+        }
+        item = input_queue.pop();
+      }
+      filter_queue.push(make_pair(input_value_type{}, -1));
+    };
+
+    #pragma omp task shared(filter_queue,filter_obj,input_queue)
+    {
+      filter_task();
+    }
+    do_pipeline(filter_queue, 
+      std::forward<OtherTransformers>(other_transform_ops)...);
+    #pragma omp taskwait
+  }
+}
 
 } // end namespace grppi
 
