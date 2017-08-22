@@ -98,7 +98,8 @@ auto reduce(polymorphic_execution & e,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(e, first, last, identity, std::forward<Combiner>(combine_op));
 }
 

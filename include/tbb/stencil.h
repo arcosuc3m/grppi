@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.3
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,10 +25,31 @@
 
 #include "parallel_execution_tbb.h"
 
-#include <tuple>
-#include <utility>
+#include <tbb/tbb.h>
 
 namespace grppi {
+
+template <typename InputIt, typename OutputIt, typename StencilTransformer, 
+          typename Neighbourhood, typename ... OtherInputIts>
+void stencil_impl(parallel_execution_tbb & ex, 
+                  int elements_per_thread, int index, 
+                  InputIt first, InputIt last, OutputIt first_out, 
+                  StencilTransformer transform_op, Neighbourhood neighbour_op, 
+                  OtherInputIts ... other_firsts){
+  auto begin = next(first, elements_per_thread * index);
+  auto end = (index==ex.concurrency_degree()-1)?
+      last :
+      next(first, elements_per_thread * (index+1));
+  auto out = next(first_out, elements_per_thread * index);
+  advance_iterators(elements_per_thread* index, other_firsts ...);
+  while(begin!=end){
+    *out = transform_op(begin, neighbour_op(begin, other_firsts ...));
+    begin++;
+    advance_iterators(other_firsts...);
+    out++;
+  }
+}
+
 
 /**
 \addtogroup stencil_pattern
@@ -54,16 +75,42 @@ TBB parallel execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood>
-void stencil(
-    const parallel_execution_tbb & ex, 
-    InputIt first, InputIt last, OutputIt first_out, 
-    StencilTransformer && transform_op, 
-    Neighbourhood && neighbour_op) 
+void stencil(parallel_execution_tbb & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer transform_op, 
+             Neighbourhood neighbour_op) 
 {
-  ex.stencil(std::make_tuple(first), first_out,
-      std::distance(first,last),
-      std::forward<StencilTransformer>(transform_op),
-      std::forward<Neighbourhood>(neighbour_op));
+  int size = last - first;
+  int elements_per_thread = size/ex.concurrency_degree();
+  tbb::task_group g;
+
+  for (int i=1; i<ex.concurrency_degree(); ++i) {
+    g.run(
+      [&neighbour_op, &transform_op, first, first_out, elements_per_thread, 
+          i, last, ex]() {
+        auto begin = first + (elements_per_thread * i);
+        auto end = (i==ex.concurrency_degree()-1)?
+            last :
+            next(first, elements_per_thread * (i+1));
+
+        auto out = next(first_out, elements_per_thread * i);
+        while (begin!=end) {
+          *out = transform_op(begin, neighbour_op(begin));
+          begin++;
+          out++;
+        }
+      }
+    );
+  }
+
+  auto end = first + elements_per_thread;
+  while (first!=end) {
+    *first_out = transform_op(first, neighbour_op(first));
+    first++;
+    first_out++;
+  }
+
+  g.wait();
 }
 
 /**
@@ -84,17 +131,35 @@ TBB parallel execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood, typename ... OtherInputIts>
-void stencil(
-    const parallel_execution_tbb & ex, 
-    InputIt first, InputIt last, OutputIt first_out, 
-    StencilTransformer && transform_op, 
-    Neighbourhood && neighbour_op, 
-    OtherInputIts ... other_firsts) 
+void stencil(parallel_execution_tbb & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer transform_op, Neighbourhood neighbour_op, 
+             OtherInputIts ... other_firsts ) 
 {
-  ex.stencil(std::make_tuple(first,other_firsts...), first_out,
-      std::distance(first,last),
-      std::forward<StencilTransformer>(transform_op),
-      std::forward<Neighbourhood>(neighbour_op));
+  int size = distance(first,last);
+  int elements_per_thread = size/ex.concurrency_degree();
+  tbb::task_group g;
+  for(int index=1; index<ex.concurrency_degree(); ++index) {
+    g.run(
+      [neighbour_op, transform_op, first, first_out, elements_per_thread, 
+          index, last, &ex, other_firsts...]()
+      {
+        stencil_impl(ex, elements_per_thread, index,
+            first, last, first_out, transform_op, 
+            neighbour_op, other_firsts...);
+      }
+    );
+  }
+
+  auto end = next(first, elements_per_thread);
+  while(first!=end){
+    *first_out = transform_op(first, neighbour_op(first,other_firsts ...));
+    first++;
+    advance_iterators( other_firsts ... );
+    first_out++;
+  }
+
+  g.wait();
 }
 
 /**

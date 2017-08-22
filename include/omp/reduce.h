@@ -24,8 +24,7 @@
 #ifdef GRPPI_OMP
 
 #include "parallel_execution_omp.h"
-
-#include <utility>
+#include "reduce.h"
 
 namespace grppi {
 
@@ -48,16 +47,57 @@ on a data sequence with parallel OpenMP execution.
 \param last Iterator to one past the end of the input sequence.
 \param identity Identity value for the combiner operation.
 \param combiner_op Combiner operation for the reduction.
-\return The reduction result.
 */
-template <typename InputIt, typename Identity, typename Combiner>
-auto reduce(const parallel_execution_omp & ex, 
+template < typename InputIt, typename Identity, typename Combiner>
+auto reduce(parallel_execution_omp & ex, 
             InputIt first, InputIt last, 
-            Identity && identity,
+            Identity identity,
             Combiner && combine_op)
 {
-  return ex.reduce(first, std::distance(first,last), 
-      std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
+    int numElements = last - first;
+    int elemperthr = numElements/ex.concurrency_degree();
+    auto identityVal = identity;
+    //local output
+    std::vector<typename std::iterator_traits<InputIt>::value_type> out(ex.concurrency_degree());
+    //Create threads
+    #pragma omp parallel
+    {
+    #pragma omp single nowait
+    {
+    for(int i=1;i<ex.concurrency_degree();i++){
+
+      auto begin = first + (elemperthr * i);
+      auto end = first + (elemperthr * (i+1));
+      if(i == ex.concurrency_degree() -1) end = last;
+
+         #pragma omp task firstprivate (begin, end,i)
+         {
+            out[i] = identityVal;
+            while( begin != end ) {
+                out[i] = combine_op(*begin, out[i] );
+                begin++;
+            }
+         }
+
+    }
+    
+    //Main thread
+    auto end = first + elemperthr;
+    out[0] = identityVal;
+    while(first!=end){
+         out[0] = combine_op(*first , out[0]);
+         first++;
+    }
+
+    #pragma omp taskwait
+    }
+    }
+
+    auto outVal = out[0];
+    for(unsigned int i = 1; i < out.size(); i++){
+       outVal = combine_op(outVal, out[i]);
+    }
+    return outVal;
 }
 
 /**

@@ -125,7 +125,8 @@ void map(polymorphic_execution & ex,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, first, last, first_out, std::forward<Transformer>(transf_op));
 }
 
@@ -153,7 +154,8 @@ void map(polymorphic_execution & ex, InputIt first, InputIt last,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, first, last, first_out, std::forward<Transformer>(op), first2, more_firsts...);
 }
 

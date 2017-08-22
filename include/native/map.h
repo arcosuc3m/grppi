@@ -22,9 +22,7 @@
 #define GRPPI_NATIVE_MAP_H
 
 #include "parallel_execution_native.h"
-
-#include <tuple>
-#include <iterator>
+#include "../common/iterator.h"
 
 namespace grppi {
 
@@ -46,15 +44,46 @@ paralell execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transform_op Transformation operation.
+\param transf_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(const parallel_execution_native & ex, 
+void map(parallel_execution_native & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transform_op)
+         Transformer && transf_op)
 {
-  ex.map(std::make_tuple(first), first_out, std::distance(first,last),
-    std::forward<Transformer>(transform_op));
+  std::vector<std::thread> tasks;
+  int numElements = last - first; 
+  int elemperthr = numElements / ex.concurrency_degree(); 
+
+  for(int i=1;i<ex.concurrency_degree();i++){
+    auto begin = first + (elemperthr * i); 
+    auto end = first + (elemperthr * (i+1)); 
+
+    if(i == ex.concurrency_degree()-1 ) end= last;
+
+    auto out = first_out + (elemperthr * i);
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out) {
+      auto manager = ex.thread_manager();
+          
+      while (begin!=end) {
+        *out = transf_op(*begin);
+        begin++;
+        out++;
+      }
+    }, begin, end, out);
+  }
+  //Map main threads
+  auto end = first+elemperthr;
+  while(first!=end) {
+    *first_out = transf_op(*first);
+    first++;
+    first_out++;
+  }
+
+  //Join threads
+  for(int i=0;i<ex.concurrency_degree()-1;i++){
+    tasks[i].join();
+  }
 }
 
 /**
@@ -68,25 +97,63 @@ parallel execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transform_op Transformation operation.
+\param transf_op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts> 
 void map(parallel_execution_native& ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transform_op, 
+         Transformer && transf_op, 
          OtherInputIts ... more_inputs)
 {
-  ex.map(std::make_tuple(first,more_inputs...), first_out,
-      std::distance(first,last), std::forward<Transformer>(transform_op));
+  std::vector<std::thread> tasks;
+
+  //Calculate number of elements per thread
+  int numElements = last - first;
+  int elemperthr = numElements / ex.concurrency_degree();
+
+  //Create tasks
+  for(int i=1;i<ex.concurrency_degree();i++){
+    //Calculate local input and output iterator 
+    auto begin = first + (elemperthr * i);
+    auto end = first + (elemperthr * (i+1));
+    if( i == ex.concurrency_degree()-1) end = last;
+    auto out = first_out + (elemperthr * i);
+    //Begin task
+    tasks.emplace_back([&](InputIt begin, InputIt end, OutputIt out, 
+      int tid, int nelem, OtherInputIts ... more_inputs) {
+        auto manager = ex.thread_manager();
+      advance_iterators(nelem*tid, more_inputs ...);
+      while (begin!=end) {
+        *out = transf_op(*begin, *more_inputs ...);
+        advance_iterators(more_inputs ...);
+        begin++;
+        out++;
+      }
+    }, begin, end, out, i, elemperthr, more_inputs...);
+    //End task
+  }
+
+  //Map main thread
+  auto end = first + elemperthr;
+  while(first!=end) {
+    *first_out = transf_op(*first, *more_inputs ...);
+    advance_iterators(more_inputs ...);
+    first++;
+    first_out++;
+  }
+
+  //Join threads
+  for(int i=0;i<ex.concurrency_degree()-1;i++) {
+    tasks[i].join();
+  }
 }
 
 /**
 @}
 @}
 */
-
 }
 
 #endif

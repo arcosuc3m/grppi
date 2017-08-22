@@ -25,6 +25,7 @@
 #include "../native/parallel_execution_native.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
+#include "../ff/parallel_execution_ff.h"
 
 #include <typeinfo>
 #include <memory>
@@ -38,6 +39,7 @@ constexpr bool is_execution_policy() {
       || is_parallel_execution_native<E>()
       || is_parallel_execution_tbb<E>()
       || is_parallel_execution_omp<E>()
+	  || is_parallel_execution_ff<E>()
   ;
 }
 

@@ -12,7 +12,7 @@
 #include <ff/node.hpp>
 #include <ff/allocator.hpp>
 
-#include <optional>
+//#include <optional>
 //#include "../common/common.hpp"
 
 #ifndef FF_ALLOCATOR_IN_USE
@@ -24,6 +24,36 @@
 
 
 namespace ff {
+
+/* Class for managing optional contained values, i.e., a value that may or
+ * may not be present.
+ * TODO: Discuss actual need of this - note that optional is not supported even by c++14 and GNU 6.3
+ * std::optional will be available in C++17, this is a sort of custom preview */
+template <typename T>
+class optional {
+    public:
+        typedef T type;
+        typedef T value_type;
+        T elem;
+        bool end;
+        optional(): end(true) { }
+        optional(const T& i): elem(i), end(false) { }
+
+        /* copy assignment operator */
+        optional& operator=(const optional& o) {
+                 elem = o.elem;
+                 end = o.end;
+                 return *this;
+        }
+
+        T& value(){ return elem; }
+
+        constexpr explicit operator bool() const {
+            return !end;
+        }
+};
+
+// -------------------------------------------------------------------------
 
 static bool outer_ff_pattern = true;
 
@@ -55,7 +85,7 @@ struct PMINode<void,TSout,L> : ff_node {
     PMINode(L const &lf):callable(lf) {};
     inline void * svc(void *) {
         // grppi::optional<TSout> ret;
-    	std::optional<TSout> ret;
+    	optional<TSout> ret;
         void * outslot = FF_MALLOC(sizeof(TSout));
         TSout * out = new (outslot) TSout();
         ret = std::move(callable());

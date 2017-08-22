@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.3
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -23,8 +23,7 @@
 
 #include "sequential_execution.h"
 
-#include <tuple>
-#include <iterator>
+#include "../common/iterator.h"
 
 namespace grppi {
 
@@ -46,16 +45,18 @@ execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transform_op Transformation operation.
-\note The sequential_execution object acts exclusively as a tag type.
+\param transf_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(const sequential_execution & ex, 
+void map(sequential_execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer transform_op) 
+         Transformer && transf_op) 
 {
-  ex.map(make_tuple(first), first_out,
-      std::distance(first, last), transform_op);
+  while(first != last) {
+    *first_out = transf_op(*first);
+    first++;
+    first_out++;
+  }
 }
 
 /**
@@ -69,19 +70,22 @@ execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transform_op Transformation operation.
+\param transf_op Transformation operation.
 \param more_firsts Additional iterators with first elements of additional sequences.
-\note The sequential_execution object acts exclusively as a tag type.
 */
 template <typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts>
-void map(const sequential_execution & ex, 
+void map(sequential_execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer transform_op, 
+         Transformer && transf_op, 
          OtherInputIts ... other_firsts) 
 {
-  ex.map(make_tuple(first,other_firsts...), first_out,
-      std::distance(first,last), transform_op);
+  while( first != last ) {
+    *first_out = transf_op(*first, *other_firsts...);
+    advance_iterators(other_firsts...);
+    first++;
+    first_out++;
+  }
 }
 
 /**

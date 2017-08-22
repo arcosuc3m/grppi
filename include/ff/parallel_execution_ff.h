@@ -8,9 +8,9 @@
 #ifndef GRPPI_FF_PARALLEL_EXECUTION_FF_H_
 #define GRPPI_FF_PARALLEL_EXECUTION_FF_H_
 
-#ifdef GRPPI_OMP
+#ifdef GRPPI_FF
 
-#include "../common/mpmc_queue.h"
+//#include "../common/mpmc_queue.h"
 
 #include <type_traits>
 
@@ -73,29 +73,20 @@ class parallel_execution_ff {
 	  */
 	  bool is_ordered() const noexcept { return ordering_; }
 
-	  /**
-	  \brief Sets the attributes for the queues built through make_queue<T>()
-	  */
+/*
 	  void set_queue_attributes(int size, queue_mode mode, int tokens) noexcept {
 	    queue_size_ = size;
 	    queue_mode_ = mode;
 	    num_tokens_ = tokens;
 	  }
 
-	  /**
-	  \brief Makes a communication queue for elements of type T.
-	  Constructs a queue using the attributes that can be set via
-	  set_queue_attributes(). The value is returned via move semantics.
-	  */
 	  template <typename T>
 	  mpmc_queue<T> make_queue() const {
 	    return {queue_size_, queue_mode_};
 	  }
 
-	  /**
-	  \brien Get num of tokens.
-	  */
 	  int tokens() const noexcept { return num_tokens_; }
+*/
 
 	private:
 
@@ -111,7 +102,7 @@ class parallel_execution_ff {
 	  //int num_tokens_ = default_num_tokens_;
 
 	  //queue_mode queue_mode_ = queue_mode::blocking;
-	};
+};
 
 	/**
 	\brief Metafunction that determines if type E is parallel_execution_ff
@@ -137,9 +128,6 @@ class parallel_execution_ff {
 	constexpr bool is_supported<parallel_execution_ff>() {
 	  return true;
 	}
-
-
-};
 
 } // end grppi namespace
 

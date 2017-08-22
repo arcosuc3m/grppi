@@ -1,5 +1,5 @@
 /*
-* @version    GrPPI v0.3
+* @version    GrPPI v0.2
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,8 +25,7 @@
 
 #include "parallel_execution_tbb.h"
 
-#include <tuple>
-#include <iterator>
+#include <tbb/tbb.h>
 
 namespace grppi {
 
@@ -48,16 +47,22 @@ parallel execution.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
 \param first_out Iterator to first elemento of the output sequence.
-\param transform_op Transformation operation.
+\param transf_op Transformation operation.
 */
 template <typename InputIt, typename OutputIt, typename Transformer>
-void map(const parallel_execution_tbb & ex, 
+void map(parallel_execution_tbb & ex, 
          InputIt first, InputIt last, 
          OutputIt first_out, 
-         Transformer && transform_op)
+         Transformer && transf_op)
 {
-  ex.map(make_tuple(first), first_out, std::distance(first,last),
-      transform_op);
+  tbb::parallel_for(
+    static_cast<std::size_t>(0), 
+    static_cast<std::size_t>((last-first)), 
+    [&] (std::size_t index){
+      auto current = (first_out+index);
+      *current = transf_op(*(first+index));
+    }
+  );   
 }
 
 /**
@@ -77,13 +82,20 @@ parallel execution.
 template <typename InputIt, typename OutputIt, 
           typename Transformer,
           typename ... OtherInputIts>
-void map(const parallel_execution_tbb & ex, 
+void map(parallel_execution_tbb & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
-         Transformer && transform_op, 
+         Transformer && transf_op, 
          OtherInputIts ... more_firsts)
 {
-  ex.map(make_tuple(first,more_firsts...), first_out, std::distance(first,last),
-      transform_op);
+  tbb::parallel_for(
+    static_cast<std::size_t>(0),
+    static_cast<std::size_t>((last-first)), 
+    [&] (std::size_t index){
+      auto current = (first_out+index);
+      *current = transf_op(*(first+index), *(more_firsts+index)...);
+    }
+ );   
+
 }
 
 }

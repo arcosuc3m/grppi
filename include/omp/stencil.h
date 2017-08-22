@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.3
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,10 +25,32 @@
 
 #include "parallel_execution_omp.h"
 
-#include <tuple>
-#include <utility>
-
 namespace grppi {
+
+template <typename InputIt, typename OutputIt, typename StencilTransformer, typename Neighbourhood,
+          typename ... OtherInputIts>
+void internal_stencil(parallel_execution_omp & ex, 
+                      InputIt first, InputIt last, OutputIt first_out, 
+                      StencilTransformer transform_op, 
+                      Neighbourhood neighbour_op, 
+                      int i, int elements_per_thread, 
+                      OtherInputIts ... other_firsts )
+{
+  auto begin = next(first, elements_per_thread * i);
+  auto end = (i==ex.concurrency_degree()-1)?
+      last :
+      next(first, elements_per_thread * (i+1));
+
+  auto out = next(first_out, elements_per_thread * i);
+
+  advance_iterators(elements_per_thread*i, other_firsts ...);
+  while (begin!=end) {
+    *out = transform_op(begin, neighbour_op(begin,other_firsts ... ));
+    begin++;
+    advance_iterators(other_firsts...);
+    out++;
+  }
+}
 
 /**
 \addtogroup stencil_pattern
@@ -54,16 +76,44 @@ OpenMP parallel execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood>
-void stencil(
-    const parallel_execution_omp & ex, 
-    InputIt first, InputIt last, OutputIt first_out, 
-    StencilTransformer && transform_op, 
-    Neighbourhood && neighbour_op) 
+void stencil(parallel_execution_omp & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer transform_op, Neighbourhood neighbour_op) 
 {
-  ex.stencil(std::make_tuple(first), first_out,
-    std::distance(first,last),
-    std::forward<StencilTransformer>(transform_op),
-    std::forward<Neighbourhood>(neighbour_op));
+  int size = last - first;
+  int elements_per_thread = size/ex.concurrency_degree();
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
+    { 
+      for(int i=1; i<ex.concurrency_degree(); i++) {
+        #pragma omp task firstprivate(i)
+        {
+          auto begin = next(first, elements_per_thread * i);
+          auto end = (i==ex.concurrency_degree()-1)?
+              last :
+              next(first, elements_per_thread * (i+1));
+          auto out = next(first_out, elements_per_thread * i);
+
+          while(begin!=end){
+            *out = transform_op(begin, neighbour_op(begin));
+            begin++;
+            out++;
+          }
+        }
+      }
+
+      auto begin = first; 
+      auto end = next(first, elements_per_thread);
+      auto out = first_out;
+      while (begin!=end) {
+        *out = transform_op(begin, neighbour_op(begin));
+        begin++;
+        out++;
+      }
+      #pragma omp taskwait
+    }
+  }
 }
 
 /**
@@ -84,17 +134,41 @@ TBB parallel execution.
 */
 template <typename InputIt, typename OutputIt, typename StencilTransformer, 
           typename Neighbourhood, typename ... OtherInputIts>
-void stencil(
-    const parallel_execution_omp & ex, 
-    InputIt first, InputIt last, OutputIt first_out, 
-    StencilTransformer && transform_op, 
-    Neighbourhood && neighbour_op, 
-    OtherInputIts ... other_firsts ) 
+void stencil(parallel_execution_omp & ex, 
+             InputIt first, InputIt last, OutputIt first_out, 
+             StencilTransformer && transform_op, Neighbourhood && neighbour_op, 
+             OtherInputIts ... other_firsts ) 
 {
-  ex.stencil(std::make_tuple(first, other_firsts...), first_out,
-    std::distance(first,last),
-    std::forward<StencilTransformer>(transform_op),
-    std::forward<Neighbourhood>(neighbour_op));
+  int size = distance(first,last);
+  int elements_per_thread = size/ex.concurrency_degree();
+  #pragma omp parallel 
+  {
+    #pragma omp single nowait
+    {
+      for (int i=1; i<ex.concurrency_degree(); ++i) {
+        #pragma omp task firstprivate(i)
+        {
+          internal_stencil(ex, first, last, first_out,
+              std::forward<StencilTransformer>(transform_op),
+              std::forward<Neighbourhood>(neighbour_op),
+              i,elements_per_thread, 
+              other_firsts...);
+        }
+      }
+
+      auto begin = first;
+      auto out = first_out; 
+      auto end = next(first, elements_per_thread);
+      while (begin!=end) {
+        *out = transform_op(*begin, neighbour_op(begin,other_firsts...));
+        begin++;
+        advance_iterators( other_firsts ... );
+        out++;
+      }
+
+      #pragma omp taskwait
+    }
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.3
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -25,9 +25,6 @@
 
 #include "parallel_execution_omp.h"
 
-#include <tuple>
-#include <utility>
-
 namespace grppi {
 
 /**
@@ -40,9 +37,9 @@ namespace grppi {
 
 /**
 \brief Invoke \ref md_map-reduce on a data sequence with 
-OpenMP parallel execution.
+native parallel execution.
 \tparam InputIt Iterator type used for input sequence.
-\tparam Identity Result type of the reduction.
+\tparam Result Result type of the reduction.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex OpenMP parallel execution policy object.
@@ -53,52 +50,51 @@ OpenMP parallel execution.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename InputIt, typename Transformer, 
-          typename Identity, typename Combiner>
-auto map_reduce(parallel_execution_omp & ex, 
-                    InputIt first, InputIt last, 
-                    Identity && identity, 
+template <typename InputIt, typename Transformer, typename Result, 
+          typename Combiner>
+Result map_reduce(parallel_execution_omp & ex, 
+                    InputIt first, InputIt last, Result identity, 
                     Transformer &&  transform_op,  
                     Combiner && combine_op)
 {
-  return ex.map_reduce(std::make_tuple(first), 
-    std::distance(first,last),
-    std::forward<Identity>(identity),
-    std::forward<Transformer>(transform_op),
-    std::forward<Combiner>(combine_op));
-}
+  using namespace std;
+  Result result{identity};
 
-/**
-\brief Invoke \ref md_map-reduce on multiple data sequences with 
-OpenMP execution.
-\tparam InputIterator Iterator type used for the input sequence.
-\tparam Identity Type for the identity value.
-\tparam Transformer Callable type for the transformation operation.
-\tparam Combiner Callable type for the combination operation of the reduction.
-\param ex OpenMP execution policy object.
-\param first Iterator to the first element in the input sequence.
-\param last Iterator to one past the end of the input sequence.
-\param identity Identity value for the combination operation.
-\param transf_op Transformation operation.
-\param combine_op Combination operation.
-\return Result of the map/reduce operation.
-*/
-template <typename InputIterator, typename Identity, 
-          typename Transformer, typename Combiner,
-          typename ... OtherInputIterators>
-auto map_reduce(const parallel_execution_omp & ex, 
-                InputIterator first, InputIterator last, 
-                Identity && identity, 
-                Transformer &&  transform_op, Combiner && combine_op,
-                OtherInputIterators ... other_firsts)
-{
-  return ex.map_reduce(make_tuple(first, other_firsts...), 
-      std::distance(first,last), 
-      std::forward<Identity>(identity),
-      std::forward<Transformer>(transform_op), 
-      std::forward<Combiner>(combine_op));
-}
+  std::vector<Result> partial_results(ex.concurrency_degree());
+  #pragma omp parallel
+  {
+    #pragma omp single nowait
+    {
+      int num_elements = distance(first,last);
+      int elements_per_thread = num_elements/ex.concurrency_degree();
+      sequential_execution seq{};
 
+      for (int i=1;i<ex.concurrency_degree();i++) {    
+        #pragma omp task firstprivate(i)
+        {
+          auto begin = next(first, elements_per_thread * i);
+          auto end = (i==ex.concurrency_degree()-1) ? last :
+              next(first, elements_per_thread * (i+1));
+          partial_results[i] = map_reduce(seq, 
+              begin, end, partial_results[i], 
+              std::forward<Transformer>(transform_op), 
+              std::forward<Combiner>(combine_op));
+        }
+      }
+
+      partial_results[0] = map_reduce(seq, 
+          first, first+elements_per_thread, partial_results[0], 
+          std::forward<Transformer>(transform_op), 
+          std::forward<Combiner>(combine_op));
+      #pragma omp taskwait
+    }
+  }
+
+  for (auto && p : partial_results){
+    result = combine_op(result, p);
+  } 
+  return result;
+}
 
 /**
 @}
@@ -106,7 +102,6 @@ auto map_reduce(const parallel_execution_omp & ex,
 */
 
 }
-
 #endif
 
 #endif
