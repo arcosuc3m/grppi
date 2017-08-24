@@ -82,8 +82,8 @@ public:
   }
 
   void check_empty() {
-    ASSERT_EQ(1, invocations_in); // Functor in was invoked once
-    ASSERT_EQ(0, invocations_op); // Functor op was not invoked
+    EXPECT_EQ(1, invocations_in); // Functor in was invoked once
+    EXPECT_EQ(0, invocations_op); // Functor op was not invoked
   }
 
   void setup_empty_sink() {}
@@ -107,9 +107,9 @@ public:
   }
 
   void check_empty_sink() {
-    ASSERT_EQ(1, invocations_in); 
-    ASSERT_EQ(0, invocations_op);
-    ASSERT_EQ(0, invocations_sk);
+    EXPECT_EQ(1, invocations_in); 
+    EXPECT_EQ(0, invocations_op);
+    EXPECT_EQ(0, invocations_sk);
   }
 
   void setup_empty_ary() {}
@@ -129,8 +129,8 @@ public:
   }
 
   void check_empty_ary() {
-    ASSERT_EQ(1, invocations_in);
-    ASSERT_EQ(0, invocations_op);
+    EXPECT_EQ(1, invocations_in);
+    EXPECT_EQ(0, invocations_op);
   }
 
   void setup_empty_ary_sink() {}
@@ -154,9 +154,9 @@ public:
   }
 
   void check_empty_ary_sink() {
-    ASSERT_EQ(1, invocations_in);
-    ASSERT_EQ(0, invocations_op);
-    ASSERT_EQ(0, invocations_sk);
+    EXPECT_EQ(1, invocations_in);
+    EXPECT_EQ(0, invocations_op);
+    EXPECT_EQ(0, invocations_sk);
   }
 
   void setup_single() {
@@ -184,8 +184,30 @@ public:
     );
   }
 
+  template <typename E>
+  void run_single_piecewise(const E & e) {
+    auto inner = grppi::farm(4,
+      [this](int x) {
+        invocations_op++;
+        w[idx_out] = x * 2;
+        idx_out++;
+      });
+
+    grppi::pipeline(e,
+      [this]() -> optional<int> {
+        invocations_in++;
+        if (idx_in < v.size() ) {
+          idx_in++;
+          return v[idx_in-1];
+        } else
+          return {};
+      },
+      inner
+    );
+  }
+
   void check_single() {
-    ASSERT_EQ(2, invocations_in); // Functor in was invoked once
+    EXPECT_EQ(2, invocations_in); // Functor in was invoked once
     EXPECT_EQ(1, this->invocations_op); // one invocation of function op
     EXPECT_EQ(84, this->w[0]);
   }
@@ -221,7 +243,7 @@ public:
   }
 
   void check_single_sink() {
-    ASSERT_EQ(2, invocations_in); // Functor in was invoked once
+    EXPECT_EQ(2, invocations_in); // Functor in was invoked once
     EXPECT_EQ(1, this->invocations_op); // one invocation of function op
     EXPECT_EQ(1, this->invocations_sk); // one invocation of function sk
     EXPECT_EQ(84, this->w[0]);
@@ -256,7 +278,7 @@ public:
   }
 
   void check_single_ary() {
-    ASSERT_EQ(2, invocations_in); // Functor in was invoked twice
+    EXPECT_EQ(2, invocations_in); // Functor in was invoked twice
     EXPECT_EQ(1, this->invocations_op); // one invocation of function op
     EXPECT_EQ(66, this->w[0]);
   }
@@ -292,7 +314,7 @@ public:
   }
 
   void check_single_ary_sink() {
-    ASSERT_EQ(2, invocations_in); // Functor in was invoked twice
+    EXPECT_EQ(2, invocations_in); // Functor in was invoked twice
     EXPECT_EQ(1, this->invocations_op); // one invocation of function op
     EXPECT_EQ(1, this->invocations_sk); // one invocation of function sk
     EXPECT_EQ(66, this->w[0]);
@@ -434,7 +456,9 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(farm_test, executions);
+//TYPED_TEST_CASE(farm_test, executions);
+using executions_tmp = ::testing::Types<sequential_execution>;
+TYPED_TEST_CASE(farm_test, executions_tmp);
 
 TYPED_TEST(farm_test, static_empty)
 {
@@ -506,6 +530,20 @@ TYPED_TEST(farm_test, poly_single)
   this->check_single();
 }
 
+TYPED_TEST(farm_test, static_single_piecewise)
+{
+  this->setup_single();
+  this->run_single_piecewise(this->execution_);
+  this->check_single();
+}
+/*
+TYPED_TEST(farm_test, poly_single_piecewise)
+{
+  this->setup_single();
+  this->run_single_piecewise(this->poly_execution_);
+  this->check_single();
+}
+*/
 TYPED_TEST(farm_test, static_single_sink)
 {
   this->setup_single_sink();

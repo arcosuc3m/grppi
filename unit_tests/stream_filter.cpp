@@ -241,14 +241,12 @@ TYPED_TEST(stream_filter_test, static_unordered_keep_empty)
   this->check_keep_empty();
 }
 
-/*
 TYPED_TEST(stream_filter_test, poly_keep_empty)
 {
   this->setup_empty();
   this->run_keep_empty(this->poly_execution_);
   this->check_keep_empty();
 }
-*/
 
 TYPED_TEST(stream_filter_test, static_discard_empty)
 {
@@ -257,14 +255,12 @@ TYPED_TEST(stream_filter_test, static_discard_empty)
   this->check_discard_empty();
 }
 
-/*
 TYPED_TEST(stream_filter_test, poly_discard_empty)
 {
   this->setup_empty();
   this->run_discard_empty(this->poly_execution_);
   this->check_discard_empty();
 }
-*/
 
 TYPED_TEST(stream_filter_test, static_keep_single)
 {
@@ -273,14 +269,12 @@ TYPED_TEST(stream_filter_test, static_keep_single)
   this->check_keep_single();
 }
 
-/*
 TYPED_TEST(stream_filter_test, poly_keep_single)
 {
   this->setup_single();
   this->run_keep_single(this->poly_execution_);
   this->check_keep_single();
 }
-*/
 
 TYPED_TEST(stream_filter_test, static_discard_single)
 {
@@ -289,14 +283,12 @@ TYPED_TEST(stream_filter_test, static_discard_single)
   this->check_discard_single();
 }
 
-/*
 TYPED_TEST(stream_filter_test, poly_discard_single)
 {
   this->setup_single();
   this->run_discard_single(this->poly_execution_);
   this->check_discard_single();
 }
-*/
 
 TYPED_TEST(stream_filter_test, static_keep_multiple)
 {
@@ -305,14 +297,12 @@ TYPED_TEST(stream_filter_test, static_keep_multiple)
   this->check_keep_multiple();
 }
 
-/*
 TYPED_TEST(stream_filter_test, poly_keep_multiple)
 {
   this->setup_multiple();
   this->run_keep_multiple(this->poly_execution_);
   this->check_keep_multiple();
 }
-*/
 
 TYPED_TEST(stream_filter_test, static_discard_multiple)
 {
@@ -321,11 +311,9 @@ TYPED_TEST(stream_filter_test, static_discard_multiple)
   this->check_discard_multiple();
 }
 
-/*
 TYPED_TEST(stream_filter_test, poly_discard_multiple)
 {
   this->setup_multiple();
   this->run_discard_multiple(this->poly_execution_);
   this->check_discard_multiple();
 }
-*/

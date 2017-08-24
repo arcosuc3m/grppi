@@ -57,7 +57,20 @@ public:
   std::atomic<int> invocations_last{0};
   std::atomic<int> invocations_intermediate{0};
 
+/*
   void setup_two_stages_empty() {
+  }
+
+  template <typename E>
+  void run_two_stages_empty(const E & e) {
+    grppi::pipeline(e,
+    [this]() -> optional<int>{ 
+        invocations_init++;
+        return {}; 
+    },
+    [this](int x) {
+      invocations_last++;
+    });
   }
 
   void check_two_stages_empty() {
@@ -68,6 +81,21 @@ public:
   void setup_two_stages() {
     out = 0;
     counter = 2;
+  }
+
+  template <typename E>
+  void run_two_stages(const E & e) {
+    grppi::pipeline(e,
+      [this]() -> optional<int> { 
+        invocations_init++;
+        counter--;
+        if (counter==0) return {}; 
+        else return this->counter;
+      },
+    [this](int x) {
+      this->invocations_last++;
+      this->out += x;
+    });
   }
 
   void check_two_stages() {
@@ -81,195 +109,155 @@ public:
     out = 0;
   }
 
+  template <typename E>
+  void run_three_stages(const E & e) {
+    grppi::pipeline(e,
+      [this]() -> optional<int> { 
+        invocations_init++;
+        counter--;
+        if (counter==0) return {}; 
+        else return this->counter;
+      },
+      [this](int x) {
+        invocations_intermediate++;
+        return x*2;
+      },
+      [this](int x) {
+        invocations_last++;
+        out += x;
+      });
+  }
+
   void check_three_stages() {
     ASSERT_EQ(5, invocations_init); 
     ASSERT_EQ(4, invocations_last); 
     ASSERT_EQ(4, invocations_intermediate);
     EXPECT_EQ(20, this->out);
   }
+*/
 
   void setup_composed() {
     counter = 5;
     out = 0;
+  }
 
+  template <typename E>
+  void run_composed(const E & e) {
+    grppi::pipeline(e,
+      [this,i=0,max=this->counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (i++<max) return i;
+        else return {};
+      },
+      grppi::pipeline(
+        [this](int x) {
+          invocations_intermediate++;
+          return x*x;
+        },
+        [this](int x) {
+          return x+1;
+        }
+      ),
+      [this](int x) {
+        invocations_last++;
+        out += x;
+      });
+  }
+
+  template <typename E>
+  void run_composed_piecewise(const E & e) {
+    auto inner = grppi::pipeline(
+      [this](int x) {
+        invocations_intermediate++;
+        return x*x;
+      },
+      [this](int x) {
+        return x+1;
+      });
+
+    grppi::pipeline(e,
+      [this,i=0,max=this->counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (i++<max) return i;
+        else return {};
+      },
+      inner,
+      [this](int x) {
+        invocations_last++;
+        out += x;
+      });
   }
 
   void check_composed() {
-    ASSERT_EQ(5, invocations_init); 
-    ASSERT_EQ(4, invocations_last); 
-    ASSERT_EQ(4, invocations_intermediate);
-    EXPECT_EQ(40, this->out);
+    EXPECT_EQ(6, invocations_init); 
+    EXPECT_EQ(5, invocations_last); 
+    EXPECT_EQ(5, invocations_intermediate);
+    EXPECT_EQ(60, out);
   }
-
 
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(pipeline_test, executions);
+//TYPED_TEST_CASE(pipeline_test, executions);
+using executions_tmp = ::testing::Types<
+  grppi::sequential_execution>;
 
+TYPED_TEST_CASE(pipeline_test, executions_tmp);
+
+/*
 TYPED_TEST(pipeline_test, static_two_stages_empty)
 {
   this->setup_two_stages_empty();
-    grppi::pipeline( this->execution_,
-    [this]() -> optional<int>{ 
-        this->invocations_init++;
-        return {}; 
-    },
-    [this]( auto x ) {
-      this->invocations_last++;
-    }
-  );
-
+  this->run_two_stages_empty(this->execution_);
   this->check_two_stages_empty();
 }
 
 TYPED_TEST(pipeline_test, poly_two_stages_empty)
 {
   this->setup_two_stages_empty();
-    grppi::pipeline( this->poly_execution_,
-    [this]() -> optional<int>{ 
-        this->invocations_init++;
-        return {}; 
-    },
-    [this]( auto x ) {
-      this->invocations_last++;
-    }
-  );
-
+  this->run_two_stages_empty(this->poly_execution_);
   this->check_two_stages_empty();
 }
-
-
 
 TYPED_TEST(pipeline_test, static_two_stages)
 {
   this->setup_two_stages();
-    grppi::pipeline( this->execution_,
-    [this]() -> optional<int>{ 
-        this->invocations_init++;
-        this->counter--;
-        if(this->counter  == 0){
-          return {}; 
-        }else{
-          return this->counter;
-        }
-    },
-    [this](int x ) {
-      this->invocations_last++;
-      this->out += x;
-    }
-  );
+  this->run_two_stages(this->execution_);
   this->check_two_stages();
 }
 
 TYPED_TEST(pipeline_test, poly_two_stages)
 {
   this->setup_two_stages();
-    grppi::pipeline( this->poly_execution_,
-    [this]() -> optional<int>{ 
-        this->invocations_init++;
-        this->counter--;
-        if(this->counter  == 0){
-          return {}; 
-        }else{
-          return this->counter;
-        }
-    },
-    [this]( auto x ) {
-      this->invocations_last++;
-      this->out += x;
-    }
-  );
+  this->run_two_stages(this->poly_execution_);
   this->check_two_stages();
 }
-
-
 
 TYPED_TEST(pipeline_test, static_three_stages)
 {
   this->setup_three_stages();
-    grppi::pipeline( this->execution_,
-    [this]() -> optional<int>{ 
-        this->invocations_init++;
-        this->counter--;
-        if(this->counter  == 0){
-          return {}; 
-        }else{
-          return this->counter;
-        }
-    },
-    [this](int x ) {
-      this->invocations_intermediate++;
-      return x*2;
-    },
-    [this](int y ) {
-      this->invocations_last++;
-      this->out += y;
-    }
-  );
+  this->run_three_stages(this->execution_);
   this->check_three_stages();
 }
 
 TYPED_TEST(pipeline_test, poly_three_stages)
 {
   this->setup_three_stages();
-    grppi::pipeline( this->poly_execution_,
-    [this]()->optional<int> { 
-        this->invocations_init++;
-        this->counter--;
-        if(this->counter  == 0){
-          return {}; 
-        }else{
-          return this->counter;
-        }
-    },
-    [this]( auto x ) {
-      this->invocations_intermediate++;
-      return x*2;
-    },
-    [this]( auto y ) {
-      this->invocations_last++;
-      this->out += y;
-    }
-  );
+  this->run_three_stages(this->poly_execution_);
   this->check_three_stages();
 }
+*/
 
-/*
-TYPED_TEST(pipeline_test, static_three_stages_composed)
+TYPED_TEST(pipeline_test, static_composed)
 {
   this->setup_composed();
-  auto f_object =     grppi::farm(this->execution_,
-        [this](std::vector<int> v) {
-          this->invocations_intermediate++;
-          int acumm = 0; 
-          for(int i = 0; i < v.size(); i++ ){
-            acumm += v[i];
-          }
-          return acumm;
-        }
-    );
-
-    grppi::pipeline( this->execution_,
-    [this]() ->optional<std::vector<int>> { 
-        this->invocations_init++;
-        this->counter--;
-        std::vector<int> v(5);
-        std::iota(begin(v), end(v), 0);
-
-        if(this->counter  <= 0){
-          return {};
-        }else{
-          return v;
-        }
-    },
-    f_object,
-    [this]( auto y ) {
-      this->invocations_last++;
-      this->out += y;
-    }
-  );
-
+  this->run_composed(this->execution_);
   this->check_composed();
 }
-*/
+
+TYPED_TEST(pipeline_test, static_composed_piecewise)
+{
+  this->setup_composed();
+  this->run_composed_piecewise(this->execution_);
+  this->check_composed();
+}
