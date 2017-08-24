@@ -25,6 +25,7 @@
 
 #include "farm_pattern.h"
 #include "filter_pattern.h"
+#include "pipeline_pattern.h"
 
 namespace grppi{
 
@@ -72,7 +73,9 @@ class filter_info
 
 template <typename T>
 constexpr bool is_no_pattern =
-  !is_farm<T> && !is_filter<T>;
+  !is_farm<T> && 
+  !is_filter<T> && 
+  !is_pipeline<T>;
 
 template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
