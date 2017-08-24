@@ -402,7 +402,7 @@ with OpenMP parallel execution.
 \remark Generator shall be a zero argument callable type.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_arguments<Generator> = 0>
+          requires_generator<Generator> = 0>
 void pipeline(const parallel_execution_omp & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
