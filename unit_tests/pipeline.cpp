@@ -183,13 +183,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-//TYPED_TEST_CASE(pipeline_test, executions);
-using executions_tmp = ::testing::Types<
-  grppi::sequential_execution,
-  grppi::parallel_execution_native,
-  grppi::parallel_execution_omp>;
-
-TYPED_TEST_CASE(pipeline_test, executions_tmp);
+TYPED_TEST_CASE(pipeline_test, executions);
 
 TYPED_TEST(pipeline_test, static_two_stages_empty)
 {
