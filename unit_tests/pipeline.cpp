@@ -186,7 +186,8 @@ public:
 //TYPED_TEST_CASE(pipeline_test, executions);
 using executions_tmp = ::testing::Types<
   grppi::sequential_execution,
-  grppi::parallel_execution_native>;
+  grppi::parallel_execution_native,
+  grppi::parallel_execution_omp>;
 
 TYPED_TEST_CASE(pipeline_test, executions_tmp);
 
