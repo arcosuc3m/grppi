@@ -28,7 +28,7 @@ namespace grppi {
 
 template <typename Execution, typename Transformer,
           typename ... MoreTransformers,
-          requires_arguments<Transformer> = 0>
+          requires_generator<Transformer> = 0>
 pipeline_info<Execution,Transformer,MoreTransformers...>
 transform_pipeline(const Execution & ex, std::tuple<Transformer, MoreTransformers ...> && transform_ops)
 {
@@ -90,7 +90,7 @@ with polymorphic execution.
 \param trasnform_ops Transformation operations for each stage.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_arguments<Generator> = 0>
+          requires_generator<Generator> = 0>
 void pipeline(const polymorphic_execution & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {

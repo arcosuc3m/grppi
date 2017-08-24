@@ -57,25 +57,27 @@ public:
   std::atomic<int> invocations_last{0};
   std::atomic<int> invocations_intermediate{0};
 
-/*
   void setup_two_stages_empty() {
+    counter=0;
   }
 
   template <typename E>
-  void run_two_stages_empty(const E & e) {
+  void run_two_stages(const E & e) {
     grppi::pipeline(e,
-    [this]() -> optional<int>{ 
+      [this,i=0,max=counter]() mutable -> optional<int> {
         invocations_init++;
-        return {}; 
-    },
-    [this](int x) {
-      invocations_last++;
-    });
+        if (++i<=max) return i;
+        else return {}; 
+      },
+      [this](int x) {
+        invocations_last++;
+        out += x;
+      });
   }
 
   void check_two_stages_empty() {
-    ASSERT_EQ(1, invocations_init); 
-    ASSERT_EQ(0, invocations_last); 
+    EXPECT_EQ(1, invocations_init); 
+    EXPECT_EQ(0, invocations_last); 
   }
 
   void setup_two_stages() {
@@ -83,25 +85,10 @@ public:
     counter = 2;
   }
 
-  template <typename E>
-  void run_two_stages(const E & e) {
-    grppi::pipeline(e,
-      [this]() -> optional<int> { 
-        invocations_init++;
-        counter--;
-        if (counter==0) return {}; 
-        else return this->counter;
-      },
-    [this](int x) {
-      this->invocations_last++;
-      this->out += x;
-    });
-  }
-
   void check_two_stages() {
-    ASSERT_EQ(2, invocations_init); 
-    ASSERT_EQ(1, invocations_last); 
-    EXPECT_EQ(1, this->out);
+    EXPECT_EQ(3, invocations_init); 
+    EXPECT_EQ(2, invocations_last); 
+    EXPECT_EQ(3, this->out);
   }
 
   void setup_three_stages() {
@@ -112,11 +99,10 @@ public:
   template <typename E>
   void run_three_stages(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this,i=0,max=counter]() mutable -> optional<int> {
         invocations_init++;
-        counter--;
-        if (counter==0) return {}; 
-        else return this->counter;
+        if (++i<=max) return i;
+        else return {}; 
       },
       [this](int x) {
         invocations_intermediate++;
@@ -129,12 +115,11 @@ public:
   }
 
   void check_three_stages() {
-    ASSERT_EQ(5, invocations_init); 
-    ASSERT_EQ(4, invocations_last); 
-    ASSERT_EQ(4, invocations_intermediate);
-    EXPECT_EQ(20, this->out);
+    EXPECT_EQ(6, invocations_init); 
+    EXPECT_EQ(5, invocations_last); 
+    EXPECT_EQ(5, invocations_intermediate);
+    EXPECT_EQ(30, this->out);
   }
-*/
 
   void setup_composed() {
     counter = 5;
@@ -144,9 +129,9 @@ public:
   template <typename E>
   void run_composed(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=this->counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> optional<int> {
         invocations_init++;
-        if (i++<max) return i;
+        if (++i<=max) return i;
         else return {};
       },
       grppi::pipeline(
@@ -176,9 +161,9 @@ public:
       });
 
     grppi::pipeline(e,
-      [this,i=0,max=this->counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> optional<int> {
         invocations_init++;
-        if (i++<max) return i;
+        if (++i<=max) return i;
         else return {};
       },
       inner,
@@ -200,22 +185,22 @@ public:
 // Test for execution policies defined in supported_executions.h
 //TYPED_TEST_CASE(pipeline_test, executions);
 using executions_tmp = ::testing::Types<
-  grppi::sequential_execution>;
+  grppi::sequential_execution,
+  grppi::parallel_execution_native>;
 
 TYPED_TEST_CASE(pipeline_test, executions_tmp);
 
-/*
 TYPED_TEST(pipeline_test, static_two_stages_empty)
 {
   this->setup_two_stages_empty();
-  this->run_two_stages_empty(this->execution_);
+  this->run_two_stages(this->execution_);
   this->check_two_stages_empty();
 }
 
 TYPED_TEST(pipeline_test, poly_two_stages_empty)
 {
   this->setup_two_stages_empty();
-  this->run_two_stages_empty(this->poly_execution_);
+  this->run_two_stages(this->poly_execution_);
   this->check_two_stages_empty();
 }
 
@@ -246,7 +231,6 @@ TYPED_TEST(pipeline_test, poly_three_stages)
   this->run_three_stages(this->poly_execution_);
   this->check_three_stages();
 }
-*/
 
 TYPED_TEST(pipeline_test, static_composed)
 {

@@ -328,7 +328,7 @@ public:
 
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
-                Transformers && ... transform_op) const;
+                Transformers && ... transform_ops) const;
 
 private:
 
@@ -351,8 +351,29 @@ private:
   template <typename Queue, typename FarmTransformer,
             template <typename> class Farm,
             requires_farm<Farm<FarmTransformer>> = 0>
+  void do_pipeline(Queue & input_queue, 
+      Farm<FarmTransformer> & farm_obj) const
+  {
+    do_pipeline(input_queue, std::move(farm_obj));
+  }
+
+  template <typename Queue, typename FarmTransformer,
+            template <typename> class Farm,
+            requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline( Queue & input_queue, 
       Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Queue, typename FarmTransformer, 
+            template <typename> class Farm,
+            typename ... OtherTransformers,
+            requires_farm<Farm<FarmTransformer>> = 0>
+  void do_pipeline(Queue & input_queue, 
+      Farm<FarmTransformer> & farm_obj,
+      OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(farm_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
 
   template <typename Queue, typename FarmTransformer, 
             template <typename> class Farm,
@@ -364,9 +385,15 @@ private:
 
   template <typename Queue, typename Predicate, 
             template <typename> class Filter,
+            typename ... OtherTransformers,
             requires_filter<Filter<Predicate>> =0>
   void do_pipeline(Queue & input_queue, 
-      Filter<Predicate> && farm_obj) const;
+      Filter<Predicate> & filter_obj,
+      OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(filter_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
 
   template <typename Queue, typename Predicate, 
             template <typename> class Filter,
@@ -375,6 +402,49 @@ private:
   void do_pipeline(Queue & input_queue, 
       Filter<Predicate> && farm_obj,
       OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename ... Transformers,
+            template <typename...> class Pipeline,
+            requires_pipeline<Pipeline<Transformers...>> = 0>
+  void do_pipeline(Queue & input_queue,
+      Pipeline<Transformers...> & pipeline_obj) const
+  {
+    do_pipeline(input_queue, std::move(pipeline_obj));
+  }
+
+  template <typename Queue, typename ... Transformers,
+            template <typename...> class Pipeline,
+            requires_pipeline<Pipeline<Transformers...>> = 0>
+  void do_pipeline(Queue & input_queue,
+      Pipeline<Transformers...> && pipeline_obj) const;
+
+  template <typename Queue, typename ... Transformers,
+            template <typename...> class Pipeline,
+            typename ... OtherTransformers,
+            requires_pipeline<Pipeline<Transformers...>> = 0>
+  void do_pipeline(Queue & input_queue,
+      Pipeline<Transformers...> & pipeline_obj,
+      OtherTransformers && ... other_transform_ops) const
+  {
+    std::cerr << "do_pipeline(q,const pipeline, other...)\n";
+    do_pipeline(input_queue, std::move(pipeline_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename ... Transformers,
+            template <typename...> class Pipeline,
+            typename ... OtherTransformers,
+            requires_pipeline<Pipeline<Transformers...>> = 0>
+  void do_pipeline(Queue & input_queue,
+      Pipeline<Transformers...> && pipeline_obj,
+      OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename ... Transformers,
+            std::size_t ... I>
+  void do_pipeline_nested(
+      Queue && input_queue, 
+      std::tuple<Transformers...> && transform_ops,
+      std::index_sequence<I...>) const;
 
 private: 
   mutable thread_registry thread_registry_;
@@ -657,9 +727,10 @@ auto parallel_execution_native::divide_conquer(
 template <typename Queue, typename Consumer,
           requires_no_pattern<Consumer> = 0>
 void parallel_execution_native::do_pipeline(
-  Queue & input_queue, 
-  Consumer && consume_op) const
+    Queue & input_queue, 
+    Consumer && consume_op) const
 {
+  std::cerr << "pipeline(q,consumer)\n";
   using namespace std;
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type;
@@ -717,6 +788,7 @@ void parallel_execution_native::do_pipeline(
     Transformer && transform_op,
     OtherTransformers && ... other_transform_ops) const
 {
+  std::cerr << "pipeline(q,t,other...)\n";
   using namespace std;
   using namespace experimental;
 
@@ -825,29 +897,6 @@ void parallel_execution_native::do_pipeline(
 
 template <typename Queue, typename Predicate, 
           template <typename> class Filter,
-          requires_filter<Filter<Predicate>> =0>
-void parallel_execution_native::do_pipeline(
-    Queue & input_queue, 
-    Filter<Predicate> && filter_obj) const
-{
-  using namespace std;
-  using namespace experimental;
-
-  using input_item_type = typename Queue::value_type;
-  using input_value_type = typename input_item_type::first_type;
-
-  auto filter_task = [&,this]() {
-    auto manager = thread_manager();
-    auto item{input_queue.pop()};
-    while (item.first) {
-      filter_obj(*item.first);
-      item = input_queue.pop();
-    }
-  };
-}
-
-template <typename Queue, typename Predicate, 
-          template <typename> class Filter,
           typename ... OtherTransformers,
           requires_filter<Filter<Predicate>> =0>
 void parallel_execution_native::do_pipeline(
@@ -939,6 +988,46 @@ void parallel_execution_native::do_pipeline(
     do_pipeline(filter_queue, forward<OtherTransformers>(other_transform_ops)...);
     filter_thread.join();
   }
+}
+
+template <typename Queue, typename ... Transformers,
+          template <typename...> class Pipeline,
+          requires_pipeline<Pipeline<Transformers...>> = 0>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue,
+    Pipeline<Transformers...> && pipeline_obj) const
+{
+  this->template do_pipeline_nested(
+    input_queue,
+    pipeline_obj.transformers(), 
+    std::make_index_sequence<sizeof...(Transformers)>());
+}
+
+template <typename Queue, typename ... Transformers,
+          template <typename...> class Pipeline,
+          typename ... OtherTransformers,
+          requires_pipeline<Pipeline<Transformers...>> = 0>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue,
+    Pipeline<Transformers...> && pipeline_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  this->template do_pipeline_nested(
+    input_queue,
+    std::tuple_cat(pipeline_obj.transformers(), 
+        std::forward_as_tuple(other_transform_ops...)),
+    std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
+}
+
+template <typename Queue, typename ... Transformers,
+          std::size_t ... I>
+void parallel_execution_native::do_pipeline_nested(
+    Queue && input_queue, 
+    std::tuple<Transformers...> && transform_ops,
+    std::index_sequence<I...>) const
+{
+  do_pipeline(input_queue,
+    std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 
 } // end namespace grppi

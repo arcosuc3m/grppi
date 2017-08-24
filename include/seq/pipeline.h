@@ -23,8 +23,7 @@
 
 #include "sequential_execution.h"
 
-#include "../common/pack_traits.h"
-#include "../common/patterns.h"
+#include "../common/callable_traits.h"
 
 namespace grppi {
 
@@ -130,8 +129,8 @@ with sequential execution.
 \param generate_op Generator operation.
 \param trasnform_ops Transformation operations for each stage.
 */
-template <typename Generator, 
-          typename ... Transformers>
+template <typename Generator, typename ... Transformers,
+          requires_generator<Generator> = 0>
 void pipeline(const sequential_execution & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {

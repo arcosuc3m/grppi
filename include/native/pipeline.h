@@ -22,11 +22,7 @@
 #define GRPPI_NATIVE_PIPELINE_H
 
 #include "parallel_execution_native.h"
-#include "../common/pack_traits.h"
 #include "../common/callable_traits.h"
-
-#include <thread>
-#include <experimental/optional>
 
 namespace grppi{
 
@@ -498,7 +494,7 @@ with native parallel execution.
 \remark Generator shall be a zero argument callable type.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_arguments<Generator> = 0>
+          requires_generator<Generator> = 0>
 void pipeline(const parallel_execution_native & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {

@@ -55,6 +55,22 @@ public:
     return f(std::forward<T>(item));
   }
 
+  /**
+  \brief Gets a transformer from the pipeline
+  \tparam I index into the pipeline.
+  \return The selected transformer object.
+  */
+  template <std::size_t I>
+  auto stage() const noexcept {
+    static_assert(I<sizeof...(Transformers),
+      "Pipeline has not so many transformers");
+    return std::get<I>(transformers_);
+  }
+
+  auto transformers() const noexcept {
+    return transformers_;
+  }
+
 private:
   std::tuple<Transformers...> transformers_;
 };
