@@ -186,12 +186,15 @@ private:
   template <typename Item, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
   void do_pipeline(Item && item, Transformer && transform_op,
-    OtherTransformers && ... other_ops) const;
+          OtherTransformers && ... other_ops) const;
 
   template <typename Item, typename FarmTransformer,
             template <typename> class Farm,
             requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Item && item, const Farm<FarmTransformer> & farm_obj) const;
+  void do_pipeline(Item && item, Farm<FarmTransformer> & farm_obj) const
+  {
+    do_pipeline(std::forward<Item>(item), std::move(farm_obj));
+  }
 
   template <typename Item, typename FarmTransformer,
             template <typename> class Farm,
@@ -202,8 +205,12 @@ private:
             template <typename> class Farm,
             typename... OtherTransformers,
             requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Item && item, const Farm<FarmTransformer> & farm_obj,
-                   OtherTransformers && ... other_transform_ops) const;
+  void do_pipeline(Item && item, Farm<FarmTransformer> & farm_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(std::forward<Item>(item), std::move(farm_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
 
   template <typename Item, typename FarmTransformer,
             template <typename> class Farm,
@@ -216,8 +223,12 @@ private:
             template <typename> class Filter,
             typename ... OtherTransformers,
             requires_filter<Filter<Predicate>> = 0>
-  void do_pipeline(Item && item, const Filter<Predicate> & filter_obj,
-                   OtherTransformers && ... other_transform_ops) const;
+  void do_pipeline(Item && item, Filter<Predicate> & filter_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(std::forward<Item>(item), std::move(filter_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
 
   template <typename Item, typename Predicate,
             template <typename> class Filter,
@@ -230,29 +241,24 @@ private:
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
             requires_pipeline<Pipeline<Transformers...>> = 0>
-  void do_pipeline(Item && item, Pipeline<Transformers...> && pipeline_obj,
-                   OtherTransformers && ... other_transform_ops) const;
+  void do_pipeline(Item && item, Pipeline<Transformers...> & pipeline_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(std::forward<Item>(item), std::move(pipeline_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
 
   template <typename Item, typename ... Transformers,
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
             requires_pipeline<Pipeline<Transformers...>> = 0>
-  void do_pipeline(Item && item, const Pipeline<Transformers...> & pipeline_obj,
+  void do_pipeline(Item && item, Pipeline<Transformers...> && pipeline_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
-  template <std::size_t I, typename Item, typename ... Transformers,
-            template <typename...> class Pipeline,
-            typename ... OtherTransformers,
-            internal::requires_index_last<I,Transformers...> = 0>
-  void do_pipeline_internal(Item && item, const Pipeline<Transformers...> & pipeline_obj,
-                   OtherTransformers && ... other_transform_ops) const;
-
-  template <std::size_t I, typename Item, typename ... Transformers,
-            template <typename...> class Pipeline,
-            typename ... OtherTransformers,
-            internal::requires_index_not_last<I,Transformers...> = 0>
-  void do_pipeline_internal(Item && item, const Pipeline<Transformers...> & pipeline_obj,
-                   OtherTransformers && ... other_transform_ops) const;
+  template <typename Item, typename ... Transformers, std::size_t ... I>
+  void do_pipeline_nested(Item && item, 
+          std::tuple<Transformers...> && transform_ops,
+          std::index_sequence<I...>) const;
 
 };
 
@@ -375,18 +381,9 @@ void sequential_execution::do_pipeline(
 {
   static_assert(!is_consumer<Transformer,Item>,
     "Itermediate pipeline stage cannot be a consumer");
+
   do_pipeline(transform_op(std::forward<Item>(item)), 
       std::forward<OtherTransformers>(other_ops)...);
-}
-
-template <typename Item, typename FarmTransformer,
-          template <typename> class Farm,
-          requires_farm<Farm<FarmTransformer>> = 0>
-void sequential_execution::do_pipeline(
-    Item && item, 
-    const Farm<FarmTransformer> & farm_obj) const
-{
-  farm_obj(std::forward<Item>(item));
 }
 
 template <typename Item, typename FarmTransformer,
@@ -405,21 +402,6 @@ template <typename Item, typename FarmTransformer,
           requires_farm<Farm<FarmTransformer>> = 0>
 void sequential_execution::do_pipeline(
     Item && item, 
-    const Farm<FarmTransformer> & farm_obj,
-    OtherTransformers && ... other_transform_ops) const
-{
-  static_assert(!is_consumer<Farm<FarmTransformer>,Item>,
-    "Itermediate pipeline stage cannot be a consumer");
-  do_pipeline(farm_obj(std::forward<Item>(item)), 
-      std::forward<OtherTransformers>(other_transform_ops)...);
-}
-
-template <typename Item, typename FarmTransformer,
-          template <typename> class Farm,
-          typename... OtherTransformers,
-          requires_farm<Farm<FarmTransformer>> = 0>
-void sequential_execution::do_pipeline(
-    Item && item, 
     Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
 {
@@ -427,21 +409,6 @@ void sequential_execution::do_pipeline(
     "Itermediate pipeline stage cannot be a consumer");
   do_pipeline(farm_obj(std::forward<Item>(item)), 
       std::forward<OtherTransformers>(other_transform_ops)...);
-}
-
-template <typename Item, typename Predicate,
-          template <typename> class Filter,
-          typename ... OtherTransformers,
-          requires_filter<Filter<Predicate>> = 0>
-void sequential_execution::do_pipeline(
-    Item && item, 
-    const Filter<Predicate> & filter_obj,
-    OtherTransformers && ... other_transform_ops) const
-{
-  if (filter_obj(std::forward<Item>(item))) {
-    do_pipeline(std::forward<Item>(item),
-        std::forward<OtherTransformers>(other_transform_ops)...);
-  }
 }
 
 template <typename Item, typename Predicate,
@@ -468,53 +435,28 @@ void sequential_execution::do_pipeline(
     Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const
 {
+  do_pipeline_nested(
+      std::forward<Item>(item),
+      std::tuple_cat(pipeline_obj.transformers(), 
+          std::forward_as_tuple(other_transform_ops...)),
+      std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
+/*
   this->template do_pipeline_internal<0>(
       std::forward<Item>(item),
       std::forward<Pipeline<Transformers...>>(pipeline_obj),
       std::forward<OtherTransformers>(other_transform_ops)...);
+*/
 }
 
-template <typename Item, typename ... Transformers,
-          template <typename...> class Pipeline,
-          typename ... OtherTransformers,
-          requires_pipeline<Pipeline<Transformers...>> = 0>
-void sequential_execution::do_pipeline(
+template <typename Item, typename ... Transformers, std::size_t ... I>
+void sequential_execution::do_pipeline_nested(
     Item && item, 
-    const Pipeline<Transformers...> & pipeline_obj,
-    OtherTransformers && ... other_transform_ops) const
+    std::tuple<Transformers...> && transform_ops,
+    std::index_sequence<I...>) const
 {
-  this->template do_pipeline_internal<0>(
+  do_pipeline(
       std::forward<Item>(item),
-      pipeline_obj,
-      std::forward<OtherTransformers>(other_transform_ops)...);
-}
-
-template <std::size_t I, typename Item, typename ... Transformers,
-          template <typename...> class Pipeline,
-          typename ... OtherTransformers,
-          internal::requires_index_last<I,Transformers...> = 0>
-void sequential_execution::do_pipeline_internal(
-    Item && item, 
-    const Pipeline<Transformers...> & pipeline_obj,
-    OtherTransformers && ... other_transform_ops) const
-{
-  do_pipeline(pipeline_obj.template invoke<I>(item),
-    std::forward<OtherTransformers>(other_transform_ops)...);
-}
-
-template <std::size_t I, typename Item, typename ... Transformers,
-          template <typename...> class Pipeline,
-          typename ... OtherTransformers,
-          internal::requires_index_not_last<I,Transformers...> = 0>
-void sequential_execution::do_pipeline_internal(
-    Item && item, 
-    const Pipeline<Transformers...> & pipeline_obj,
-    OtherTransformers && ... other_transform_ops) const
-{
-  this->template do_pipeline_internal<I+1>(
-      pipeline_obj.template invoke<I>(item),
-      pipeline_obj,
-      std::forward<OtherTransformers>(other_transform_ops)...);
+      std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 
 /// Determine if a type is a sequential execution policy.

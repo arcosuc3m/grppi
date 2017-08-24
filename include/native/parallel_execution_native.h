@@ -442,7 +442,7 @@ private:
   template <typename Queue, typename ... Transformers,
             std::size_t ... I>
   void do_pipeline_nested(
-      Queue && input_queue, 
+      Queue & input_queue, 
       std::tuple<Transformers...> && transform_ops,
       std::index_sequence<I...>) const;
 
@@ -997,10 +997,10 @@ void parallel_execution_native::do_pipeline(
     Queue & input_queue,
     Pipeline<Transformers...> && pipeline_obj) const
 {
-  this->template do_pipeline_nested(
-    input_queue,
-    pipeline_obj.transformers(), 
-    std::make_index_sequence<sizeof...(Transformers)>());
+  do_pipeline_nested(
+      input_queue,
+      pipeline_obj.transformers(), 
+      std::make_index_sequence<sizeof...(Transformers)>());
 }
 
 template <typename Queue, typename ... Transformers,
@@ -1012,22 +1012,22 @@ void parallel_execution_native::do_pipeline(
     Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const
 {
-  this->template do_pipeline_nested(
-    input_queue,
-    std::tuple_cat(pipeline_obj.transformers(), 
-        std::forward_as_tuple(other_transform_ops...)),
-    std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
+  do_pipeline_nested(
+      input_queue,
+      std::tuple_cat(pipeline_obj.transformers(), 
+          std::forward_as_tuple(other_transform_ops...)),
+      std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
 }
 
 template <typename Queue, typename ... Transformers,
           std::size_t ... I>
 void parallel_execution_native::do_pipeline_nested(
-    Queue && input_queue, 
+    Queue & input_queue, 
     std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
 {
   do_pipeline(input_queue,
-    std::forward<Transformers>(std::get<I>(transform_ops))...);
+      std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 
 } // end namespace grppi
