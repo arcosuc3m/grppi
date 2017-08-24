@@ -68,19 +68,15 @@ private:
 namespace internal {
 
 template<typename T>
-struct is_farm {
-  static constexpr bool value = false;
-};
+struct is_farm : std::false_type {};
 
 template<typename T>
-struct is_farm<farm_t<T>> {
-  static constexpr bool value = true;
-};
+struct is_farm<farm_t<T>> : std::true_type {};
 
 } // namespace internal
 
 template <typename T>
-static constexpr bool is_farm = internal::is_farm<T>::value;
+static constexpr bool is_farm = internal::is_farm<std::decay_t<T>>();
 
 template <typename T>
 using requires_farm = typename std::enable_if_t<is_farm<T>, int>;

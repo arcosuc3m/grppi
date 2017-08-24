@@ -56,19 +56,15 @@ private:
 namespace internal {
 
 template<typename T>
-struct is_filter {
-  static constexpr bool value = false;
-};
+struct is_filter : std::false_type {};
 
 template<typename T>
-struct is_filter<filter_t<T>> {
-  static constexpr bool value = true;
-};
+struct is_filter<filter_t<T>> : std::true_type {};
 
 } // namespace internal
 
 template <typename T>
-static constexpr bool is_filter = internal::is_filter<T>::value;
+static constexpr bool is_filter = internal::is_filter<std::decay_t<T>>();
 
 template <typename T>
 using requires_filter = typename std::enable_if_t<is_filter<T>, int>;
