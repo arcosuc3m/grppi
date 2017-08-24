@@ -1,0 +1,21 @@
+grPPI v0.2 - FastFlow backend
+
+- Nell'attesa di direttive su come gestire la libreria FastFlow, ho modificato 
+il CMakeLists.txt principale, aggiungendo le regole di inclusione e compilazione 
+necessarie. FastFlow dovrebbe quindi trovarsi al percorso ${PROJECT_SOURCE_DIR}/fastflow 
+ 
+- al percorso include/ff/ ci sono le interfacce per i pattern fin'ora esaminati, 
+conformi alla nuova struttura di grPPI. non tutte le interfacce funzionano. 
+
+- in 'parallel_execution_ff.h' ho rimosso 
+tutta la parte relativa alla mpmc_queue usata con gli altri backend come canale 
+di comunicazione. 
+
+- i pattern attualmente testati e funzionanti sono Map e Reduce. testati 
+eseguendo gli esempi contenuti in samples/map e samples/reduce. 
+
+TODO:
+- terminare MapReduce
+- lavorare sullo stencil
+- versione iniziale di Farm
+

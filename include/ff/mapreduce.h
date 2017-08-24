@@ -14,6 +14,8 @@
 
 #include <ff/node.hpp>
 #include <ff/parallel_for.hpp>
+#include <ff/pipeline.hpp>
+#include <ff/farm.hpp>
 #include "ff_node_wrap.hpp"
 
 
@@ -23,23 +25,42 @@ template <typename InputIt, typename Transformer, typename Identity, typename Co
 Identity map_reduce ( parallel_execution_ff& ex, InputIt first, InputIt last,
 		Identity identity, Transformer && transform_op, Combiner && combine_op) {
 
-	bool notnested = ff::outer_ff_pattern;
-	ff::outer_ff_pattern=false;
+	size_t total_parfor_size = last-first;
 	auto nw = ex.concurrency_degree();
 
-	ssize_t total_parfor_size = last-first;
-	ff::ParallelForPipeReduce<Identity> pfr(nw, true);
+	ff::ParallelForPipeReduce<std::vector<Identity>> pfr(nw, true);
 
-	pfr.parallel_reduce_idx(0,total_parfor_size,1,total_parfor_size/nw,
-			// Map
-			[&](const long internal_start, const long internal_stop, const int thid) {
-		for (size_t internal_it =internal_start; internal_it < internal_stop; ++internal_it)
-			*(firstOut+internal_it) = transform_op( *(first+internal_it) );
-	},
-			// Reduce
-			[&]( ) {
+	std::vector<Identity> R;
+	R.reserve(nw);
+	Identity vaR;
 
-	});
+	auto Map = [&](const long internal_start, const long internal_stop, const int thid) {
+		std::vector<Identity> partials;
+		partials.reserve(internal_stop - internal_start);
+
+		std::cout << "[MAPREDUCE] map stage" << std::endl;
+
+		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
+			partials[internal_it] = transform_op( *(first+internal_it) );
+
+		ff::ff_node::ff_send_out(&partials);
+	};
+
+	auto Reduce = [&](std::vector<Identity> *p) {
+		const std::vector<Identity> &parts = *p;
+
+		std::cout << "[MAPREDUCE] reduce stage" << std::endl;
+
+		for(size_t i=0; i<parts.size(); ++i)
+			vaR = combine_op( vaR, parts[i] );
+
+	};
+
+	pfr.parallel_reduce_idx(0,total_parfor_size,1,total_parfor_size/nw, Map, Reduce);
+
+	std::cout << "[MAPREDUCE] vaR: " << vaR << std::endl;
+
+	return vaR;
 
 }
 

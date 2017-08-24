@@ -8,7 +8,7 @@
 #ifndef GRPPI_FF_FARM_H
 #define GRPPI_FF_FARM_H
 
-#ifdef GRPPI_FF
+//#ifdef GRPPI_FF
 
 #include "parallel_execution_ff.h"
 
@@ -38,40 +38,73 @@ execution with a generator and a consumer.
 */
 template <typename Generator, typename Consumer>
 void farm(parallel_execution_ff & ex, Generator generate_op,
-          Consumer consume_op) {
+		Consumer consume_op) {
 
-		bool notnested = ff::outer_ff_pattern;
-		ff::outer_ff_pattern = false;
-		typedef typename std::result_of<Generator()>::type::type emitterOutType;
-		typedef typename std::result_of<Consumer(emitterOutType)>::type workerOutType;
-		auto nw = ex.concurrency_degree();
+	bool notnested = ff::outer_ff_pattern;
+	ff::outer_ff_pattern = false;
+	typedef typename std::result_of<Generator()>::type::type emitterOutType;
+	typedef typename std::result_of<Consumer(emitterOutType)>::type workerOutType;
+	auto nw = ex.concurrency_degree();
 
-		std::unique_ptr<ff::ff_node> E = std::make_unique<ff::PMINode<void,emitterOutType,Generator>>(in);
+	std::unique_ptr<ff::ff_node> E = std::make_unique<ff::PMINode<emitterOutType,Generator>>(generate_op);
 
-		std::vector<std::unique_ptr<ff::ff_node>> w;
-		for(int i=0; i<nw; ++i)
-			w.push_back( std::make_unique<ff::PMINode<emitterOutType,void,Consumer> >(taskf) );
+	std::vector<std::unique_ptr<ff::ff_node>> w;
+	for(int i=0; i<nw; ++i)
+		w.push_back( std::make_unique<ff::PMINode<emitterOutType,workerOutType,Consumer> >(consume_op) );
 
-		ff::ff_Farm<> farm( std::move(w), std::move(E) );
+	ff::ff_Farm<> farm( std::move(w), std::move(E) );
 
-		farm.setFixedSize(true);
-		farm.setInputQueueLength(nw*1);
-		farm.setOutputQueueLength(nw*1);
+	farm.setFixedSize(true);
+	farm.setInputQueueLength(nw*1);
+	farm.setOutputQueueLength(nw*1);
 
-		if(notnested) {
-			farm.remove_collector(); // needed to avoid init errors!
-			farm.run_and_wait_end();
+	if(notnested) {
+		farm.remove_collector(); // needed to avoid init errors!
+		farm.run_and_wait_end();
 
-			// check if ff_nodes need to be deleted
-			// in case of nested pattern this don't work - to be fixed with unique_ptr
-			//for(int i=0;i<p.num_threads;++i) delete w[i];
-		}
+		// check if ff_nodes need to be deleted
+		// in case of nested pattern this don't work - to be fixed with unique_ptr
+		//for(int i=0;i<p.num_threads;++i) delete w[i];
+	}
 }
 
 // TODO:
 template <typename Generator, typename Transformer, typename Consumer>
 void farm(parallel_execution_ff & ex, Generator generate_op,
-          Transformer transform_op , Consumer consume_op) {
+		Transformer transform_op , Consumer consume_op) {
+
+	bool notnested = ff::outer_ff_pattern;
+	ff::outer_ff_pattern = false;
+	typedef typename std::result_of<Generator()>::type::type           emitterOutType;
+	typedef typename std::result_of<Consumer(emitterOutType)>::type    consumerOutType;
+	typedef typename std::result_of<Transformer(emitterOutType)>::type transformerOutType;
+	auto nw = ex.concurrency_degree();
+
+	// first stage
+	std::unique_ptr<ff::ff_node> E = std::make_unique<ff::PMINode<emitterOutType,Generator>>(generate_op);
+	// last stage
+	std::unique_ptr<ff::ff_node> C = std::make_unique<ff::PMINode<consumerOutType,Consumer>>(consume_op);
+
+	std::vector<std::unique_ptr<ff::ff_node>> w;
+	for(int i=0; i<nw; ++i)
+		w.push_back( std::make_unique<ff::PMINode<emitterOutType,transformerOutType,Transformer>>(transform_op) );
+
+	ff::ff_Farm<> farm( std::move(w), std::move(E), std::move(C) );
+
+	farm.setFixedSize(true);
+	farm.setInputQueueLength(nw*1);
+	farm.setOutputQueueLength(nw*1);
+
+	if(notnested) {
+		//farm.remove_collector(); // needed to avoid init errors!
+		farm.run_and_wait_end();
+
+		// check if ff_nodes need to be deleted
+		// in case of nested pattern this don't work - to be fixed with unique_ptr
+		//for(int i=0;i<p.num_threads;++i) delete w[i];
+	}
+
+
 
 }
 

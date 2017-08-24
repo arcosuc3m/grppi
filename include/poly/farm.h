@@ -121,7 +121,8 @@ void farm(polymorphic_execution & ex, Generator && generate_op,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, std::forward<Generator>(generate_op), 
       std::forward<Consumer>(consume_op));
 }
@@ -145,7 +146,8 @@ void farm(polymorphic_execution & ex, Generator && generate_op,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, std::forward<Generator>(generate_op), 
       std::forward<Transformer>(transform_op), 
       std::forward<Consumer>(consume_op));

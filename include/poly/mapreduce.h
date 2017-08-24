@@ -94,7 +94,8 @@ Result map_reduce(polymorphic_execution & ex,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, first, last, identity, std::forward<Transformer>(transform_op), 
         std::forward<Combiner>(combine_op));
 }

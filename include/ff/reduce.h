@@ -32,10 +32,15 @@ auto reduce(parallel_execution_ff & ex,
 	Identity vaR = identity;
 	Identity vaR_identity = identity;
 
+	auto final_red = [&](typename std::iterator_traits<InputIt>::value_type a,
+			typename std::iterator_traits<InputIt>::value_type r) {
+		vaR = combine_op(a, r);
+	};
+
 	pfr.parallel_reduce(vaR, vaR_identity, 0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
-			[&](const long internal_it, Identity &vaR) {
+			[&](const long internal_it, typename std::iterator_traits<InputIt>::value_type &vaR) {
 		vaR = combine_op( vaR, *(first+internal_it) );
-	}, combine_op, ex.concurrency_degree());
+	}, final_red, ex.concurrency_degree());
 
 	//std::cout << "[REDUCE_FF] vaR: " << vaR << " identity: " << vaR_identity << std::endl;
 

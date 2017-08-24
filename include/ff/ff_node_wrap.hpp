@@ -95,7 +95,7 @@ struct PMINode<void,TSout,L> : ff_node {
         // FT: according to previous custom implementation:
         // if ret has a value, end is false but its
         // boolean evaluation returns true
-        if( ret.has_value() ) {
+        if( ret ) {
             //std::cout << "EOS\n";
             return EOS;
         }

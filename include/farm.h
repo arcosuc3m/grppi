@@ -27,6 +27,8 @@
 #include "tbb/farm.h"
 #include "poly/farm.h"
 
+#include "ff/farm.h"
+
 #include "common/patterns.h"
 
 namespace grppi {

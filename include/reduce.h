@@ -27,6 +27,8 @@
 #include "tbb/reduce.h"
 #include "poly/reduce.h"
 
+#include "ff/reduce.h"
+
 namespace grppi {
 
 /** 

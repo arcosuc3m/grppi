@@ -27,6 +27,8 @@
 #include "tbb/mapreduce.h"
 #include "poly/mapreduce.h"
 
+#include "ff/mapreduce.h"
+
 namespace grppi {
 
 /**
