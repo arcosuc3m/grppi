@@ -19,6 +19,26 @@
 
 namespace grppi {
 
+/**
+\addtogroup reduce_pattern
+@{
+\addtogroup reduce_pattern_ff FastFlow parallel reduce pattern
+\brief FF parallel implementation of the \ref md_reduce.
+@{
+*/
+
+/**
+\brief Invoke \ref md_reduce with identity value
+on a data sequence with parallel FF execution.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Identity Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Parallel native execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+*/
 template < typename InputIt, typename Identity, typename Combiner>
 auto reduce(parallel_execution_ff & ex,
             InputIt first, InputIt last, 

@@ -8,7 +8,7 @@
 #ifndef GRPPI_FF_FARM_H
 #define GRPPI_FF_FARM_H
 
-//#ifdef GRPPI_FF
+#ifdef GRPPI_FF
 
 #include "parallel_execution_ff.h"
 
@@ -103,9 +103,6 @@ void farm(parallel_execution_ff & ex, Generator generate_op,
 		// in case of nested pattern this don't work - to be fixed with unique_ptr
 		//for(int i=0;i<p.num_threads;++i) delete w[i];
 	}
-
-
-
 }
 
 
