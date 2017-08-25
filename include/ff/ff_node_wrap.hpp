@@ -12,7 +12,7 @@
 #include <ff/node.hpp>
 #include <ff/allocator.hpp>
 
-//#include <optional>
+#include <experimental/optional>
 //#include "../common/common.hpp"
 
 #ifndef FF_ALLOCATOR_IN_USE
@@ -30,17 +30,17 @@ namespace ff {
  * TODO: Discuss actual need of this - note that optional is not supported even by c++14 and GNU 6.3
  * std::optional will be available in C++17, this is a sort of custom preview */
 template <typename T>
-class optional {
+class ff_optional {
     public:
         typedef T type;
         typedef T value_type;
         T elem;
         bool end;
-        optional(): end(true) { }
-        optional(const T& i): elem(i), end(false) { }
+        ff_optional(): end(true) { }
+        ff_optional(const T& i): elem(i), end(false) { }
 
         /* copy assignment operator */
-        optional& operator=(const optional& o) {
+        ff_optional& operator=(const ff_optional& o) {
                  elem = o.elem;
                  end = o.end;
                  return *this;
@@ -95,7 +95,7 @@ struct PMINode<void,TSout,L> : ff_node {
         // FT: according to previous custom implementation:
         // if ret has a value, end is false but its
         // boolean evaluation returns true
-        if( ret ) {
+        if( ret.has_value() ) {
             //std::cout << "EOS\n";
             return EOS;
         }
