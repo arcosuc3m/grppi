@@ -22,46 +22,45 @@
 namespace grppi {
 
 template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
-Identity map_reduce ( parallel_execution_ff& ex, InputIt first, InputIt last,
+Identity map_reduce( parallel_execution_ff& ex, InputIt first, InputIt last,
 		Identity identity, Transformer && transform_op, Combiner && combine_op) {
 
 	size_t total_parfor_size = last-first;
 	auto nw = ex.concurrency_degree();
 
-	ff::ParallelForPipeReduce<std::vector<Identity>> pfr(nw, true);
+	// FT: enable spinwait and spinbarrier- we use the same pattern twice
+	// this constructor does not skip the warm-up phase
+	ff::ParallelForReduce<Identity> pfr(nw, true, true);
 
-	std::vector<Identity> R;
-	R.reserve(nw);
-	Identity vaR;
+	Identity vaR = identity;
+	Identity var_id = identity;
+	std::vector<Identity> partial_outs(total_parfor_size);
 
+	// Map function
 	auto Map = [&](const long internal_start, const long internal_stop, const int thid) {
-		std::vector<Identity> partials;
-		partials.reserve(internal_stop - internal_start);
-
-		std::cout << "[MAPREDUCE] map stage" << std::endl;
-
 		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
-			partials[internal_it] = transform_op( *(first+internal_it) );
-
-		ff::ff_node::ff_send_out(&partials);
+			partial_outs[internal_it] = transform_op(*(first+internal_it));
 	};
 
-	auto Reduce = [&](std::vector<Identity> *p) {
-		const std::vector<Identity> &parts = *p;
-
-		std::cout << "[MAPREDUCE] reduce stage" << std::endl;
-
-		for(size_t i=0; i<parts.size(); ++i)
-			vaR = combine_op( vaR, parts[i] );
+	// Reduce funtion - this is the partial reduce function, executed in parallel
+	auto Reduce = [&](const long internal_it, Identity &vaR) {
+		vaR = combine_op( vaR, partial_outs[internal_it] );
 
 	};
 
-	pfr.parallel_reduce_idx(0,total_parfor_size,1,total_parfor_size/nw, Map, Reduce);
+	// Final reduce - this reduces partial results and is executed sequentially
+	auto final_red = [&](Identity a, Identity b) {
+		vaR = combine_op(a, b);
+	};
 
-	std::cout << "[MAPREDUCE] vaR: " << vaR << std::endl;
+	// FT: consider implementing map+reduce as pipeline stages. could it be more efficient?
+	pfr.parallel_for_idx(0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
+			Map, ex.concurrency_degree() );
+
+	pfr.parallel_reduce(vaR, var_id, 0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
+			Reduce, final_red, ex.concurrency_degree());
 
 	return vaR;
-
 }
 
 
