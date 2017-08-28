@@ -21,12 +21,6 @@
 #ifndef GRPPI_STREAM_REDUCE_H
 #define GRPPI_STREAM_REDUCE_H
 
-#include "seq/stream_reduce.h"
-#include "native/stream_reduce.h"
-#include "omp/stream_reduce.h"
-#include "tbb/stream_reduce.h"
-#include "poly/stream_reduce.h"
-
 #include "common/patterns.h"
 
 namespace grppi {
@@ -51,13 +45,12 @@ that can be composed in other streaming patterns.
 \param combine_op Combination operation.
 
 */
-template <typename Execution, typename Identity, typename Combiner>
-auto stream_reduce(Execution & ex, 
-                   int window_size, int offset, 
+template <typename Identity, typename Combiner>
+auto stream_reduce(int window_size, int offset, 
                    Identity identity, 
                    Combiner && combine_op)
 {
-   return reduction_info<Execution, Combiner, Identity>(ex, 
+  return reduce_t<Combiner,Identity>(
        window_size, offset, identity, 
        std::forward<Combiner>(combine_op));
 }

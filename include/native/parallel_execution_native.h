@@ -403,6 +403,24 @@ private:
       Filter<Predicate> && farm_obj,
       OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Queue, typename Combiner, typename Identity,
+            template <typename C, typename I> class Reduce,
+            typename ... OtherTransformers,
+            requires_reduce<Reduce<Combiner,Identity>> = 0>
+  void do_pipeline(Queue && input_queue, Reduce<Combiner,Identity> & reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(reduce_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  };
+
+  template <typename Queue, typename Combiner, typename Identity,
+            template <typename C, typename I> class Reduce,
+            typename ... OtherTransformers,
+            requires_reduce<Reduce<Combiner,Identity>> = 0>
+  void do_pipeline(Queue && input_queue, Reduce<Combiner,Identity> && reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
   template <typename Queue, typename ... Transformers,
             template <typename...> class Pipeline,
             requires_pipeline<Pipeline<Transformers...>> = 0>
@@ -426,7 +444,6 @@ private:
       Pipeline<Transformers...> & pipeline_obj,
       OtherTransformers && ... other_transform_ops) const
   {
-    std::cerr << "do_pipeline(q,const pipeline, other...)\n";
     do_pipeline(input_queue, std::move(pipeline_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
@@ -988,6 +1005,44 @@ void parallel_execution_native::do_pipeline(
     do_pipeline(filter_queue, forward<OtherTransformers>(other_transform_ops)...);
     filter_thread.join();
   }
+}
+
+template <typename Queue, typename Combiner, typename Identity,
+          template <typename C, typename I> class Reduce,
+          typename ... OtherTransformers,
+          requires_reduce<Reduce<Combiner,Identity>> = 0>
+void parallel_execution_native::do_pipeline(
+    Queue && input_queue, 
+    Reduce<Combiner,Identity> && reduce_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename decay_t<Queue>::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+  using output_item_value_type = optional<decay_t<Identity>>;
+  using output_item_type = pair<output_item_value_type,long>;
+  auto output_queue = make_queue<output_item_type>();
+
+  auto reduce_task = [&,this]() {
+    auto manager = thread_manager();
+    auto item{input_queue.pop()};
+    int order = 0;
+    while (item.first) {
+      reduce_obj.add_item(std::forward<Identity>(*item.first));
+      item = input_queue.pop();
+      if (reduce_obj.reduction_needed()) {
+        constexpr sequential_execution seq;
+        auto red = reduce_obj.reduce_window(seq);
+        output_queue.push(make_pair(red, order++));
+      }
+    }
+    output_queue.push(make_pair(output_item_value_type{}, -1));
+  };
+  thread reduce_thread{reduce_task};
+  do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
+  reduce_thread.join();
 }
 
 template <typename Queue, typename ... Transformers,

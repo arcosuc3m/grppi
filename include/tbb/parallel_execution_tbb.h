@@ -298,6 +298,24 @@ private:
   auto make_filter(Filter<Predicate> && filter_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Input, typename Combiner, typename Identity,
+            template <typename C, typename I> class Reduce,
+            typename ... OtherTransformers,
+            requires_reduce<Reduce<Combiner,Identity>> = 0>
+  auto make_filter(Reduce<Combiner,Identity> & reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    return this->template make_filter<Input>(std::move(reduce_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  };
+
+  template <typename Input, typename Combiner, typename Identity,
+            template <typename C, typename I> class Reduce,
+            typename ... OtherTransformers,
+            requires_reduce<Reduce<Combiner,Identity>> = 0>
+  auto make_filter(Reduce<Combiner,Identity> && reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
   template <typename Input, typename ... Transformers,
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
@@ -717,6 +735,37 @@ auto parallel_execution_tbb::make_filter(
       [&](input_type item) -> input_type {
         if (item && filter_obj(*item)) return item;
         else return {};
+      })
+    &
+      this->template make_filter<input_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+template <typename Input, typename Combiner, typename Identity,
+          template <typename C, typename I> class Reduce,
+          typename ... OtherTransformers,
+          requires_reduce<Reduce<Combiner,Identity>> = 0>
+auto parallel_execution_tbb::make_filter(
+    Reduce<Combiner,Identity> && reduce_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input;
+  using input_type = optional<input_value_type>;
+
+  std::atomic<long int> order{0};
+  return tbb::make_filter<input_type, input_type>(
+      tbb::filter::serial,
+      [&, it=std::vector<input_value_type>(), rem=0](input_type item) -> input_type {
+        if (!item) return {};
+        reduce_obj.add_item(std::forward<Identity>(*item));
+        if (reduce_obj.reduction_needed()) {
+            constexpr sequential_execution seq;
+            return reduce_obj.reduce_window(seq);
+        }
+        return {};
       })
     &
       this->template make_filter<input_value_type>(

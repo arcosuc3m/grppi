@@ -237,6 +237,25 @@ private:
   void do_pipeline(Item && item, Filter<Predicate> && filter_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Item, typename Combiner, typename Identity,
+            template <typename C, typename I> class Reduce,
+            typename ... OtherTransformers,
+            requires_reduce<Reduce<Combiner,Identity>> = 0>
+  void do_pipeline(Item && item, Reduce<Combiner,Identity> & reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(std::forward<Item>(item), std::move(reduce_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  };
+    
+
+  template <typename Item, typename Combiner, typename Identity,
+            template <typename C, typename I> class Reduce,
+            typename ... OtherTransformers,
+            requires_reduce<Reduce<Combiner,Identity>> = 0>
+  void do_pipeline(Item && item, Reduce<Combiner,Identity> && reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
   template <typename Item, typename ... Transformers,
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
@@ -426,6 +445,23 @@ void sequential_execution::do_pipeline(
   }
 }
 
+template <typename Item, typename Combiner, typename Identity,
+          template <typename C, typename I> class Reduce,
+          typename ... OtherTransformers,
+          requires_reduce<Reduce<Combiner,Identity>> = 0>
+void sequential_execution::do_pipeline(
+    Item && item, 
+    Reduce<Combiner,Identity> && reduce_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  reduce_obj.add_item(std::forward<Identity>(item));
+  if (reduce_obj.reduction_needed()) {
+    auto red = reduce_obj.reduce_window(*this);
+    do_pipeline(red,
+        std::forward<OtherTransformers...>(other_transform_ops)...);
+  }
+}
+
 template <typename Item, typename ... Transformers,
           template <typename...> class Pipeline,
           typename ... OtherTransformers,
@@ -440,12 +476,6 @@ void sequential_execution::do_pipeline(
       std::tuple_cat(pipeline_obj.transformers(), 
           std::forward_as_tuple(other_transform_ops...)),
       std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
-/*
-  this->template do_pipeline_internal<0>(
-      std::forward<Item>(item),
-      std::forward<Pipeline<Transformers...>>(pipeline_obj),
-      std::forward<OtherTransformers>(other_transform_ops)...);
-*/
 }
 
 template <typename Item, typename ... Transformers, std::size_t ... I>

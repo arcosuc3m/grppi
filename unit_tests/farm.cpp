@@ -456,9 +456,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-//TYPED_TEST_CASE(farm_test, executions);
-using executions_tmp = ::testing::Types<sequential_execution>;
-TYPED_TEST_CASE(farm_test, executions_tmp);
+TYPED_TEST_CASE(farm_test, executions);
 
 TYPED_TEST(farm_test, static_empty)
 {
