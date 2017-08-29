@@ -51,8 +51,7 @@ Identity map_reduce( parallel_execution_ff& ex, InputIt first, InputIt last,
 	size_t total_parfor_size = last-first;
 	auto nw = ex.concurrency_degree();
 
-	// FT: enable spinwait and spinbarrier- we use the same pattern twice
-	// this constructor does not skip the warm-up phase
+	// FT: enable spinwait and spinbarrier
 	ff::ParallelForReduce<Identity> pfr(nw, true, true);
 
 	Identity vaR = identity;

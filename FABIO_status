@@ -11,7 +11,7 @@ al percorso "${PROJECT_SOURCE_DIR}/fastflow" (vedere 'CMakeLists.txt').
  
 - al percorso "${PROJECT_SOURCE_DIR}/include/ff/" ci sono le interfacce per i 
 pattern fin'ora esaminati, conformi alla nuova struttura di grPPI v0.2. i pattern 
-stream parallelism (Farm e Pipeline) non funzionano.
+stream parallelism (Farm e Pipeline, etc.) non funzionano ancora.
 
 - nel file 'parallel_execution_ff.h' ho rimosso tutta la parte relativa alla 
 'mpmc_queue', usata con gli altri backend come canale di comunicazione. 
@@ -22,7 +22,8 @@ rispettive implementazioni polimorfiche.
 - i pattern attualmente testati e funzionanti sono: 
     . Map, 
     . Reduce 
-    . Map+Reduce. 
+    . Map+Reduce,
+    . Stencil. 
 Sono stati compilati con GNU g++ 6.3.0, eseguendo gli esempi 
 contenuti in "${PROJECT_SOURCE_DIR}/samples/", con eventuali modifiche per 
 riscontri di correttezza. Non ho ancora eseguito l'intera test-suite contenuta 
@@ -30,7 +31,6 @@ in "${PROJECT_SOURCE_DIR}/unit_tests/"
 
 
 ## TODO: 
-- Stencil
-- testare Farm e annidamenti
-- Pipeline
+- sistemare Farm e Pipeline
+- nesting
 

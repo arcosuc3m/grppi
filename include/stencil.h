@@ -27,6 +27,8 @@
 #include "tbb/stencil.h"
 #include "poly/stencil.h"
 
+#include "ff/stencil.h"
+
 namespace grppi {
 
 /**

@@ -134,7 +134,8 @@ void stencil(polymorphic_execution & ex,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, first, last, first_out, 
       std::forward<StencilTransformer>(transform_op),
       std::forward<Neighbourhood>(neighbour_op));
@@ -167,7 +168,8 @@ void stencil(polymorphic_execution & ex,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, first, last, first_out, 
       std::forward<StencilTransformer>(transform_op), 
       std::forward<Neighbourhood>(neighbour_op), 

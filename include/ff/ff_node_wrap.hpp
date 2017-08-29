@@ -48,6 +48,7 @@ class ff_optional {
 
         T& value(){ return elem; }
 
+        // true if object contains a value
         constexpr explicit operator bool() const {
             return !end;
         }
@@ -84,18 +85,16 @@ struct PMINode<void,TSout,L> : ff_node {
     L callable;
     PMINode(L const &lf):callable(lf) {};
     inline void * svc(void *) {
-        // grppi::optional<TSout> ret;
-    	optional<TSout> ret;
+        // ff::optional<TSout> ret;
+    	std::experimental::optional<TSout> ret;
         void * outslot = FF_MALLOC(sizeof(TSout));
         TSout * out = new (outslot) TSout();
         ret = std::move(callable());
         //*out = ret.elem;
-        *out = ret;
+        *out = ret.value_or(nullptr);
 
-        // FT: according to previous custom implementation:
-        // if ret has a value, end is false but its
-        // boolean evaluation returns true
-        if( ret.has_value() ) {
+        // if( ret.has_value() ) { -- C++17
+        if( !ret ) { // -- C++14
             //std::cout << "EOS\n";
             return EOS;
         }
