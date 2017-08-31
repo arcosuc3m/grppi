@@ -1139,6 +1139,7 @@ void parallel_execution_native::do_pipeline(
     Iteration<Transformer,Predicate> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
 {
+  static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
 
 

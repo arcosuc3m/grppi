@@ -520,6 +520,7 @@ void sequential_execution::do_pipeline(
     Iteration<Transformer,Predicate> && iteration_obj, 
     OtherTransformers && ... other_transform_ops) const
 {
+  static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
 
 template <typename Item, typename ... Transformers,

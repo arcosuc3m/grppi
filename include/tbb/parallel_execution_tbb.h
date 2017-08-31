@@ -838,19 +838,7 @@ auto parallel_execution_tbb::make_filter(
     Iteration<Transformer,Predicate> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
 {
-  using namespace std;
-  using namespace experimental;
-
-  using input_value_type = Input;
-  using input_type = optional<input_value_type>;
-
-  return tbb::make_filter<input_type, input_type>(
-      tbb::filter::serial,
-      [&](input_type item) -> input_type {
-      })
-    &
-      this->template make_filter<input_value_type>(
-          std::forward<OtherTransformers>(other_transform_ops)...);
+  static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
 
 

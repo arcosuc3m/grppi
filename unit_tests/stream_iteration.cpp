@@ -25,6 +25,7 @@
 #include "farm.h"
 #include "pipeline.h"
 #include "stream_iteration.h"
+#include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
@@ -156,11 +157,6 @@ public:
   }
 };
 
-using executions = ::testing::Types<
-  grppi::sequential_execution,
-  grppi::parallel_execution_native
->;
-
 TYPED_TEST_CASE(stream_iteration_test, executions);
 
 TYPED_TEST(stream_iteration_test, static_no_composed)
@@ -177,6 +173,7 @@ TYPED_TEST(stream_iteration_test, poly_no_composed)
   this->check_no_composed();
 }
 
+/*
 TYPED_TEST(stream_iteration_test, static_composed_pipeline)
 {
   this->setup_composed_pipeline();
@@ -192,7 +189,6 @@ TYPED_TEST(stream_iteration_test, poly_composed_pipeline)
 
 }
 
-/*
 TYPED_TEST(stream_iteration_test, static_composed_farm)
 {
   this->setup_composed_farm();
