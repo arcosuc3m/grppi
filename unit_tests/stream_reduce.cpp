@@ -28,7 +28,6 @@
 
 #include "supported_executions.h"
 
-
 using namespace std;
 using namespace grppi;
 template <typename T>

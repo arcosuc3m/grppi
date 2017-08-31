@@ -421,6 +421,35 @@ private:
   void do_pipeline(Queue && input_queue, Reduce<Combiner,Identity> && reduce_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Queue, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_no_pattern<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> & iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(iteration_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_no_pattern<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_pipeline<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+
   template <typename Queue, typename ... Transformers,
             template <typename...> class Pipeline,
             requires_pipeline<Pipeline<Transformers...>> = 0>
@@ -1044,6 +1073,74 @@ void parallel_execution_native::do_pipeline(
   do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
   reduce_thread.join();
 }
+
+template <typename Queue, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> =0,
+          requires_no_pattern<Transformer> =0>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue, 
+    Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename decay_t<Queue>::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+  auto output_queue = make_queue<input_item_type>();
+
+  auto iteration_task = [&]() {
+    for (;;) {
+      auto item = input_queue.pop();
+      if (!item.first) break;
+      std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
+      auto value = iteration_obj.transform(*item.first);
+      auto new_item = input_item_type{value,item.second};
+      if (iteration_obj.predicate(value)) {
+        std::cerr << "Sending to output"
+            << *new_item.first << " , " << new_item.second << ">\n";
+        output_queue.push(new_item);
+      }
+      else {
+        std::cerr << "Sending to input"
+            << *new_item.first << " , " << new_item.second << ">\n";
+        input_queue.push(new_item);
+      }
+    }
+    while (!input_queue.is_empty()) {
+      auto item = input_queue.pop();
+      std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
+      auto value = iteration_obj.transform(*item.first);
+      auto new_item = input_item_type{value,item.second};
+      if (iteration_obj.predicate(value)) {
+        output_queue.push(new_item);
+      }
+      else {
+        input_queue.push(new_item);
+      }
+    }
+    output_queue.push(input_item_type{{},-1});
+  };
+
+  thread iteration_thread{iteration_task};
+  do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
+  iteration_thread.join();
+}
+
+template <typename Queue, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> =0,
+          requires_pipeline<Transformer> =0>
+void parallel_execution_native::do_pipeline(
+    Queue & input_queue, 
+    Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+}
+
 
 template <typename Queue, typename ... Transformers,
           template <typename...> class Pipeline,

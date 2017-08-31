@@ -534,14 +534,14 @@ TYPED_TEST(farm_test, static_single_piecewise)
   this->run_single_piecewise(this->execution_);
   this->check_single();
 }
-/*
+
 TYPED_TEST(farm_test, poly_single_piecewise)
 {
   this->setup_single();
   this->run_single_piecewise(this->poly_execution_);
   this->check_single();
 }
-*/
+
 TYPED_TEST(farm_test, static_single_sink)
 {
   this->setup_single_sink();

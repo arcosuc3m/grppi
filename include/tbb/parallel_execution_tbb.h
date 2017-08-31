@@ -316,6 +316,34 @@ private:
   auto make_filter(Reduce<Combiner,Identity> && reduce_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Input, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_no_pattern<Transformer> =0>
+  auto make_filter(Iteration<Transformer,Predicate> & iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    return this->template make_filter<Input>(std::move(iteration_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Input, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_no_pattern<Transformer> =0>
+  auto make_filter(Iteration<Transformer,Predicate> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Input, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_pipeline<Transformer> =0>
+  auto make_filter(Iteration<Transformer,Predicate> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
   template <typename Input, typename ... Transformers,
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
@@ -771,6 +799,61 @@ auto parallel_execution_tbb::make_filter(
       this->template make_filter<input_value_type>(
           std::forward<OtherTransformers>(other_transform_ops)...);
 }
+
+template <typename Input, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> =0,
+          requires_no_pattern<Transformer> =0>
+auto parallel_execution_tbb::make_filter(
+    Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input;
+  using input_type = optional<input_value_type>;
+
+  return tbb::make_filter<input_type, input_type>(
+      tbb::filter::serial,
+      [&](input_type item) -> input_type {
+        if (!item) return {};
+        do {
+          item = iteration_obj.transform(*item);
+        } while (!iteration_obj.predicate(*item));
+        return item;
+      })
+    &
+      this->template make_filter<input_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+template <typename Input, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> =0,
+          requires_pipeline<Transformer> =0>
+auto parallel_execution_tbb::make_filter(
+    Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_value_type = Input;
+  using input_type = optional<input_value_type>;
+
+  return tbb::make_filter<input_type, input_type>(
+      tbb::filter::serial,
+      [&](input_type item) -> input_type {
+      })
+    &
+      this->template make_filter<input_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+
 
 template <typename Input, typename ... Transformers,
           template <typename...> class Pipeline,

@@ -118,7 +118,63 @@ public:
     EXPECT_EQ(6, invocations_init); 
     EXPECT_EQ(5, invocations_last); 
     EXPECT_EQ(5, invocations_intermediate);
-    EXPECT_EQ(30, this->out);
+    EXPECT_EQ(30, out);
+  }
+
+  void setup_composed_last() {
+    counter = 5;
+    out = 0;
+  }
+
+  template <typename E>
+  void run_composed_last(const E & e) {
+    grppi::pipeline(e,
+      [this,i=0,max=counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (++i<=max) return i;
+        else return {};
+      },
+      grppi::pipeline(
+        [this](int x) {
+          std::cerr << "squaring " << x << std::endl;
+          invocations_intermediate++;
+          std::cerr << "Incrementing\n";
+          return x*x;
+        },
+        [this](int x) {
+          invocations_last++;
+          out +=x;
+        }
+      ));
+  }
+
+  template <typename E>
+  void run_composed_last_piecewise(const E & e) {
+    auto inner = grppi::pipeline(
+        [this](int x) {
+          invocations_intermediate++;
+          return x*x;
+        },
+        [this](int x) {
+          invocations_last++;
+          out +=x;
+        }
+    );
+    grppi::pipeline(e,
+      [this,i=0,max=counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (++i<=max) return i;
+        else return {};
+      },
+      inner);
+  }
+
+
+  void check_composed_last() {
+    EXPECT_EQ(6, invocations_init); 
+    EXPECT_EQ(5, invocations_last); 
+    EXPECT_EQ(5, invocations_intermediate);
+    EXPECT_EQ(55, out);
   }
 
   void setup_composed() {
@@ -225,6 +281,20 @@ TYPED_TEST(pipeline_test, poly_three_stages)
   this->setup_three_stages();
   this->run_three_stages(this->poly_execution_);
   this->check_three_stages();
+}
+
+TYPED_TEST(pipeline_test, static_composed_last)
+{
+  this->setup_composed_last();
+  this->run_composed_last(this->execution_);
+  this->check_composed_last();
+}
+
+TYPED_TEST(pipeline_test, static_composed_piecewise_last)
+{
+  this->setup_composed_last();
+  this->run_composed_last_piecewise(this->execution_);
+  this->check_composed_last();
 }
 
 TYPED_TEST(pipeline_test, static_composed)

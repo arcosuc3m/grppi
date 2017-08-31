@@ -27,6 +27,7 @@
 #include "filter_pattern.h"
 #include "pipeline_pattern.h"
 #include "reduce_pattern.h"
+#include "iteration_pattern.h"
 
 namespace grppi{
 
@@ -77,7 +78,8 @@ constexpr bool is_no_pattern =
   !is_farm<T> && 
   !is_filter<T> && 
   !is_pipeline<T> &&
-  !is_reduce<T>;
+  !is_reduce<T> &&
+  !is_iteration<T>;
 
 template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;

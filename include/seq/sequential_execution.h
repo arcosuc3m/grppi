@@ -256,6 +256,36 @@ private:
   void do_pipeline(Item && item, Reduce<Combiner,Identity> && reduce_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Item, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> = 0>
+  void do_pipeline(Item && item, 
+          Iteration<Transformer,Predicate> & iteration_obj, 
+          OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(std::forward<Item>(item), std::move(iteration_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Item, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ...OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> = 0,
+            requires_no_pattern<Transformer> = 0>
+  void do_pipeline(Item && item, 
+          Iteration<Transformer,Predicate> && iteration_obj, 
+          OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Item, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ...OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> = 0,
+            requires_pipeline<Transformer> = 0>
+  void do_pipeline(Item && item, 
+          Iteration<Transformer,Predicate> && iteration_obj, 
+          OtherTransformers && ... other_transform_ops) const;
+
   template <typename Item, typename ... Transformers,
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
@@ -460,6 +490,36 @@ void sequential_execution::do_pipeline(
     do_pipeline(red,
         std::forward<OtherTransformers...>(other_transform_ops)...);
   }
+}
+
+template <typename Item, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> = 0,
+          requires_no_pattern<Transformer> = 0>
+void sequential_execution::do_pipeline(
+    Item && item, 
+    Iteration<Transformer,Predicate> && iteration_obj, 
+    OtherTransformers && ... other_transform_ops) const
+{
+  auto new_item = iteration_obj.transform(std::forward<Item>(item));
+  while (!iteration_obj.predicate(new_item)) {
+    new_item = iteration_obj.transform(new_item);
+  }
+  do_pipeline(new_item,
+      std::forward<OtherTransformers...>(other_transform_ops)...);
+}
+
+template <typename Item, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> = 0,
+          requires_pipeline<Transformer> = 0>
+void sequential_execution::do_pipeline(
+    Item && item, 
+    Iteration<Transformer,Predicate> && iteration_obj, 
+    OtherTransformers && ... other_transform_ops) const
+{
 }
 
 template <typename Item, typename ... Transformers,

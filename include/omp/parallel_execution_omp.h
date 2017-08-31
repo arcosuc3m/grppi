@@ -334,13 +334,41 @@ private:
   {
     do_pipeline(input_queue, std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
 
   template <typename Queue, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
             typename ... OtherTransformers,
             requires_reduce<Reduce<Combiner,Identity>> = 0>
   void do_pipeline(Queue && input_queue, Reduce<Combiner,Identity> && reduce_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_no_pattern<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> & iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(iteration_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_no_pattern<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename Transformer, typename Predicate,
+            template <typename T, typename P> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration<Iteration<Transformer,Predicate>> =0,
+            requires_pipeline<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Queue, typename ... Transformers,
@@ -1004,6 +1032,30 @@ void parallel_execution_omp::do_pipeline(
   do_pipeline(output_queue, 
       std::forward<OtherTransformers>(other_transform_ops)...);
   #pragma omp taskwait
+}
+
+template <typename Queue, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> =0,
+          requires_no_pattern<Transformer> =0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+}
+
+template <typename Queue, typename Transformer, typename Predicate,
+          template <typename T, typename P> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration<Iteration<Transformer,Predicate>> =0,
+          requires_pipeline<Transformer> =0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue, 
+    Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
 }
 
 template <typename Queue, typename ... Transformers,

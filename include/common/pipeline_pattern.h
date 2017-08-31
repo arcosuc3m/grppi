@@ -91,6 +91,27 @@ static constexpr bool is_pipeline = internal::is_pipeline<std::decay_t<T>>();
 template <typename T>
 using requires_pipeline = typename std::enable_if_t<is_pipeline<T>, int>;
 
+namespace internal {
+
+template <typename I, typename T>
+struct output_value_type {
+  using type = std::decay_t<typename std::result_of<T(I)>::type>;
+};
+
+template <typename I, typename T, typename ... U>
+struct output_value_type<I,pipeline_t<T,U...>> {
+  using first_result = std::decay_t<typename std::result_of<T(I)>::type>;
+  using type = std::conditional_t<sizeof...(U)==0,
+    first_result,
+    typename output_value_type<first_result,U...>::type
+  >;
+};
+
+}
+
+template <typename I, typename T>
+using output_value_type = typename internal::output_value_type<I,T>::type;
+
 }
 
 #endif
