@@ -23,11 +23,11 @@
 
 #include "sequential_execution.h"
 
-#include "../common/pack_traits.h"
-#include "../common/patterns.h"
+#include "../common/callable_traits.h"
 
 namespace grppi {
 
+/*
 template <typename Input, int Index, typename ... MoreTransformers,
           internal::requires_index_last<Index,MoreTransformers...> = 0>
 auto composed_pipeline(Input in, 
@@ -110,6 +110,7 @@ void pipeline_impl(sequential_execution & ex, Item && item,
   pipeline_impl(ex, transform_op(item), 
       std::forward<MoreTransformers>(more_transform_ops)...);
 }
+*/
 
 /**
 \addtogroup pipeline_pattern
@@ -128,17 +129,13 @@ with sequential execution.
 \param generate_op Generator operation.
 \param trasnform_ops Transformation operations for each stage.
 */
-template <typename Generator, 
-          typename ... Transformers,
-          typename = typename std::result_of<Generator()>::type> // TODO: Intention?
-void pipeline(sequential_execution & ex, Generator && generator_op, 
+template <typename Generator, typename ... Transformers,
+          requires_generator<Generator> = 0>
+void pipeline(const sequential_execution & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
-  for (;;) {
-    auto item = generator_op();
-    if(!item) break;
-    pipeline_impl(ex, *item, std::forward<Transformers>(transform_ops) ... );
-  }
+  ex.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
 }
 
 /**

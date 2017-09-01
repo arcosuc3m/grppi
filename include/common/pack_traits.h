@@ -27,7 +27,7 @@ namespace internal {
 
 template <int Index, typename ... T>
 using requires_index_last =
-  std::enable_if_t<(Index == sizeof...(T) - 1), int>;
+  std::enable_if_t<(Index == (sizeof...(T) - 1)), int>;
 
 template <int Index, typename ... T>
 using requires_index_not_last =

@@ -21,9 +21,7 @@
 #ifndef GRPPI_STREAM_ITERATION_H
 #define GRPPI_STREAM_ITERATION_H
 
-#include "seq/stream_iteration.h"
-#include "native/stream_iteration.h"
-#include "poly/stream_iteration.h"
+#include "common/iteration_pattern.h"
 
 namespace grppi {
 
@@ -34,6 +32,16 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_stream-iteration.
 @}
 */
+
+template <typename Transformer, typename Predicate>
+auto repeat_until(
+    Transformer && transform_op,
+    Predicate && predicate_op)
+{
+  return iteration_t<Transformer,Predicate>(
+      std::forward<Transformer>(transform_op),
+      std::forward<Predicate>(predicate_op));
+}
 
 }
 

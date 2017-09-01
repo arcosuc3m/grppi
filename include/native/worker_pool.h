@@ -18,7 +18,7 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_NATIVE_WOKER_POOL_H
+#ifndef GRPPI_NATIVE_WORKER_POOL_H
 #define GRPPI_NATIVE_WORKER_POOL_H
 
 #include <thread>
@@ -44,11 +44,13 @@ class worker_pool {
     \brief Destructs the worker pool after joining with all threads in the 
     pool.
     */
-    ~worker_pool() noexcept { wait(); }
+    ~worker_pool() noexcept { this->wait(); }
+
+    worker_pool(worker_pool &&) noexcept = default;
+    worker_pool & operator=(worker_pool &&) noexcept = default;
     
     /**
     \brief Launch a function in the pool.
-    \pre Number of running threads must be lower than number of pool threads.
     \tparam E Execution policy type.
     \tparam F Type for launched function.
     \tparam Args Type for launched function arguments.
@@ -57,15 +59,21 @@ class worker_pool {
     \param args Arguments for launched function.
     */
     template <typename E, typename F, typename ... Args>
-    void launch(E & ex, F f, Args && ... args) {
-      // TODO: Precondition
-      if (num_threads_ <= workers_.size()) 
-        throw std::runtime_error{"Too many threads in worker"};
-
+    void launch(const E & ex, F f, Args && ... args) {
       workers_.emplace_back([=,&ex]() {
         auto manager = ex.thread_manager();
         f(args...);
       });
+    }
+
+    template <typename E, typename F, typename ... Args>
+    void launch_tasks(const E & ex, F && f, Args && ... args) {
+      for (int i=0; i<num_threads_; ++i) {
+        workers_.emplace_back([=,&ex]() {
+          auto manager = ex.thread_manager();
+          f(args...);
+        });
+      }
     }
 
     /**

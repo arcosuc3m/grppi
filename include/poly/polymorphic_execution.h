@@ -80,7 +80,7 @@ public:
 
   // Check if the current execution is of type E
   template <typename E>
-  bool is_execution() const {
+  bool is_execution() const noexcept {
     if (!has_execution()) return false;
     return typeid(E) == *execution_type_;
   }
@@ -88,7 +88,7 @@ public:
   /// Get the execution pointer for a given type.
   template <typename E, 
             requires_execution_policy<E> = 0>
-  E * execution_ptr() {
+  E * execution_ptr() const noexcept {
     if (!has_execution()) return nullptr;
     if (*execution_type_ != typeid(E)) return nullptr;
     return static_cast<E*>(execution_.get());
@@ -97,7 +97,7 @@ public:
   /// Get the execution pointer for a given type.
   template <typename E, 
             requires_not_execution_policy<E> = 0>
-  E * execution_ptr() {
+  E * execution_ptr() const noexcept {
     return nullptr;
   }
 

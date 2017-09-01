@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.3
+* @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -17,42 +17,41 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
+#include <experimental/optional>
 
-#ifndef GRPPI_FARM_H
-#define GRPPI_FARM_H
+#include <gtest/gtest.h>
 
-#include "common/farm_pattern.h"
+#include "common/patterns.h"
+#include "farm.h"
+#include "stream_filter.h"
+#include "pipeline.h"
 
-namespace grppi {
+#include <iostream>
 
-/** 
-\addtogroup stream_patterns
-@{
-\defgroup farm_pattern Farm pattern
-\brief Interface for applyinng the \ref md_farm.
-@{
-*/
+using namespace std;
+using namespace grppi;
 
-/**
-\brief Invoke \ref md_farm on a data stream 
-that can be composed in other streaming patterns.
-\tparam Execution Execution policy type.
-\tparam Transformer Callable type for the transformation operation.
-\param ex Execution policy object.
-\param transform_op Transformer operation.
-*/
-template <typename Transformer>
-auto farm(int ntasks, Transformer && transform_op)
+TEST(patterns, is_farm)
 {
-   return farm_t<Transformer>{ntasks,
-       std::forward<Transformer>(transform_op)};
+  auto f = [](int x) { return x; };
+  auto pattern = farm(4,f);
+  EXPECT_TRUE(is_farm<decltype(pattern)>);
+  EXPECT_TRUE(is_farm<decltype(pattern)&>);
 }
 
-/**
-@}
-@}
-*/
-
+TEST(patterns, is_filter)
+{
+  auto f = [](int x) { return x; };
+  auto pattern = keep(f);
+  EXPECT_TRUE(is_filter<decltype(pattern)>);
+  EXPECT_TRUE(is_filter<decltype(pattern)&>);
 }
 
-#endif
+TEST(patterns, is_pipeline)
+{
+  auto f = [](int x) { return x; };
+  auto g = [](int x) { return x+1; };
+  auto pattern = pipeline(f,g);
+  EXPECT_TRUE(is_pipeline<decltype(pattern)>);
+  EXPECT_TRUE(is_pipeline<decltype(pattern)&>);
+}

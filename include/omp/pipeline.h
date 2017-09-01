@@ -29,6 +29,7 @@
 
 namespace grppi {
 
+/*
 //Last stage
 template <typename InQueue, typename Consumer>
 void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue, 
@@ -380,6 +381,7 @@ void pipeline_impl(parallel_execution_omp & ex, InQueue & input_queue,
   pipeline_impl(ex, output_queue, 
       forward<MoreTransformers>(more_transform_ops)...);
 }
+*/
 
 /**
 \addtogroup pipeline_pattern
@@ -400,10 +402,13 @@ with OpenMP parallel execution.
 \remark Generator shall be a zero argument callable type.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_arguments<Generator> = 0>
-void pipeline(parallel_execution_omp & ex, Generator && generate_op, 
+          requires_generator<Generator> = 0>
+void pipeline(const parallel_execution_omp & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
+  ex.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
+/*
   using namespace std;
 
   using result_type = typename result_of<Generator()>::type;
@@ -427,6 +432,7 @@ void pipeline(parallel_execution_omp & ex, Generator && generate_op,
       #pragma omp taskwait
     }
   }
+*/
 }
 
 /**

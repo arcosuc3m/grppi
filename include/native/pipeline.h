@@ -22,14 +22,11 @@
 #define GRPPI_NATIVE_PIPELINE_H
 
 #include "parallel_execution_native.h"
-#include "../common/pack_traits.h"
 #include "../common/callable_traits.h"
-
-#include <thread>
-#include <experimental/optional>
 
 namespace grppi{
 
+/*
 template <typename InQueue, typename OutQueue, int Index, 
           typename ... MoreTransformers,
           internal::requires_index_last<Index,MoreTransformers...> = 0>
@@ -476,6 +473,7 @@ void pipeline_impl(parallel_execution_native & ex, InQueue & input_queue,
       forward<MoreTransformers>(more_transform_ops)...);
   task.join();
 }
+*/
 
 /**
 \addtogroup pipeline_pattern
@@ -496,10 +494,13 @@ with native parallel execution.
 \remark Generator shall be a zero argument callable type.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_arguments<Generator> = 0>
-void pipeline(parallel_execution_native & ex, Generator && generate_op, 
+          requires_generator<Generator> = 0>
+void pipeline(const parallel_execution_native & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
+  ex.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
+/*
   using namespace std;
 
   using result_type = typename result_of<Generator()>::type;
@@ -522,6 +523,7 @@ void pipeline(parallel_execution_native & ex, Generator && generate_op,
 
   pipeline_impl(ex, first_queue, forward<Transformers>(transform_ops)...);
   generator_task.join();
+*/
 }
 
 /**

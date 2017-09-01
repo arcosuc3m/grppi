@@ -21,12 +21,6 @@
 #ifndef GRPPI_STREAM_FILTER_H
 #define GRPPI_STREAM_FILTER_H
 
-#include "seq/stream_filter.h"
-#include "native/stream_filter.h"
-#include "omp/stream_filter.h"
-#include "tbb/stream_filter.h"
-#include "poly/stream_filter.h"
-
 #include "common/patterns.h"
 
 namespace grppi {
@@ -49,11 +43,10 @@ that satisfy the predicate.
 \param ex Execution policy object.
 \param predicate_op Predicate callable object.
 */
-template <typename Execution, typename Predicate>
-auto keep(Execution & ex, Predicate && predicate_op)
+template <typename Predicate>
+auto keep(Predicate && predicate_op)
 {
-  return filter_info<Execution, Predicate>{ex, 
-      std::forward<Predicate>(predicate_op)};
+  return filter_t<Predicate>{std::forward<Predicate>(predicate_op)};
 }
 
 /**
@@ -66,10 +59,10 @@ that satisfy the predicate.
 \param ex Execution policy object.
 \param predicate_op Predicate callable object.
 */
-template <typename Execution, typename Predicate>
-auto discard(Execution & ex, Predicate && predicate_op)
+template <typename Predicate>
+auto discard(Predicate && predicate_op)
 {
-  return keep(ex, [&](auto val) { return !predicate_op(val); });
+  return keep([&](auto val) { return !predicate_op(val); });
 }
 
 /**

@@ -33,6 +33,7 @@ namespace grppi {
 
 // TODO: Input could be only a template argument with no function argument.
 
+/*
 
 //Last stage
 template <typename Transformer, typename Input>
@@ -147,6 +148,7 @@ auto pipeline_impl(parallel_execution_tbb & ex,
       pipeline_impl(ex, output_type{},      
           forward<MoreTransformers>(more_transform_ops)...);
 }
+*/
 
 /**
 \addtogroup pipeline_pattern
@@ -167,10 +169,13 @@ with TBB parallel execution.
 \remark Generator shall be a zero argument callable type.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_arguments<Generator> = 0>
-void pipeline(parallel_execution_tbb & ex, Generator generate_op, 
+          requires_generator<Generator> = 0>
+void pipeline(const parallel_execution_tbb & ex, Generator && generate_op, 
               Transformers && ... transform_ops) 
 {
+  ex.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
+/*
   using namespace std;
   using result_type = typename result_of<Generator()>::type;
   using output_value_type = typename result_type::value_type;
@@ -191,6 +196,7 @@ void pipeline(parallel_execution_tbb & ex, Generator generate_op,
       & 
       pipeline_impl(ex, output_value_type{}, 
           forward<Transformers>(transform_ops)...));
+*/
 }
 
 /**

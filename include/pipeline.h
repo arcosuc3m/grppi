@@ -48,16 +48,17 @@ that can be composed in other streaming patterns.
 \param tranform_op First stage transformation operation
 \param more_trasnform_ops Transformation operations for each additional stage.
 */
-template <typename Execution, typename Transformer, 
-          typename ... MoreTransformers,
-          requires_arguments<Transformer> = 0>
-pipeline_info<Execution,Transformer,MoreTransformers...> 
-pipeline(Execution & ex, Transformer && transform_op, 
-         MoreTransformers && ... more_transform_ops)
+template <typename Generator, typename ... Transformers, typename Consumer>
+auto pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops,
+    Consumer && consume_op)
 {
-    return pipeline_info<Execution,Transformer, MoreTransformers...> (ex, 
-        std::forward<Transformer>(transform_op), 
-        std::forward<MoreTransformers>(more_transform_ops)...);
+    std::cerr << "Make pipeline object\n";
+    return pipeline_t<Generator,Transformers...,Consumer> (
+        std::forward<Generator>(generate_op),
+        std::forward<Transformers>(transform_ops)...,
+        std::forward<Consumer>(consume_op));
 }
 
 
