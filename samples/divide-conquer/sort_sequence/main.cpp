@@ -19,6 +19,7 @@
 */
 // Standard library
 #include <iostream>
+#include <iterator>
 #include <vector>
 #include <fstream>
 #include <chrono>
