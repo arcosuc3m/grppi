@@ -65,7 +65,7 @@ public:
       }
       else return {};
     },
-    grppi::stream_reduce(window, offset, 0,
+    grppi::reduce(window, offset, 0,
       [](int x, int y) { return x+y; }),
     [this](int x) { 
       std::cerr << "consuming " << x << "\n";

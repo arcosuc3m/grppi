@@ -29,7 +29,7 @@
 #include <experimental/optional>
 
 // grppi
-#include "stream_filter.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -47,12 +47,12 @@ void print_primes(grppi::polymorphic_execution & exec, int n) {
   using namespace experimental;
 
   int i=0;
-  grppi::keep(exec,
+  grppi::pipeline(exec,
     [&i,n]() -> optional<int> {
       if (i<=n) return i++;
       else return {};
     },
-    [](int x) { return is_prime(x); },
+    grppi::keep(is_prime),
     [](int x) {
       cout << x << endl;
     }

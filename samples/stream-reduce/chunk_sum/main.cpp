@@ -28,7 +28,7 @@
 #include <experimental/optional>
 
 // grppi
-#include "stream_reduce.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -43,9 +43,10 @@ void test_map(grppi::polymorphic_execution & e, int n, int window_size, int offs
     else     return {};
   };
 
-  grppi::stream_reduce(e,
-    window_size, offset, 0, generator,
-    [](int x, int y) { return x+y; },
+  grppi::pipeline(e,
+    generator,
+    grppi::reduce(window_size, offset, 0,
+      [](int x, int y) { return x+y; }),
     [](int x) { cout << x << endl; }
   );
 }

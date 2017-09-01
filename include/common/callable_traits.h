@@ -105,8 +105,7 @@ constexpr bool is_consumer = internal::has_void_return<F,I>();
 // Meta-function for determining if G is a generator
 template <typename G>
 constexpr bool is_generator = 
-  !internal::has_void_return<G>() &&
-  !internal::has_arguments<G>();
+  !internal::has_void_return<G>();
 
 // Concept emulation requiring a callable generating values
 template <typename G>

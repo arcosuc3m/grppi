@@ -22,6 +22,7 @@
 #define GRPPI_SEQ_REDUCE_H
 
 #include "sequential_execution.h"
+#include "common/iterator_traits.h"
 
 #include <utility>
 
@@ -48,7 +49,8 @@ on a data sequence with sequential execution.
 \param combiner_op Combiner operation for the reduction.
 \return The result of the reduction.
 */
-template <typename InputIt, typename Result, typename Combiner>
+template <typename InputIt, typename Result, typename Combiner,
+          requires_iterator<InputIt> = 0>
 auto reduce(const sequential_execution & ex, 
             InputIt first, InputIt last, 
             Result && identity,
