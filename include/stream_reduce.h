@@ -46,7 +46,7 @@ that can be composed in other streaming patterns.
 
 */
 template <typename Identity, typename Combiner>
-auto stream_reduce(int window_size, int offset, 
+auto reduce(int window_size, int offset, 
                    Identity identity, 
                    Combiner && combine_op)
 {

@@ -28,7 +28,7 @@
 #include <stdexcept>
 
 // grppi
-#include <grppi.h>
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -39,14 +39,14 @@ void discard_words(grppi::polymorphic_execution & ex,
   using namespace std;
   using namespace experimental;
 
-  keep(ex,
+  grppi::pipeline(ex,
     [&file]() -> optional<string> {
       string word;
       file >> word;
       if (!file) { return {}; }
       else { return word; }
     },
-    [](string w) -> bool { return w.length() < 4; },
+    grppi::keep([](string w) -> bool { return w.length() < 4; }),
     [](string w) {
       cout << w << endl;
     }

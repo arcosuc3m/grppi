@@ -28,8 +28,7 @@
 #include <cctype>
 
 // grppi
-#include "farm.h"
-#include "map.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -40,20 +39,21 @@ void capitalize(grppi::polymorphic_execution & e,
   using namespace std;
   using namespace experimental;
 
-  grppi::farm(e,
+  grppi::pipeline(e,
     [&]() -> optional<string> {
       string word;
       in >> word;
       if (in) return word;
       else return {};
     },
-    [](auto word) { 
-      grppi::sequential_execution seq{};
-      grppi::map(seq, begin(word), end(word), begin(word), [](char c) { 
-        return std::toupper(c);
-      }); 
-      return word;
-    },
+    grppi::farm(4,
+      [](auto word) { 
+        grppi::sequential_execution seq{};
+        grppi::map(seq, begin(word), end(word), begin(word), [](char c) { 
+          return std::toupper(c);
+        }); 
+        return word;
+      }),
     [&](auto word) {
       out << word << std::endl;
     }

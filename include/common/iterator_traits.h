@@ -22,17 +22,29 @@
 #define GRPPI_COMMON_ITERATOR_TRAITS_H
 
 namespace grppi{
-  template<typename T, typename = void>
-  struct is_iterator
-  {
-    static constexpr bool value = false;
-  };
 
-  template<typename T>
-  struct is_iterator<T, typename std::enable_if<!std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
-  {
-    static constexpr bool value = true;
-  };
+namespace internal {
+
+template<typename T, typename = void>
+struct is_iterator
+{
+  static constexpr bool value = false;
+};
+
+template<typename T>
+struct is_iterator<T, typename std::enable_if<!std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
+{
+  static constexpr bool value = true;
+};
+
+}
+
+template <typename T>
+constexpr bool is_iterator = internal::is_iterator<T>::value;
+
+template <typename T>
+using requires_iterator = std::enable_if_t<is_iterator<T>, int>;
+
 }
 
 #endif

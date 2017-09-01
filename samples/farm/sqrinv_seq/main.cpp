@@ -27,8 +27,7 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -37,14 +36,14 @@ void test_pipeline(grppi::polymorphic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
-  grppi::farm(e, 
+  grppi::pipeline(e, 
     [x=1,n]() mutable -> optional<double> { 
       if (x<=n) return x++;
       else return {}; 
     },
-    [](double x) {
+    grppi::farm(4,[](double x) {
       return 1/(x*x);
-    },
+    }),
     [](double x) { cout << x << endl; }
   );
 }

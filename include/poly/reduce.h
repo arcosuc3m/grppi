@@ -23,6 +23,7 @@
 
 #include "polymorphic_execution.h"
 #include "../common/support.h"
+#include "../common/iterator_traits.h"
 
 namespace grppi {
 
@@ -88,7 +89,8 @@ on a data sequence with sequential execution.
 \param identity Identity value for the combiner operation.
 \param combiner_op Combiner operation for the reduction.
 */
-template <typename InputIt, typename Identity, typename Combiner>
+template <typename InputIt, typename Identity, typename Combiner,
+          requires_iterator<InputIt> = 0>
 auto reduce(polymorphic_execution & e, 
             InputIt first, InputIt last, 
             Identity identity, 

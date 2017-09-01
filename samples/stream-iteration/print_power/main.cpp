@@ -42,10 +42,12 @@ void print_power(grppi::polymorphic_execution & e, int n) {
     else return {};
   };
 
-  grppi::repeat_until(e,
+  grppi::pipeline(e,
     generator,
-    [](int x) { return 2*x; },
-    [](int x) { return x>1024; },
+    grppi::repeat_until(
+      [](int x) { return 2*x; },
+      [](int x) { return x>1024; }
+    ),
     [](int x) { cout << x << endl; }
   );
 }
