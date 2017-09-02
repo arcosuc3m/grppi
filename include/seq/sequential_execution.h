@@ -23,6 +23,7 @@
 
 #include "../common/iterator.h"
 #include "../common/callable_traits.h"
+#include "../common/execution_traits.h"
 #include "../common/patterns.h"
 #include "../common/pack_traits.h"
 
@@ -311,6 +312,26 @@ private:
 
 };
 
+/// Determine if a type is a sequential execution policy.
+template <typename E>
+constexpr bool is_sequential_execution() {
+  return std::is_same<E, sequential_execution>::value;
+}
+
+/**
+\brief Determines if an execution policy is supported in the current compilation.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool is_supported<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_map<sequential_execution>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
 constexpr void sequential_execution::map(
@@ -548,20 +569,6 @@ void sequential_execution::do_pipeline_nested(
   do_pipeline(
       std::forward<Item>(item),
       std::forward<Transformers>(std::get<I>(transform_ops))...);
-}
-
-/// Determine if a type is a sequential execution policy.
-template <typename E>
-constexpr bool is_sequential_execution() {
-  return std::is_same<E, sequential_execution>::value;
-}
-
-template <typename E>
-constexpr bool is_supported();
-
-template <>
-constexpr bool is_supported<sequential_execution>() {
-  return true;
 }
 
 } // end namespace grppi

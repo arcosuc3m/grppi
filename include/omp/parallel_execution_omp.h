@@ -25,6 +25,7 @@
 
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
+#include "../common/execution_traits.h"
 #include "../seq/sequential_execution.h"
 
 #include <type_traits>
@@ -428,6 +429,29 @@ private:
   queue_mode queue_mode_ = queue_mode::blocking;
 };
 
+/**
+\brief Metafunction that determines if type E is parallel_execution_omp
+\tparam Execution policy type.
+*/
+template <typename E>
+constexpr bool is_parallel_execution_omp() {
+  return std::is_same<E, parallel_execution_omp>::value;
+}
+
+/**
+\brief Determines if an execution policy is supported in the current compilation.
+\note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
+*/
+template <>
+constexpr bool is_supported<parallel_execution_omp>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
+*/
+template <>
+constexpr bool supports_map<parallel_execution_omp>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_omp::map(
@@ -621,31 +645,6 @@ void parallel_execution_omp::pipeline(
       #pragma omp taskwait
     }
   }
-}
-
-/**
-\brief Metafunction that determines if type E is parallel_execution_omp
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_parallel_execution_omp() {
-  return std::is_same<E, parallel_execution_omp>::value;
-}
-
-/**
-\brief Metafunction that determines if type E is supported in the current build.
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_supported();
-
-/**
-\brief Specialization stating that parallel_execution_omp is supported.
-This metafunction evaluates to false if GRPPI_OMP is enabled.
-*/
-template <>
-constexpr bool is_supported<parallel_execution_omp>() {
-  return true;
 }
 
 // PRIVATE MEMBERS
@@ -1153,21 +1152,6 @@ This metafunction evaluates to false if GRPPI_OMP is disabled.
 */
 template <typename E>
 constexpr bool is_parallel_execution_omp() {
-  return false;
-}
-
-/**
-\brief Metafunction that determines if type E is supported in the current build.
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_supported();
-
-/**
-\brief Specialization stating that parallel_execution_omp is supported.
-*/
-template <>
-constexpr bool is_supported<parallel_execution_omp>() {
   return false;
 }
 
