@@ -532,6 +532,13 @@ constexpr bool is_supported<parallel_execution_native>() { return true; }
 template <>
 constexpr bool supports_map<parallel_execution_native>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_reduce<parallel_execution_native>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_native::map(

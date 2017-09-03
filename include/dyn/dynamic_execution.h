@@ -166,31 +166,41 @@ private:
     E ex_;
   };
 
-  template <typename E, typename ... O, typename ... Args>
-  void try_map(Args && ... args) const; 
-
-  template <typename ... Args>
-  void try_map(Args && ... args) const {}
-
 private:
   /// Pointer to dynamically allocated execution policy.
   std::unique_ptr<execution_base> execution_;
 
 };
 
-
-template <typename E, typename ... O, typename ... Args>
-void dynamic_execution::try_map(Args && ... args) const
-{
-  if (supports_map<E>()) {
-    auto * ex = dynamic_cast<execution<E>*>(execution_.get());
-    if (ex) {
-      ex->ex_.map(std::forward<Args>(args)...);
-      return;
-    }
-  }
-  try_map<O...>(std::forward<Args>(args)...);
+#define GRPPI_TRY_PATTERN(E,PATTERN,...)\
+{\
+  if (supports_##PATTERN<E>()) {\
+    auto * ex = dynamic_cast<execution<E>*>(execution_.get());\
+    if (ex) {\
+      return ex->ex_.PATTERN(__VA_ARGS__);\
+    }\
+  }\
 }
+
+#ifdef GRPPI_OMP
+#define GRPPI_TRY_PATTERN_OMP(PATTERN,...) \
+GRPPI_TRY_PATTERN(parallel_execution_omp,PATTERN,__VA_ARGS__)
+#else
+#define GRPPI_TRY_PATTERN_OMP(PATTERN,...)
+#endif
+
+#ifdef GRPPI_TBB
+#define GRPPI_TRY_PATTERN_TBB(PATTERN,...) \
+GRPPI_TRY_PATTERN(parallel_execution_tbb,PATTERN,__VA_ARGS__)
+#else
+#define GRPPI_TRY_PATTERN_TBB(PATTERN,...)
+#endif
+
+#define GRPPI_TRY_PATTERN_ALL(...) \
+GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
+GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
+GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
+GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
@@ -200,13 +210,23 @@ void dynamic_execution::map(
     std::size_t sequence_size, 
     Transformer && transform_op) const 
 {
-    try_map<
-      sequential_execution, 
-      parallel_execution_native,
-      parallel_execution_omp,
-      parallel_execution_tbb
-    >(firsts, first_out, sequence_size, std::forward<Transformer>(transform_op));
+  GRPPI_TRY_PATTERN_ALL(map, firsts, first_out, sequence_size, 
+      std::forward<Transformer>(transform_op));
 }
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto dynamic_execution::reduce(InputIterator first, std::size_t sequence_size,
+          Identity && identity,
+          Combiner && combine_op) const
+{
+  GRPPI_TRY_PATTERN_ALL(reduce, first, sequence_size, 
+      std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
+}
+
+#undef GRPPI_TRY_PATTERN
+#undef GRPPI_TRY_PATTERN_OMP
+#undef GRPPI_TRY_PATTERN_TBB
+#undef GRPPI_TRY_PATTERN_ALL
 
 } // end namespace grppi
 

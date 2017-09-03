@@ -29,6 +29,7 @@
 
 #include <type_traits>
 #include <tuple>
+#include <iterator>
 
 
 namespace grppi {
@@ -331,6 +332,13 @@ constexpr bool is_supported<sequential_execution>() { return true; }
 */
 template <>
 constexpr bool supports_map<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_reduce<sequential_execution>() { return true; }
 
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>

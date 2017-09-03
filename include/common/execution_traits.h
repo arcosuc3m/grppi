@@ -39,6 +39,13 @@ constexpr bool is_supported() { return false; }
 template <typename E>
 constexpr bool supports_map() { return false; }
 
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note This must be specialized by every execution policy supporting reduce.
+*/
+template <typename E>
+constexpr bool supports_reduce() { return false; }
+
 } // end namespace grppi
 
 #endif
