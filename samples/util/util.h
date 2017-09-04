@@ -67,7 +67,7 @@ void print_available_modes(std::ostream & os) {
   }
 
   if (is_supported<parallel_execution_ff>()) {
-      os << "    ff -> FastFlow backend" << endl;
+      os << "    ff  -> FastFlow backend" << endl;
   }
 }
 

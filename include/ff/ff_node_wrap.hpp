@@ -9,10 +9,12 @@
 #ifndef FF_NODE_WRAP_HPP
 #define FF_NODE_WRAP_HPP
 
+#include <experimental/optional>
+#include <type_traits>
+
 #include <ff/node.hpp>
 #include <ff/allocator.hpp>
 
-#include <experimental/optional>
 //#include "../common/common.hpp"
 
 #ifndef FF_ALLOCATOR_IN_USE
@@ -27,7 +29,6 @@ namespace ff {
 
 /* Class for managing optional contained values, i.e., a value that may or
  * may not be present.
- * TODO: Discuss actual need of this - note that optional is not supported even by c++14 and GNU 6.3
  * std::optional will be available in C++17, this is a sort of custom preview */
 template <typename T>
 class ff_optional {
@@ -56,17 +57,13 @@ class ff_optional {
 
 // -------------------------------------------------------------------------
 
-static bool outer_ff_pattern = true;
-
-// Here it is assumed that result is an object with value_type public field
-
 // Middle stage (worker node)
 template <typename TSin, typename TSout, typename L>
 struct PMINode : ff_node {
     L callable;
-    PMINode(L const &lf,bool streamitem=true):callable(lf) {};
+    PMINode(L const &lf) : callable(lf) {};
+    //PMINode(L &&lf) : callable(std::forward<L>(lf)) {};
     inline void * svc(void *t) {
-        //typedef typename TSin::value_type in_type;
         void * outslot = FF_MALLOC(sizeof(TSout));
         TSout * out = new (outslot) TSout();
         TSin * input_item = (TSin *) t;
@@ -83,45 +80,24 @@ struct PMINode : ff_node {
 template <typename TSout, typename L >
 struct PMINode<void,TSout,L> : ff_node {
     L callable;
-    PMINode(L const &lf):callable(lf) {};
+    PMINode(L const &lf) : callable(lf) {};
+
     inline void * svc(void *) {
-        // ff::optional<TSout> ret;
+        // ff::ff_optional<TSout> ret;
+
     	std::experimental::optional<TSout> ret;
-        void * outslot = FF_MALLOC(sizeof(TSout));
-        TSout * out = new (outslot) TSout();
+        void *outslot = FF_MALLOC(sizeof(TSout));
+        TSout *out = new (outslot) TSout();
+
         ret = std::move(callable());
+
         //*out = ret.elem;
-        *out = ret.value_or(nullptr);
-
-        // if( ret.has_value() ) { -- C++17
-        if( !ret ) { // -- C++14
-            //std::cout << "EOS\n";
-            return EOS;
-        }
-        else {
-            //std::cout << "Res " << *out << "\n";
-            return(outslot);
-        }
-        // No GO_ON
-    }
-};
-
-// Filter
-template <typename TSin, typename L>
-struct PMINodeFilter : ff_node {
-    L cond;
-    PMINodeFilter (L const &c):cond(c) {};
-    inline void * svc(void *t) {
-        void * outslot = GO_ON;
-        TSin * input_item = (TSin *) t;
-        if (cond(*input_item)) {
-            input_item->~TSin();
-            FF_FREE(input_item);
-            //std::cout << "Filter drop " << *input_item << "\n";
-        } else {
-            outslot = t;
-        }
-        return(outslot);
+        // if(ret.has_value()) // c++17 only - use bool operator
+        if(ret) {
+        	*out = ret.value();
+        	return out;
+        } else
+        	return EOS;	// No GO_ON
     }
 };
 
@@ -130,7 +106,8 @@ struct PMINodeFilter : ff_node {
 template <typename TSin, typename L >
 struct PMINode<TSin,void,L> : ff_node {
     L callable;
-    PMINode(L const &lf):callable(lf) {};
+    PMINode(L const &lf) : callable(lf) {};
+
     inline void * svc(void *t) {
         TSin * input_item = (TSin *) t;
         callable(*input_item);
@@ -142,7 +119,27 @@ struct PMINode<TSin,void,L> : ff_node {
 };
 
 
-}
+// Filter - cond is the filtering function
+template <typename TSin, typename L>
+struct PMINodeFilter : ff_node {
+    L cond;
+    PMINodeFilter (L const &lf) : cond(lf) {};
+
+    inline void * svc(void *t) {
+        void * outslot = GO_ON;
+        TSin * input_item = (TSin *) t;
+        if (cond(*input_item)) {
+            input_item->~TSin();
+            FF_FREE(input_item);
+        } else
+            outslot = t;
+
+        return(outslot);
+    }
+};
+
+
+} // namespace ff
 
 
 #endif // FF_NODE_WRAP_HPP

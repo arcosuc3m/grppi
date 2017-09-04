@@ -132,7 +132,8 @@ void keep(polymorphic_execution & ex, Generator && generate_op,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, std::forward<Generator>(generate_op),
       std::forward<Predicate>(predicate_op),
       std::forward<Consumer>(consume_op));
@@ -159,7 +160,8 @@ void discard(polymorphic_execution & ex, Generator && generate_op,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, std::forward<Generator>(generate_op),
       std::forward<Predicate>(predicate_op),
       std::forward<Consumer>(consume_op));

@@ -105,7 +105,8 @@ void stream_reduce(polymorphic_execution & ex,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, windowsize, offset, identity,
       std::forward<Generator>(gen),
       std::forward<Combiner>(comb), 
