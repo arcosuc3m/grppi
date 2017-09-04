@@ -21,6 +21,11 @@
 #ifndef GRPPI_MAP_H
 #define GRPPI_MAP_H
 
+#include <utility>
+
+#include "common/execution_traits.h"
+#include "common/iterator_traits.h"
+
 namespace grppi {
 
 /** 
@@ -43,11 +48,16 @@ namespace grppi {
 \param transform_op Transformation operation.
 \note The sequential_execution object acts exclusively as a tag type.
 */
-template <typename Execution, typename InputIt, typename OutputIt, typename Transformer>
+template <typename Execution, typename InputIt, typename OutputIt, 
+          typename Transformer,
+          requires_iterator<InputIt> = 0,
+          requires_iterator<OutputIt> = 0>
 void map(const Execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer transform_op) 
 {
+  static_assert(supports_map<Execution>(),
+      "map not supported on execution type");
   ex.map(make_tuple(first), first_out,
       std::distance(first, last), transform_op);
 }
@@ -67,12 +77,16 @@ void map(const Execution & ex,
 \note The sequential_execution object acts exclusively as a tag type.
 */
 template <typename Execution, typename InputIt, typename OutputIt, typename Transformer,
-          typename ... OtherInputIts>
+          typename ... OtherInputIts,
+          requires_iterator<InputIt> = 0,
+          requires_iterator<OutputIt> = 0>
 void map(const Execution & ex, 
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer transform_op, 
          OtherInputIts ... other_firsts) 
 {
+  static_assert(supports_map<Execution>(),
+      "map not supported on execution type");
   ex.map(make_tuple(first,other_firsts...), first_out,
       std::distance(first,last), transform_op);
 }

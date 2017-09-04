@@ -21,7 +21,10 @@
 #ifndef GRPPI_REDUCE_H 
 #define GRPPI_REDUCE_H
 
+#include <utility>
+
 #include "common/iterator_traits.h"
+#include "common/execution_traits.h"
 
 namespace grppi {
 
@@ -54,6 +57,8 @@ auto reduce(const Execution & ex,
             Result && identity,
             Combiner && combine_op)
 {
+  static_assert(supports_reduce<Execution>(),
+      "reduce not supported on execution type");
   return ex.reduce(first, std::distance(first,last), 
       std::forward<Result>(identity), std::forward<Combiner>(combine_op));
 }

@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "common/execution_traits.h"
+#include "common/iterator_traits.h"
 
 namespace grppi {
 
@@ -51,14 +52,15 @@ namespace grppi {
 \return Result of the map/reduce operation.
 */
 template <typename Execution, typename InputIterator, typename Identity, 
-          typename Transformer, typename Combiner>
+          typename Transformer, typename Combiner,
+          requires_iterator<InputIterator> = 0>
 auto map_reduce(const Execution & ex, 
                 InputIterator first, InputIterator last, 
                 Identity && identity, 
                 Transformer &&  transform_op, Combiner && combine_op)
 {
   static_assert(supports_map_reduce<Execution>(),
-    "Map reduce not supported on execution type");
+    "map/reduce not supported on execution type");
   return ex.map_reduce(make_tuple(first), std::distance(first,last), 
       std::forward<Identity>(identity),
       std::forward<Transformer>(transform_op), 
@@ -82,7 +84,8 @@ auto map_reduce(const Execution & ex,
 */
 template <typename Execution, typename InputIterator, typename Identity, 
           typename Transformer, typename Combiner,
-          typename ... OtherInputIterators>
+          typename ... OtherInputIterators,
+          requires_iterator<InputIterator> = 0>
 auto map_reduce(const Execution & ex, 
                 InputIterator first, InputIterator last, 
                 Identity && identity, 
@@ -90,7 +93,7 @@ auto map_reduce(const Execution & ex,
                 OtherInputIterators ... other_firsts)
 {
   static_assert(supports_map_reduce<Execution>(),
-    "Map reduce not supported on execution type");
+    "map/reduce not supported on execution type");
   return ex.map_reduce(make_tuple(first, other_firsts...), 
       std::distance(first,last), 
       std::forward<Identity>(identity),
