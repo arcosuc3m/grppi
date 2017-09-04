@@ -20,3 +20,7 @@ endif()
 
 set(HWLOC_ROOT ${CMAKE_BINARY_DIR}/external/hwloc)
 set(env(HWLOC_ROOT) ${CMAKE_BINARY_DIR}/external/hwloc)
+set(HWLOC_INCLUDE_DIR "${HWLOC_ROOT}/external/hwloc/include")
+set(env(HWLOC_INCLUDE_DIR) "${HWLOC_ROOT}/external/hwloc/include")
+set(HWLOC_LIBS "${HWLOC_ROOT}/external/hwloc/lib")
+set(env(HWLOC_LIBS) "${HWLOC_ROOT}/external/hwloc/lib")

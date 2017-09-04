@@ -50,6 +50,24 @@ endif()
 # GrPPI library
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
+# HWLOC library
+find_package( HWLOC )
+message("DETECTING HWLOC")
+if(HWLOC_FOUND)
+  message("DETECTED HWLOC")
+  option( GRPPI_HWLOC_ENABLE "Require HWLOC library" ON )
+else( HWLOC_FOUND )
+  message("NO DETECTED HWLOC")
+  option( GRPPI_HWLOC_ENABLE "Require HWLOC library" OFF )
+endif( HWLOC_FOUND )
+
+if( GRPPI_HWLOC_ENABLE )
+  add_definitions( -DGRPPI_HWLOC)
+  include_directories(${HWLOC_INCLUDE_DIRS})
+  set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lhwloc" )
+  message("---> ${CMAKE_EXE_LINKER_FLAGS}")
+endif( GRPPI_HWLOC_ENABLE )
+
 # TBB Library
 find_package( TBB ) 
 if( TBB_FOUND )
