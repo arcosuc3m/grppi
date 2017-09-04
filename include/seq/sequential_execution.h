@@ -340,6 +340,13 @@ constexpr bool supports_map<sequential_execution>() { return true; }
 template <>
 constexpr bool supports_reduce<sequential_execution>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_map_reduce<sequential_execution>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
 constexpr void sequential_execution::map(

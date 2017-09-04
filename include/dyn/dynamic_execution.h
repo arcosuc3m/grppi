@@ -172,6 +172,29 @@ private:
 
 };
 
+/**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_map<dynamic_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_reduce<dynamic_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_map_reduce<dynamic_execution>() { return true; }
+
+
+
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
 {\
   if (supports_##PATTERN<E>()) {\
@@ -221,6 +244,21 @@ auto dynamic_execution::reduce(InputIterator first, std::size_t sequence_size,
 {
   GRPPI_TRY_PATTERN_ALL(reduce, first, sequence_size, 
       std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
+}
+
+template <typename ... InputIterators, typename Identity, 
+          typename Transformer, typename Combiner>
+auto dynamic_execution::map_reduce(
+    std::tuple<InputIterators...> firsts, 
+    std::size_t sequence_size,
+    Identity && identity,
+    Transformer && transform_op, 
+    Combiner && combine_op) const
+{
+  GRPPI_TRY_PATTERN_ALL(map_reduce, firsts, sequence_size, 
+      std::forward<Identity>(identity), 
+      std::forward<Transformer>(transform_op),
+      std::forward<Combiner>(combine_op));
 }
 
 #undef GRPPI_TRY_PATTERN

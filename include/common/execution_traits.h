@@ -34,17 +34,45 @@ constexpr bool is_supported() { return false; }
 
 /**
 \brief Determines if an execution policy supports the map pattern.
-\note This must be specialized by every execution policy supporting map.
+\note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
 constexpr bool supports_map() { return false; }
 
 /**
 \brief Determines if an execution policy supports the reduce pattern.
-\note This must be specialized by every execution policy supporting reduce.
+\note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
 constexpr bool supports_reduce() { return false; }
+
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_map_reduce() { return false; }
+
+/**
+\brief Determines if an execution policy supports the stencil pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_map_stencil() { return false; }
+
+/**
+\brief Determines if an execution policy supports the divide-conquer pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_divide_conquer() { return false; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_pipeline() { return false; }
 
 } // end namespace grppi
 
