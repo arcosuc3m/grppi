@@ -24,23 +24,30 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "common/parallel_execution_native.h"
+#include <native/parallel_execution_native.h>
 
 using namespace std;
 using namespace grppi;
 
 TEST(numa_affinity, set_apply){
+        std::cout<<"1"<<std::endl;
   parallel_execution_native p(2);
+        std::cout<<"1"<<std::endl;
   p.set_numa_affinity(0,{0});
+        std::cout<<"1"<<std::endl;
   p.set_numa_affinity(1,{1});
+        std::cout<<"1"<<std::endl;
   std::vector<std::thread> task;
+        std::cout<<"1"<<std::endl;
   std::vector<int> ids(2);
+        std::cout<<"1"<<std::endl;
   for (auto i = 0;i<2;++i) {
     task.push_back(std::thread(
       [&](){
-        p.register_thread();
+        std::cout<<"MANAGER"<<std::endl;
+        p.thread_manager();
+        std::cout<<"THREAD ID: "<<p.get_thread_id()<<std::endl;
         ids[p.get_thread_id()] = 10;
-        p.deregister_thread();
       }
     ));
   }
@@ -59,9 +66,8 @@ TEST(thread_affinity, set_apply){
   for (auto i = 0;i<2;++i) {
     task.push_back(std::thread(
       [&](){
-        p.register_thread();
+        p.thread_manager();
         ids[p.get_thread_id()] = 10;
-        p.deregister_thread();
       }
     ));
   }
@@ -70,57 +76,4 @@ TEST(thread_affinity, set_apply){
   EXPECT_EQ(10,ids[1]);
 }
 
-TEST(numa_affinity, resize_threads){
- parallel_execution_native p(2);
-  p.set_numa_affinity(0,{0});
-  p.set_numa_affinity(1,{1});
-  std::vector<std::thread> task;
-  std::vector<int> ids(2);
-  int n_thr = p.get_num_threads();
-  for (auto i = 0;i<2;++i) {
-    task.push_back(std::thread(
-      [&](){
-        p.register_thread();
-        ids[p.get_thread_id()] = 10;
-        p.deregister_thread();
-      }
-    ));
-  }
-  for(auto &t:task) t.join();
-  p.set_num_threads(1);  
-  int n_thrb = p.get_num_threads();
-  
-  EXPECT_EQ(2,n_thr);
-  EXPECT_EQ(1,n_thrb);
-  EXPECT_EQ(10,ids[0]);
-  EXPECT_EQ(10,ids[1]);
-}
-
-TEST(thread_affinity, resize_threads){
-  parallel_execution_native p(2);
-  p.set_thread_affinity(0,{0});
-  p.set_thread_affinity(1,{1});
-  int n_thr = p.get_num_threads();
-  std::vector<std::thread> task;
-  std::vector<int> ids(2);
-  for (auto i = 0;i<2;++i) {
-    task.push_back(std::thread(
-      [&](){
-        p.register_thread();
-        ids[p.get_thread_id()] = 10;
-        p.deregister_thread();
-      }
-    ));
-  }
-  for(auto &t:task) t.join();
-  p.set_num_threads(1);  
-  int n_thrb = p.get_num_threads();
-  
-  EXPECT_EQ(2,n_thr);
-  EXPECT_EQ(1,n_thrb);
-  EXPECT_EQ(10,ids[0]);
-  EXPECT_EQ(10,ids[1]);
-
-
-}
 
