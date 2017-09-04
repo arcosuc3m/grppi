@@ -553,6 +553,13 @@ constexpr bool supports_map_reduce<parallel_execution_native>() { return true; }
 template <>
 constexpr bool supports_stencil<parallel_execution_native>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the divide/conquer pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_divide_conquer<parallel_execution_native>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_native::map(

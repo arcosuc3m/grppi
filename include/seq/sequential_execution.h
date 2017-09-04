@@ -168,7 +168,6 @@ public:
   \param solver_op Solver operation.
   \param combine_op Combiner operation.
   */
-
   template <typename Input, typename Divider, typename Solver, typename Combiner>
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
@@ -353,6 +352,13 @@ constexpr bool supports_map_reduce<sequential_execution>() { return true; }
 */
 template <>
 constexpr bool supports_stencil<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the divide/conquer pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_divide_conquer<sequential_execution>() { return true; }
 
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>

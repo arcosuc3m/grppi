@@ -200,6 +200,13 @@ constexpr bool supports_map_reduce<dynamic_execution>() { return true; }
 template <>
 constexpr bool supports_stencil<dynamic_execution>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the divide/conquer pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_divide_conquer<dynamic_execution>() { return true; }
+
 
 
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
@@ -280,6 +287,19 @@ void dynamic_execution::stencil(
   GRPPI_TRY_PATTERN_ALL(stencil, firsts, first_out, sequence_size,
       std::forward<StencilTransformer>(transform_op),
       std::forward<Neighbourhood>(neighbour_op));
+}
+
+template <typename Input, typename Divider, typename Solver, typename Combiner>
+auto dynamic_execution::divide_conquer(
+    Input && input, 
+    Divider && divide_op, 
+    Solver && solve_op, 
+    Combiner && combine_op) const
+{
+  GRPPI_TRY_PATTERN_ALL(divide_conquer, std::forward<Input>(input),
+      std::forward<Divider>(divide_op),
+      std::forward<Solver>(solve_op),
+      std::forward<Combiner>(combine_op));
 }
 
 #undef GRPPI_TRY_PATTERN
