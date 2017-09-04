@@ -173,6 +173,13 @@ private:
 };
 
 /**
+\brief Determines if an execution policy is supported in the current compilation.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool is_supported<dynamic_execution>() { return true; }
+
+/**
 \brief Determines if an execution policy supports the map pattern.
 \note Specialization for dynamic_execution.
 */
@@ -206,6 +213,13 @@ constexpr bool supports_stencil<dynamic_execution>() { return true; }
 */
 template <>
 constexpr bool supports_divide_conquer<dynamic_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 
 
 
@@ -300,6 +314,15 @@ auto dynamic_execution::divide_conquer(
       std::forward<Divider>(divide_op),
       std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op));
+}
+
+template <typename Generator, typename ... Transformers>
+void dynamic_execution::pipeline(
+    Generator && generate_op, 
+    Transformers && ... transform_ops) const
+{
+  GRPPI_TRY_PATTERN_ALL(pipeline, std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
 }
 
 #undef GRPPI_TRY_PATTERN

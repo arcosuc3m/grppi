@@ -32,6 +32,14 @@ namespace grppi {
 template <typename E>
 constexpr bool is_supported() { return false; }
 
+template <typename E>
+using requires_execution_supported =
+  std::enable_if_t<is_supported<E>(), int>;
+
+template <typename E>
+using requires_execution_not_supported =
+  std::enable_if_t<!is_supported<E>(), int>;
+
 /**
 \brief Determines if an execution policy supports the map pattern.
 \note This must be specialized by every execution policy supporting the pattern.

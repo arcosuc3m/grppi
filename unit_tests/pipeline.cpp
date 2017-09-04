@@ -17,20 +17,17 @@
 *
 * See COPYRIGHT.txt for copyright notices and details.
 */
+
 #include <atomic>
 #include <experimental/optional>
-
+#include <numeric>
 
 #include <gtest/gtest.h>
 
 #include "pipeline.h"
-#include "farm.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
-#include "poly/polymorphic_execution.h"
-
-#include <iostream>
-#include <numeric>
 
 using namespace std;
 using namespace grppi;
@@ -41,8 +38,7 @@ template <typename T>
 class pipeline_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Variables
   int out;
@@ -248,10 +244,10 @@ TYPED_TEST(pipeline_test, static_two_stages_empty)
   this->check_two_stages_empty();
 }
 
-TYPED_TEST(pipeline_test, poly_two_stages_empty)
+TYPED_TEST(pipeline_test, dyn_two_stages_empty)
 {
   this->setup_two_stages_empty();
-  this->run_two_stages(this->poly_execution_);
+  this->run_two_stages(this->dyn_execution_);
   this->check_two_stages_empty();
 }
 
@@ -262,10 +258,10 @@ TYPED_TEST(pipeline_test, static_two_stages)
   this->check_two_stages();
 }
 
-TYPED_TEST(pipeline_test, poly_two_stages)
+TYPED_TEST(pipeline_test, dyn_two_stages)
 {
   this->setup_two_stages();
-  this->run_two_stages(this->poly_execution_);
+  this->run_two_stages(this->dyn_execution_);
   this->check_two_stages();
 }
 
@@ -276,10 +272,10 @@ TYPED_TEST(pipeline_test, static_three_stages)
   this->check_three_stages();
 }
 
-TYPED_TEST(pipeline_test, poly_three_stages)
+TYPED_TEST(pipeline_test, dyn_three_stages)
 {
   this->setup_three_stages();
-  this->run_three_stages(this->poly_execution_);
+  this->run_three_stages(this->dyn_execution_);
   this->check_three_stages();
 }
 

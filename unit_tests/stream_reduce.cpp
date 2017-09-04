@@ -24,7 +24,7 @@
 
 #include "pipeline.h"
 #include "stream_reduce.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -37,8 +37,7 @@ template <typename T>
 class stream_reduce_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Variables
   int out;
@@ -150,10 +149,10 @@ TYPED_TEST(stream_reduce_test, static_empty)
   this->check_empty();
 }
 
-TYPED_TEST(stream_reduce_test, poly_empty)
+TYPED_TEST(stream_reduce_test, dyn_empty)
 { 
   this->setup_empty();
-  this->run_reduction_add(this->poly_execution_);
+  this->run_reduction_add(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -165,10 +164,10 @@ TYPED_TEST(stream_reduce_test, static_single)
   this->check_single();
 }
 
-TYPED_TEST(stream_reduce_test, poly_single)
+TYPED_TEST(stream_reduce_test, dyn_single)
 { 
   this->setup_single();
-  this->run_reduction_add(this->poly_execution_);
+  this->run_reduction_add(this->dyn_execution_);
   this->check_single();
 }
 
@@ -179,10 +178,10 @@ TYPED_TEST(stream_reduce_test, static_multiple)
   this->check_multiple();
 }
 
-TYPED_TEST(stream_reduce_test, poly_multiple)
+TYPED_TEST(stream_reduce_test, dyn_multiple)
 { 
   this->setup_multiple();
-  this->run_reduction_add(this->poly_execution_);
+  this->run_reduction_add(this->dyn_execution_);
   this->check_multiple();
 }
 
@@ -195,10 +194,10 @@ TYPED_TEST(stream_reduce_test, static_window_offset)
   this->check_window_offset();
 }
 
-TYPED_TEST(stream_reduce_test, poly_window_offset)
+TYPED_TEST(stream_reduce_test, dyn_window_offset)
 { 
   this->setup_window_offset();
-  this->run_reduction_add(this->poly_execution_);
+  this->run_reduction_add(this->dyn_execution_);
   this->check_window_offset();
 }
 
@@ -210,9 +209,9 @@ TYPED_TEST(stream_reduce_test, static_offset_window)
   this->check_offset_window();
 }
 
-TYPED_TEST(stream_reduce_test, poly_offset_window)
+TYPED_TEST(stream_reduce_test, dyn_offset_window)
 {
   this->setup_offset_window();
-  this->run_reduction_add(this->poly_execution_);
+  this->run_reduction_add(this->dyn_execution_);
   this->check_offset_window();
 }

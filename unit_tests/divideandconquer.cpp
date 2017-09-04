@@ -177,7 +177,7 @@ TYPED_TEST(divideconquer_test, static_empty)
   this->check_empty();
 }
 
-TYPED_TEST(divideconquer_test, poly_empty)
+TYPED_TEST(divideconquer_test, dyn_empty)
 {
   this->setup_empty();
   this->out = this->run_simple(this->dyn_execution_);
@@ -193,7 +193,7 @@ TYPED_TEST(divideconquer_test, static_single)
   this->check_single();
 }
 
-TYPED_TEST(divideconquer_test, poly_single)
+TYPED_TEST(divideconquer_test, dyn_single)
 {
   this->setup_single();
   this->out = this->run_simple(this->dyn_execution_);
@@ -209,7 +209,7 @@ TYPED_TEST(divideconquer_test, static_multiple)
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, poly_multiple)
+TYPED_TEST(divideconquer_test, dyn_multiple)
 {
   this->setup_multiple();
   this->out =  this->run_vecsum(this->dyn_execution_);

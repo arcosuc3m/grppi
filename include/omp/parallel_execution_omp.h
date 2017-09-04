@@ -234,6 +234,13 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  /**
+  \brief Invoke \ref md_pipeline.
+  \tparam Generator Callable type for the generator operation.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \param generate_op Generator operation.
+  \param transform_ops Transformer operations.
+  */
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
@@ -479,6 +486,13 @@ constexpr bool supports_stencil<parallel_execution_omp>() { return true; }
 */
 template <>
 constexpr bool supports_divide_conquer<parallel_execution_omp>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
+*/
+template <>
+constexpr bool supports_pipeline<parallel_execution_omp>() { return true; }
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
