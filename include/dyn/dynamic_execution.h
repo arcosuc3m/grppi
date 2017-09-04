@@ -193,6 +193,13 @@ constexpr bool supports_reduce<dynamic_execution>() { return true; }
 template <>
 constexpr bool supports_map_reduce<dynamic_execution>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the stencil pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_stencil<dynamic_execution>() { return true; }
+
 
 
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
@@ -259,6 +266,20 @@ auto dynamic_execution::map_reduce(
       std::forward<Identity>(identity), 
       std::forward<Transformer>(transform_op),
       std::forward<Combiner>(combine_op));
+}
+
+template <typename ... InputIterators, typename OutputIterator,
+          typename StencilTransformer, typename Neighbourhood>
+void dynamic_execution::stencil(
+    std::tuple<InputIterators...> firsts, 
+    OutputIterator first_out,
+    std::size_t sequence_size,
+    StencilTransformer && transform_op,
+    Neighbourhood && neighbour_op) const
+{
+  GRPPI_TRY_PATTERN_ALL(stencil, firsts, first_out, sequence_size,
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
 }
 
 #undef GRPPI_TRY_PATTERN

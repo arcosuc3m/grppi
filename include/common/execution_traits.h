@@ -58,7 +58,7 @@ constexpr bool supports_map_reduce() { return false; }
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_map_stencil() { return false; }
+constexpr bool supports_stencil() { return false; }
 
 /**
 \brief Determines if an execution policy supports the divide-conquer pattern.

@@ -21,11 +21,11 @@
 #ifndef GRPPI_STENCIL_H 
 #define GRPPI_STENCIL_H
 
-#include "seq/stencil.h"
-#include "native/stencil.h"
-#include "omp/stencil.h"
-#include "tbb/stencil.h"
-#include "poly/stencil.h"
+#include <tuple>
+#include <utility>
+
+#include "common/execution_traits.h"
+#include "common/iterator_traits.h"
 
 namespace grppi {
 
@@ -34,6 +34,81 @@ namespace grppi {
 @{
 \defgroup stencil_pattern Stencil pattern
 \brief Interface for applyinng the \ref md_stencil.
+@{
+*/
+
+/**
+\brief Invoke \ref md_stencil on a data sequence with 
+sequential execution.
+\tparam Execution Execution type.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\param ex Execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+*/
+template <typename Execution, typename InputIt, typename OutputIt, 
+          typename StencilTransformer, typename Neighbourhood,
+          requires_iterator<InputIt> = 0,
+          requires_iterator<OutputIt> = 0>
+void stencil(
+    const Execution & ex, 
+    InputIt first, InputIt last, OutputIt out, 
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op) 
+{
+  static_assert(supports_stencil<Execution>(),
+      "stencil not supported for execution type");
+  ex.stencil(std::make_tuple(first), out,
+      std::distance(first,last),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
+}
+
+/**
+\brief Invoke \ref md_stencil on multiple data sequences with 
+sequential execution.
+\tparam Execution Execution type.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\tparam OtherInputIts Iterator types for additional input sequences.
+\param ex Execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+\param other_firsts Iterators to the first element of additional input sequences.
+*/
+template <typename Execution, typename InputIt, typename OutputIt, 
+          typename StencilTransformer, typename Neighbourhood, 
+          typename ... OtherInputIts,
+          requires_iterator<InputIt> = 0,
+          requires_iterator<OutputIt> = 0>
+void stencil(
+    const Execution & ex, 
+    InputIt first, InputIt last, OutputIt out, 
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op, 
+    OtherInputIts ... other_firsts) 
+{
+  static_assert(supports_stencil<Execution>(),
+      "stencil not supported for execution type");
+  ex.stencil(std::make_tuple(first,other_firsts...), out,
+      std::distance(first,last),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
+}
+
+/**
+@}
 @}
 */
 
