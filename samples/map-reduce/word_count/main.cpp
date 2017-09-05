@@ -29,12 +29,12 @@
 #include <stdexcept>
 
 // grppi
-#include "mapreduce.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_mapreduce(grppi::polymorphic_execution & ex,
+void test_mapreduce(grppi::dynamic_execution & ex,
                     std::istream & file)
 {
   using namespace std;

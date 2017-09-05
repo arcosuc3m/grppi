@@ -24,6 +24,7 @@
 #include "worker_pool.h"
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
+#include "../common/execution_traits.h"
 
 #include <thread>
 #include <atomic>
@@ -166,6 +167,10 @@ public:
   parallel_execution_native(int concurrency_degree, bool ordering=true) noexcept :
     concurrency_degree_{concurrency_degree},
     ordering_{ordering}
+  {}
+
+  parallel_execution_native(const parallel_execution_native & ex) :
+      parallel_execution_native{ex.concurrency_degree_, ex.ordering_}
   {}
 
   /**
@@ -326,6 +331,13 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  /**
+  \brief Invoke \ref md_pipeline.
+  \tparam Generator Callable type for the generator operation.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \param generate_op Generator operation.
+  \param transform_ops Transformer operations.
+  */
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_ops) const;
@@ -503,6 +515,64 @@ private:
 
   queue_mode queue_mode_ = queue_mode::blocking;
 };
+
+/**
+\brief Metafunction that determines if type E is parallel_execution_native
+\tparam Execution policy type.
+*/
+template <typename E>
+constexpr bool is_parallel_execution_native() {
+  return std::is_same<E, parallel_execution_native>::value;
+}
+
+/**
+\brief Determines if an execution policy is supported in the current compilation.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool is_supported<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_map<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_reduce<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_map_reduce<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the stencil pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stencil<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the divide/conquer pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_divide_conquer<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_pipeline<parallel_execution_native>() { return true; }
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
@@ -691,30 +761,6 @@ void parallel_execution_native::pipeline(
   generator_task.join();
 }
 
-/**
-\brief Metafunction that determines if type E is parallel_execution_native
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_parallel_execution_native() {
-  return std::is_same<E, parallel_execution_native>::value;
-}
-
-/**
-\brief Metafunction that determines if type E is supported in the current build.
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_supported();
-
-/**
-\brief Specialization stating that parallel_execution_native is supported.
-*/
-template <>
-constexpr bool is_supported<parallel_execution_native>() {
-  return true;
-}
-
 // PRIVATE MEMBERS
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -776,7 +822,6 @@ void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Consumer && consume_op) const
 {
-  std::cerr << "pipeline(q,consumer)\n";
   using namespace std;
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type;
@@ -834,7 +879,6 @@ void parallel_execution_native::do_pipeline(
     Transformer && transform_op,
     OtherTransformers && ... other_transform_ops) const
 {
-  std::cerr << "pipeline(q,t,other...)\n";
   using namespace std;
   using namespace experimental;
 
@@ -1095,23 +1139,17 @@ void parallel_execution_native::do_pipeline(
     for (;;) {
       auto item = input_queue.pop();
       if (!item.first) break;
-      std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {
-        std::cerr << "Sending to output"
-            << *new_item.first << " , " << new_item.second << ">\n";
         output_queue.push(new_item);
       }
       else {
-        std::cerr << "Sending to input"
-            << *new_item.first << " , " << new_item.second << ">\n";
         input_queue.push(new_item);
       }
     }
     while (!input_queue.is_empty()) {
       auto item = input_queue.pop();
-      std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {

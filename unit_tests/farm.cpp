@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,13 +21,11 @@
 #include <utility>
 #include <experimental/optional>
 
-
 #include <gtest/gtest.h>
-#include <iostream>
 
 #include "farm.h"
 #include "pipeline.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -40,12 +38,10 @@ template <typename T>
 class farm_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_}; 
 
   // Variables
   std::atomic<int> output;
-
 
   // Vectors
   vector<int> v{};
@@ -465,10 +461,10 @@ TYPED_TEST(farm_test, static_empty)
   this->check_empty();
 }
 
-TYPED_TEST(farm_test, poly_empty)
+TYPED_TEST(farm_test, dyn_empty)
 {
   this->setup_empty();
-  this->run_empty(this->poly_execution_);
+  this->run_empty(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -479,10 +475,10 @@ TYPED_TEST(farm_test, static_empty_sink)
   this->check_empty_sink();
 }
 
-TYPED_TEST(farm_test, poly_empty_sink)
+TYPED_TEST(farm_test, dyn_empty_sink)
 {
   this->setup_empty_sink();
-  this->run_empty_sink(this->poly_execution_);
+  this->run_empty_sink(this->dyn_execution_);
   this->check_empty_sink();
 }
 
@@ -493,10 +489,10 @@ TYPED_TEST(farm_test, static_empty_ary)
   this->check_empty();
 }
 
-TYPED_TEST(farm_test, poly_empty_ary)
+TYPED_TEST(farm_test, dyn_empty_ary)
 {
   this->setup_empty();
-  this->run_empty_ary(this->poly_execution_);
+  this->run_empty_ary(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -507,10 +503,10 @@ TYPED_TEST(farm_test, static_empty_ary_sink)
   this->check_empty_ary_sink();
 }
 
-TYPED_TEST(farm_test, poly_empty_ary_sink)
+TYPED_TEST(farm_test, dyn_empty_ary_sink)
 {
   this->setup_empty_ary_sink();
-  this->run_empty_ary_sink(this->poly_execution_);
+  this->run_empty_ary_sink(this->dyn_execution_);
   this->check_empty_ary_sink();
 }
 
@@ -521,10 +517,10 @@ TYPED_TEST(farm_test, static_single)
   this->check_single();
 }
 
-TYPED_TEST(farm_test, poly_single)
+TYPED_TEST(farm_test, dyn_single)
 {
   this->setup_single();
-  this->run_single(this->poly_execution_);
+  this->run_single(this->dyn_execution_);
   this->check_single();
 }
 
@@ -535,10 +531,10 @@ TYPED_TEST(farm_test, static_single_piecewise)
   this->check_single();
 }
 
-TYPED_TEST(farm_test, poly_single_piecewise)
+TYPED_TEST(farm_test, dyn_single_piecewise)
 {
   this->setup_single();
-  this->run_single_piecewise(this->poly_execution_);
+  this->run_single_piecewise(this->dyn_execution_);
   this->check_single();
 }
 
@@ -549,38 +545,38 @@ TYPED_TEST(farm_test, static_single_sink)
   this->check_single_sink();
 }
 
-TYPED_TEST(farm_test, poly_single_sink)
+TYPED_TEST(farm_test, dyn_single_sink)
 {
   this->setup_single_sink();
-  this->run_single_sink(this->poly_execution_);
+  this->run_single_sink(this->dyn_execution_);
   this->check_single_sink();
 }
 
 TYPED_TEST(farm_test, static_single_ary)
 {
   this->setup_single_ary();
-  this->run_single_ary(this->poly_execution_);
+  this->run_single_ary(this->dyn_execution_);
   this->check_single_ary();
 }
 
-TYPED_TEST(farm_test, poly_single_ary)
+TYPED_TEST(farm_test, dyn_single_ary)
 {
   this->setup_single_ary();
-  this->run_single_ary(this->poly_execution_);
+  this->run_single_ary(this->dyn_execution_);
   this->check_single_ary();
 }
 
 TYPED_TEST(farm_test, static_single_ary_sink)
 {
   this->setup_single_ary_sink();
-  this->run_single_ary_sink(this->poly_execution_);
+  this->run_single_ary_sink(this->dyn_execution_);
   this->check_single_ary_sink();
 }
 
-TYPED_TEST(farm_test, poly_single_ary_sink)
+TYPED_TEST(farm_test, dyn_single_ary_sink)
 {
   this->setup_single_ary_sink();
-  this->run_single_ary_sink(this->poly_execution_);
+  this->run_single_ary_sink(this->dyn_execution_);
   this->check_single_ary_sink();
 }
 
@@ -591,10 +587,10 @@ TYPED_TEST(farm_test, static_multiple)
   this->check_multiple();
 }
 
-TYPED_TEST(farm_test, poly_multiple)
+TYPED_TEST(farm_test, dyn_multiple)
 {
   this->setup_multiple();
-  this->run_multiple(this->poly_execution_);
+  this->run_multiple(this->dyn_execution_);
   this->check_multiple();
 }
 
@@ -605,10 +601,10 @@ TYPED_TEST(farm_test, static_multiple_sink)
   this->check_multiple_sink();
 }
 
-TYPED_TEST(farm_test, poly_multiple_sink)
+TYPED_TEST(farm_test, dyn_multiple_sink)
 {
   this->setup_multiple();
-  this->run_multiple_sink(this->poly_execution_);
+  this->run_multiple_sink(this->dyn_execution_);
   this->check_multiple_sink();
 }
 
@@ -619,10 +615,10 @@ TYPED_TEST(farm_test, static_multiple_ary)
   this->check_multiple_ary();
 }
 
-TYPED_TEST(farm_test, poly_multiple_ary)
+TYPED_TEST(farm_test, dyn_multiple_ary)
 {
   this->setup_multiple_ary();
-  this->run_multiple_ary(this->poly_execution_);
+  this->run_multiple_ary(this->dyn_execution_);
   this->check_multiple_ary();
 }
 
@@ -633,9 +629,9 @@ TYPED_TEST(farm_test, static_multiple_ary_sink)
   this->check_multiple_ary_sink();
 }
 
-TYPED_TEST(farm_test, poly_multiple_ary_sink)
+TYPED_TEST(farm_test, dyn_multiple_ary_sink)
 {
   this->setup_multiple_ary_sink();
-  this->run_multiple_ary_sink(this->poly_execution_);
+  this->run_multiple_ary_sink(this->dyn_execution_);
   this->check_multiple_ary_sink();
 }

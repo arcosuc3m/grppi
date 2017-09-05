@@ -42,7 +42,7 @@ bool is_prime(int n) {
   return true;
 }
 
-void print_primes(grppi::polymorphic_execution & exec, int n) {
+void print_primes(grppi::dynamic_execution & exec, int n) {
   using namespace std;
   using namespace experimental;
 

@@ -27,6 +27,7 @@
 #include "../common/iterator.h"
 #include "../common/patterns.h"
 #include "../common/farm_pattern.h"
+#include "../common/execution_traits.h"
 
 #include <type_traits>
 #include <tuple>
@@ -214,6 +215,13 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  /**
+  \brief Invoke \ref md_pipeline.
+  \tparam Generator Callable type for the generator operation.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \param generate_op Generator operation.
+  \param transform_ops Transformer operations.
+  */
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
@@ -383,6 +391,64 @@ private:
   queue_mode queue_mode_ = queue_mode::blocking;
 };
 
+/**
+\brief Metafunction that determines if type E is parallel_execution_tbb
+\tparam Execution policy type.
+*/
+template <typename E>
+constexpr bool is_parallel_execution_tbb() {
+  return std::is_same<E, parallel_execution_tbb>::value;
+}
+
+/**
+\brief Determines if an execution policy is supported in the current compilation.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool is_supported<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool supports_map<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool supports_reduce<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool supports_map_reduce<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the stencil pattern.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool supports_stencil<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the divide/conquer pattern.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool supports_divide_conquer<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
+*/
+template <>
+constexpr bool supports_pipeline<parallel_execution_tbb>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_tbb::map(
@@ -542,31 +608,6 @@ void parallel_execution_tbb::pipeline(
     generator
     & 
     rest);
-}
-
-/**
-\brief Metafunction that determines if type E is parallel_execution_tbb
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_parallel_execution_tbb() {
-  return std::is_same<E, parallel_execution_tbb>::value;
-}
-
-/**
-\brief Metafunction that determines if type E is supported in the current build.
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_supported();
-
-/**
-\brief Specialization stating that parallel_execution_tbb is supported.
-This metafunction evaluates to false if GRPPI_TBB is enabled.
-*/
-template <>
-constexpr bool is_supported<parallel_execution_tbb>() {
-  return true;
 }
 
 // PRIVATE MEMBERS
@@ -874,7 +915,6 @@ auto parallel_execution_tbb::make_filter_nested(
 
 namespace grppi {
 
-
 /// Parallel execution policy.
 /// Empty type if GRPPI_TBB disabled.
 struct parallel_execution_tbb {};
@@ -886,21 +926,6 @@ This metafunction evaluates to false if GRPPI_TBB is disabled.
 */
 template <typename E>
 constexpr bool is_parallel_execution_tbb() {
-  return false;
-}
-
-/**
-\brief Metafunction that determines if type E is supported in the current build.
-\tparam Execution policy type.
-*/
-template <typename E>
-constexpr bool is_supported();
-
-/**
-\brief Specialization stating that parallel_execution_native is supported.
-*/
-template <>
-constexpr bool is_supported<parallel_execution_tbb>() {
   return false;
 }
 

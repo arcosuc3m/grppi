@@ -33,7 +33,7 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_map(grppi::polymorphic_execution & e, int n) {
+void test_map(grppi::dynamic_execution & e, int n) {
   using namespace std;
 
   mt19937_64 rengine;

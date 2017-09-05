@@ -33,7 +33,7 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void discard_words(grppi::polymorphic_execution & ex,
+void discard_words(grppi::dynamic_execution & ex,
                   std::istream & file)
 {
   using namespace std;

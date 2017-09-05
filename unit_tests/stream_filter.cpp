@@ -24,7 +24,7 @@
 
 #include "stream_filter.h"
 #include "pipeline.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -37,8 +37,7 @@ template <typename T>
 class stream_filter_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Vectors
   vector<int> v{};
@@ -67,7 +66,7 @@ public:
     },
     grppi::keep(
       [this](int x) { 
-        this->invocations_op++; 
+        invocations_op++; 
         return true; 
       }),
     [this](int x) { 
@@ -84,11 +83,11 @@ public:
     },
     grppi::discard(
       [this](int x) { 
-        this->invocations_op++; 
+        invocations_op++; 
         return true; 
       }),
     [this](int x) { 
-      this->invocations_out++; 
+      invocations_out++; 
     });
   }
 
@@ -111,7 +110,7 @@ public:
 
   template <typename E>
   void run_keep_single(const E & e) {
-    grppi::pipeline (this->execution_,
+    grppi::pipeline (e,
     [this]() -> optional<int> {
       invocations_in++;
       if(idx_in < v.size() ) return v[idx_in++];
@@ -130,7 +129,7 @@ public:
 
   template <typename E>
   void run_discard_single(const E & e) {
-    grppi::pipeline (this->execution_,
+    grppi::pipeline (e,
     [this]() -> optional<int> {
       invocations_in++;
       if(idx_in < v.size() ) return v[idx_in++];
@@ -148,17 +147,17 @@ public:
   }
 
   void check_keep_single() {
-    EXPECT_EQ(2, this->invocations_in); // two invocation
-    EXPECT_EQ(1, this->invocations_op); // one invocation
-    EXPECT_EQ(1, this->invocations_out); // one invocation
-    EXPECT_EQ(42, this->w[0]);
+    EXPECT_EQ(2, invocations_in); // two invocation
+    EXPECT_EQ(1, invocations_op); // one invocation
+    EXPECT_EQ(1, invocations_out); // one invocation
+    EXPECT_EQ(42, w[0]);
   }
 
   void check_discard_single() {
-    EXPECT_EQ(2, this->invocations_in); // two invocation
-    EXPECT_EQ(1, this->invocations_op); // one invocation
-    EXPECT_EQ(0, this->invocations_out); // not invoked
-    EXPECT_EQ(99, this->w[0]);
+    EXPECT_EQ(2, invocations_in); // two invocation
+    EXPECT_EQ(1, invocations_op); // one invocation
+    EXPECT_EQ(0, invocations_out); // not invoked
+    EXPECT_EQ(99, w[0]);
   }
 
   void setup_multiple() {
@@ -170,54 +169,54 @@ public:
 
   template <typename E>
   void run_keep_multiple(const E & e) {
-    grppi::pipeline(this->execution_,
+    grppi::pipeline(e,
       [this]() -> optional<int> {
-        this->invocations_in++;
-        if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
+        invocations_in++;
+        if (idx_in < v.size() ) return v[idx_in++];
         else return {};
       },
       grppi::keep(
         [this](int x) {
-        this->invocations_op++;
+        invocations_op++;
         return x % 2 == 0;
       }),
       [this](int x) {
-        this->invocations_out++;
-        this->w[this->idx_out++] = x;
+        invocations_out++;
+        w[this->idx_out++] = x;
       });
   }
 
   template <typename E>
   void run_discard_multiple(const E & e) {
-    grppi::pipeline(this->execution_,
+    grppi::pipeline(e,
       [this]() -> optional<int> {
-        this->invocations_in++;
-        if ( this->idx_in < this->v.size() ) return this->v[this->idx_in++];
+        invocations_in++;
+        if (idx_in < v.size()) return v[idx_in++];
         else return {};
       },
       grppi::discard(
         [this](int x) {
-        this->invocations_op++;
+        invocations_op++;
         return x % 2 == 0;
       }),
       [this](int x) {
-        this->invocations_out++;
-        this->w[this->idx_out++] = x;
+        invocations_out++;
+        w[idx_out++] = x;
       });
   }
 
   void check_keep_multiple() {
-    EXPECT_EQ(6, this->invocations_in); // six invocations
-    EXPECT_EQ(5, this->invocations_op); // five invocations
-    EXPECT_EQ(2, this->invocations_out); // two invocations
-    EXPECT_TRUE(equal(begin(this->expected_even), end(this->expected_even), begin(this->w)));
+    EXPECT_EQ(6, invocations_in); // six invocations
+    EXPECT_EQ(5, invocations_op); // five invocations
+    EXPECT_EQ(2, invocations_out); // two invocations
+    EXPECT_TRUE(equal(begin(expected_even), end(expected_even), begin(w)));
   }
 
   void check_discard_multiple() {
-    EXPECT_EQ(6, this->invocations_in); // six invocations
-    EXPECT_EQ(5, this->invocations_op); // five invocations
-    EXPECT_EQ(3, this->invocations_out); // two invocations
-    EXPECT_TRUE(equal(begin(this->expected_odd), end(this->expected_odd), begin(this->w)));
+    EXPECT_EQ(6, invocations_in); // six invocations
+    EXPECT_EQ(5, invocations_op); // five invocations
+    EXPECT_EQ(3, invocations_out); // two invocations
+    EXPECT_TRUE(equal(begin(expected_odd), end(expected_odd), begin(w)));
   }
 
 };
@@ -241,10 +240,10 @@ TYPED_TEST(stream_filter_test, static_unordered_keep_empty)
   this->check_keep_empty();
 }
 
-TYPED_TEST(stream_filter_test, poly_keep_empty)
+TYPED_TEST(stream_filter_test, dyn_keep_empty)
 {
   this->setup_empty();
-  this->run_keep_empty(this->poly_execution_);
+  this->run_keep_empty(this->dyn_execution_);
   this->check_keep_empty();
 }
 
@@ -255,10 +254,10 @@ TYPED_TEST(stream_filter_test, static_discard_empty)
   this->check_discard_empty();
 }
 
-TYPED_TEST(stream_filter_test, poly_discard_empty)
+TYPED_TEST(stream_filter_test, dyn_discard_empty)
 {
   this->setup_empty();
-  this->run_discard_empty(this->poly_execution_);
+  this->run_discard_empty(this->dyn_execution_);
   this->check_discard_empty();
 }
 
@@ -269,10 +268,10 @@ TYPED_TEST(stream_filter_test, static_keep_single)
   this->check_keep_single();
 }
 
-TYPED_TEST(stream_filter_test, poly_keep_single)
+TYPED_TEST(stream_filter_test, dyn_keep_single)
 {
   this->setup_single();
-  this->run_keep_single(this->poly_execution_);
+  this->run_keep_single(this->dyn_execution_);
   this->check_keep_single();
 }
 
@@ -283,10 +282,10 @@ TYPED_TEST(stream_filter_test, static_discard_single)
   this->check_discard_single();
 }
 
-TYPED_TEST(stream_filter_test, poly_discard_single)
+TYPED_TEST(stream_filter_test, dyn_discard_single)
 {
   this->setup_single();
-  this->run_discard_single(this->poly_execution_);
+  this->run_discard_single(this->dyn_execution_);
   this->check_discard_single();
 }
 
@@ -297,10 +296,10 @@ TYPED_TEST(stream_filter_test, static_keep_multiple)
   this->check_keep_multiple();
 }
 
-TYPED_TEST(stream_filter_test, poly_keep_multiple)
+TYPED_TEST(stream_filter_test, dyn_keep_multiple)
 {
   this->setup_multiple();
-  this->run_keep_multiple(this->poly_execution_);
+  this->run_keep_multiple(this->dyn_execution_);
   this->check_keep_multiple();
 }
 
@@ -311,9 +310,9 @@ TYPED_TEST(stream_filter_test, static_discard_multiple)
   this->check_discard_multiple();
 }
 
-TYPED_TEST(stream_filter_test, poly_discard_multiple)
+TYPED_TEST(stream_filter_test, dyn_discard_multiple)
 {
   this->setup_multiple();
-  this->run_discard_multiple(this->poly_execution_);
+  this->run_discard_multiple(this->dyn_execution_);
   this->check_discard_multiple();
 }

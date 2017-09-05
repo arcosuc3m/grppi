@@ -28,12 +28,12 @@
 #include <random>
 
 // grppi
-#include "divideconquer.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void fibonacci(grppi::polymorphic_execution & exec, int n) {
+void fibonacci(grppi::dynamic_execution & exec, int n) {
   using namespace std;
 
   auto res = grppi::divide_conquer(exec,

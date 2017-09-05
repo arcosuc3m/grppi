@@ -28,7 +28,7 @@
 #include <random>
 
 // grppi
-#include "divideconquer.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -51,7 +51,7 @@ std::vector<range> divide(range r) {
   return { {r.first,mid} , {mid, r.last} };
 }
 
-void sort_sequence(grppi::polymorphic_execution & exec, int n) {
+void sort_sequence(grppi::dynamic_execution & exec, int n) {
   using namespace std;
 
   std::random_device rdev;

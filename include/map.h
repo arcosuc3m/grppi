@@ -21,11 +21,10 @@
 #ifndef GRPPI_MAP_H
 #define GRPPI_MAP_H
 
-#include "seq/map.h"
-#include "native/map.h"
-#include "omp/map.h"
-#include "tbb/map.h"
-#include "poly/map.h"
+#include <utility>
+
+#include "common/execution_traits.h"
+#include "common/iterator_traits.h"
 
 namespace grppi {
 
@@ -34,9 +33,68 @@ namespace grppi {
 @{
 \defgroup map_pattern Map pattern
 \brief Interface for applyinng the \ref md_map.
-@}
+@{
 */
 
+/**
+\brief Invoke \ref md_map on a data sequence.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param transform_op Transformation operation.
+\note The sequential_execution object acts exclusively as a tag type.
+*/
+template <typename Execution, typename InputIt, typename OutputIt, 
+          typename Transformer,
+          requires_iterator<InputIt> = 0,
+          requires_iterator<OutputIt> = 0>
+void map(const Execution & ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Transformer transform_op) 
+{
+  static_assert(supports_map<Execution>(),
+      "map not supported on execution type");
+  ex.map(make_tuple(first), first_out,
+      std::distance(first, last), transform_op);
+}
+
+/**
+\brief Invoke \ref md_map on a data sequence.
+\tparam InputIt Iterator type used for input sequence.
+\tparam OtuputIt Iterator type used for the output sequence.
+\tparam Transformer Callable type for the transformation operation.
+\tparam OtherInputIts Iterator types used for additional input sequences.
+\param ex Sequential execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param first_out Iterator to first elemento of the output sequence.
+\param transform_op Transformation operation.
+\param more_firsts Additional iterators with first elements of additional sequences.
+\note The sequential_execution object acts exclusively as a tag type.
+*/
+template <typename Execution, typename InputIt, typename OutputIt, typename Transformer,
+          typename ... OtherInputIts,
+          requires_iterator<InputIt> = 0,
+          requires_iterator<OutputIt> = 0>
+void map(const Execution & ex, 
+         InputIt first, InputIt last, OutputIt first_out, 
+         Transformer transform_op, 
+         OtherInputIts ... other_firsts) 
+{
+  static_assert(supports_map<Execution>(),
+      "map not supported on execution type");
+  ex.map(make_tuple(first,other_firsts...), first_out,
+      std::distance(first,last), transform_op);
+}
+
+/**
+@}
+@}
+*/
 }
 
 #endif

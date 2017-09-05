@@ -67,7 +67,7 @@ int col_index(I it, C & cont, int ncols) {
   return std::distance(cont.begin(), it) % ncols;
 }
 
-void matrix_mult(grppi::polymorphic_execution & e, int n) {
+void matrix_mult(grppi::dynamic_execution & e, int n) {
   using namespace std;
 
   random_device rdev;

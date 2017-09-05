@@ -33,7 +33,7 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void print_power(grppi::polymorphic_execution & e, int n) {
+void print_power(grppi::dynamic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 

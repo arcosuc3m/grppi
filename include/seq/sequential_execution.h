@@ -23,11 +23,13 @@
 
 #include "../common/iterator.h"
 #include "../common/callable_traits.h"
+#include "../common/execution_traits.h"
 #include "../common/patterns.h"
 #include "../common/pack_traits.h"
 
 #include <type_traits>
 #include <tuple>
+#include <iterator>
 
 
 namespace grppi {
@@ -166,13 +168,19 @@ public:
   \param solver_op Solver operation.
   \param combine_op Combiner operation.
   */
-
   template <typename Input, typename Divider, typename Solver, typename Combiner>
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
+  /**
+  \brief Invoke \ref md_pipeline.
+  \tparam Generator Callable type for the generator operation.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \param generate_op Generator operation.
+  \param transform_ops Transformer operations.
+  */
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
@@ -310,6 +318,61 @@ private:
           std::index_sequence<I...>) const;
 
 };
+
+/// Determine if a type is a sequential execution policy.
+template <typename E>
+constexpr bool is_sequential_execution() {
+  return std::is_same<E, sequential_execution>::value;
+}
+
+/**
+\brief Determines if an execution policy is supported in the current compilation.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool is_supported<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_map<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_reduce<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_map_reduce<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the stencil pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_stencil<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the divide/conquer pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_divide_conquer<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_pipeline<sequential_execution>() { return true; }
 
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
@@ -548,20 +611,6 @@ void sequential_execution::do_pipeline_nested(
   do_pipeline(
       std::forward<Item>(item),
       std::forward<Transformers>(std::get<I>(transform_ops))...);
-}
-
-/// Determine if a type is a sequential execution policy.
-template <typename E>
-constexpr bool is_sequential_execution() {
-  return std::is_same<E, sequential_execution>::value;
-}
-
-template <typename E>
-constexpr bool is_supported();
-
-template <>
-constexpr bool is_supported<sequential_execution>() {
-  return true;
 }
 
 } // end namespace grppi

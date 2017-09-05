@@ -20,11 +20,9 @@
 #ifndef GRPPI_DIVIDECONQUER_H
 #define GRPPI_DIVIDECONQUER_H
 
-#include "seq/divideconquer.h"
-#include "native/divideconquer.h"
-#include "omp/divideconquer.h"
-#include "tbb/divideconquer.h"
-#include "poly/divideconquer.h"
+#include <utility>
+
+#include "common/execution_traits.h"
 
 namespace grppi {
 
@@ -33,6 +31,40 @@ namespace grppi {
 @{
 \defgroup divide_conquer_pattern Divide/Conquer pattern
 \brief Interface for applyinng the \ref md_divide-conquer.
+@{
+*/
+
+/**
+\brief Invoke \ref md_divide-conquer.
+\parapm Execution Execution type.
+\tparam Input Type used for the input problem.
+\tparam Divider Callable type for the divider operation.
+\tparam Solver Callable type for the solver operation.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Execution policy object.
+\param input Input problem to be solved.
+\param divider_op Divider operation.
+\param solver_op Solver operation.
+\param combiner_op Combiner operation.
+*/
+template <typename Execution, typename Input, 
+          typename Divider, typename Solver, typename Combiner>
+auto divide_conquer(
+    const Execution & ex, 
+    Input && input, 
+    Divider && divider_op, 
+    Solver && solver_op, 
+    Combiner && combiner_op) 
+{
+  static_assert(supports_divide_conquer<Execution>(),
+      "divide/conquer pattern not supported for execution type");
+  return ex.divide_conquer(std::forward<Input>(input), 
+        std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
+        std::forward<Combiner>(combiner_op));
+}
+
+/**
+@}
 @}
 */
 

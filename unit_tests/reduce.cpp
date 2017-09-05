@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 #include "reduce.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -33,8 +33,7 @@ template <typename T>
 class reduce_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Variables
   int out;
@@ -42,13 +41,20 @@ public:
   // Vectors
   vector<int> v{};
 
+  template <typename E>
+  void run_unary(const E & e) {
+    out = grppi::reduce(e, v.begin(), v.end(), 0,
+     [](int x, int y){ return x + y; }
+    );
+  }
+
   void setup_single() {
     out = 0;
     v = vector<int>{1};
   }
 
   void check_single() {
-    EXPECT_EQ(1, this->out);
+    EXPECT_EQ(1, out);
   }
 
   void setup_multiple() {
@@ -57,7 +63,7 @@ public:
   }
 
   void check_multiple() {
-    EXPECT_EQ(15, this->out); 
+    EXPECT_EQ(15, out); 
   }
 
 };
@@ -68,23 +74,14 @@ TYPED_TEST_CASE(reduce_test, executions);
 TYPED_TEST(reduce_test, static_single)
 {
   this->setup_single();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), 0,
-   [](int x, int y){
-      return x + y;
-   }
-  );
+  this->run_unary(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, poly_single)
+TYPED_TEST(reduce_test, dyn_single)
 {
   this->setup_single();
-  this->out = grppi::reduce(this->poly_execution_, begin(this->v), 
-    end(this->v), 0,
-   [](int x, int y){
-      return x + y;
-   }
-  );
+  this->run_unary(this->dyn_execution_);
   this->check_single();
 }
 
@@ -93,23 +90,14 @@ TYPED_TEST(reduce_test, poly_single)
 TYPED_TEST(reduce_test, static_multiple)
 {
   this->setup_multiple();
-  this->out = grppi::reduce(this->execution_, begin(this->v), end(this->v), 0,
-   [](int x, int y){
-      return x + y;
-   }
-  );
+  this->run_unary(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(reduce_test, poly_multiple)
+TYPED_TEST(reduce_test, dyn_multiple)
 {
   this->setup_multiple();
-  this->out = grppi::reduce(this->poly_execution_, begin(this->v), 
-    end(this->v), 0,
-   [](int x, int y){
-      return x + y;
-   }
-  );
+  this->run_unary(this->dyn_execution_);
   this->check_multiple();
 }
 

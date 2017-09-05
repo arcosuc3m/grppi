@@ -27,14 +27,12 @@
 #include <stdexcept>
 
 // grppi
-#include "poly/polymorphic_execution.h"
-#include "map.h"
-#include "poly/map.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_map(grppi::polymorphic_execution & e, int n) {
+void test_map(grppi::dynamic_execution & e, int n) {
   using namespace std;
 
   vector<int> v1;

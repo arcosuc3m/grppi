@@ -21,11 +21,10 @@
 #ifndef GRPPI_REDUCE_H 
 #define GRPPI_REDUCE_H
 
-#include "seq/reduce.h"
-#include "native/reduce.h"
-#include "omp/reduce.h"
-#include "tbb/reduce.h"
-#include "poly/reduce.h"
+#include <utility>
+
+#include "common/iterator_traits.h"
+#include "common/execution_traits.h"
 
 namespace grppi {
 
@@ -34,9 +33,40 @@ namespace grppi {
 @{
 \defgroup reduce_pattern Reduce pattern
 \brief Interface for applyinng the \ref md_reduce.
-@}
+@{
 */
 
+/**
+\brief Invoke \ref md_reduce with identity value
+on a data sequence with sequential execution.
+\tparam Execution Execution type.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Result Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+\return The result of the reduction.
+*/
+template <typename Execution, typename InputIt, typename Result, typename Combiner,
+          requires_iterator<InputIt> = 0>
+auto reduce(const Execution & ex, 
+            InputIt first, InputIt last, 
+            Result && identity,
+            Combiner && combine_op)
+{
+  static_assert(supports_reduce<Execution>(),
+      "reduce not supported on execution type");
+  return ex.reduce(first, std::distance(first,last), 
+      std::forward<Result>(identity), std::forward<Combiner>(combine_op));
+}
+
+/**
+@}
+@}
+*/
 }
 
 #endif

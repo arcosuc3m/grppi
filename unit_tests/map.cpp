@@ -19,11 +19,10 @@
 */
 #include <atomic>
 
-
 #include <gtest/gtest.h>
 
 #include "map.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -34,8 +33,7 @@ template <typename T>
 class map_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Vectors
   vector<int> v{};
@@ -47,6 +45,29 @@ public:
   // Invocation counter
   std::atomic<int> invocations{0};
 
+  template <typename E>
+  void run_unary(const E & e) {
+    grppi::map(e, 
+      v.begin(), v.end(), w.begin(),
+      [this](int i) {
+        invocations++; 
+        return i*2; 
+      }
+    );
+  }
+
+  template <typename E>
+  void run_nary(const E & e) {
+    grppi::map(e, 
+      v.begin(), v.end(), w.begin(),
+      [this](int x, int y, int z) { 
+        invocations++; 
+        return x+y+z; 
+      },
+      v2.begin(), v3.begin()
+    );
+  }
+
   void setup_empty() {
   }
 
@@ -54,40 +75,40 @@ public:
     ASSERT_EQ(0, invocations); // Functor was not invoked
   }
 
-  void setup_single() {
+  void setup_single_unary() {
     v = vector<int>{42};
     w = vector<int>{99};
   }
 
-  void check_single() {
+  void check_single_unary() {
     EXPECT_EQ(1, this->invocations); // one invocation
     EXPECT_EQ(84, this->w[0]);
   }
 
-  void setup_single_ary() {
+  void setup_multiple_unary() {
+    v = vector<int>{1,2,3,4,5};
+    w = vector<int>(5);
+    expected = vector<int>{2,4,6,8,10};
+  }
+
+  void check_multiple_unary() {
+    EXPECT_EQ(5, this->invocations); // five invocations
+    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+  }
+
+  void setup_single_nary() {
     v = vector<int>{11};
     v2 = vector<int>{22};
     v3 = vector<int>{33};
     w = vector<int>{99};
   }
 
-  void check_single_ary() {
+  void check_single_nary() {
     EXPECT_EQ(1, this->invocations); // one invocation
     EXPECT_EQ(66, this->w[0]);
   }
 
-  void setup_multiple() {
-    v = vector<int>{1,2,3,4,5};
-    w = vector<int>(5);
-    expected = vector<int>{2,4,6,8,10};
-  }
-
-  void check_multiple() {
-    EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
-  }
-
-  void setup_multiple_ary() {
+  void setup_multiple_nary() {
     v = vector<int>{1,2,3,4,5};
     v2 = vector<int>{2,4,6,8,10};
     v3 = vector<int>{10,10,10,10,10};
@@ -95,7 +116,7 @@ public:
     expected = vector<int>{13,16,19,22,25};
   }
 
-  void check_multiple_ary() {
+  void check_multiple_nary() {
     EXPECT_EQ(5, this->invocations); // five invocations
     EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
   }
@@ -105,152 +126,87 @@ public:
 // Test for execution policies defined in supported_executions.h
 TYPED_TEST_CASE(map_test, executions);
 
-TYPED_TEST(map_test, static_empty)
+TYPED_TEST(map_test, static_empty_unary)
 {
   this->setup_empty();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x) { 
-      this->invocations++; 
-      return x; 
-    }
-  );
+  this->run_unary(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(map_test, poly_empty)
+TYPED_TEST(map_test, dyn_empty_unary)
 {
   this->setup_empty();
-  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x) { 
-      this->invocations++; 
-      return x; 
-    }
-  );
+  this->run_unary(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(map_test, static_empty_ary)
+TYPED_TEST(map_test, static_single_unary)
+{
+  this->setup_single_unary();
+  this->run_unary(this->execution_);
+  this->check_single_unary();
+}
+
+TYPED_TEST(map_test, dyn_single_unary)
+{
+  this->setup_single_unary();
+  this->run_unary(this->dyn_execution_);
+  this->check_single_unary();
+}
+
+TYPED_TEST(map_test, static_multiple_unary)
+{
+  this->setup_multiple_unary();
+  this->run_unary(this->execution_);
+  this->check_multiple_unary();
+}
+
+TYPED_TEST(map_test, dyn_multiple_unary)
+{
+  this->setup_multiple_unary();
+  this->run_unary(this->dyn_execution_);
+  this->check_multiple_unary();
+}
+
+TYPED_TEST(map_test, static_empty_nary)
 {
   this->setup_empty();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x, int y, int z) { 
-      this->invocations++; 
-      return x+y+z; 
-    },
-    begin(this->v2), begin(this->v3)
-  );
+  this->run_nary(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(map_test, poly_empty_ary)
+TYPED_TEST(map_test, dyn_empty_nary)
 {
   this->setup_empty();
-  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x, int y, int z) { 
-      this->invocations++; 
-      return x+y+z; 
-    },
-    begin(this->v2), begin(this->v3)
-  );
+  this->run_nary(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(map_test, static_single)
+
+TYPED_TEST(map_test, static_single_nary)
 {
-  this->setup_single();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int i) {
-      this->invocations++; 
-      return i*2; 
-    }
-  );
-  this->check_single();
+  this->setup_single_nary();
+  this->run_nary(this->execution_);
+  this->check_single_nary();
 }
 
-TYPED_TEST(map_test, poly_single)
+TYPED_TEST(map_test, dyn_single_nary)
 {
-  this->setup_single();
-  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int i) {
-      this->invocations++; 
-      return i*2; 
-    }
-  );
-  this->check_single();
+  this->setup_single_nary();
+  this->run_nary(this->dyn_execution_);
+  this->check_single_nary();
 }
 
-TYPED_TEST(map_test, static_single_ary)
+TYPED_TEST(map_test, static_multiple_nary)
 {
-  this->setup_single_ary();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x, int y, int z) {
-      this->invocations++; 
-      return x+y+z; 
-    },
-    begin(this->v2), begin(this->v3)
-  );
-  this->check_single_ary();
+  this->setup_multiple_nary();
+  this->run_nary(this->execution_);
+  this->check_multiple_nary();
 }
 
-TYPED_TEST(map_test, poly_single_ary)
+TYPED_TEST(map_test, dyn_multiple_nary)
 {
-  this->setup_single_ary();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x, int y, int z) {
-      this->invocations++; 
-      return x+y+z; 
-    },
-    begin(this->v2), begin(this->v3)
-  );
-  this->check_single_ary();
-}
-
-TYPED_TEST(map_test, static_multiple)
-{
-  this->setup_multiple();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int i) {
-      this->invocations++; 
-      return i*2; 
-    }
-  );
-  this->check_multiple();
-}
-
-TYPED_TEST(map_test, poly_multiple)
-{
-  this->setup_multiple();
-  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int i) {
-      this->invocations++; 
-      return i*2; 
-    }
-  );
-  this->check_multiple();
-}
-
-TYPED_TEST(map_test, static_multiple_ary)
-{
-  this->setup_multiple_ary();
-  grppi::map(this->execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x, int y, int z) {
-      this->invocations++; 
-      return x+y+z; 
-    },
-    begin(this->v2), begin(this->v3)
-  );
-  this->check_multiple_ary();
-}
-
-TYPED_TEST(map_test, poly_multiple_ary)
-{
-  this->setup_multiple_ary();
-  grppi::map(this->poly_execution_, begin(this->v), end(this->v), begin(this->w),
-    [this](int x, int y, int z) {
-      this->invocations++; 
-      return x+y+z; 
-    },
-    begin(this->v2), begin(this->v3)
-  );
-  this->check_multiple_ary();
+  this->setup_multiple_nary();
+  this->run_nary(this->execution_);
+  this->check_multiple_nary();
 }

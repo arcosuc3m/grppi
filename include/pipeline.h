@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -21,12 +21,11 @@
 #ifndef GRPPI_PIPELINE_H
 #define GRPPI_PIPELINE_H
 
-#include "seq/pipeline.h"
-#include "native/pipeline.h"
-#include "omp/pipeline.h"
-#include "tbb/pipeline.h"
-#include "poly/pipeline.h"
-#include "common/patterns.h"
+#include <utility>
+
+#include "common/callable_traits.h"
+#include "common/execution_traits.h"
+#include "common/pipeline_pattern.h"
 
 namespace grppi {
 
@@ -37,6 +36,28 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_pipeline
 @{
 */
+
+/**
+\brief Invoke \ref md_pipeline on a data stream.
+\tparam Execution Execution type.
+\tparam Generator Callable type for the stream generator.
+\tparam Transformers Callable type for each transformation stage.
+\param ex Execution policy object.
+\param generate_op Generator operation.
+\param trasnform_ops Transformation operations for each stage.
+*/
+template <typename Execution, typename Generator, typename ... Transformers,
+          requires_execution_supported<Execution> = 0>
+void pipeline(
+    const Execution & ex, 
+    Generator && generate_op, 
+    Transformers && ... transform_ops) 
+{
+  static_assert(supports_pipeline<Execution>(),
+      "pipeline pattern is not supported by execution type");
+  ex.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
+}
 
 /**
 \brief Build a composable \ref md_pipeline representation
@@ -54,14 +75,11 @@ auto pipeline(
     Transformers && ... transform_ops,
     Consumer && consume_op)
 {
-    std::cerr << "Make pipeline object\n";
     return pipeline_t<Generator,Transformers...,Consumer> (
         std::forward<Generator>(generate_op),
         std::forward<Transformers>(transform_ops)...,
         std::forward<Consumer>(consume_op));
 }
-
-
 
 /**
 @}
