@@ -31,48 +31,6 @@
 
 namespace grppi{
 
-template <typename E,typename Stage, typename ... Stages>
-class pipeline_info{
-   public:
-      E & exectype;
-      std::tuple<Stage , Stages ...> stages;
-      pipeline_info(E &p, Stage s, Stages ... sts) : exectype{p}, stages{std::make_tuple(s, sts...)} {}
-      pipeline_info(E &p, std::tuple<Stage,Stages ...> st) : exectype{p} , stages{st} {}
-};
-
-template <typename E,class Combiner, typename Identity>
-class reduction_info
-{
-   public:
-      Combiner combine_op;
-      int window_size;
-      int offset;
-      Identity identity;
-      E & exectype;
-      reduction_info(E &s,int ws, int off, Identity iden, Combiner comb) : 
-        exectype{s}, window_size{ws}, offset{off}, identity{iden}, combine_op{comb} {}
-};
-
-template <typename E,class Operation>
-class farm_info
-{
-   public:
-      Operation  task;
-      E & exectype;
-      int farmtype;
-      farm_info(E &s,Operation  f) : task{f}, exectype{s}, farmtype{} {};
-};
-
-template <typename E,class Operation>
-class filter_info
-{
-   public:
-      Operation task;
-      E & exectype;
-      int filtertype;
-      filter_info(E &s,Operation f) : task{f}, exectype{s}, filtertype{} {};
-};
-
 template <typename T>
 constexpr bool is_no_pattern =
   !is_farm<T> && 
