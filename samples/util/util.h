@@ -21,17 +21,15 @@
 #ifndef GRPPI_SAMPLES_UTIL_H
 #define GRPPI_SAMPLES_UTIL_H
 
-grppi::polymorphic_execution execution_mode(const std::string & opt) {
+#include "dyn/dynamic_execution.h"
+
+grppi::dynamic_execution execution_mode(const std::string & opt) {
   using namespace grppi;
-  if ("seq" == opt) 
-    return make_polymorphic_execution<sequential_execution>();
-  if ("thr" == opt) 
-    return make_polymorphic_execution<parallel_execution_native>();
-  if ("omp" == opt) 
-    return make_polymorphic_execution<parallel_execution_omp>();
-  if ("tbb" == opt) 
-    return make_polymorphic_execution<parallel_execution_tbb>();
-  return polymorphic_execution{};
+  if ("seq" == opt) return sequential_execution{};
+  if ("thr" == opt) return parallel_execution_native{};
+  if ("omp" == opt) return parallel_execution_omp{};
+  if ("tbb" == opt) return parallel_execution_tbb{};
+  return {};
 }
 
 template <typename F, typename ...Args>

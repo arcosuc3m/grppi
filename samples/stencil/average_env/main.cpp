@@ -32,7 +32,7 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void compute_avg(grppi::polymorphic_execution & e, int n) {
+void compute_avg(grppi::dynamic_execution & e, int n) {
   using namespace std;
 
   vector<long long> in;

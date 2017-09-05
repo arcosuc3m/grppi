@@ -33,7 +33,7 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void capitalize(grppi::polymorphic_execution & e, 
+void capitalize(grppi::dynamic_execution & e, 
                 std::istream & in, std::ostream & out)
 {
   using namespace std;

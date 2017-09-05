@@ -40,6 +40,8 @@ public:
   template <typename E>
   dynamic_execution(const E & e) : execution_{std::make_unique<execution<E>>(e)} {}
 
+  bool has_execution() const { return execution_.get() != nullptr; }
+
   /**
   \brief Applies a trasnformation to multiple sequences leaving the result in
   another sequence.

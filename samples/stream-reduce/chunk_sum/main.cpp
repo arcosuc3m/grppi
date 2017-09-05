@@ -33,7 +33,7 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_map(grppi::polymorphic_execution & e, int n, int window_size, int offset) {
+void test_map(grppi::dynamic_execution & e, int n, int window_size, int offset) {
   using namespace std;
   using namespace experimental;
 
