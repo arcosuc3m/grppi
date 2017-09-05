@@ -185,6 +185,16 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
+  template <typename Execution, typename Transformers...,
+            typename <typename E,typename ... T> Context>
+  void pipeline(Context<Execution,Transformers...> & ctx) const {
+    pipeline(std::move(ctx));
+  }
+
+  template <typename Execution, typename Transformers...,
+            typename <typename E,typename ... T> Context>
+  void pipeline(Context<Execution,Transformers...> & ctx) const;
+
 private:
 
   template <typename Item, typename Consumer,
@@ -611,6 +621,17 @@ void sequential_execution::do_pipeline_nested(
   do_pipeline(
       std::forward<Item>(item),
       std::forward<Transformers>(std::get<I>(transform_ops))...);
+}
+
+
+template <typename Execution, typename Transformers...,
+          typename <typename E,typename ... T> Context>
+void sequential_exectuion::pipeline(Context<Execution,Transformers...> & ctx) const
+{
+  if (is_sequential_execution<Execution>()) {
+  }
+  else {
+  }
 }
 
 } // end namespace grppi
