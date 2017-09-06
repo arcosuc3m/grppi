@@ -27,6 +27,8 @@
 #include "tbb/stream_reduce.h"
 #include "poly/stream_reduce.h"
 
+#include "ff/stream_reduce.h"
+
 #include "common/patterns.h"
 
 namespace grppi {

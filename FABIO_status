@@ -12,8 +12,8 @@ al percorso "${PROJECT_SOURCE_DIR}/fastflow" (vedere 'CMakeLists.txt').
 - al percorso "${PROJECT_SOURCE_DIR}/include/ff/" ci sono le interfacce per i 
 pattern fin'ora esaminati, conformi alla nuova struttura di grPPI v0.2. 
 
-- tra ii pattern di stream parallelism (Farm e Pipeline, etc.), Farm funziona 
-per sia come *transforming* famr che come *identity* farm. Provato anche 
+- tra i pattern di stream parallelism (Farm e Pipeline, etc.), Farm funziona sia 
+come *transforming* farm che come *identity* farm. Provato anche 
 annidamento con altro pattern (workers as Map):
 
         | --- Map ---|
@@ -21,8 +21,9 @@ annidamento con altro pattern (workers as Map):
         |    ...     | --- C
         | --- Map ---|
 
+- stream-reduce pattern funzionante.
 
-- Gli altri stream parallel patterns non sono ancora pronti.
+- Non tutti gli altri stream parallel patterns sono pronti.
 
 - in ultimo sarà Pipeline e la composizione di pattern (Pipe di Farm, etc.)
 
@@ -38,6 +39,7 @@ rispettive implementazioni polimorfiche.
     . Map+Reduce,
     . Stencil,
     . Farm
+    . StreamReduce
 I samples sono stati compilati con GNU g++ 6.3.0, eseguendo gli esempi 
 contenuti in "${PROJECT_SOURCE_DIR}/samples/", con eventuali modifiche per 
 riscontri di correttezza. Non ho ancora eseguito l'intera test-suite contenuta 
