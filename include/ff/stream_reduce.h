@@ -177,15 +177,8 @@ void stream_reduce(parallel_execution_ff & ex,
 	farm.setInputQueueLength(nw*1);
 	farm.setOutputQueueLength(nw*1);
 
-	if(notnested) {
-		//farm.remove_collector(); // needed to avoid init errors!
+	if(notnested)
 		farm.run_and_wait_end();
-
-		// check if ff_nodes need to be deleted
-		// in case of nested pattern this don't work - to be fixed with unique_ptr
-		//for(int i=0;i<p.num_threads;++i) delete w[i];
-	}
-
 
 }
 

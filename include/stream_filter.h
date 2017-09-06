@@ -26,6 +26,7 @@
 #include "omp/stream_filter.h"
 #include "tbb/stream_filter.h"
 #include "poly/stream_filter.h"
+#include "ff/stream_filter.h"
 
 #include "common/patterns.h"
 

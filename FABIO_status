@@ -10,28 +10,37 @@ compilazione necessarie. Al momento, la cartella "ff" di FastFlow deve trovarsi
 al percorso "${PROJECT_SOURCE_DIR}/fastflow" (vedere 'CMakeLists.txt').
  
 - al percorso "${PROJECT_SOURCE_DIR}/include/ff/" ci sono le interfacce per i 
-pattern fin'ora esaminati, conformi alla nuova struttura di grPPI v0.2. 
-
-- tra i pattern di stream parallelism (Farm e Pipeline, etc.), Farm funziona sia 
-come *transforming* farm che come *identity* farm. Provato anche 
-annidamento con altro pattern (workers as Map):
-
-        | --- Map ---|
-  E --- | --- Map ---|
-        |    ...     | --- C
-        | --- Map ---|
-
-- stream-reduce pattern funzionante.
-
-- Non tutti gli altri stream parallel patterns sono pronti.
-
-- in ultimo sarà Pipeline e la composizione di pattern (Pipe di Farm, etc.)
+pattern fin'ora esaminati, conformi alla struttura di grPPI v0.2.
 
 - nel file 'parallel_execution_ff.h' ho rimosso tutta la parte relativa alla 
 'mpmc_queue', usata con gli altri backend come canale di comunicazione. 
 
 - il backend denominato *parallel_execution_ff* è stato aggiunto nelle 
-rispettive implementazioni polimorfiche.
+rispettive implementazioni polimorfiche attualmente testate. 
+
+- tutti i data-parallel pattern sono testati e funzionanti.
+
+- tra i pattern di stream parallelism (Farm e Pipeline, etc.), Farm funziona sia 
+come *transforming* farm che come *identity* farm. Provato anche 
+annidamento con pattern-as-a-worker:
+
+        | --- Map --- |
+        | --- Map --- |
+  E --- |     ...     | --- C
+        |             |
+        | --- Map --- |
+
+- StreamReduce pattern funzionante.
+
+- StreamFilter pattern funzionante.
+
+- Problemi con Divide&Conquer: l'interfaccia grPPI per Divide&Conquer non 
+prevede la dichiarazione esplicita di una condizione di split (per identificare 
+il caso base): suppone che la funzione 'divide' controlli anche la condizione 
+per il caso base. L'interfaccia di ff_DC richiede invece una 'condition_fn' per 
+identificare il caso base.
+
+- in ultimo sarà Pipeline e la composizione di pattern (Pipe di Farm, etc.)
 
 - i pattern attualmente testati e funzionanti sono: 
     . Map, 
@@ -40,13 +49,15 @@ rispettive implementazioni polimorfiche.
     . Stencil,
     . Farm
     . StreamReduce
-I samples sono stati compilati con GNU g++ 6.3.0, eseguendo gli esempi 
-contenuti in "${PROJECT_SOURCE_DIR}/samples/", con eventuali modifiche per 
-riscontri di correttezza. Non ho ancora eseguito l'intera test-suite contenuta 
-in "${PROJECT_SOURCE_DIR}/unit_tests/"
+    . StreamFilter
+Compilati con GNU g++ 6.3.0, eseguendo gli esempi contenuti in 
+"${PROJECT_SOURCE_DIR}/samples/", con eventuali modifiche per riscontri di 
+correttezza. Non ho ancora eseguito l'intera test-suite contenuta in 
+"${PROJECT_SOURCE_DIR}/unit_tests/"
 
 
 ## TODO: 
-- sistemare StreamReduce, StreamFilter e Pipeline
+- sistemare Pipeline e Divide&Conquer
 - pipeline nesting
+- StreamIterator?
 

@@ -61,14 +61,16 @@ class ff_optional {
 template <typename TSin, typename TSout, typename L>
 struct PMINode : ff_node {
     L callable;
+
     PMINode(L const &lf) : callable(lf) {};
-    //PMINode(L &&lf) : callable(std::forward<L>(lf)) {};
+
     inline void * svc(void *t) {
         void * outslot = FF_MALLOC(sizeof(TSout));
         TSout * out = new (outslot) TSout();
         TSin * input_item = (TSin *) t;
-        //std::cout << "Middle stage " << *input_item << "\n";
+
         *out = std::move(callable(*input_item));
+
         input_item->~TSin();
         FF_FREE(input_item);
         return(outslot);
@@ -80,22 +82,21 @@ struct PMINode : ff_node {
 template <typename TSout, typename L >
 struct PMINode<void,TSout,L> : ff_node {
     L callable;
+
     PMINode(L const &lf) : callable(lf) {};
 
     inline void * svc(void *) {
         // ff::ff_optional<TSout> ret;
-
     	std::experimental::optional<TSout> ret;
         void *outslot = FF_MALLOC(sizeof(TSout));
         TSout *out = new (outslot) TSout();
 
         ret = std::move(callable());
 
-        //*out = ret.elem;
         // if(ret.has_value()) // c++17 only - use bool operator
         if(ret) {
         	*out = ret.value();
-        	return out;
+        	return outslot;
         } else
         	return EOS;	// No GO_ON
     }
@@ -106,6 +107,7 @@ struct PMINode<void,TSout,L> : ff_node {
 template <typename TSin, typename L >
 struct PMINode<TSin,void,L> : ff_node {
     L callable;
+
     PMINode(L const &lf) : callable(lf) {};
 
     inline void * svc(void *t) {
@@ -113,28 +115,32 @@ struct PMINode<TSin,void,L> : ff_node {
         callable(*input_item);
         input_item->~TSin();
         FF_FREE(input_item);
-        //delete input_item;
         return GO_ON;
     }
 };
 
 
 // Filter - cond is the filtering function
+// Note that according to grPPI interface,
+// basic filter keeps matching items
 template <typename TSin, typename L>
 struct PMINodeFilter : ff_node {
     L cond;
-    PMINodeFilter (L const &lf) : cond(lf) {};
+
+    PMINodeFilter (L const &c):cond(c) {};
 
     inline void * svc(void *t) {
         void * outslot = GO_ON;
         TSin * input_item = (TSin *) t;
+
         if (cond(*input_item)) {
+        	outslot = t;
+        } else {
             input_item->~TSin();
             FF_FREE(input_item);
-        } else
-            outslot = t;
+        }
 
-        return(outslot);
+        return outslot;
     }
 };
 
