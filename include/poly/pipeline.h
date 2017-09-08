@@ -98,7 +98,8 @@ void pipeline(polymorphic_execution & ex, Generator && generate_op,
     sequential_execution,
     parallel_execution_native,
     parallel_execution_omp,
-    parallel_execution_tbb
+    parallel_execution_tbb,
+	parallel_execution_ff
   >(ex, std::forward<Generator>(generate_op), 
       std::forward<Transformers>(transform_ops) ...);
 }

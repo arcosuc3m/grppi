@@ -26,6 +26,7 @@
 #include "omp/pipeline.h"
 #include "tbb/pipeline.h"
 #include "poly/pipeline.h"
+#include "ff/pipeline.h"
 #include "common/patterns.h"
 
 namespace grppi {
