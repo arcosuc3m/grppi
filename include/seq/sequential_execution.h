@@ -227,6 +227,28 @@ private:
   void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+  void do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> & farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(farm_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+  void do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
   template <typename Item, typename Predicate,
             template <typename> class Filter,
             typename ... OtherTransformers,
@@ -507,6 +529,18 @@ void sequential_execution::do_pipeline(
 {
   farm_obj(std::forward<Item>(item));
 }
+
+template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+void sequential_execution::do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+}
+
 
 template <typename Item, typename FarmTransformer,
           template <typename> class Farm,

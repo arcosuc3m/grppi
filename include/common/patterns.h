@@ -28,7 +28,7 @@
 #include "pipeline_pattern.h"
 #include "reduce_pattern.h"
 #include "iteration_pattern.h"
-
+#include "windowed_farm_pattern.h"
 namespace grppi{
 
 template <typename E,typename Stage, typename ... Stages>
@@ -79,7 +79,8 @@ constexpr bool is_no_pattern =
   !is_filter<T> && 
   !is_pipeline<T> &&
   !is_reduce<T> &&
-  !is_iteration<T>;
+  !is_iteration<T>&&
+  !is_window_farm<T>;
 
 template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;

@@ -375,6 +375,31 @@ private:
   void do_pipeline( Queue & input_queue, 
       Farm<FarmTransformer> && farm_obj) const;
 
+  template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm< Farm< Transformer, Window >> = 0>
+  void do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> & farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(farm_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+
+  }
+
+  template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+  void do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+
+
   template <typename Queue, typename FarmTransformer, 
             template <typename> class Farm,
             typename ... OtherTransformers,
@@ -984,6 +1009,84 @@ void parallel_execution_native::do_pipeline(
 
   workers.wait();
 }
+
+
+
+template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+void parallel_execution_native::do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const 
+{
+  using namespace std;
+  using namespace experimental;
+
+  using window_type = typename result_of<decltype(&Window::get_window)(Window)>::type;
+  using window_optional_type = experimental::optional<window_type>;
+  using window_item_type = pair <window_optional_type, long> ;
+
+  auto intermediate_queue = make_queue< window_item_type >();
+
+ 
+  auto windower_task = [&](int nt){
+    long order = 0;
+
+    auto win = farm_obj.get_window();
+    
+    auto item = input_queue.pop();
+   
+    while(item.first) {
+      while(!win.add_item(std::move(*item.first) )){
+        item = input_queue.pop();
+        if(!item.first) break;
+      }
+      if(item.first) item = input_queue.pop();
+      intermediate_queue.push( make_pair(win.get_window(), order) );
+      order++;
+    } 
+    intermediate_queue.push( make_pair(window_optional_type{}, -1) );
+  };
+
+  using result_type = typename result_of<Transformer(window_type)>::type;
+  using output_optional_type = experimental::optional <result_type>;
+  using output_item_type = pair <output_optional_type,long>;
+  auto output_queue = make_queue<output_item_type>();
+  atomic<int> done_threads{0}; 
+
+  auto farm_task = [&](int nt) {
+    long order = 0;
+    auto item{intermediate_queue.pop()};
+    while (item.first) {
+      auto out = output_optional_type{farm_obj.transform(*item.first)};
+      output_queue.push(make_pair(out,item.second)) ;
+      item = intermediate_queue.pop();
+    }
+    intermediate_queue.push(item);
+    done_threads++;
+    if (done_threads == nt) {
+      output_queue.push(make_pair(output_optional_type{}, -1));
+    }
+  };
+  
+  auto ntasks = farm_obj.cardinality();
+  worker_pool workers{ntasks};
+  workers.launch_tasks(*this, farm_task, ntasks);
+
+  worker_pool windower{1};
+  windower.launch_tasks(*this, windower_task, 1);
+
+  do_pipeline(output_queue, 
+      forward<OtherTransformers>(other_transform_ops)... );
+
+  windower.wait();
+  workers.wait();
+
+}
+
+
 
 template <typename Queue, typename Predicate, 
           template <typename> class Filter,

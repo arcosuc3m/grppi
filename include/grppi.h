@@ -21,6 +21,9 @@
 #ifndef GRPPI_GRPPI_H
 #define GRPPI_GRPPI_H
 
+// Include for window policies
+#include "common/window_policies.h"
+
 // Includes for data parallel patterns
 #include "map.h"
 #include "mapreduce.h"
@@ -53,6 +56,7 @@ namespace grppi {
 #include "stream_filter.h"
 #include "stream_iteration.h"
 #include "stream_reduce.h"
+#include "windowed_farm.h"
 
 namespace grppi {
 

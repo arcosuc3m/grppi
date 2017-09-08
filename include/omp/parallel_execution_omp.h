@@ -278,6 +278,30 @@ private:
   void do_pipeline(Queue & input_queue, 
                    Farm<FarmTransformer> && farm_obj) const;
 
+  template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+  void do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> & farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(farm_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+  void do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+
+
   template <typename Queue, typename FarmTransformer, 
             template <typename> class Farm,
             typename ... OtherTransformers,
@@ -904,6 +928,17 @@ void parallel_execution_omp::do_pipeline(
   }
   do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
   #pragma omp taskwait
+}
+
+template <typename Queue, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+void parallel_execution_omp::do_pipeline(
+    Queue && input_queue,
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
 }
 
 
