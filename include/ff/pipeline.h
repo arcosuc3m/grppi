@@ -94,7 +94,6 @@ private:
 			MoreTransformers const &...args) {
     	using farm_type = farm_info<parallel_execution_ff,Transformer>;
 
-    	// Questo perché tipato è buono - fra l'altro al momento funziona solo con profondità 1
     	// output_type -- typedef typename std::remove_pointer<decltype(Transformer::task)>::type task_t;
     	// output_value_type -- using outItemType = typename std::result_of<task_t(ToutOfPrevStage)>::type ;
 

@@ -57,6 +57,7 @@ control this issue:
 
 * `GRPPI_OMP_ENABLE`: Enable/disable OpenMP back end.
 * `GRPPI_TBB_ENABLE`: Enable/disable TBB back end.
+* `GRPPI_FF_ENABLE`: Enable/disable FastFlow back end.
 
 ### Running the unit tests
 
