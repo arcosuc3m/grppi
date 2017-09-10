@@ -124,6 +124,7 @@ public:
 
   template <typename E>
   void run_composed_last(const E & e) {
+    std::cerr << "run_composed()\n";
     grppi::pipeline(e,
       [this,i=0,max=counter]() mutable -> optional<int> {
         invocations_init++;
@@ -195,6 +196,32 @@ public:
           return x+1;
         }
       ),
+      [this](int x) {
+        invocations_last++;
+        out += x;
+      });
+  }
+
+  template <typename E>
+  void run_composed_seq(const E & e) {
+    constexpr sequential_execution seq;
+    auto inner =
+      run_with(seq, grppi::pipeline(
+        [this](int x) {
+          invocations_intermediate++;
+          return x*x;
+        },
+        [this](int x) {
+          return x+1;
+        }
+      ));
+    grppi::pipeline(seq,
+      [this,i=0,max=counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (++i<=max) return i;
+        else return {};
+      },
+      inner,
       [this](int x) {
         invocations_last++;
         out += x;
@@ -304,5 +331,12 @@ TYPED_TEST(pipeline_test, static_composed_piecewise)
 {
   this->setup_composed();
   this->run_composed_piecewise(this->execution_);
+  this->check_composed();
+}
+
+TYPED_TEST(pipeline_test, static_composed_seq)
+{
+  this->setup_composed();
+  this->run_composed_seq(this->execution_);
   this->check_composed();
 }

@@ -40,6 +40,18 @@ template <typename E>
 using requires_execution_not_supported =
   std::enable_if_t<!is_supported<E>(), int>;
 
+template <typename E>
+constexpr bool is_sequential() { return false; }
+
+template <typename E>
+using requires_sequential = std::enable_if_t<is_sequential<E>(), int>;
+
+template <typename E>
+constexpr bool is_parallel() { return false; }
+
+template <typename E>
+using requires_parallel = std::enable_if_t<is_parallel<E>(), int>;
+
 /**
 \brief Determines if an execution policy supports the map pattern.
 \note This must be specialized by every execution policy supporting the pattern.

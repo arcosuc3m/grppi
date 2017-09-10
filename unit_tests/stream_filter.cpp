@@ -28,6 +28,7 @@
 
 #include "supported_executions.h"
 
+/*
 using namespace std;
 using namespace grppi;
 template <typename T>
@@ -316,3 +317,4 @@ TYPED_TEST(stream_filter_test, dyn_discard_multiple)
   this->run_discard_multiple(this->dyn_execution_);
   this->check_discard_multiple();
 }
+*/

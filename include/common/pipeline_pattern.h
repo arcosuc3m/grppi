@@ -43,7 +43,10 @@ public:
   */
   pipeline_t(Transformers && ... others) noexcept :
     transformers_{others...}
-  {}
+  {
+    std::cerr << "Creating pipeline of size "
+        << sizeof...(Transformers) << "\n";
+  }
 
   /**
   \brief Invokes a trasnformer from the pipeline.

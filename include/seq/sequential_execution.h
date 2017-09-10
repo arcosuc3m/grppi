@@ -26,6 +26,9 @@
 #include "../common/execution_traits.h"
 #include "../common/patterns.h"
 #include "../common/pack_traits.h"
+#include "../common/execution_context.h"
+
+#include "mixed_execution.h"
 
 #include <type_traits>
 #include <tuple>
@@ -181,19 +184,21 @@ public:
   \param generate_op Generator operation.
   \param transform_ops Transformer operations.
   */
-  template <typename Generator, typename ... Transformers>
-  void pipeline(Generator && generate_op, 
-                Transformers && ... transform_op) const;
+  template <typename Generator, typename ... Transformers,
+            requires_not_execution_context<Generator> = 0>
+  void pipeline(Generator && generate_op, Transformers && ... transform_op) const;
 
-  template <typename Execution, typename Transformers...,
-            typename <typename E,typename ... T> Context>
-  void pipeline(Context<Execution,Transformers...> & ctx) const {
+  template <typename Context,
+            requires_execution_context<Context> = 0>
+  void pipeline(Context & ctx) const {
     pipeline(std::move(ctx));
   }
 
-  template <typename Execution, typename Transformers...,
-            typename <typename E,typename ... T> Context>
-  void pipeline(Context<Execution,Transformers...> & ctx) const;
+  template <typename Context,
+          requires_execution_context<Context> = 0,
+          requires_execution_supported<typename Context::execution_type> = 0,
+          requires_sequential<typename Context::execution_type> = 0>
+  void pipeline(Context && ctx) const;
 
 private:
 
@@ -342,6 +347,9 @@ constexpr bool is_sequential_execution() {
 template <>
 constexpr bool is_supported<sequential_execution>() { return true; }
 
+template <>
+constexpr bool is_sequential<sequential_execution>() { return true; }
+
 /**
 \brief Determines if an execution policy supports the map pattern.
 \note Specialization for sequential_execution.
@@ -470,6 +478,7 @@ auto sequential_execution::divide_conquer(
       std::forward<Combiner>(combine_op));
 }
 
+/*
 template <typename Generator, typename ... Transformers>
 void sequential_execution::pipeline(
     Generator && generate_op,
@@ -484,6 +493,7 @@ void sequential_execution::pipeline(
     do_pipeline(*x, std::forward<Transformers>(transform_ops)...);
   }
 }
+*/
 
 template <typename Item, typename Consumer,
           requires_no_pattern<Consumer> = 0>
@@ -623,15 +633,117 @@ void sequential_execution::do_pipeline_nested(
       std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 
+template <typename ... Transformers>
+class pipeline_sequential_execution {
+public:
+  using transformers_type = std::tuple<Transformers...>;
+  constexpr static std::size_t pipeline_size() { 
+    return std::tuple_size<transformers_type>();
+  }
+ 
+public:
+  pipeline_sequential_execution(Transformers && ... t) :
+    transformers_{t...} 
+  {
+    std::cerr << "pipeline_sequential_execution with size "
+        << pipeline_size() << "\n";
+  }
 
-template <typename Execution, typename Transformers...,
-          typename <typename E,typename ... T> Context>
-void sequential_exectuion::pipeline(Context<Execution,Transformers...> & ctx) const
+  pipeline_sequential_execution(std::tuple<Transformers...> t) :
+    transformers_{t}
+  {}
+
+  void run_outer() const {
+  std::cerr << "running pipeline\n";
+  auto generate = std::get<0>(transformers_);
+  for (;;) {
+    auto x = generate();
+    std::cerr << "Generated item\n";
+    if (!x) break;
+    std::cerr << "-->" << *x << "\n";
+    run<1,pipeline_size()>(*x);
+  }
+  }
+
+  template <typename T>
+  auto run_inner(T && x) const {
+  std::cerr << "\n***running inner pipeline***\n";
+  std::cerr << "  pipeline(" << x << ")\n";
+  auto z = apply_transform<0>(std::forward<T>(x));
+  return run<1,pipeline_size()>(z);
+  }
+  
+private:
+
+  template <std::size_t I, std::size_t N, typename T,
+            std::enable_if_t<(I<N),int> = 0>
+  auto run(T && x) const {
+    std::cerr << "run<" << I << "," << N << ">(" << x << ")\n";
+    auto z = apply_transform<I>(std::forward<T>(x));
+    std::cerr << "--->" << z << "\n";
+    return run<I+1,N>(z);
+  }
+
+  template <std::size_t I, std::size_t N, typename T,
+            std::enable_if_t<(I==N),int> = 0>
+  auto run(T && x) const {
+    std::cerr << "run_last<" << I << "," << N << ">(" << x << ")\n";
+    return apply_transform<I+1>(std::forward<T>(x));
+  }
+  
+  template <std::size_t I, typename T,
+            requires_no_pattern<std::tuple_element_t<I,transformers_type>> = 0,
+            requires_not_execution_context<std::tuple_element_t<I,transformers_type>> = 0>
+  auto apply_transform(T && x) const {
+    return std::get<I>(transformers_)(std::forward<T>(x));
+  }
+
+  template <std::size_t I, typename T,
+            requires_execution_context<std::tuple_element_t<I,transformers_type>> = 0>
+  auto apply_transform(T && x) const {
+    using context_type = std::tuple_element_t<I,transformers_type>;
+    pipeline_sequential_execution<typename context_type::transformers_type> inner{std::get<I>(transformers_)};
+    return inner.run_inner(std::forward<T>(x));
+  }
+
+  template <std::size_t I, typename T,
+            requires_pipeline<std::tuple_element_t<I,transformers_type>> = 0>
+  auto apply_transform(T && x) const {
+    constexpr sequential_execution seq;
+    using piepeline_type = std::tuple_element_t<I,transformers_type>;
+    auto pipe = std::get<I>(transformers_);
+    auto ctx = run_with(seq, pipe);
+    pipeline_sequential_execution<decltype(ctx)> ex{ctx};
+    return ex.run_inner(std::forward<T>(x));
+  }
+
+private:
+  transformers_type transformers_;
+};
+
+
+template <typename Context,
+          requires_execution_context<Context> = 0,
+          requires_execution_supported<typename Context::execution_type> = 0,
+          requires_sequential<typename Context::execution_type> = 0>
+void sequential_execution::pipeline(Context && ctx) const
 {
-  if (is_sequential_execution<Execution>()) {
-  }
-  else {
-  }
+  std::cerr << "sequential_execution::pipeline(ctx)\n";
+  //pipeline_sequential_execution<Context> ex{ctx};
+  //ex.run_outer()
+}
+
+template <typename Generator, typename ... Transformers,
+          requires_not_execution_context<Generator> = 0>
+void sequential_execution::pipeline(
+    Generator && generate_op, 
+    Transformers && ... transform_op) const
+{
+  std::cerr << "sequential_execution::pipeline(generator,transformer)\n";
+  pipeline_sequential_execution<Generator,Transformers...> ex{
+    std::forward<Generator>(generate_op), 
+    std::forward<Transformers>(transform_op)...};
+  ex.run_outer();
 }
 
 } // end namespace grppi

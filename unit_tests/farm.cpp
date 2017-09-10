@@ -29,6 +29,7 @@
 
 #include "supported_executions.h"
 
+/*
 using namespace std;
 using namespace grppi;
 template <typename T>
@@ -635,3 +636,4 @@ TYPED_TEST(farm_test, dyn_multiple_ary_sink)
   this->run_multiple_ary_sink(this->dyn_execution_);
   this->check_multiple_ary_sink();
 }
+*/

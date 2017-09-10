@@ -28,6 +28,7 @@
 
 #include "supported_executions.h"
 
+/*
 using namespace std;
 using namespace grppi;
 template <typename T>
@@ -171,6 +172,7 @@ TYPED_TEST(stream_iteration_test, dyn_no_composed)
   this->run_nested_iteration(this->dyn_execution_);
   this->check_no_composed();
 }
+*/
 
 /*
 TYPED_TEST(stream_iteration_test, static_composed_pipeline)

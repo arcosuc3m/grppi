@@ -27,19 +27,38 @@ namespace grppi {
 /**
 \brief Representation of an execution context.
 */
-template <typename Execution, typename ... Transformers,
-          template <typename...> Pipeline>
+template <typename Execution, typename Pipeline,
+          requires_pipeline<Pipeline> = 0>
 class execution_context_t {
 public:
 
-  execution_context_t(const Execution & e, Pipeline<Transformers...> && pipe) noexcept:
+  using execution_type = Execution;
+  using pipeline_type = Pipeline;
+  using transformers_type = typename Pipeline::transformers_type;
+
+  execution_context_t(const Execution & e, Pipeline && pipe) noexcept:
     execution_{e},
     pipeline_{pipe}
-  {}
+  {
+    std::cerr << "execution context size -> " 
+        << std::tuple_size<transformers_type>() << "\n";
+  }
+
+  execution_context_t(const Execution & e, const Pipeline & pipe) noexcept:
+    execution_{e},
+    pipeline_{pipe}
+  {
+    std::cerr << "execution context size -> " 
+        << std::tuple_size<transformers_type>() << "\n";
+  }
+
+  auto transformers() const noexcept {
+    return pipeline_.transformers();
+  }
 
 private:
   const Execution & execution_;
-  Pipeline<Transformers...> pipeline_;
+  Pipeline pipeline_;
 };
 
 namespace internal {
@@ -47,8 +66,8 @@ namespace internal {
 template<typename T>
 struct is_execution_context : std::false_type {};
 
-template <typename E, typename ... T, template <typename...> Pipe>
-struct is_execution_context<execution_context_t<E, Pipe<T...>>> :std::true_type {};
+template <typename E, typename Pipeline>
+struct is_execution_context<execution_context_t<E, Pipeline>> :std::true_type {};
 
 } // namespace internal
 
@@ -57,5 +76,10 @@ static constexpr bool is_execution_context = internal::is_execution_context<std:
 
 template <typename T>
 using requires_execution_context = typename std::enable_if_t<is_execution_context<T>, int>;
+
+template <typename T>
+using requires_not_execution_context = typename std::enable_if_t<!is_execution_context<T>, int>;
+
+} // namespace grppi
 
 #endif

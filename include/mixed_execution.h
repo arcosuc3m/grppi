@@ -21,19 +21,37 @@
 #ifndef GRPPI_MIXED_EXECUTION_H
 #define GRPPI_MIXED_EXECUTION_H
 
+#include "common/execution_context.h"
+
 #include <utility>
 
 
 namespace grppi {
 
 template <typename Execution, typename ... Transformers,
-          template <typename...> Pipeline,
-          requires_execution_supported<Execution> = 0>
-auto pipeline(
+          template <typename...> class Pipeline,
+          requires_execution_supported<Execution> = 0,
+          requires_pipeline<Pipeline<Transformers...>> = 0>
+auto run_with(
+    const Execution & ex, 
+    Pipeline<Transformers...> & pipeline_obj) 
+{
+  using pipe_type = Pipeline<Transformers...>;
+  using context_type = execution_context_t<Execution,pipe_type>;
+  return context_type(ex, pipeline_obj);
+}
+
+template <typename Execution, typename ... Transformers,
+          template <typename...> class Pipeline,
+          requires_execution_supported<Execution> = 0,
+          requires_pipeline<Pipeline<Transformers...>> = 0>
+auto run_with(
     const Execution & ex, 
     Pipeline<Transformers...> && pipeline_obj) 
 {
-  return execution_context_t(ex, pipeline_obj);
+  using pipe_type = Pipeline<Transformers...>;
+  using context_type = execution_context_t<Execution,pipe_type>;
+  return context_type(ex, std::forward<pipe_type>(pipeline_obj));
 }
 
 /**

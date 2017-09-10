@@ -28,6 +28,7 @@
 
 #include "supported_executions.h"
 
+/*
 using namespace std;
 using namespace grppi;
 template <typename T>
@@ -215,3 +216,4 @@ TYPED_TEST(stream_reduce_test, dyn_offset_window)
   this->run_reduction_add(this->dyn_execution_);
   this->check_offset_window();
 }
+*/
