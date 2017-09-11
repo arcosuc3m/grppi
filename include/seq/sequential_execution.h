@@ -530,15 +530,21 @@ void sequential_execution::do_pipeline(
   farm_obj(std::forward<Item>(item));
 }
 
-template <typename Queue, typename Transformer, typename Window,
+template <typename Item, typename Transformer, typename Window,
           template <typename C, typename W> class Farm,
           typename ... OtherTransformers,
           requires_window_farm<Farm<Transformer,Window>> = 0>
 void sequential_execution::do_pipeline(
-    Queue && input_queue,
+    Item && item,
     Farm<Transformer,Window> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
 {
+   auto win = farm_obj.get_window();
+   if ( win.add_item( std::move(item) ) ) {
+      do_pipeline( farm_obj.transform(win.get_window()),
+         std::forward<OtherTransformers>(other_transform_ops)...);
+   }  
+   farm_obj.save_window(win);
 }
 
 

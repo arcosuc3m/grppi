@@ -21,6 +21,7 @@
 #define GRPPI_COMMON_WINDOWED_FARM_PATTERN_H
 
 #include <type_traits>
+#include <memory>
 
 namespace grppi {
 
@@ -55,6 +56,11 @@ public:
   
   auto get_window(){
     return window_;
+  }
+
+  void save_window(window_type w)
+  {
+    window_ = w;
   }
 
   /**

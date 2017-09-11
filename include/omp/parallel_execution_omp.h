@@ -939,6 +939,58 @@ void parallel_execution_omp::do_pipeline(
     Farm<Transformer,Window> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
 {
+   using namespace std;
+  using namespace experimental;
+
+  using window_type = typename result_of<decltype(&Window::get_window)(Window)>::type;
+  using window_optional_type = experimental::optional<window_type>;
+  using window_item_type = pair <window_optional_type, long> ;
+
+  auto intermediate_queue = make_queue< window_item_type >();
+
+  #pragma omp task shared (input_queue, intermediate_queue, farm_obj)
+  {
+    long order = 0;
+    auto win = farm_obj.get_window();
+    auto item = input_queue.pop();
+    while(item.first) {
+      while(!win.add_item(std::move(*item.first) )){
+        item = input_queue.pop();
+        if(!item.first) break;
+      }
+      if(item.first) item = input_queue.pop();
+      intermediate_queue.push( make_pair(win.get_window(), order) );
+      order++;
+    }
+    intermediate_queue.push( make_pair(window_optional_type{}, -1) );
+  }
+
+  using result_type = typename result_of<Transformer(window_type)>::type;
+  using output_optional_type = experimental::optional <result_type>;
+  using output_item_type = pair <output_optional_type,long>;
+  auto output_queue = make_queue<output_item_type>();
+  atomic<int> done_threads{0};
+
+  for (int i=0; i<farm_obj.cardinality(); ++i) {
+    #pragma omp task shared(intermediate_queue, output_queue, farm_obj, done_threads)
+    {
+      long order = 0;
+      auto item{intermediate_queue.pop()};
+      while (item.first) {
+        auto out = output_optional_type{farm_obj.transform(*item.first)};
+        output_queue.push(make_pair(out,item.second)) ;
+        item = intermediate_queue.pop();
+      }
+      intermediate_queue.push(item);
+      done_threads++;
+      if (done_threads == farm_obj.cardinality()) {
+        output_queue.push(make_pair(output_optional_type{}, -1));
+      }
+    }
+  }
+  do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
+  #pragma omp taskwait
+
 }
 
 
