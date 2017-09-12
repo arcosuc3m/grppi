@@ -131,13 +131,17 @@ struct PMINodeFilter : ff_node {
 
     inline void * svc(void *t) {
         void * outslot = GO_ON;
+        std::experimental::optional<TSin> check;
         TSin * input_item = (TSin *) t;
+        check = *input_item;
 
-        if (cond(*input_item)) {
-        	outslot = t;
-        } else {
-            input_item->~TSin();
-            FF_FREE(input_item);
+        if(check) {
+        	if (cond(*input_item)) {
+        		outslot = t;
+        	} else {
+        		input_item->~TSin();
+        		FF_FREE(input_item);
+        	}
         }
 
         return outslot;
