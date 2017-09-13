@@ -49,12 +49,8 @@ template <typename Generator, typename Predicate, typename Consumer>
 void keep(parallel_execution_ff & ex, Generator generate_op,
           Predicate predicate_op, Consumer consume_op) {
 
-	bool notnested = true;
-
 	using generator_type   = typename std::result_of<Generator()>::type;
 	using generalOutType   = typename generator_type::value_type;
-	//using transformer_type = typename std::result_of<Predicate(emitterOutType)>::type;
-	//using transformerOutType = typename transformer_type::value_type;
 
 	auto nw = ex.concurrency_degree();
 
@@ -73,11 +69,7 @@ void keep(parallel_execution_ff & ex, Generator generate_op,
 	farm.setInputQueueLength(nw*1);
 	farm.setOutputQueueLength(nw*1);
 
-	if(notnested)
-		farm.run_and_wait_end();
-
-
-
+	farm.run_and_wait_end();
 }
 
 

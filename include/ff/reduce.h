@@ -42,7 +42,7 @@ on a data sequence with parallel FF execution.
 template < typename InputIt, typename Identity, typename Combiner>
 auto reduce(parallel_execution_ff & ex,
             InputIt first, InputIt last, 
-            Identity & identity,
+            Identity identity,
             Combiner && combine_op)
 {
 
@@ -61,8 +61,6 @@ auto reduce(parallel_execution_ff & ex,
 			[&](const long internal_it, typename std::iterator_traits<InputIt>::value_type &vaR) {
 		vaR = combine_op( vaR, *(first+internal_it) );
 	}, final_red, ex.concurrency_degree());
-
-	//std::cout << "[REDUCE_FF] vaR: " << vaR << " identity: " << vaR_identity << std::endl;
 
 	return vaR;
 

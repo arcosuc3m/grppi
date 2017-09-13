@@ -65,15 +65,19 @@ struct PMINode : ff_node {
     PMINode(L const &lf) : callable(lf) {};
 
     inline void * svc(void *t) {
+    	std::experimental::optional<TSin> check;
         void * outslot = FF_MALLOC(sizeof(TSout));
         TSout * out = new (outslot) TSout();
         TSin * input_item = (TSin *) t;
+        check = *input_item;
 
-        *out = std::move(callable(*input_item));
+        if(check) {
+        	*out = std::move(callable(check.value()));
+        	input_item->~TSin();
+        	FF_FREE(input_item);
+        }
 
-        input_item->~TSin();
-        FF_FREE(input_item);
-        return(outslot);
+        return outslot;
     }
 };
 
@@ -86,7 +90,6 @@ struct PMINode<void,TSout,L> : ff_node {
     PMINode(L const &lf) : callable(lf) {};
 
     inline void * svc(void *) {
-        // ff::ff_optional<TSout> ret;
     	std::experimental::optional<TSout> ret;
         void *outslot = FF_MALLOC(sizeof(TSout));
         TSout *out = new (outslot) TSout();
@@ -111,10 +114,15 @@ struct PMINode<TSin,void,L> : ff_node {
     PMINode(L const &lf) : callable(lf) {};
 
     inline void * svc(void *t) {
+    	std::experimental::optional<TSin> check;
         TSin * input_item = (TSin *) t;
-        callable(*input_item);
-        input_item->~TSin();
-        FF_FREE(input_item);
+        check = *input_item;
+
+        if(check) {
+        	callable(check.value());
+        	input_item->~TSin();
+        	FF_FREE(input_item);
+        }
         return GO_ON;
     }
 };
@@ -127,23 +135,22 @@ template <typename TSin, typename L>
 struct PMINodeFilter : ff_node {
     L cond;
 
-    PMINodeFilter (L const &c):cond(c) {};
+    PMINodeFilter (L const &c) : cond(c) {};
 
     inline void * svc(void *t) {
-        void * outslot = GO_ON;
-        std::experimental::optional<TSin> check;
+    	std::experimental::optional<TSin> check;
+    	void * outslot = GO_ON;
         TSin * input_item = (TSin *) t;
         check = *input_item;
 
         if(check) {
-        	if (cond(*input_item)) {
+        	if ( cond(check.value()) ) {
         		outslot = t;
         	} else {
         		input_item->~TSin();
         		FF_FREE(input_item);
         	}
         }
-
         return outslot;
     }
 };

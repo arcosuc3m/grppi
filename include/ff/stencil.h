@@ -49,11 +49,11 @@ void stencil(parallel_execution_ff & ex,
 	ssize_t total_parfor_size = last-first;
 	ff::ParallelFor pf;
 
-	pf.parallel_for_idx(0,total_parfor_size,1,total_parfor_size/ex.concurrency_degree(),
+	pf.parallel_for_idx(0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
 			[&](const long internal_start, const long internal_stop, const int thid) {
 		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
 			*(first_out+internal_it) = transform_op( (first+internal_it), neighbour_op((first+internal_it)) );
-	},ex.concurrency_degree());
+	}, ex.concurrency_degree());
 
 
 }
@@ -85,12 +85,13 @@ void stencil(parallel_execution_ff & ex,
 	ssize_t total_parfor_size = last-first;
 	ff::ParallelFor pf;
 
-	pf.parallel_for_idx(0,total_parfor_size,1,total_parfor_size/ex.concurrency_degree(),
+	pf.parallel_for_idx(0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
 			[&](const long internal_start, const long internal_stop, const int thid) {
 		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
 			*(first_out+internal_it) = transform_op( (first+internal_it),
-					neighbour_op((first+internal_it), (other_firsts+internal_it)...) );
-	},ex.concurrency_degree());
+					neighbour_op( (first+internal_it), (other_firsts+internal_it)... )
+					);
+	}, ex.concurrency_degree());
 
 }
 

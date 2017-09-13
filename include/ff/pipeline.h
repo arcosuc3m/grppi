@@ -25,7 +25,6 @@ namespace grppi {
 class ff_wrap_pipeline: public ff::ff_pipeline {
 private:
 
-	// need to see this before add2pipeall variadic template function
 	inline void add2pipe(ff_node &node) {
 		ff::ff_pipeline::add_stage(&node);
 	}
@@ -38,25 +37,26 @@ private:
     template <typename T>
         void add2pipeall() { }
 
+
     // Last stage
     template <typename Transformer, class Input>
-    //typename std::is_same<typename std::result_of<Transformer(Input)>::type,void> // last stage node must return void?
-    void add2pipeall(Input, Transformer &&stage) {
+    // typename std::is_same<typename std::result_of<Transformer(Input)>::type,void>
+    auto add2pipeall(Input, Transformer &&stage) {
 
         auto n = new ff::PMINode<Input,void,Transformer>(stage);
         add2pipe(n);
     }
 
+
     // Intermediate stage (aka sequential stage)
-    template <typename Transformer, typename ... MoreTransformers, typename Input>
-    void add2pipeall(Input, Transformer && predicate_op, MoreTransformers && ... more_transform_ops) {
+    template <typename Predicate, typename ... MoreTransformers, typename Input>
+    auto add2pipeall(Input in, Predicate && predicate_op, MoreTransformers && ... more_transform_ops) {
 
     	using optional_input_type = std::experimental::optional<Input>;
-    	using output_type = typename std::result_of<Transformer(Input)>::type;
-    	//using predOutType = typename output_type::value_type;
+    	using output_type = typename std::result_of<Predicate(Input)>::type;
     	using optional_output_type = std::experimental::optional<output_type>;
 
-    	auto n = new ff::PMINode<Input,output_type,Transformer>(predicate_op);
+    	auto n = new ff::PMINode<Input,output_type,Predicate>(predicate_op);
 
     	// add node to pipeline
     	add2pipe(n);
@@ -65,7 +65,8 @@ private:
     	add2pipeall(output_type{}, std::forward<MoreTransformers>(more_transform_ops)...);
     }
 
-    //Intermediate stages -- Filter
+
+    // Intermediate stages -- Filter
     template <typename Predicate, typename... MoreTransformers, typename Input>
     auto add2pipeall(Input in,
     		filter_info<parallel_execution_ff,Predicate> & filter_obj,
@@ -77,47 +78,37 @@ private:
     }
 
 
-    // TODO: Filter
+    // Intermediate stages -- Filter impl
     template <typename Predicate, typename ... MoreTransformers, typename Input>
-    void add2pipeall(Input,
+    auto add2pipeall(Input in,
     		filter_info<parallel_execution_ff, Predicate> && predicate_op,
 			MoreTransformers && ... more_transform_ops) {
 
-    	//    	using optional_input_type = std::experimental::optional<Input>;
-    	//    	using output_type = typename std::result_of<Predicate(Input)>::type;
-    	//    	//using predOutType = typename output_type::value_type;
-    	//    	using optional_output_type = std::experimental::optional<output_type>;
-    	//using task_t = typename std::remove_pointer<decltype(Predicate::task)>::type;
-    	//using outItemType = typename std::result_of<task_t(Input)>::type;
-
     	using optional_input_type = std::experimental::optional<Input>;
-    	auto taskf = predicate_op.task;
-    	using worker_type = decltype(taskf);
+    	using output_type = typename std::result_of<Predicate(Input)>::type;
 
     	// Build the farm
-//    	size_t nworkers = predicate_op.exectype.concurrency_degree(); //stage.exectype->num_threads;
-//
-//    	std::vector<std::unique_ptr<ff::ff_node>> w;
-//
-//    	for(int i=0; i<nworkers; ++i)
-//    		w.push_back(std::make_unique<ff::PMINodeFilter<optional_input_type,worker_type> >(predicate_op.task) );
+    	size_t nworkers = predicate_op.exectype.concurrency_degree();
 
-    	auto n = new ff::PMINodeFilter<Input,worker_type>(predicate_op.task);
+    	std::vector<std::unique_ptr<ff::ff_node>> w;
 
-//    	ff::ff_Farm<> * theFarm = new ff::ff_Farm<>(std::move(w)); //,std::move(E),std::move(C));
-//    	theFarm->setFixedSize(true);
-//    	theFarm->setInputQueueLength(nworkers*1);
-//    	theFarm->setOutputQueueLength(nworkers*1);
+    	for(int i=0; i<nworkers; ++i)
+    		w.push_back(std::make_unique<ff::PMINodeFilter<Input,Predicate> >(predicate_op.task) );
+
+    	ff::ff_Farm<> * theFarm = new ff::ff_Farm<>(std::move(w));
+    	theFarm->setFixedSize(true);
+    	theFarm->setInputQueueLength(nworkers*1);
+    	theFarm->setOutputQueueLength(nworkers*1);
 
     	// add node to pipeline
-    	add2pipe(n);
+    	add2pipe(theFarm);
 
-    	// recurse - template deduction should stop this recursion when no more args are given
-    	add2pipeall(worker_type{}, std::forward<MoreTransformers>(more_transform_ops)...);
+    	// recurse - template deduction stops this recursion when no more args are given
+    	add2pipeall(in, std::forward<MoreTransformers>(more_transform_ops)...);
     }
 
 
-    //Intermediate stages -- Farm
+    // Intermediate stages -- Farm
     template <typename Transformer, typename... MoreTransformers, typename Input>
     auto add2pipeall(Input in,
     		farm_info<parallel_execution_tbb,Transformer> & farm_obj,
@@ -129,38 +120,26 @@ private:
     }
 
 
-    // TODO: farm nesting into pipeline fails.
+    // Intermediate stages -- Farm impl
     template <typename Transformer, typename ... MoreTransformers, typename Input>
-    void add2pipeall(Input in,
+    auto add2pipeall(Input,
     		farm_info<parallel_execution_ff,Transformer>  && stage,
 			MoreTransformers &&...args) {
 
-    	auto taskf = stage.task;
-    	// typedef decltype(taskf) workerType;
-    	// output_type -- typedef typename std::remove_pointer<decltype(Transformer::task)>::type task_t;
-    	// output_value_type -- using outItemType = typename std::result_of<task_t(ToutOfPrevStage)>::type;
-    	// using output_type = typename std::result_of<Transformer(Input)>::type;
-
-    	// TODO: these types are used to handle optional values.
     	using optional_input_type = std::experimental::optional<Input>;
-
-    	//using output_value_type = output_type::value_type;
-    	using task_t = typename std::remove_pointer<decltype(Transformer::task)>::type;
-    	using outItemType = typename std::result_of<task_t(optional_input_type)>::type;
-    	using worker_type = decltype(taskf);
-
-    	using optional_output_type = std::experimental::optional<worker_type>;
+    	using output_type = typename std::result_of<Transformer(Input)>::type;
+    	using optional_output_type = std::experimental::optional<output_type>;
 
     	// Build the farm
-    	size_t nworkers = stage.exectype.concurrency_degree(); //stage.exectype->num_threads;
+    	size_t nworkers = stage.exectype.concurrency_degree();
 
     	std::vector<std::unique_ptr<ff::ff_node>> w;
 
     	for(int i=0; i<nworkers; ++i)
-    		w.push_back(std::make_unique<ff::PMINode<Input,outItemType,worker_type> >(stage.task));
+    		w.push_back(std::make_unique<ff::PMINode<Input,output_type,Transformer> >(stage.task));
 
 
-    	ff::ff_Farm<> * theFarm = new ff::ff_Farm<>(std::move(w)); //,std::move(E),std::move(C));
+    	ff::ff_Farm<> * theFarm = new ff::ff_Farm<>(std::move(w));
     	theFarm->setFixedSize(true);
     	theFarm->setInputQueueLength(nworkers*1);
     	theFarm->setOutputQueueLength(nworkers*1);
@@ -168,8 +147,8 @@ private:
     	// Add farm to the pipeline
     	add2pipe(theFarm);
 
-    	// recurse - template deduction should stop this recursion when no more args are given
-    	add2pipeall(worker_type{}, std::forward<MoreTransformers>(args)...);
+    	// recurse - template deduction stops the recursion when no more args are given
+    	add2pipeall(output_type{}, std::forward<MoreTransformers>(args)...);
     }
 
 
@@ -185,7 +164,7 @@ public:
         using output_type = std::experimental::optional<generator_value_type>;
 
         // First stage
-        auto n = new ff::PMINode<void,result_type,Generator>(gen_func);
+        auto n = new ff::PMINode<void,generator_value_type,Generator>(gen_func);
         add2pipe(n);
 
         // Other stages
@@ -230,7 +209,7 @@ template <typename Generator, typename ... Transformers,
 void pipeline(parallel_execution_ff & ex, Generator generate_op,
               Transformers && ... transform_ops) {
 
-    bool notnested = true;
+    //bool notnested = true;
 
     ff_wrap_pipeline pipe(generate_op, transform_ops ...);
 
@@ -238,8 +217,8 @@ void pipeline(parallel_execution_ff & ex, Generator generate_op,
     pipe.setXNodeInputQueueLength(1024);
     pipe.setXNodeOutputQueueLength(1024);
 
-    if (notnested)
-        pipe.run_and_wait_end();
+    //if (notnested)
+    pipe.run_and_wait_end();
 
 }
 

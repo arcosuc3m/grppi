@@ -34,10 +34,7 @@ annidamento con pattern-as-a-worker:
 
 - StreamFilter pattern funzionante.
 
-- Pipeline parzialmente funzionante. L'attuale versione funziona con gli esempi 
-di pipeline contenuti in "samples/", ma nessuno di loro prevede la composizione 
-di pattern (es. Pipe+Farm). Se si aggiunge una farm come stage della pipeline, 
-ci sono errori di compilazione con qualsiasi backend. 
+- Pipeline funzionante, con pattern nesting. 
 
 - Problemi con Divide&Conquer: l'interfaccia grPPI per Divide&Conquer non 
 prevede la dichiarazione esplicita di una condizione di split (per identificare 
@@ -54,15 +51,17 @@ identificare il caso base.
     . Farm
     . StreamReduce
     . StreamFilter
-    . Pipeline (partial)
+    . Pipeline
 Compilati con GNU g++ 6.3.0, eseguendo gli esempi contenuti in 
 "${PROJECT_SOURCE_DIR}/samples/", con eventuali modifiche per riscontri di 
-correttezza. Non ho ancora eseguito l'intera test-suite contenuta in 
-"${PROJECT_SOURCE_DIR}/unit_tests/"
+correttezza. 
+
+- Eseguiti tutti i test inclusi in 'unit_test': 117 test eseguiti con successo 
+su 122. 5 falliti, da verificare.
 
 
 ## TODO: 
+- verificare unit_tests falliti
 - sistemare Divide&Conquer
-- pipeline per pattern composition
 - StreamIterator?
 

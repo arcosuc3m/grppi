@@ -49,11 +49,11 @@ inline void map(parallel_execution_ff & ex,
 	ssize_t total_parfor_size = last-first;
 	ff::ParallelFor pf;
 
-	pf.parallel_for_idx(0,total_parfor_size,1,total_parfor_size/ex.concurrency_degree(),
+	pf.parallel_for_idx(0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
 			[&](const long internal_start, const long internal_stop, const int thid) {
 		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
 			*(firstOut+internal_it) = taskf( *(first+internal_it) );
-	},ex.concurrency_degree());
+	}, ex.concurrency_degree());
 }
 
 
@@ -73,8 +73,12 @@ parallel execution.
 */
 template <typename InputIt, typename OutputIt,
 		typename Transformer, typename ... OtherInputsIts>
-inline void map(parallel_execution_ff & ex, InputIt first, InputIt last, OutputIt firstOut,
-		Transformer const & taskf, OtherInputsIts ... more ) {
+inline void map(parallel_execution_ff & ex,
+		InputIt first,
+		InputIt last,
+		OutputIt firstOut,
+		Transformer const & taskf,
+		OtherInputsIts ... more ) {
 
 	ssize_t total_parfor_size = last-first;
 	ff::ParallelFor pf;
@@ -83,7 +87,7 @@ inline void map(parallel_execution_ff & ex, InputIt first, InputIt last, OutputI
 			[&](const long internal_start, const long internal_stop, const int thid) {
 		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
 			*(firstOut+internal_it) = taskf( *(first+internal_it), *(more+internal_it)... );
-	},ex.concurrency_degree());
+	}, ex.concurrency_degree());
 }
 
 }

@@ -45,8 +45,12 @@ FF parallel execution.
 \return Result of the map/reduce operation.
 */
 template <typename InputIt, typename Transformer, typename Identity, typename Combiner>
-Identity map_reduce( parallel_execution_ff& ex, InputIt first, InputIt last,
-		Identity identity, Transformer && transform_op, Combiner && combine_op) {
+Identity map_reduce( parallel_execution_ff& ex,
+		InputIt first,
+		InputIt last,
+		Identity identity,
+		Transformer && transform_op,
+		Combiner && combine_op) {
 
 	size_t total_parfor_size = last-first;
 	auto nw = ex.concurrency_degree();
@@ -64,7 +68,7 @@ Identity map_reduce( parallel_execution_ff& ex, InputIt first, InputIt last,
 			partial_outs[internal_it] = transform_op(*(first+internal_it));
 	};
 
-	// Reduce funtion - this is the partial reduce function, executed in parallel
+	// Reduce function - this is the partial reduce function, executed in parallel
 	auto Reduce = [&](const long internal_it, Identity &vaR) {
 		vaR = combine_op( vaR, partial_outs[internal_it] );
 
@@ -75,7 +79,6 @@ Identity map_reduce( parallel_execution_ff& ex, InputIt first, InputIt last,
 		vaR = combine_op(a, b);
 	};
 
-	// FT: consider implementing map+reduce as pipeline stages. could it be more efficient?
 	pfr.parallel_for_idx(0, total_parfor_size, 1, total_parfor_size/ex.concurrency_degree(),
 			Map, ex.concurrency_degree() );
 

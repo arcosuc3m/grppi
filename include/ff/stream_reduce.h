@@ -71,6 +71,7 @@ struct ReduceEmitter : public ff::ff_node {
     	return EOS;
     }
 
+    // class variables
     int winsize;
     int offset;
     L gen_func;
@@ -79,8 +80,6 @@ struct ReduceEmitter : public ff::ff_node {
 // wraps combiner function
 template <typename TSin, typename TSout, typename L>
 struct ReduceWorker : ff::ff_node {
-	L combiner;
-	TSout vaR_id;
 
 	ReduceWorker(L const &comb, TSout ident) :
 		combiner(comb), vaR_id(ident) { };
@@ -99,13 +98,16 @@ struct ReduceWorker : ff::ff_node {
 
 		return (outslot);
 	}
+
+	// class variables
+	L combiner;
+	TSout vaR_id;
 };
 
 // wraps consumer function
 template<typename TSin, typename L>
 struct ReduceCollector : ff::ff_node {
 
-	L cons_func;
 	ReduceCollector(L const &lf) : cons_func(lf) {}
 
 	void *svc(void *t) {
@@ -115,6 +117,9 @@ struct ReduceCollector : ff::ff_node {
 		ff::FFAllocator::instance()->free(task);
 		return GO_ON;
 	}
+
+	// class variables
+	L cons_func;
 };
 
 
@@ -151,8 +156,6 @@ void stream_reduce(parallel_execution_ff & ex,
 				   Combiner &&combine_op,
                    Consumer &&consume_op) {
 
-	bool notnested = true;
-
 	using generator_type = typename std::result_of<Generator()>::type;
 	using genOutType	 = typename generator_type::value_type;
 
@@ -177,8 +180,7 @@ void stream_reduce(parallel_execution_ff & ex,
 	farm.setInputQueueLength(nw*1);
 	farm.setOutputQueueLength(nw*1);
 
-	if(notnested)
-		farm.run_and_wait_end();
+	farm.run_and_wait_end();
 
 }
 

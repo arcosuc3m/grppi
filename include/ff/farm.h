@@ -40,12 +40,10 @@ template <typename Generator, typename Consumer>
 void farm(parallel_execution_ff & ex, Generator generate_op,
 		Consumer consume_op) {
 
-	// keep this flag for nesting patterns.
-	bool notnested = true;
+	//bool notnested = true;
 
 	auto nw = ex.concurrency_degree();
 
-	// Deduces the return type
 	using generator_type = typename std::result_of<Generator()>::type;
 	using emitterOutType = typename generator_type::value_type;
 
@@ -66,22 +64,21 @@ void farm(parallel_execution_ff & ex, Generator generate_op,
 	farm.setInputQueueLength(nw*1);
 	farm.setOutputQueueLength(nw*1);
 
-	if(notnested) {
-		farm.remove_collector();
-		farm.run_and_wait_end();
-	}
+	//if(notnested) {
+	farm.remove_collector();
+	farm.run_and_wait_end();
+	//}
 }
 
 template <typename Generator, typename Transformer, typename Consumer>
 void farm(parallel_execution_ff & ex, Generator generate_op,
 		Transformer transform_op , Consumer consume_op) {
 
-	bool notnested = true;
+	//bool notnested = true;
 
 	using generator_type   = typename std::result_of<Generator()>::type;
 	using emitterOutType   = typename generator_type::value_type;
 	using transformer_type = typename std::result_of<Transformer(emitterOutType)>::type;
-	//using transformerOutType = typename transformer_type::value_type;
 
 	auto nw = ex.concurrency_degree();
 
@@ -100,8 +97,8 @@ void farm(parallel_execution_ff & ex, Generator generate_op,
 	farm.setInputQueueLength(nw*1);
 	farm.setOutputQueueLength(nw*1);
 
-	if(notnested)
-		farm.run_and_wait_end();
+	//if(notnested)
+	farm.run_and_wait_end();
 }
 
 

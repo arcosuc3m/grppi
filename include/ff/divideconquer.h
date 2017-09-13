@@ -68,7 +68,7 @@ divide_conquer(parallel_execution_ff & ex, Input & input,
 	};
 
 	// condition
-	// TODO: grPPI interface does not consider splitting operand.
+	// TODO: grPPI interface does not consider a splitting operand.
 	// split condition is supposed to be included in the divide function.
 	auto cond_fn = [&] (const Input &in) {
 		if(in>2) return false;
