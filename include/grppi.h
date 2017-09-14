@@ -23,6 +23,7 @@
 
 // Include for window policies
 #include "common/window_policies.h"
+#include "common/split_policies.h"
 
 // Includes for data parallel patterns
 #include "map.h"
@@ -57,7 +58,8 @@ namespace grppi {
 #include "stream_iteration.h"
 #include "stream_reduce.h"
 #include "windowed_farm.h"
-
+#include "split_join.h"
+#include "window.h"
 namespace grppi {
 
 /** 

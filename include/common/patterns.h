@@ -29,6 +29,9 @@
 #include "reduce_pattern.h"
 #include "iteration_pattern.h"
 #include "windowed_farm_pattern.h"
+#include "split_join_pattern.h"
+#include "window_pattern.h"
+
 namespace grppi{
 
 template <typename E,typename Stage, typename ... Stages>
@@ -80,10 +83,40 @@ constexpr bool is_no_pattern =
   !is_pipeline<T> &&
   !is_reduce<T> &&
   !is_iteration<T>&&
-  !is_window_farm<T>;
+  !is_window_farm<T>&&
+  !is_split_join<T>&&
+  !is_window<T>;
 
 template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
+
+template <typename T>
+using requires_pattern = std::enable_if_t<!is_no_pattern<T>, int>;
+
+
+//template <typename ...> struct input_type;
+
+
+template<class T, class Enable = void>
+class input_type {}; // primary template
+ 
+template<class T>
+class input_type<T, typename std::enable_if<  !is_no_pattern<T> >::type> {
+  public:
+  using type = typename T::input_type;
+};
+
+template<class T>
+class input_type<T, typename std::enable_if<  is_no_pattern<T> >::type> {
+  public:
+  using type = typename internal::function_traits<T>::template arg<0>::type;
+};
+
+/*template <typename T>
+using input_type = typename std::conditional<!is_no_pattern<T>, 
+    typename internal::function_traits<T>::template arg<0>::type,
+    typename T::input_type>::type;
+*/
 
 } // end namespace grppi
 

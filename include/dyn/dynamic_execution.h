@@ -224,6 +224,8 @@ template <>
 constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 
 
+template <>
+constexpr bool supports_split_join<dynamic_execution>() { return true; }
 
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
 {\

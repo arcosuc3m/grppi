@@ -35,7 +35,7 @@ class pipeline_t {
 public:
 
   using transformers_type = std::tuple<Transformers...>;
-
+  
   /**
   \brief Constructs a pipeline with several transformers.
   \param t Transformer for the first stage of the pipeline.

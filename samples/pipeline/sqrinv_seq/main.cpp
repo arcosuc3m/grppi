@@ -36,7 +36,6 @@
 void test_pipeline(grppi::polymorphic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
-
   grppi::pipeline(e, 
     [n]() -> optional<double> { 
       static int x = 0;

@@ -26,6 +26,7 @@
 #include "common/callable_traits.h"
 #include "common/execution_traits.h"
 #include "common/pipeline_pattern.h"
+#include "common/patterns.h"
 
 namespace grppi {
 
@@ -36,6 +37,12 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_pipeline
 @{
 */
+
+
+template <typename F>
+using requires_no_execution =
+  typename std::enable_if_t<internal::is_callable<F>::value||!is_no_pattern<F>, int>;
+
 
 /**
 \brief Invoke \ref md_pipeline on a data stream.
@@ -59,6 +66,8 @@ void pipeline(
       std::forward<Transformers>(transform_ops)...);
 }
 
+
+
 /**
 \brief Build a composable \ref md_pipeline representation
 that can be composed in other streaming patterns.
@@ -69,16 +78,15 @@ that can be composed in other streaming patterns.
 \param tranform_op First stage transformation operation
 \param more_trasnform_ops Transformation operations for each additional stage.
 */
-template <typename Generator, typename ... Transformers, typename Consumer>
+template <typename Generator, typename ... Transformers,
+          requires_no_execution<Generator> = 0>
 auto pipeline(
     Generator && generate_op,
-    Transformers && ... transform_ops,
-    Consumer && consume_op)
+    Transformers && ... transform_ops)
 {
-    return pipeline_t<Generator,Transformers...,Consumer> (
+    return pipeline_t<Generator,Transformers...> (
         std::forward<Generator>(generate_op),
-        std::forward<Transformers>(transform_ops)...,
-        std::forward<Consumer>(consume_op));
+        std::forward<Transformers>(transform_ops)...);
 }
 
 /**

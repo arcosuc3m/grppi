@@ -14,4 +14,4 @@ add_subdirectory(stream-reduce)
 add_subdirectory(stream-filter)
 add_subdirectory(stream-iteration)
 
-add_subdirectory(windowed_farm)
+add_subdirectory(split_join)

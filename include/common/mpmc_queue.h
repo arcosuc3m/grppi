@@ -41,7 +41,7 @@ class mpmc_queue{
       using value_type = T;
 
       mpmc_queue<T>(int q_size, queue_mode q_mode ):
-           size{q_size}, buffer{std::vector<T>(q_size)}, mode{q_mode}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
+           size{q_size}, buffer{std::vector<T>(q_size)}, mode{q_mode}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { } 
       
       mpmc_queue(mpmc_queue && q) :
         size{q.size},

@@ -249,6 +249,31 @@ private:
     Farm<Transformer,Window> && farm_obj,
     OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P, typename ... T> class SplitJoin,
+          typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    SplitJoin<Policy,Transformers...> & split_obj,
+    OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(split_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+
+  }
+
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P, typename ... T> class SplitJoin,
+          typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    SplitJoin<Policy,Transformers...> && split_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+
+
   template <typename Item, typename Predicate,
             template <typename> class Filter,
             typename ... OtherTransformers,
@@ -395,6 +420,7 @@ constexpr bool supports_divide_conquer<sequential_execution>() { return true; }
 */
 template <>
 constexpr bool supports_pipeline<sequential_execution>() { return true; }
+
 
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
@@ -545,6 +571,18 @@ void sequential_execution::do_pipeline(
          std::forward<OtherTransformers>(other_transform_ops)...);
    }  
    farm_obj.save_window(win);
+}
+
+template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P, typename ... T> class SplitJoin,
+          typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
+void sequential_execution::do_pipeline(
+    Queue && input_queue,
+    SplitJoin<Policy,Transformers...> && split_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+   
 }
 
 

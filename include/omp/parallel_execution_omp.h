@@ -516,7 +516,7 @@ constexpr bool supports_divide_conquer<parallel_execution_omp>() { return true; 
 \note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
 */
 template <>
-constexpr bool supports_pipeline<parallel_execution_omp>() { return true; }
+constexpr bool supports_pipeline<parallel_execution_omp>() { return false; }
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>

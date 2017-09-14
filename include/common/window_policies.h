@@ -33,6 +33,7 @@ Represents a farm of n replicas from a transformer.
 template <typename ItemType>
 class count_based{
 public:
+  using item_type = ItemType;
   /**
   \brief Constructs a farm with a cardinality and a transformer.
   \param n Number of replicas for the farm.
@@ -75,6 +76,7 @@ private:
 template <typename ItemType>
 class time_based {
 public:
+  using item_type = ItemType;
   using time_type = std::chrono::high_resolution_clock::time_point;
   /**
   \brief Constructs a farm time based window.
