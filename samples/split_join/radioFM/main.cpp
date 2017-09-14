@@ -211,7 +211,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
          }
        ),
        grppi::pipeline(
-        grppi::window(grppi::count_based<float>(taps,4)), //64,1
+        grppi::window(grppi::count_based<float>(taps,1)), //64,1
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
            //Low pass filter
