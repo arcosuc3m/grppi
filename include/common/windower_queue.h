@@ -24,8 +24,8 @@ class windower_queue{
     auto pop() { 
       using namespace std;
       using namespace experimental;
-
       if(!end_){
+        mut_.lock();
         auto item = input_queue_.pop();
         if(item.first){
           while(!policy_.add_item(std::move(*item.first) )){
@@ -37,9 +37,11 @@ class windower_queue{
           }
           auto window = make_pair(make_optional(policy_.get_window()), order_);
           order_++;
+          mut_.unlock();
           return window;
         }
         end_ = true;
+        mut_.unlock();
       }
       return make_pair(window_optional_type{}, -1);
    }

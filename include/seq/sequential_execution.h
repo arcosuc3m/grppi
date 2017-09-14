@@ -377,7 +377,7 @@ constexpr bool is_sequential_execution() {
 \note Specialization for sequential_execution.
 */
 template <>
-constexpr bool is_supported<sequential_execution>() { return true; }
+constexpr bool is_supported<sequential_execution>() { return false; }
 
 /**
 \brief Determines if an execution policy supports the map pattern.

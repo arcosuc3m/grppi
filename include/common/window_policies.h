@@ -55,14 +55,14 @@ public:
  
   auto get_window() noexcept{
     auto aux{items};
-    if (offset_ > window_size_) {
+    if (offset_ >= window_size_) {
       remaining = offset_ - window_size_;
       items.clear();
     }
     else {
       items.erase(items.begin(), std::next(items.begin(), offset_));
     }
-    return aux;
+    return std::move(aux);
   }
 
 private:

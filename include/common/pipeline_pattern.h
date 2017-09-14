@@ -21,7 +21,7 @@
 #define GRPPI_COMMON_PIPELINE_PATTERN_H
 
 #include <type_traits>
-
+#include "callable_traits.h"
 namespace grppi {
 
 /**
