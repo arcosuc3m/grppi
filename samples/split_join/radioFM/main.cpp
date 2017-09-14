@@ -134,10 +134,11 @@ void capitalize(grppi::parallel_execution_native & e/*,
       }
       return 0.0;
     },
+    grppi::window(grppi::count_based<float>(taps,1)), //64,1
     //Equalizer
     grppi::split_join(grppi::duplicate{},
       grppi::pipeline(
-        grppi::window(grppi::count_based<float>(taps,4)), //64,1
+        //grppi::window(grppi::count_based<float>(taps,4)), //64,1
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
            //Low pass filter
@@ -160,7 +161,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
               return sum;
            }
          ), 
-         grppi::window(grppi::count_based<float>(2,1)),
+         grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
          [](auto w){
             float val = 0.0;
@@ -174,7 +175,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
          }
        ),
        grppi::pipeline(
-        grppi::window(grppi::count_based<float>(taps,4)), //64,1
+        //grppi::window(grppi::count_based<float>(taps,1)), //64,1
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
            //Low pass filter
@@ -197,7 +198,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
               return sum;
            }
          ),
-         grppi::window(grppi::count_based<float>(2,1)),
+         grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
          [](auto w){
             float val = 0.0;
@@ -211,7 +212,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
          }
        ),
        grppi::pipeline(
-        grppi::window(grppi::count_based<float>(taps,1)), //64,1
+        //grppi::window(grppi::count_based<float>(taps,1)), //64,1
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
            //Low pass filter
@@ -234,7 +235,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
               return sum;
            }
          ),
-         grppi::window(grppi::count_based<float>(2,1)),
+         grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
          [](auto w){
             float val = 0.0;
@@ -248,7 +249,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
          }
        ),
        grppi::pipeline(
-        grppi::window(grppi::count_based<float>(taps,4)), //64,1
+//        grppi::window(grppi::count_based<float>(taps,4)), //64,1
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
            //Low pass filter
@@ -271,7 +272,7 @@ void capitalize(grppi::parallel_execution_native & e/*,
               return sum;
            }
          ),
-         grppi::window(grppi::count_based<float>(2,1)),
+         grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
          [](auto w){
             float val = 0.0;
