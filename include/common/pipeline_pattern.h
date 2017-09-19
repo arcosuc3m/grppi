@@ -77,20 +77,33 @@ private:
 
 namespace internal {
 
+template <typename, template <typename ...> class>
+struct is_pipeline : std::false_type{};
+
+template <class... T, template <class...> class W>
+struct is_pipeline <W<T...>, W> :std::true_type{};
+
+/*
 template<typename T>
 struct is_pipeline : std::false_type {};
 
 template <typename ... T>
 struct is_pipeline<pipeline_t<T...>> :std::true_type {};
-
+*/
 } // namespace internal
 
-template <typename T>
+template <class T>
+static constexpr bool is_pipeline = internal::is_pipeline<std::decay_t<T>, pipeline_t>();
+
+template <class T>
+using requires_pipeline = typename std::enable_if_t<is_pipeline<T>, int>;
+
+/*template <typename T>
 static constexpr bool is_pipeline = internal::is_pipeline<std::decay_t<T>>();
 
 template <typename T>
 using requires_pipeline = typename std::enable_if_t<is_pipeline<T>, int>;
-
+*/
 namespace internal {
 
 template <typename I, typename T>

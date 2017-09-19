@@ -79,7 +79,7 @@ that can be composed in other streaming patterns.
 \param more_trasnform_ops Transformation operations for each additional stage.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_execution<Generator> = 0>
+          requires_no_execution<std::decay_t<Generator>> = 0>
 auto pipeline(
     Generator && generate_op,
     Transformers && ... transform_ops)

@@ -950,7 +950,7 @@ This metafunction evaluates to false if GRPPI_TBB is disabled.
 */
 template <typename E>
 constexpr bool is_parallel_execution_tbb() {
-  return false;
+  return true;
 }
 
 } // end namespace grppi
