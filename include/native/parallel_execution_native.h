@@ -1174,7 +1174,6 @@ void parallel_execution_native::do_pipeline(
 
 }
 
-
 template <std::size_t index, typename InQueue, typename OutQueue, 
           typename ...Transformers, typename Policy,
           template <typename P, typename ... T> class SplitJoin,
@@ -1220,17 +1219,6 @@ typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
    });
    create_flow<index+1>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj),tasks);
 }
-
-template <typename T>
-struct next_type{
-  using type = typename input_type<typename std::decay<T>::type>::type;
-};
-
-template <typename T, typename ... Other>
-struct next_input_type{
-  using type = typename next_type<T>::type;
-};
-
 
 template <typename Queue, typename Policy, typename ... Transformers,
           template <typename P> class Window,

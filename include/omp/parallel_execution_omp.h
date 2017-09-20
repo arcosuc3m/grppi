@@ -24,6 +24,10 @@
 #ifdef GRPPI_OMP
 
 #include "../common/mpmc_queue.h"
+#include "../common/windower_queue.h"
+#include "../common/splitter_queue.h"
+#include "../common/split_consumer_queue.h"
+#include "../common/joiner_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 #include "../seq/sequential_execution.h"
@@ -124,6 +128,13 @@ public:
     return {queue_size_, queue_mode_};
   }
 
+
+  template <typename Queue, typename Policy>
+  splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
+      Queue & q, int num_queues, Policy policy) const
+  {
+     return {q, num_queues, policy, queue_size_, queue_mode_};
+  }
   /**
   \brief Get index of current thread in the thread table
   */
@@ -298,6 +309,71 @@ private:
   void do_pipeline(
     Queue && input_queue,
     Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    Window<Policy> && win_obj,
+    OtherTransformers & ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(win_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+
+  template <std::size_t index, typename InQueue, typename OutQueue,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+  typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
+    create_flow(
+          InQueue && split_queue,  OutQueue && join_queue,
+          SplitJoin<Policy,Transformers...> && split_obj) const;
+
+  template <std::size_t index, typename InQueue, typename OutQueue,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+  typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
+    create_flow(
+          InQueue && split_queue,  OutQueue && join_queue,
+          SplitJoin<Policy,Transformers...> && split_obj) const;
+
+
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P, typename ... T> class SplitJoin,
+          typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    SplitJoin<Policy,Transformers...> & split_obj,
+    OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(split_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+
+  }
+
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P, typename ... T> class SplitJoin,
+          typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    SplitJoin<Policy,Transformers...> && split_obj,
     OtherTransformers && ... other_transform_ops) const;
 
 
@@ -862,6 +938,7 @@ void parallel_execution_omp::do_pipeline(
 
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_ops)...);
+  #pragma omp taskwait
 }
 
 template <typename Queue, typename FarmTransformer,
@@ -993,6 +1070,99 @@ void parallel_execution_omp::do_pipeline(
 
 }
 
+
+template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+void parallel_execution_omp::do_pipeline(
+    Queue && input_queue,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+    using namespace std;
+    using namespace experimental;
+
+    windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
+    do_pipeline(window_queue, std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+
+template <std::size_t index, typename InQueue, typename OutQueue,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
+   parallel_execution_omp::create_flow(
+          InQueue && split_queue,  OutQueue && join_queue,
+          SplitJoin<Policy,Transformers...> && split_obj) const
+{
+   using namespace std;
+   using namespace experimental;
+
+   #pragma omp task shared(split_queue, join_queue, split_obj)
+   {
+     auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
+       join_queue.push( item, index);
+     };
+     split_consumer_queue<InQueue> input_queue(split_queue,index);
+     do_pipeline(input_queue, split_obj.template flow<index>(), consumer);
+     join_queue.push( typename std::decay<OutQueue>::type::value_type::first_type{},index);
+  }
+    #pragma omp taskwait
+}
+
+template <std::size_t index, typename InQueue, typename OutQueue,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
+   parallel_execution_omp::create_flow(
+          InQueue && split_queue,  OutQueue && join_queue,
+          SplitJoin<Policy,Transformers...> && split_obj) const
+{
+   using namespace std;
+   using namespace experimental;
+
+   #pragma omp task shared(split_queue, join_queue, split_obj)
+   {
+     auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
+       join_queue.push( item, index);
+     };
+     split_consumer_queue<InQueue> input_queue(split_queue,index);
+     do_pipeline(input_queue, split_obj.template flow<index>(), consumer);
+     join_queue.push(typename std::decay<OutQueue>::type::value_type::first_type{}, index);
+     //#pragma omp taskwait
+     
+   }
+   create_flow<index+1>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj));
+   #pragma omp taskwait
+}
+
+template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P, typename ... T> class SplitJoin,
+          typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
+void parallel_execution_omp::do_pipeline(
+    Queue && input_queue,
+    SplitJoin<Policy,Transformers...> && split_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+    using namespace std;
+    using namespace experimental;
+    using output_type = typename next_input_type<OtherTransformers...>::type;
+    using output_optional_type = experimental::optional<output_type>;
+    using output_item_type = pair <output_optional_type, long> ;
+
+    auto split_queue = make_split_queue( input_queue, split_obj.num_transformers(), split_obj.get_policy() );
+    joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
+    #pragma omp task shared(split_queue, join_queue, split_obj, input_queue)
+    {
+      create_flow<0>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj));
+    }
+    do_pipeline(join_queue, std::forward<OtherTransformers>(other_transform_ops)...);
+    #pragma omp taskwait
+}
 
 template <typename Queue, typename Predicate,
           template <typename> class Filter,

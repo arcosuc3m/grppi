@@ -112,6 +112,16 @@ class input_type<T, typename std::enable_if<  is_no_pattern<T> >::type> {
   using type = typename internal::function_traits<T>::template arg<0>::type;
 };
 
+template <typename T>
+struct next_type{
+  using type = typename input_type<typename std::decay<T>::type>::type;
+};
+
+template <typename T, typename ... Other>
+struct next_input_type{
+  using type = typename next_type<T>::type;
+};
+
 /*template <typename T>
 using input_type = typename std::conditional<!is_no_pattern<T>, 
     typename internal::function_traits<T>::template arg<0>::type,

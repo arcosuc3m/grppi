@@ -19,7 +19,9 @@ class windower_queue{
     using window_optional_type = std::experimental::optional<window_type>;
     using value_type = std::pair <window_optional_type, long> ;
     
-    void push(){}
+    void push(){
+       
+    }
 
     auto pop() { 
       using namespace std;

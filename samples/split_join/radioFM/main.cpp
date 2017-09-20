@@ -37,7 +37,7 @@
 
 
 
-void capitalize(grppi::parallel_execution_native & e/*, 
+void capitalize(grppi::parallel_execution_omp & e/*, 
                 std::istream & in, std::ostream & out*/)
 {
   using namespace std;
@@ -341,7 +341,8 @@ int main(int argc, char **argv) {
     return -1;
   }
 */
-  auto e = grppi::parallel_execution_native{};
+  //auto e = grppi::parallel_execution_native{};
+  auto e = grppi::parallel_execution_omp{};
   capitalize(e);
   return 0;
 }
