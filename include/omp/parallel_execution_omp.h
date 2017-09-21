@@ -23,11 +23,11 @@
 
 #ifdef GRPPI_OMP
 
-#include "../common/mpmc_queue.h"
-#include "../common/windower_queue.h"
-#include "../common/splitter_queue.h"
+#include "omp_mpmc_queue.h"
+#include "omp_windower_queue.h"
+#include "omp_splitter_queue.h"
 #include "../common/split_consumer_queue.h"
-#include "../common/joiner_queue.h"
+#include "omp_joiner_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 #include "../seq/sequential_execution.h"
@@ -124,13 +124,13 @@ public:
   set_queue_attributes(). The value is returned via move semantics.
   */
   template <typename T>
-  mpmc_queue<T> make_queue() const {
+  omp_mpmc_queue<T> make_queue() const {
     return {queue_size_, queue_mode_};
   }
 
 
   template <typename Queue, typename Policy>
-  splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
+  omp_splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
       Queue & q, int num_queues, Policy policy) const
   {
      return {q, num_queues, policy, queue_size_, queue_mode_};
@@ -632,7 +632,7 @@ auto parallel_execution_omp::reduce(
         const auto delta = chunk_size * i;
         const auto chunk_first = std::next(first,delta);
 
-        #pragma omp task firstprivate (chunk_first, chunk_size, i)
+        #pragma omp task untied firstprivate (chunk_first, chunk_size, i)
         {
           process_chunk(chunk_first, chunk_size, i);
         }
@@ -680,7 +680,7 @@ auto parallel_execution_omp::map_reduce(
     {
 
       for (int i=0;i<concurrency_degree_-1;++i) {    
-        #pragma omp task firstprivate(i)
+        #pragma omp task untied firstprivate(i)
         {
           const auto delta = chunk_size * i;
           const auto chunk_firsts = iterators_next(firsts,delta);
@@ -725,7 +725,7 @@ void parallel_execution_omp::stencil(
     #pragma omp single nowait
     {
       for (int i=0; i<concurrency_degree_-1; ++i) {
-        #pragma omp task firstprivate(i)
+        #pragma omp task untied firstprivate(i)
         {
           const auto delta = chunk_size * i;
           const auto chunk_firsts = iterators_next(firsts,delta);
@@ -773,7 +773,7 @@ void parallel_execution_omp::pipeline(
   {
     #pragma omp single nowait
     {
-      #pragma omp task shared(generate_op,output_queue)
+      #pragma omp task untied shared(generate_op,output_queue)
       {
         long order = 0;
         for (;;) {
@@ -827,7 +827,7 @@ auto parallel_execution_omp::divide_conquer(
     { 
       auto i = subproblems.begin() + 1;
       while (i!=subproblems.end() && num_threads.load()>0) {
-        #pragma omp task firstprivate(i,division) \
+        #pragma omp task untied firstprivate(i,division) \
                 shared(partials,divide_op,solve_op,combine_op,num_threads)
         {
            process_subproblems(i, division);
@@ -925,7 +925,7 @@ void parallel_execution_omp::do_pipeline(
   using output_type = pair<output_value_type,long>;
   auto output_queue = make_queue<output_type>();
 
-  #pragma omp task shared(transform_op, input_queue, output_queue)
+  #pragma omp task untied shared(transform_op, input_queue, output_queue)
   {
     for (;;) {
       auto item = input_queue.pop(); 
@@ -954,7 +954,7 @@ void parallel_execution_omp::do_pipeline(
   using input_value_type = typename input_type::first_type::value_type;
  
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task shared(farm_obj,input_queue)
+    #pragma omp task untied shared(farm_obj,input_queue)
     {
       auto item = input_queue.pop();
       while (item.first) {
@@ -988,7 +988,7 @@ void parallel_execution_omp::do_pipeline(
   auto output_queue = make_queue<output_type>();
   atomic<int> done_threads{0};
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue)
+    #pragma omp task untied shared(done_threads,output_queue,farm_obj,input_queue)
     {
       auto item = input_queue.pop();
       while (item.first) {
@@ -1025,7 +1025,7 @@ void parallel_execution_omp::do_pipeline(
 
   auto intermediate_queue = make_queue< window_item_type >();
 
-  #pragma omp task shared (input_queue, intermediate_queue, farm_obj)
+  #pragma omp task untied shared (input_queue, intermediate_queue, farm_obj)
   {
     long order = 0;
     auto win = farm_obj.get_window();
@@ -1049,7 +1049,7 @@ void parallel_execution_omp::do_pipeline(
   atomic<int> done_threads{0};
 
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task shared(intermediate_queue, output_queue, farm_obj, done_threads)
+    #pragma omp task untied shared(intermediate_queue, output_queue, farm_obj, done_threads)
     {
       long order = 0;
       auto item{intermediate_queue.pop()};
@@ -1083,7 +1083,7 @@ void parallel_execution_omp::do_pipeline(
     using namespace std;
     using namespace experimental;
 
-    windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
+    omp_windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
     do_pipeline(window_queue, std::forward<OtherTransformers>(other_transform_ops)...);
 }
 
@@ -1100,7 +1100,7 @@ typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
    using namespace std;
    using namespace experimental;
 
-   #pragma omp task shared(split_queue, join_queue, split_obj)
+   #pragma omp task untied shared(split_queue, join_queue, split_obj)
    {
      auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
        join_queue.push( item, index);
@@ -1124,7 +1124,7 @@ typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
    using namespace std;
    using namespace experimental;
 
-   #pragma omp task shared(split_queue, join_queue, split_obj)
+   #pragma omp task untied shared(split_queue, join_queue, split_obj)
    {
      auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
        join_queue.push( item, index);
@@ -1155,8 +1155,8 @@ void parallel_execution_omp::do_pipeline(
     using output_item_type = pair <output_optional_type, long> ;
 
     auto split_queue = make_split_queue( input_queue, split_obj.num_transformers(), split_obj.get_policy() );
-    joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
-    #pragma omp task shared(split_queue, join_queue, split_obj, input_queue)
+    omp_joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
+    #pragma omp task untied shared(split_queue, join_queue, split_obj, input_queue)
     {
       create_flow<0>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj));
     }
@@ -1251,12 +1251,12 @@ void parallel_execution_omp::do_pipeline(
     };
 
     
-    #pragma omp task shared(filter_queue,filter_obj,input_queue)
+    #pragma omp task untied shared(filter_queue,filter_obj,input_queue)
     {
       filter_task();
     }
     
-    #pragma omp task shared (output_queue,filter_queue)
+    #pragma omp task untied shared (output_queue,filter_queue)
     {
       reorder_task();
     }
@@ -1278,7 +1278,7 @@ void parallel_execution_omp::do_pipeline(
       filter_queue.push(make_pair(input_value_type{}, -1));
     };
 
-    #pragma omp task shared(filter_queue,filter_obj,input_queue)
+    #pragma omp task untied shared(filter_queue,filter_obj,input_queue)
     {
       filter_task();
     }
@@ -1382,7 +1382,7 @@ void parallel_execution_omp::do_pipeline(
     output_queue.push(input_item_type{{},-1});
   };
 
-  #pragma omp task shared(iteration_obj,input_queue,output_queue)
+  #pragma omp task untied shared(iteration_obj,input_queue,output_queue)
   {
     iteration_task();
   }

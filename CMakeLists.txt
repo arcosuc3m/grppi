@@ -38,7 +38,7 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
         message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 16.0 or above.")
     else()
         message( STATUS "C++ Compiler is Intel" )
-        message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
+   #     message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
     endif()
 
 else()
