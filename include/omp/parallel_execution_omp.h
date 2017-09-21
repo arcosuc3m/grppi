@@ -1156,7 +1156,8 @@ void parallel_execution_omp::do_pipeline(
 
     auto split_queue = make_split_queue( input_queue, split_obj.num_transformers(), split_obj.get_policy() );
     omp_joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
-    #pragma omp task untied shared(split_queue, join_queue, split_obj, input_queue)
+    
+    #pragma omp task untied shared(split_queue, join_queue, split_obj, input_queue)    
     {
       create_flow<0>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj));
     }
