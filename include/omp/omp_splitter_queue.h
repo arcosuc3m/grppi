@@ -20,16 +20,14 @@ class omp_splitter_queue{
       while (consumer_queues_[queue_id].is_empty()) 
       {
         //Only one consumer can take elements from the input queue
-        while(!omp_test_lock(&mut_)){
-           #pragma omp taskyield
-        }
+        std::unique_lock<std::mutex> lk(mut_);//omp_set_lock(&mut_);
+        
         if(can_consume_ && consumer_queues_[queue_id].is_empty()) {
           can_consume_ = false;
-          std::cout<<"THERE IS A CONSUMER THREAD"<<std::endl;
-          omp_unset_lock(&mut_);
+          lk.unlock();
+          //omp_unset_lock(&mut_);
           do {
             auto next = policy_.next_queue();
-            std::cout<<"POP ITEM"<<std::endl;
             auto item = input_queue_.pop();
 
             //If is an end of stream item
@@ -40,44 +38,42 @@ class omp_splitter_queue{
             } 
             else {
               for( auto it = next.begin(); it != next.end(); it++){
-            std::cout<<"PUSH ITEM TO"<<*it<<std::endl;
                 item.second = order_[*it];
                 order_[*it]++;
                 consumer_queues_[*it].push(item);
               }
             }
-            std::cout<<"END PUSHING"<<std::endl;          
             //Wake up all the conusmer threads to check if they have any item to conusme
 
           } while(consumer_queues_[queue_id].is_empty());
 
           //This is used to avoid potential everlasting waiting threads
-          while(!omp_test_lock(&mut_)){
-             #pragma omp taskyield
-          }
-            std::cout<<"FREE CONSUMPTION"<<std::endl;          
+          //omp_set_lock(&mut_);
+          lk.lock();
           can_consume_ = true;
-          omp_unset_lock(&mut_); 
+          lk.unlock();
+          //omp_unset_lock(&mut_); 
         } 
         else {
-          if(!can_consume_ && consumer_queues_[queue_id].is_empty()) {
-             omp_unset_lock(&mut_); 
-             while(!omp_test_lock(&mut_)){
+          if(!can_consume_  && consumer_queues_[queue_id].is_empty()) {
+             //omp_unset_lock(&mut_); 
+             lk.unlock();
                #pragma omp taskyield
-             }
+             //omp_set_lock(&mut_);
+             lk.lock();
           }
-          omp_unset_lock(&mut_); 
+          lk.unlock();
+          //omp_unset_lock(&mut_); 
           
         }
+        #pragma omp taskyield
       }
-      std::cout<<"POP "<<queue_id<<std::endl;
       auto pop_item = consumer_queues_[queue_id].pop();
       return std::move(pop_item);
       //return std::move(consumer_queues_[queue_id].pop());
     }
     
     void push(T item,int queue_id) {
-      std::cout<<"OTRO PUSH A "<<queue_id<<std::endl;
       consumer_queues_[queue_id].push(item);
     }
 
@@ -89,7 +85,7 @@ class omp_splitter_queue{
         order_.push_back(0); 
         consumer_queues_.emplace_back(q_size,q_mode);
       }
-      omp_init_lock(&mut_);
+      //omp_init_lock(&mut_);
     
     } 
     
@@ -100,7 +96,7 @@ class omp_splitter_queue{
       for (auto i = 0; i<num_consumers_; i++) {
         consumer_queues_.emplace_back(std::move(q.consumer_queues_[i]));
       }
-      omp_init_lock(&mut_);
+      //omp_init_lock(&mut_);
     }
     
     omp_splitter_queue(const omp_splitter_queue &) = delete;
@@ -112,9 +108,10 @@ class omp_splitter_queue{
     int num_consumers_;
     std::vector<mpmc_queue<T>> consumer_queues_;
     Splitting_policy policy_;
-    omp_lock_t mut_;
+    //omp_lock_t mut_;
+    std::mutex mut_;
     std::atomic_flag consuming_ = ATOMIC_FLAG_INIT;
-    bool can_consume_ {true};
+    std::atomic<bool> can_consume_ {true};
     std::vector<long> order_;
 };
 }

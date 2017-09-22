@@ -21,16 +21,16 @@ class omp_joiner_queue{
     
 
     void push(typename T::first_type item, std::size_t queue_id) {
-      while(!omp_test_lock(&lk)) {
-         #pragma omp taskyield
-      }
+      omp_set_lock(&lk);
       while( queue_id != not_finished_[current_] && item ){
         omp_unset_lock(&lk);
-        #pragma omp taskyield
-        while(!omp_test_lock(&lk)) {
-          #pragma omp taskyield
-        }
-         
+        //#pragma omp taskyield
+        //while(!omp_test_lock(&lk)) {
+        //  #pragma omp taskyield
+        //}
+        
+        #pragma omp taskyield 
+        omp_set_lock(&lk);
       }
       if(!item) {
          auto position = std::find(not_finished_.begin(), not_finished_.end(), queue_id);
@@ -69,7 +69,7 @@ class omp_joiner_queue{
     omp_mpmc_queue<T> output_queue_;
 
   private:
-    int current_ = 0;
+    int current_{0};
     long order = 0;
     int num_producers_ = 0;
     int end_ = 0;

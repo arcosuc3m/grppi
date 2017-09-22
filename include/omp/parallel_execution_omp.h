@@ -23,11 +23,11 @@
 
 #ifdef GRPPI_OMP
 
-#include "omp_mpmc_queue.h"
-#include "omp_windower_queue.h"
-#include "omp_splitter_queue.h"
+#include "../common/mpmc_queue.h"
+#include "../common/windower_queue.h"
+#include "../common/splitter_queue.h"
 #include "../common/split_consumer_queue.h"
-#include "omp_joiner_queue.h"
+#include "../common/joiner_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 #include "../seq/sequential_execution.h"
@@ -124,13 +124,13 @@ public:
   set_queue_attributes(). The value is returned via move semantics.
   */
   template <typename T>
-  omp_mpmc_queue<T> make_queue() const {
+  mpmc_queue<T> make_queue() const {
     return {queue_size_, queue_mode_};
   }
 
 
   template <typename Queue, typename Policy>
-  omp_splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
+  splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
       Queue & q, int num_queues, Policy policy) const
   {
      return {q, num_queues, policy, queue_size_, queue_mode_};
@@ -938,7 +938,6 @@ void parallel_execution_omp::do_pipeline(
 
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_ops)...);
-  #pragma omp taskwait
 }
 
 template <typename Queue, typename FarmTransformer,
@@ -964,7 +963,6 @@ void parallel_execution_omp::do_pipeline(
       input_queue.push(item);
     }              
   }
-  #pragma omp taskwait
 }
 
 template <typename Queue, typename FarmTransformer, 
@@ -1004,7 +1002,6 @@ void parallel_execution_omp::do_pipeline(
     }              
   }
   do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
-  #pragma omp taskwait
 }
 
 template <typename Queue, typename Transformer, typename Window,
@@ -1066,7 +1063,6 @@ void parallel_execution_omp::do_pipeline(
     }
   }
   do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
-  #pragma omp taskwait
 
 }
 
@@ -1083,7 +1079,7 @@ void parallel_execution_omp::do_pipeline(
     using namespace std;
     using namespace experimental;
 
-    omp_windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
+    windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
     do_pipeline(window_queue, std::forward<OtherTransformers>(other_transform_ops)...);
 }
 
@@ -1109,7 +1105,7 @@ typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
      do_pipeline(input_queue, split_obj.template flow<index>(), consumer);
      join_queue.push( typename std::decay<OutQueue>::type::value_type::first_type{},index);
   }
-    #pragma omp taskwait
+   // #pragma omp taskwait
 }
 
 template <std::size_t index, typename InQueue, typename OutQueue,
@@ -1124,7 +1120,7 @@ typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
    using namespace std;
    using namespace experimental;
 
-   #pragma omp task untied shared(split_queue, join_queue, split_obj)
+   #pragma omp task untied shared(split_queue, join_queue, split_obj) 
    {
      auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
        join_queue.push( item, index);
@@ -1136,7 +1132,7 @@ typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
      
    }
    create_flow<index+1>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj));
-   #pragma omp taskwait
+   //#pragma omp taskwait
 }
 
 template <typename Queue, typename Policy, typename ... Transformers,
@@ -1155,14 +1151,14 @@ void parallel_execution_omp::do_pipeline(
     using output_item_type = pair <output_optional_type, long> ;
 
     auto split_queue = make_split_queue( input_queue, split_obj.num_transformers(), split_obj.get_policy() );
-    omp_joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
+    joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
     
-    #pragma omp task untied shared(split_queue, join_queue, split_obj, input_queue)    
+    #pragma omp task untied shared(split_queue, join_queue, split_obj, input_queue)  
     {
       create_flow<0>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj));
     }
     do_pipeline(join_queue, std::forward<OtherTransformers>(other_transform_ops)...);
-    #pragma omp taskwait
+    //#pragma omp taskwait
 }
 
 template <typename Queue, typename Predicate,
@@ -1265,7 +1261,6 @@ void parallel_execution_omp::do_pipeline(
     do_pipeline(output_queue, 
         forward<OtherTransformers>(other_transform_ops)...);
 
-    #pragma omp taskwait
   }
   else {
     auto filter_task = [&]() {
@@ -1285,7 +1280,6 @@ void parallel_execution_omp::do_pipeline(
     }
     do_pipeline(filter_queue, 
       std::forward<OtherTransformers>(other_transform_ops)...);
-    #pragma omp taskwait
   }
 }
 
@@ -1330,7 +1324,6 @@ void parallel_execution_omp::do_pipeline(
   }
   do_pipeline(output_queue, 
       std::forward<OtherTransformers>(other_transform_ops)...);
-  #pragma omp taskwait
 }
 
 template <typename Queue, typename Transformer, typename Predicate,
@@ -1389,7 +1382,6 @@ void parallel_execution_omp::do_pipeline(
   }
   do_pipeline(output_queue, 
       std::forward<OtherTransformers>(other_transform_ops)...);
-  #pragma omp taskwait
 
 }
 

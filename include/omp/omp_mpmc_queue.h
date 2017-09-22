@@ -62,7 +62,11 @@ class omp_mpmc_queue{
   
       omp_mpmc_queue(const omp_mpmc_queue &) = delete;
       omp_mpmc_queue & operator=(const omp_mpmc_queue &) = delete;
-     
+      
+      void omp_wait() const{
+         #pragma omp barrier     
+      }
+  
       bool is_empty () const noexcept;
       T pop () ;
       bool push (T item) ;
@@ -80,7 +84,7 @@ class omp_mpmc_queue{
       std::atomic<unsigned long long> internal_pread;
       std::atomic<unsigned long long> internal_pwrite;
 
-
+      //std::mutex m;
       omp_lock_t lk;
 };
 
@@ -112,20 +116,34 @@ T omp_mpmc_queue<T>::pop(){
      
      return std::move(item);
   }else{
-     while(!omp_test_lock(&lk)){
-        #pragma omp taskyield
-     } 
+    omp_set_lock(&lk);
      while(is_empty(pread)){
+       // std::cout<<"TASKYIELD POP"<<std::endl;
         omp_unset_lock(&lk);
         #pragma omp taskyield
-        while(!omp_test_lock(&lk)){
-           #pragma omp taskyield
-        } 
+        //omp_wait();
+        //while(!omp_test_lock(&lk)){
+        //   #pragma omp taskyield
+        //} 
      }  
      auto item = std::move(buffer[pread%size]);
      pread++;    
      omp_unset_lock(&lk);
- 
+
+    /* while(is_empty(pread)){
+      // lk.unlock();
+     //   empty.wait(lk);
+       #pragma omp taskyield
+      // lk.lock();
+     }
+     std::unique_lock<std::mutex> lk(m);
+     auto item = std::move(buffer[pread%size]);
+     pread++;
+     lk.unlock();
+     //full.notify_one();
+ */
+     
+     #pragma omp taskyield
      return std::move(item);
   }
 
@@ -150,21 +168,33 @@ bool omp_mpmc_queue<T>::push(T item){
 
      return true;
   }else{
-     while(!omp_test_lock(&lk)){
-        #pragma omp taskyield
-     } 
-
+    omp_set_lock(&lk);
     while(is_full(pwrite)){
         omp_unset_lock(&lk);
-        #pragma omp taskyield
-        while(!omp_test_lock(&lk)){
-           #pragma omp taskyield
-        } 
+//        std::cout<<"TASKYIELD PUSH"<<std::endl;
+        #pragma omp taskyield 
+        //omp_wait();
+     //   while(!omp_test_lock(&lk)){
+     //      #pragma omp taskyield
+     //   } 
     }
     buffer[pwrite%size] = std::move(item);
 
     pwrite++;
     omp_unset_lock(&lk);
+    #pragma omp taskyield
+   /* while(is_full(pwrite)){
+    //lk.unlock();
+    //    full.wait(lk);
+      #pragma omp taskyield
+    //lk.lock();
+    }
+    std::unique_lock<std::mutex> lk(m);
+    buffer[pwrite%size] = std::move(item);
+
+    pwrite++;
+    lk.unlock();*/
+    //empty.notify_one();
     return true;
   }
 }

@@ -30,8 +30,8 @@ class omp_windower_queue{
       using namespace experimental;
       if(!end_){
         while(!omp_test_lock(&mut_)){
-           #pragma omp taskyield
-        }
+          #pragma omp taskyield 
+        } 
         auto item = input_queue_.pop();
         if(item.first){
           while(!policy_.add_item(std::move(*item.first) )){
