@@ -36,8 +36,8 @@
 
 
 
-
-void capitalize(grppi::parallel_execution_omp & e/*, 
+template <typename E>
+void capitalize(E & e/*, 
                 std::istream & in, std::ostream & out*/)
 {
   using namespace std;
@@ -110,65 +110,193 @@ void capitalize(grppi::parallel_execution_omp & e/*,
   int end = 4*2*64*10;
   float x = 0;
 
-
   grppi::pipeline(e,
-    [&]() -> optional<std::vector<float>> {
+    [&]() -> optional<float> {
        x++;
        if(x==end) return {};
-       std::vector<float> o;
-       o.push_back(x);
-       return {o};
+       return {x};
     },
-//    grppi::window(grppi::count_based<float>(1,1)), //64,1
+    grppi::window(grppi::count_based<float>(taps,1+decimation)), //64,4
+    //low pass filter
+    [&coeff](auto window){
+      int i=0;
+      float sum = 0;
+      for(auto it = window.begin(); it != window.end(); it++){
+         sum+= *it*coeff[i++];
+      }
+      return sum;
+    },
+    grppi::window(grppi::count_based<float>(2,1)),
+    //FMDemodulator
+    [&mGain](auto w)->float{
+      if (w.size()==2){
+        return mGain* atan(w[0] * w[1]);
+      }
+      return 0.0;
+    },
+    grppi::window(grppi::count_based<float>(taps,1)), //64,1
+    //Equalizer
+    grppi::split_join(grppi::duplicate{},
+      grppi::pipeline(
+        //grppi::window(grppi::count_based<float>(taps,4)), //64,1
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
-          /* grppi::pipeline(
-           grppi::split_join(grppi::duplicate{},
            //Low pass filter
            [&coeffs](auto window){
 //           [&coeffs](auto window)->float{
-              float sum = window[0];
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= (*it)*coeffs[0][i++];
+              }
               return sum;
            },
            //Low pass filter
            [&coeffs](auto window){
-              return window[0];
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= *it*coeffs[1][i++];
+              }
+              return sum;
            }
-           ),
-           grppi::window(grppi::count_based<float>(1,1)), //64,1
-           [](auto win){ return win[0]+win[1];}
-           ),
-           */
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];},
-           [](auto win){return win[0];}
+         ), 
+         grppi::window(grppi::count_based<float>(2,2)),
+         //Substracter
+         [](auto w){
+            float val = 0.0;
+            if(w.size()==2)
+              val = w[1]-w[0]; 
+            return val;
+         },
+         //Amplify
+         [&eqGain](float a){
+            return a * eqGain[1];
+         }
+       ),
+       grppi::pipeline(
+        //grppi::window(grppi::count_based<float>(taps,1)), //64,1
+        //Band_pass_filter 
+        grppi::split_join(grppi::duplicate{},
+           //Low pass filter
+           [&coeffs](auto window){
+//           [&coeffs](auto window)->float{
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= (*it)*coeffs[1][i++];
+              }
+              return sum;
+           },
+           //Low pass filter
+           [&coeffs](auto window){
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= *it*coeffs[2][i++];
+              }
+              return sum;
+           }
+         ),
+         grppi::window(grppi::count_based<float>(2,2)),
+         //Substracter
+         [](auto w){
+            float val = 0.0;
+            if(w.size()==2)
+              val = w[1]-w[0];
+            return val;
+         },
+         //Amplify
+         [&eqGain](float a){
+            return a * eqGain[2];
+         }
+       ),
+       grppi::pipeline(
+        //grppi::window(grppi::count_based<float>(taps,1)), //64,1
+        //Band_pass_filter 
+        grppi::split_join(grppi::duplicate{},
+           //Low pass filter
+           [&coeffs](auto window){
+//           [&coeffs](auto window)->float{
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= (*it)*coeffs[2][i++];
+              }
+              return sum;
+           },
+           //Low pass filter
+           [&coeffs](auto window){
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= *it*coeffs[3][i++];
+              }
+              return sum;
+           }
+         ),
+         grppi::window(grppi::count_based<float>(2,2)),
+         //Substracter
+         [](auto w){
+            float val = 0.0;
+            if(w.size()==2)
+              val = w[1]-w[0];
+            return val;
+         },
+         //Amplify
+         [&eqGain](float a){
+            return a * eqGain[3];
+         }
+       ),
+       grppi::pipeline(
+//        grppi::window(grppi::count_based<float>(taps,4)), //64,1
+        //Band_pass_filter 
+        grppi::split_join(grppi::duplicate{},
+           //Low pass filter
+           [&coeffs](auto window){
+//           [&coeffs](auto window)->float{
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= (*it)*coeffs[3][i++];
+              }
+              return sum;
+           },
+           //Low pass filter
+           [&coeffs](auto window){
+              int i=0;
+              float sum = 0.0;
+              for(auto it = window.begin(); it != window.end(); it++){
+                 sum+= *it*coeffs[4][i++];
+              }
+              return sum;
+           }
+         ),
+         grppi::window(grppi::count_based<float>(2,2)),
+         //Substracter
+         [](auto w){
+            float val = 0.0;
+            if(w.size()==2)
+              val = w[1]-w[0];
+            return val;
+         },
+         //Amplify
+         [&eqGain](float a){
+            return a * eqGain[4];
+         }
+       )
+
     ),
+    grppi::window(grppi::count_based<float>(4,4)),
+    //Anonfliter
+    [](auto a){
+       float sum = 0.0;
+       int i= 0;
+       for ( auto it = a.begin(); it!= a.end(); it++){
+          sum+=*it;
+       }
+       return sum;
+    },
     [&](float a){
       std::cout<<a<<std::endl;
     }
@@ -201,7 +329,6 @@ int main(int argc, char **argv) {
     print_message(argv[0], "Cannot open file "s + argv[2]);
     return -2;
   }
-
   ofstream out{argv[3]};
   if (!out) {
     print_message(argv[0], "Cannot open file "s + argv[3]);
@@ -215,6 +342,7 @@ int main(int argc, char **argv) {
 */
   //auto e = grppi::parallel_execution_native{};
   auto e = grppi::parallel_execution_omp{};
+  //auto e = grppi::sequential_execution{};
   capitalize(e);
   return 0;
 }

@@ -54,6 +54,10 @@ public:
     return std::get<I>(transformers_);
   }
 
+  void save_policy(SplitPolicy p)
+  {
+    policy_ = p;
+  }
   /**
   \brief Farm's cardinality or number of replicas.
   \return The farm's cardinality. 

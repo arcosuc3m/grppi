@@ -227,48 +227,89 @@ private:
   void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
-  template <typename Queue, typename Transformer, typename Window,
+  template <typename Item, typename Transformer, typename Window,
           template <typename C, typename W> class Farm,
           typename ... OtherTransformers,
           requires_window_farm<Farm<Transformer,Window>> = 0>
   void do_pipeline(
-    Queue && input_queue,
+    Item && item,
     Farm<Transformer,Window> & farm_obj,
     OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline(input_queue, std::move(farm_obj),
+    do_pipeline(item, std::move(farm_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
-  template <typename Queue, typename Transformer, typename Window,
+  template <typename Item, typename Transformer, typename Window,
           template <typename C, typename W> class Farm,
           typename ... OtherTransformers,
           requires_window_farm<Farm<Transformer,Window>> = 0>
   void do_pipeline(
-    Queue && input_queue,
+    Item && item,
     Farm<Transformer,Window> && farm_obj,
     OtherTransformers && ... other_transform_ops) const;
 
-  template <typename Queue, typename Policy, typename ... Transformers,
+  template <typename Item, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Item && item,
+    Window<Policy> & win_obj,
+    OtherTransformers & ... other_transform_ops) const
+  {
+    do_pipeline(item, std::forward<Window<Policy>>(win_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Item, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Item && item,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+
+   template <std::size_t index, typename Item, typename NextFlows,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin, typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+   typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
+      create_flow(Item && item, NextFlows && flows, SplitJoin<Policy,Transformers...> && split_obj,
+      OtherTransformers && ... other_transform_ops) const;
+
+   template <std::size_t index, typename Item, typename NextFlows,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin, typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+   typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
+     create_flow(Item && item, NextFlows && flows, SplitJoin<Policy,Transformers...> && split_obj,
+     OtherTransformers && ... other_transform_ops) const;
+
+
+
+  template <typename Item, typename Policy, typename ... Transformers,
           template <typename P, typename ... T> class SplitJoin,
           typename ... OtherTransformers,
           requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
   void do_pipeline(
-    Queue && input_queue,
+    Item && item,
     SplitJoin<Policy,Transformers...> & split_obj,
     OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline(input_queue, std::move(split_obj),
+    do_pipeline(item, std::move(split_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
 
   }
 
-  template <typename Queue, typename Policy, typename ... Transformers,
+  template <typename Item, typename Policy, typename ... Transformers,
           template <typename P, typename ... T> class SplitJoin,
           typename ... OtherTransformers,
           requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
   void do_pipeline(
-    Queue && input_queue,
+    Item && item,
     SplitJoin<Policy,Transformers...> && split_obj,
     OtherTransformers && ... other_transform_ops) const;
 
@@ -539,9 +580,9 @@ void sequential_execution::do_pipeline(
     Transformer && transform_op,
     OtherTransformers && ... other_ops) const
 {
-  static_assert(!is_consumer<Transformer,Item>,
+  /*static_assert(!is_consumer<Transformer,Item>,
     "Itermediate pipeline stage cannot be a consumer");
-
+*/
   do_pipeline(transform_op(std::forward<Item>(item)), 
       std::forward<OtherTransformers>(other_ops)...);
 }
@@ -573,16 +614,72 @@ void sequential_execution::do_pipeline(
    farm_obj.save_window(win);
 }
 
-template <typename Queue, typename Policy, typename ... Transformers,
+
+  template <typename Item, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  void sequential_execution::do_pipeline(
+    Item && input_item,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+   auto win = win_obj.get_window();
+   if(win.add_item( std::move(input_item) )){
+       do_pipeline(win.get_window(),
+          std::forward<OtherTransformers>(other_transform_ops)...);
+   }
+   win_obj.save_window(win);
+}
+
+template <std::size_t index, typename Item, typename NextFlows,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin, typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
+sequential_execution::create_flow(Item && item, NextFlows && flows, SplitJoin<Policy,Transformers...> && split_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+   if(std::find(flows.begin(),flows.end(),index) != flows.end()){
+      do_pipeline(item, split_obj.template flow<index>(), 
+          std::forward<OtherTransformers>(other_transform_ops)...);
+   }
+}
+
+
+template <std::size_t index, typename Item, typename NextFlows,
+          typename ...Transformers, typename Policy,
+          template <typename P, typename ... T> class SplitJoin, typename ... OtherTransformers,
+          requires_split_join< SplitJoin <Policy, Transformers...>> = 0>
+typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
+sequential_execution::create_flow(Item && item, NextFlows && flows, SplitJoin<Policy,Transformers...> && split_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+   if(std::find(flows.begin(),flows.end(),index) != flows.end()){
+      do_pipeline(item, split_obj.template flow<index>(), 
+          std::forward<OtherTransformers>(other_transform_ops)...);
+   }
+   create_flow<index+1>(item,flows,std::forward<SplitJoin<Policy,Transformers...>>(split_obj),
+      std::forward<OtherTransformers>(other_transform_ops)...);
+}
+
+
+
+template <typename Item, typename Policy, typename ... Transformers,
           template <typename P, typename ... T> class SplitJoin,
           typename ... OtherTransformers,
           requires_split_join< SplitJoin <Policy, Transformers...>> = 0 >
 void sequential_execution::do_pipeline(
-    Queue && input_queue,
+    Item && item,
     SplitJoin<Policy,Transformers...> && split_obj,
     OtherTransformers && ... other_transform_ops) const
 {
-   
+    auto policy = split_obj.get_policy();
+    policy.set_num_queues(split_obj.num_transformers());
+    auto next_flows = policy.next_queue();
+    split_obj.save_policy(policy);
+    create_flow<0>(item,next_flows, std::forward<SplitJoin<Policy,Transformers...>>(split_obj),
+      std::forward<OtherTransformers>(other_transform_ops)...);
 }
 
 

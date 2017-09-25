@@ -72,7 +72,7 @@ struct is_window < W<F...>, W> : std::true_type {};
 } // namespace internal
 
 template <class F>
-static constexpr bool is_window = internal::is_window< F, window_t>();
+static constexpr bool is_window = internal::is_window< std::decay_t<F>, window_t>();
 
 template <class F>
 using requires_window = typename std::enable_if_t<is_window<F>, int>;
