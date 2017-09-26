@@ -256,6 +256,14 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -533,7 +541,7 @@ private:
   constexpr static int default_queue_size = 100;
   int queue_size_ = default_queue_size;
 
-  queue_mode queue_mode_ = queue_mode::blocking;
+  queue_mode queue_mode_ = queue_mode::lockfree;
 };
 
 /**
@@ -861,6 +869,96 @@ auto parallel_execution_omp::divide_conquer(
       std::forward<subresult_type>(subresult), combine_op);
 }
 
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void parallel_execution_omp::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+
+  using namespace std;
+  using namespace experimental;
+
+  using selected_type = typename std::result_of<Selection(Population&)>::type;
+  using individual_type = typename Population::value_type;
+  using selected_op_type = optional<selected_type>;
+  using individual_op_type = optional<individual_type>;
+
+
+  #pragma omp parallel
+  {
+  #pragma omp single nowait
+  {
+
+  auto selected_queue = make_queue<selected_op_type>();
+  auto output_queue = make_queue<individual_op_type>();
+
+
+  std::atomic<bool> end{false};
+  std::atomic<int> done_threads{0};
+  std::atomic_flag lock = ATOMIC_FLAG_INIT;
+  for(auto i = 0; i< concurrency_degree_-2; i++){
+    #pragma omp task shared(done_threads, end, selection_op, evolve_op, eval_op, selected_queue, output_queue)
+    {
+    auto selection = selected_queue.pop();
+    while(selection){
+      auto evolved = evolve_op(*selection);
+      auto filtered = eval_op(*selection, evolved);
+      if(termination_op(filtered)){
+        end = true;
+      }
+      output_queue.push({filtered});
+      selection = selected_queue.pop();
+    }
+    done_threads++;
+    if(done_threads == concurrency_degree_-2)
+     output_queue.push(individual_op_type{});
+    }
+  }
+
+  #pragma omp task shared(population, selected_queue, output_queue, done_threads,end,lock)
+  {
+    for(;;) {
+      if(end) break;
+      while(lock.test_and_set());
+      if( population.size() != 0 ){
+        auto selection = selection_op(population);
+        selected_queue.push({selection});
+       /* #pragma omp task firstprivate(selection) shared(end, evolve_op, termination_op, eval_op, output_queue)
+        {
+          auto evolved = evolve_op(selection);
+          auto filtered = eval_op(selection, evolved);
+          if(termination_op(filtered)){
+            end = true;
+          }
+          output_queue.push({filtered});
+        }*/
+      }
+      lock.clear();
+    }
+    for(int i=0;i<concurrency_degree_-2;i++) selected_queue.push(selected_op_type{});
+    //output_queue.push(individual_op_type{}); 
+ }
+
+ #pragma omp task shared(population,lock, output_queue)
+ {
+    auto item = output_queue.pop();
+    while(item) {
+      while(lock.test_and_set());
+      population.push_back(*item);
+      lock.clear();
+      item = output_queue.pop();
+    }
+  }
+
+  #pragma omp taskwait
+  }
+  }
+}
+
+
 template <typename Queue, typename Consumer,
           requires_no_pattern<Consumer> =0>
 void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consume_op) const
@@ -1016,46 +1114,30 @@ void parallel_execution_omp::do_pipeline(
    using namespace std;
   using namespace experimental;
 
-  using window_type = typename result_of<decltype(&Window::get_window)(Window)>::type;
-  using window_optional_type = experimental::optional<window_type>;
-  using window_item_type = pair <window_optional_type, long> ;
 
-  auto intermediate_queue = make_queue< window_item_type >();
+  using windower_queue_t = windower_queue<Queue,std::decay_t<Window>>;
+  windower_queue<Queue,std::decay_t<Window>> window_queue{input_queue, farm_obj.get_window()};
 
-  #pragma omp task untied shared (input_queue, intermediate_queue, farm_obj)
-  {
-    long order = 0;
-    auto win = farm_obj.get_window();
-    auto item = input_queue.pop();
-    while(item.first) {
-      while(!win.add_item(std::move(*item.first) )){
-        item = input_queue.pop();
-        if(!item.first) break;
-      }
-      if(item.first) item = input_queue.pop();
-      intermediate_queue.push( make_pair(win.get_window(), order) );
-      order++;
-    }
-    intermediate_queue.push( make_pair(window_optional_type{}, -1) );
-  }
-
+  using optional_window_t = typename windower_queue_t::value_type;
+  using window_type = typename optional_window_t::first_type::value_type;
   using result_type = typename result_of<Transformer(window_type)>::type;
   using output_optional_type = experimental::optional <result_type>;
   using output_item_type = pair <output_optional_type,long>;
+
   auto output_queue = make_queue<output_item_type>();
   atomic<int> done_threads{0};
 
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task untied shared(intermediate_queue, output_queue, farm_obj, done_threads)
+    #pragma omp task untied shared(window_queue, output_queue, farm_obj, done_threads)
     {
       long order = 0;
-      auto item{intermediate_queue.pop()};
+      auto item{window_queue.pop()};
       while (item.first) {
         auto out = output_optional_type{farm_obj.transform(*item.first)};
         output_queue.push(make_pair(out,item.second)) ;
-        item = intermediate_queue.pop();
+        item = window_queue.pop();
       }
-      intermediate_queue.push(item);
+     // intermediate_queue.push(item);
       done_threads++;
       if (done_threads == farm_obj.cardinality()) {
         output_queue.push(make_pair(output_optional_type{}, -1));

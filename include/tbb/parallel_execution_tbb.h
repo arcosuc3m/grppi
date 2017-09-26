@@ -226,6 +226,15 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
+
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -398,6 +407,7 @@ private:
             std::size_t ... I>
   auto make_filter_nested(std::tuple<Transformers...> && transform_ops,
       std::index_sequence<I...>) const;
+
 
 private:
 
@@ -632,6 +642,78 @@ void parallel_execution_tbb::pipeline(
     generator
     & 
     rest);
+}
+
+
+template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+void parallel_execution_tbb::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+
+  using namespace std;
+  using namespace experimental;
+
+  using selected_type = typename std::result_of<Selection(Population&)>::type;
+  using individual_type = typename Population::value_type;
+  using selected_op_type = optional<selected_type>;
+  using individual_op_type = optional<individual_type>;
+
+  auto selected_queue = make_queue<selected_op_type>();
+  auto output_queue = make_queue<individual_op_type>();
+
+
+  std::atomic<bool> end{false};
+  std::atomic<int> done_threads{0};
+  std::atomic_flag lock = ATOMIC_FLAG_INIT;
+  tbb::task_group g;
+  for(auto i = 0; i< concurrency_degree_; i++)
+    g.run( [&](){
+    auto selection = selected_queue.pop();
+    while(selection){
+      auto evolved = evolve_op(*selection);
+      auto filtered = eval_op(*selection, evolved);
+      if(termination_op(filtered)){
+        end = true;
+      }
+      output_queue.push({filtered});
+      selection = selected_queue.pop();
+    }
+    done_threads++;
+    if(done_threads == concurrency_degree_)
+     output_queue.push(individual_op_type{});
+  });
+  g.run([&](){
+    for(;;) {
+      if(end) break;
+      while(lock.test_and_set());
+      if( population.size() != 0 ){
+        auto selection = selection_op(population);
+        selected_queue.push({selection});
+      }
+      lock.clear();
+    }
+    for(int i=0;i<concurrency_degree_;i++) selected_queue.push(selected_op_type{});
+  });
+
+ g.run([&](){
+    auto item = output_queue.pop();
+    while(item) {
+      while(lock.test_and_set());
+      population.push_back(*item);
+      lock.clear();
+      item = output_queue.pop();
+    }
+  });
+ // worker_pool workers{concurrency_degree_};
+    //tasks.push_back({task});
+
+ // workers.launch_tasks(*this, task, concurrency_degree_);
+ // workers.wait();
+ g.wait();
 }
 
 // PRIVATE MEMBERS

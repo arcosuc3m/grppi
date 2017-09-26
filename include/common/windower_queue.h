@@ -19,15 +19,15 @@ class windower_queue{
     using window_optional_type = std::experimental::optional<window_type>;
     using value_type = std::pair <window_optional_type, long> ;
     
-    void push(){
+    void push(value_type w){
        
     }
 
     auto pop() { 
       using namespace std;
       using namespace experimental;
+      mut_.lock();
       if(!end_){
-        mut_.lock();
         auto item = input_queue_.pop();
         if(item.first){
           while(!policy_.add_item(std::move(*item.first) )){
@@ -43,8 +43,8 @@ class windower_queue{
           return window;
         }
         end_ = true;
-        mut_.unlock();
       }
+        mut_.unlock();
       return make_pair(window_optional_type{}, -1);
    }
     

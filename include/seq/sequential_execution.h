@@ -185,6 +185,21 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
+
+  /**
+  \brief Invoke \ref md_pipeline.
+  \tparam Generator Callable type for the generator operation.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \param generate_op Generator operation.
+  \param transform_ops Transformer operations.
+  */
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
 private:
 
   template <typename Item, typename Consumer,
@@ -562,6 +577,22 @@ void sequential_execution::pipeline(
     if (!x) break;
     do_pipeline(*x, std::forward<Transformers>(transform_ops)...);
   }
+}
+
+ template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+ void sequential_execution::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+   for(;;) {
+      auto selection = selection_op(population);
+      auto evolved = evolve_op(selection);
+      population.push_back(eval_op(selection,evolved));
+      if( termination_op(evolved) ) break;
+   }
 }
 
 template <typename Item, typename Consumer,

@@ -33,6 +33,8 @@ namespace grppi {
 @{
 */
 
+
+
 /**
 \brief Invoke \ref md_farm on a data stream 
 that can be composed in other streaming patterns.
@@ -47,6 +49,11 @@ auto window(Window && window_policy)
    return window_t<Window>{std::forward<Window>(window_policy)};
 }
 
+template <typename Window>
+auto window(Window & window_policy)
+{
+   return window(std::forward<Window>(window_policy));
+}
 /**
 @}
 @}

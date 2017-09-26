@@ -15,3 +15,5 @@ add_subdirectory(stream-filter)
 add_subdirectory(stream-iteration)
 
 add_subdirectory(split_join)
+add_subdirectory(stream_pool)
+add_subdirectory(window-farm)

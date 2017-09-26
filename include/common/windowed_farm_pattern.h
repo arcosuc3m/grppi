@@ -54,7 +54,7 @@ public:
     return cardinality_;
   }
   
-  auto get_window(){
+  Window& get_window(){
     return window_;
   }
 

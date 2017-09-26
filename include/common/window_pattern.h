@@ -35,7 +35,7 @@ class window_t {
 public:
 
   using window_type = Window;
-  using input_type = typename Window::item_type;
+  using input_type = typename window_type::item_type;
   /**
   \brief Constructs a farm with a cardinality and a transformer.
   \param n Number of replicas for the farm.
@@ -44,6 +44,10 @@ public:
   window_t(Window && win) noexcept :
     window_{win}
   {}
+
+/*  window_t(Window &win) noexcept :
+    window_{win}
+  {}*/
 
   auto& get_window(){
     return window_;
