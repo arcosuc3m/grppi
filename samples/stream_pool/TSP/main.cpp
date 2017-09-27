@@ -73,13 +73,13 @@ int computeCost(std::vector<int> individual, std::vector<std::vector<int>> trave
 }
 
 template <typename E>
-void capitalize(E & e, int num_cities/*, 
+void travel(E & e, int num_threads, int num_cities/*, 
                 std::istream & in, std::ostream & out*/)
 {
   using namespace std;
   using namespace experimental;
-  srand((unsigned)time(NULL));
 
+  e.set_concurrency_degree(num_threads);
   auto problem = generate_problem(num_cities);
 
   int popsize = 100;
@@ -136,17 +136,22 @@ void capitalize(E & e, int num_cities/*,
            print_individual(evolved, computeCost(evolved, problem) );
            return true;
         }*/
-        if(200 < count++) return true;
+        if(2000 < count++) return true;
         return false;
      }
   );
+ 
+  auto end = std::chrono::high_resolution_clock::now();
+  int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                             (end-start).count();
+  std::cout << elapsed_time <<std::endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
 
   cerr << msg << endl;
-  cerr << "Usage: " << prog << " mode num_cities" <<endl;
+  cerr << "Usage: " << prog << " mode num_threads num_cities" <<endl;
 /*  cerr << "  input: Input file name" << endl;
   cerr << "  output: Output file name" << endl;*/
   cerr << "  mode:" << endl;
@@ -158,15 +163,30 @@ int main(int argc, char **argv) {
     
   using namespace std;
 
-  if(argc < 2){
+  if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");
     return -1;
   }
 
-  auto e = grppi::parallel_execution_native{24};
+  if(string(argv[1]) == "thr"){
+    auto e = grppi::parallel_execution_native{};
+    travel(e, atoi(argv[2]),atoi(argv[3]) );
+  }
+  if(string(argv[1]) == "tbb"){
+    auto e = grppi::parallel_execution_tbb{};
+    travel(e, atoi(argv[2]),atoi(argv[3]) );
+  }
+  if(string(argv[1]) == "omp"){
+    auto e = grppi::parallel_execution_omp{};
+    travel(e, atoi(argv[2]),atoi(argv[3]) );
+  }
+  if(string(argv[1]) == "seq"){
+    auto e = grppi::sequential_execution{};
+    travel(e, atoi(argv[2]),atoi(argv[3]) );
+  }
   //auto e = grppi::parallel_execution_omp{};
   //auto e = grppi::parallel_execution_tbb{};
   //auto e = grppi::sequential_execution{};
-  capitalize(e, atoi(argv[1]) );
+ // auto e = execution_mode(string(argv[1]));
   return 0;
 }

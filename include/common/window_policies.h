@@ -26,18 +26,19 @@
 namespace grppi {
 
 /**
-\brief Representation of farm pattern.
-Represents a farm of n replicas from a transformer.
-\tparam Transformer Callable type for the farm transformer.
+\brief Representation of count based window policy.
+Represents a count based. 
+It generates a window when a given number of items has arrived
+\tparam ItemType type of the incoming items.
 */
 template <typename ItemType>
 class count_based{
 public:
   using item_type = ItemType;
   /**
-  \brief Constructs a farm with a cardinality and a transformer.
-  \param n Number of replicas for the farm.
-  \param t Transformer for the farm.
+  \brief Constructs count based window policy.
+  \param n Window size.
+  \param t Sliding factor.
   */
   count_based(int n, int t) noexcept :
     window_size_{n}, offset_{t}
@@ -79,9 +80,9 @@ public:
   using item_type = ItemType;
   using time_type = std::chrono::high_resolution_clock::time_point;
   /**
-  \brief Constructs a farm time based window.
-  \param n time range size of the windows in seconds.
-  \param offset overlapping time between windows in secods.
+  \brief Constructs time based window policy.
+  \param n Time range size of the windows.
+  \param t Sliding factor.
   */
   time_based(double n, double t) noexcept :
     window_size_{n}, offset_{t}
@@ -129,6 +130,75 @@ private:
   
 };
 
-}
+template <typename ItemType>
+class punctuation_based{
+public:
+  using item_type = ItemType;
+  /**
+  \brief Constructs pucntuation based window policy.
+  \param n Puntutation item.
+  */
+  punctuation_based(item_type n) noexcept :
+    punctuation_{n}
+  {}
 
+  auto add_item(ItemType && item) noexcept{
+    items.push_back(item);
+    return (item == punctuation_);
+  }
+
+  auto get_window() noexcept{
+    auto aux{items};
+    items.clear();
+    return std::move(aux);
+  }
+
+private:
+  item_type punctuation_;
+  std::vector<ItemType> items{};
+};
+
+template <typename ItemType>
+class delta_based{
+public:
+  using item_type = ItemType;
+  /**
+  \brief Constructs pucntuation based window policy.
+  \param n Puntutation item.
+  */
+  delta_based(item_type n, item_type t, item_type initial_value) noexcept :
+    delta_{n}, slide_{t}, current_value_{initial_value}
+  {}
+
+
+  auto add_item(ItemType && item) noexcept{
+    if(item >= current_value_)
+      items.push_back(item);
+    return (item >= current_value_+delta_);
+  }
+
+  auto get_window() noexcept{
+    auto aux{items};
+    current_value_ += slide_;
+    auto it = find_if(items.begin(), items.end(), 
+       [&](item_type i){  return i >= current_value_ ; } );
+    
+    if(it!=items.end()){
+      items.erase(items.begin(), it);
+    }else {
+      items.clear();
+    }
+
+    return std::move(aux);
+  }
+
+private:
+  item_type current_value_;
+  item_type delta_;
+  item_type slide_;
+  std::vector<ItemType> items{};
+};
+
+
+}
 #endif

@@ -340,8 +340,8 @@ int main(int argc, char **argv) {
     return -1;
   }
 */
-  //auto e = grppi::parallel_execution_native{};
-  auto e = grppi::parallel_execution_omp{};
+  auto e = grppi::parallel_execution_native{};
+//  auto e = grppi::parallel_execution_omp{};
   //auto e = grppi::sequential_execution{};
   capitalize(e);
   return 0;

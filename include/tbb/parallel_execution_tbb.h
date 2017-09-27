@@ -266,28 +266,47 @@ private:
             requires_farm<Farm<FarmTransformer>> = 0>
   auto make_filter(Farm<FarmTransformer> && farm_obj) const;
 
-/*  template <typename Queue, typename Transformer, typename Window,
+  template <typename Input, typename Transformer, typename Window,
           template <typename C, typename W> class Farm,
           typename ... OtherTransformers,
           requires_window_farm<Farm<Transformer,Window>> = 0>
-  void do_pipeline(
-    Queue && input_queue,
-    Farm<Transformer,Window> & farm_obj,
-    OtherTransformers && ... other_transform_ops) const
+  auto make_filter(
+          Farm<Transformer,Window> & farm_obj,
+          OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline(input_queue, std::move(farm_obj),
-        std::forward<OtherTransformers>(other_transform_ops)...);
+    return this->template make_filter<Input>(std::move(farm_obj), 
+      std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
-  template <typename Queue, typename Transformer, typename Window,
+  template <typename Input, typename Transformer, typename Window,
           template <typename C, typename W> class Farm,
           typename ... OtherTransformers,
           requires_window_farm<Farm<Transformer,Window>> = 0>
-  void do_pipeline(
-    Queue && input_queue,
-    Farm<Transformer,Window> && farm_obj,
+  auto make_filter(
+          Farm<Transformer,Window> && farm_obj,
+          OtherTransformers && ... other_transform_ops) const;
+
+
+  template <typename Input, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  auto do_pipeline(
+    Window<Policy> & win_obj,
+    OtherTransformers & ... other_transform_ops) const
+  {
+    return this->template make_filter<Input>(std::move(win_obj),
+      std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Input, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+  auto do_pipeline(
+    Window<Policy> && win_obj,
     OtherTransformers && ... other_transform_ops) const;
-*/
+
 
 
   template <typename Input, typename FarmTransformer, 
@@ -839,6 +858,7 @@ auto parallel_execution_tbb::make_filter(
       });
 }
 
+
 template <typename Input, typename FarmTransformer, 
           template <typename> class Farm,
           typename ... OtherTransformers,
@@ -915,6 +935,99 @@ auto parallel_execution_tbb::make_filter(
       this->template make_filter<input_value_type>(
           std::forward<OtherTransformers>(other_transform_ops)...);
 }
+
+template <typename Input, typename Transformer, typename Window,
+          template <typename C, typename W> class Farm,
+          typename ... OtherTransformers,
+          requires_window_farm<Farm<Transformer,Window>> = 0>
+auto parallel_execution_tbb::make_filter(
+    Farm<Transformer,Window> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+
+   using namespace std;
+   using namespace experimental;
+
+   using input_value_type = Input;
+   using input_type = optional<input_value_type>;
+
+   using window_value_type = vector<input_value_type>;
+   using window_type = optional<window_value_type>;
+   
+   using output_value_type = typename std::result_of<Transformer(window_value_type)>::type;
+   using output_type = optional<output_value_type>; 
+
+   return tbb::make_filter<input_type, window_type>(
+       tbb::filter::serial_in_order,
+       [&](input_type item) -> window_type {
+          auto window = farm_obj.get_window();
+          if(window.add_item(std::move(*item)))
+          {
+             auto value =window.get_window();
+             farm_obj.save_window(window);
+             return {value};
+          }
+          else {
+             farm_obj.save_window(window);
+             return {};
+          }
+       }
+     )
+     &
+     tbb::make_filter<window_type, output_type>(
+        tbb::filter::parallel,
+        [&](window_type win) -> output_type{
+          if(win){
+             return {farm_obj.transform(*win)};
+          }else
+             return {};
+        }
+     )
+     & 
+     this->template make_filter<output_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...); 
+   
+}
+
+template <typename Input, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_window< Window <Policy>> = 0 >
+auto parallel_execution_tbb::do_pipeline(
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+      using namespace std;
+   using namespace experimental;
+
+   using input_value_type = Input;
+   using input_type = optional<input_value_type>;
+
+   using window_value_type = vector<input_value_type>;
+   using window_type = optional<window_value_type>;
+  
+   return tbb::make_filter<input_type, window_type>(
+       tbb::filter::serial_in_order,
+       [&](input_type item) -> window_type {
+          auto window = win_obj.get_window();
+          if(window.add_item(std::move(*item)))
+          {
+             auto value =window.get_window();
+             win_obj.save_window(window);
+             return {value};
+          }
+          else {
+             win_obj.save_window(window);
+             return {};
+          }
+       }
+     )
+     &
+     this->template make_filter<window_value_type>(
+          std::forward<OtherTransformers>(other_transform_ops)...);
+
+}
+
 
 template <typename Input, typename Combiner, typename Identity,
           template <typename C, typename I> class Reduce,
