@@ -39,9 +39,13 @@ namespace grppi {
 */
 
 
+#include <iostream>
+#include <utility>
+
+//TODO: Check is is a function/functor object -> it doesn't work with overloaded functions
 template <typename F>
 using requires_no_execution =
-  typename std::enable_if_t<internal::is_callable<F>::value || !is_no_pattern<std::decay_t<F>>, int>;
+  typename std::enable_if_t<!is_no_pattern<std::decay_t<F>> || internal::is_callable_type<F>::value, int>;
 
 
 /**

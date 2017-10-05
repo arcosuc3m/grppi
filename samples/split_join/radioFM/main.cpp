@@ -34,6 +34,7 @@
 #include "../../util/util.h"
 
 
+
 //#include "extrae_user_events.h"
 //#include <extrae.h>
 
@@ -44,21 +45,22 @@ void equalizer(E & e, int num_samples, int num_taps)
   using namespace experimental;
   
   //INIT FMRADIOCORE
-  float rate = 250000000; // 250 MHz sampling rate is sensible
-  float cutoff = 108000000; //guess... doesn't FM freq max at 108 Mhz? 
+  constexpr float rate = 250000000; // 250 MHz sampling rate is sensible
+  constexpr  float cutoff = 108000000; //guess... doesn't FM freq max at 108 Mhz? 
   int taps = num_taps;
-  float max = 27000;
-  float bandwidth = 10000;
+  constexpr float max = 27000;
+  constexpr float bandwidth = 10000;
   int decimation = taps/16;
+//  constexpr int decimation = 128;
   // determine where equalizer cuts.  Note that <eqBands> is the
   // number of CUTS; there are <eqBands>-1 bands, with parameters
   // held in slots 1..<eqBands> of associated arrays.
-  int eqBands = 5;
+  constexpr int eqBands = 5;
   float eqCutoff[eqBands];
   float eqGain[eqBands];
-  float low = 55;
-  float high = 1760;
-  float pi = 3.1416;
+  constexpr float low = 55;
+  constexpr float high = 1760;
+  constexpr float pi = 3.1416;
 
   for (int i=0; i<eqBands; i++) {
      // have exponentially spaced cutoffs
@@ -123,7 +125,7 @@ void equalizer(E & e, int num_samples, int num_taps)
     },
     grppi::window(grppi::count_based<float>(taps,1+decimation)), //64,4
     //low pass filter
-    [&coeff](auto window){
+    [&coeff](auto && window){
       //Extrae_event(60000000,4);
       int i=0;
       float sum = 0;
@@ -135,24 +137,23 @@ void equalizer(E & e, int num_samples, int num_taps)
     },
     grppi::window(grppi::count_based<float>(2,1)),
     //FMDemodulator
-    [&mGain](auto w)->float{
+    [&mGain](auto && w)->float{
       //Extrae_event(60000000,5);
-      if (w.size()==2){
-        //Extrae_event(60000000,0);
-        return mGain* atan(w[0] * w[1]);
-      }
       //Extrae_event(60000000,0);
-      return 0.0;
+      return mGain* atan(w[0] * w[1]);
+      //Extrae_event(60000000,0);
     },
-    grppi::window(grppi::count_based<float>(taps,1)), //64,1
+    //grppi::window(grppi::count_based<float>(taps,1)), //64,1
     //Equalizer
     grppi::split_join(grppi::duplicate{},
       grppi::pipeline(
-        //grppi::window(grppi::count_based<float>(taps,4)), //64,1
+        [](auto &&p) {return p;},
         //Band_pass_filter 
         grppi::split_join(grppi::duplicate{},
+           grppi::pipeline(
+           grppi::window(grppi::count_based<float>(taps,1)), //64,1
            //Low pass filter
-           [&coeffs](auto window){
+           [&coeffs](auto && window){
 //           [&coeffs](auto window)->float{
               //Extrae_event(60000000,6);
               int i=0;
@@ -160,11 +161,12 @@ void equalizer(E & e, int num_samples, int num_taps)
               for(auto it = window.begin(); it != window.end(); it++){
                  sum+= (*it)*coeffs[0][i++];
               }
-              //Extrae_event(60000000,0);
               return sum;
-            },
+            }),
+           grppi::pipeline(
+           grppi::window(grppi::count_based<float>(taps,1)), //64,1
            //Low pass filter
-           [&coeffs](auto window){
+           [&coeffs](auto && window){
              //Extrae_event(60000000,7);
               int i=0;
               float sum = 0.0;
@@ -173,11 +175,11 @@ void equalizer(E & e, int num_samples, int num_taps)
               }
               //Extrae_event(60000000,0);
               return sum;
-           }
+           })
          ), 
          grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
-         [&eqGain](auto w){
+         [&eqGain](auto &&w){
             //Extrae_event(60000000,8);
             float val = 0.0;
             if(w.size()==2)
@@ -193,9 +195,12 @@ void equalizer(E & e, int num_samples, int num_taps)
        grppi::pipeline(
         //grppi::window(grppi::count_based<float>(taps,1)), //64,1
         //Band_pass_filter 
+        //[](auto &&p) {return p;},
         grppi::split_join(grppi::duplicate{},
+           grppi::pipeline(
+           grppi::window(grppi::count_based<float>(taps,1)), //64,1
            //Low pass filter
-           [&coeffs](auto window){
+           [&coeffs](auto &&window){
 //           [&coeffs](auto window)->float{
               //Extrae_event(60000000,9);
               int i=0;
@@ -205,9 +210,11 @@ void equalizer(E & e, int num_samples, int num_taps)
               }
               //Extrae_event(60000000,0);
               return sum;
-           },
+           }),
+           grppi::pipeline(
+           grppi::window(grppi::count_based<float>(taps,1)), //64,1
            //Low pass filter
-           [&coeffs](auto window){
+           [&coeffs](auto &&window){
               //Extrae_event(60000000,10);
               int i=0;
               float sum = 0.0;
@@ -216,11 +223,11 @@ void equalizer(E & e, int num_samples, int num_taps)
               }
 //Extrae_event(60000000,0);
               return sum;
-           }
+           })
          ),
          grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
-         [&eqGain](auto w){
+         [&eqGain](auto &&w){
  //Extrae_event(60000000,11);
             float val = 0.0;
             if(w.size()==2)
@@ -236,9 +243,12 @@ void equalizer(E & e, int num_samples, int num_taps)
        grppi::pipeline(
         //grppi::window(grppi::count_based<float>(taps,1)), //64,1
         //Band_pass_filter 
+        //[](auto &&p) {return p;},
         grppi::split_join(grppi::duplicate{},
+           grppi::pipeline(
+           grppi::window(grppi::count_based<float>(taps,1)), //64,1
            //Low pass filter
-           [&coeffs](auto window){
+           [&coeffs](auto &&window){
 //           [&coeffs](auto window)->float{
 //Extrae_event(60000000,12);
               int i=0;
@@ -248,9 +258,11 @@ void equalizer(E & e, int num_samples, int num_taps)
               }
 //Extrae_event(60000000,0);
               return sum;
-           },
+           }),
+           grppi::pipeline(
+           grppi::window(grppi::count_based<float>(taps,1)), //64,1
            //Low pass filter
-           [&coeffs](auto window){
+           [&coeffs](auto &&window){
 //Extrae_event(60000000,13);
               int i=0;
               float sum = 0.0;
@@ -259,20 +271,21 @@ void equalizer(E & e, int num_samples, int num_taps)
               }
 //Extrae_event(60000000,0);
               return sum;
-           }
+           })
          ),
          grppi::window(grppi::count_based<float>(2,2)),
          //Substracter
-         [&eqGain](auto w){
+         [&eqGain](auto &&w){
 //Extrae_event(60000000,14);
             float val = 0.0;
             if(w.size()==2)
               val = w[1]-w[0];
-        /*    return val;
-         },
+        //    return val;
+     //    },
          //Amplify
-         [&eqGain](float a){*/
+     //    [&eqGain](float a){
 //Extrae_event(60000000,0);
+            //std::cout<<val<<"*"<<eqGain[3]<<"="<<val * eqGain[3]<<std::endl;
             return val * eqGain[3];
          }
       /* ),
@@ -317,15 +330,17 @@ void equalizer(E & e, int num_samples, int num_taps)
     ),
     grppi::window(grppi::count_based<float>(3,3)),
     //Anonfliter
-    [](auto a){
+    [&](auto &&a){
 //Extrae_event(60000000,15);
        float sum = 0.0;
        int i= 0;
        for ( auto it = a.begin(); it!= a.end(); it++){
           sum+=*it;
        }
+      // std::cout<<sum<<std::endl;
+     //  outs++;
 //Extrae_event(60000000,0);
-       return sum;
+//       return sum;
   /*  },
     [&](float a){
       //std::cout<<a<0std::endl;
@@ -333,6 +348,7 @@ void equalizer(E & e, int num_samples, int num_taps)
     }
  );
 
+  //std::cout<<outs<<std::endl;
   auto endt = std::chrono::high_resolution_clock::now();
   int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>
                              (endt-start).count();
@@ -379,7 +395,8 @@ int main(int argc, char **argv) {
 */
   if(string(argv[1]) == "thr"){
     auto e = grppi::parallel_execution_native{};
-    e.set_queue_attributes(100,grppi::queue_mode::lockfree);
+    e.set_queue_attributes(25,grppi::queue_mode::lockfree);
+//    e.disable_ordering();
     equalizer(e,atoi(argv[2]),atoi(argv[3]));
   }
   if(string(argv[1]) == "seq"){
@@ -388,7 +405,7 @@ int main(int argc, char **argv) {
   }
   if(string(argv[1]) == "omp"){
     auto e = grppi::parallel_execution_omp{};
-    e.set_queue_attributes(100,grppi::queue_mode::lockfree);
+    e.set_queue_attributes(25,grppi::queue_mode::lockfree);
     equalizer(e,atoi(argv[2]),atoi(argv[3]));
   }
   return 0;
