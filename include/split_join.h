@@ -26,20 +26,20 @@
 namespace grppi {
 
 /** 
-\addtogroup stream_patterns
+\addtogroup stream_building_blocks
 @{
-\defgroup farm_pattern Farm pattern
-\brief Interface for applyinng the \ref md_farm.
+\defgroup split_join_pattern Split-Join pattern
+\brief Interface for applyinng the \ref md_split_join.
 @{
 */
 
 /**
-\brief Invoke \ref md_farm on a data stream 
+\brief Invoke \ref md_split_join on a data stream 
 that can be composed in other streaming patterns.
-\tparam Execution Execution policy type.
-\tparam Transformer Callable type for the transformation operation.
-\param ex Execution policy object.
-\param transform_op Transformer operation.
+\tparam Policy Splitting policy type.
+\tparam Transformers Callable type or Pattern type for the transforming operations.
+\param policy Spliting policy object.
+\param transforms Transforming operations.
 */
 template <typename Policy, typename ... Transformers>
 auto split_join(Policy policy, Transformers && ... transforms)

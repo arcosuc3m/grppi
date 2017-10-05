@@ -53,13 +53,18 @@ public:
     return window_;
   }
 
+  bool add_item(input_type && item)
+  {
+    window_.add_item(std::forward<input_type>(item));
+  }
+
   void save_window(window_type w)
   {
     window_ = w;
   }
 
-private:
   Window window_;
+private:
 };
 
 

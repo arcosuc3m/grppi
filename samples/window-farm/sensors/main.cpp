@@ -59,7 +59,7 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
        if(n != 4000) {
          if(incremental)
            value+=rand() % 20;
-         else value = rand() %10;
+         else value = rand() %20;
          return optional<int>{value}; 
        }else
           return optional<int>{};
@@ -68,6 +68,7 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
        double value = 0.0;
        for(auto i = 0; i < 20000000; i++){
       // for( auto it = window.begin(); it != window.end(); it ++){
+//         std::cout<<window.size()<<std::endl;
          double aux = window[0]; 
          value = sqrt(aux*aux + value*value);
        }

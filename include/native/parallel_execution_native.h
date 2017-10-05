@@ -39,6 +39,8 @@
 #include <tuple>
 #include <experimental/optional>
 
+//#include "extrae_user_events.h"
+//#include <extrae.h>
 namespace grppi {
 
 /**
@@ -238,9 +240,17 @@ public:
     return {queue_size_, queue_mode_};
   }
 
-
-  //----NEW----
-
+  /**
+  \brief Makes a special communication queue that splits the data stream
+  into a given number of consumer queues.
+  Constructs the internal queues using the attributes that can be set via 
+  set_queue_attributes(). The value is returned via move semantics.
+  \tparam Queue Queue type for the consumer queues.
+  \tparam Policy Policy type for the splitting management.
+  \param q Input queue to be splited in several streams
+  \param num_queue number of consumers queues
+  \param policy splitting policy  
+  */
   template <typename Queue, typename Policy>
   splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
       Queue & q, int num_queues, Policy policy) const
@@ -358,7 +368,19 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_ops) const;
 
-
+  /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
   template <typename Population, typename Selection, typename Evolution,
             typename Evaluation, typename Predicate>
   void stream_pool(Population & population,
@@ -626,10 +648,11 @@ private:
   int concurrency_degree_;
   bool ordering_;
 
-  constexpr static int default_queue_size = 100;
+  constexpr static int default_queue_size = 500;
   int queue_size_ = default_queue_size;
 
   queue_mode queue_mode_ = queue_mode::blocking;
+//  queue_mode queue_mode_ = queue_mode::lockfree;
 };
 
 /**
@@ -689,6 +712,13 @@ constexpr bool supports_divide_conquer<parallel_execution_native>() { return tru
 */
 template <>
 constexpr bool supports_pipeline<parallel_execution_native>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stream_pool<parallel_execution_native>() { return true; }
 
 /**
 \brief Determines if an execution policy supports the split join pattern.
@@ -884,6 +914,7 @@ void parallel_execution_native::pipeline(
   generator_task.join();
 }
 
+// PRIVATE MEMBERS
 template <typename Population, typename Selection, typename Evolution,
             typename Evaluation, typename Predicate>
 void parallel_execution_native::stream_pool(Population & population,
@@ -933,9 +964,11 @@ void parallel_execution_native::stream_pool(Population & population,
       while(lock.test_and_set());
       if( population.size() != 0 ){
         auto selection = selection_op(population);
+        lock.clear();
         selected_queue.push({selection});
+      }else{
+        lock.clear();
       }
-      lock.clear();
     }
     for(int i=0;i<concurrency_degree_;i++) selected_queue.push(selected_op_type{});
   });
@@ -949,10 +982,10 @@ void parallel_execution_native::stream_pool(Population & population,
       item = output_queue.pop();
     }
   });
- // worker_pool workers{concurrency_degree_};
-    //tasks.push_back({task});
+/*  worker_pool workers{concurrency_degree_};
+  tasks.push_back({task});
           
- // workers.launch_tasks(*this, task, concurrency_degree_);
+  workers.launch_tasks(*this, task, concurrency_degree_);*/
   sink.join();
   selector.join();
   for(auto i = 0; i< concurrency_degree_; i++) 
@@ -961,7 +994,6 @@ void parallel_execution_native::stream_pool(Population & population,
 
 }
 
-// PRIVATE MEMBERS
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
 auto parallel_execution_native::divide_conquer(
@@ -1027,6 +1059,7 @@ void parallel_execution_native::do_pipeline(
   using input_value_type = typename input_type::first_type;
 
   auto manager = thread_manager(); 
+  //Extrae_event(60000000,1);
   if (!is_ordered()) {
     for (;;) {
       auto item = input_queue.pop();
@@ -1068,6 +1101,7 @@ void parallel_execution_native::do_pipeline(
       }
     }
   }
+  //Extrae_event(60000000,0);
 }
 
 template <typename Queue, typename Transformer, 
@@ -1095,8 +1129,11 @@ void parallel_execution_native::do_pipeline(
     long order = 0;
     for (;;) {
       auto item{input_queue.pop()};
+
+     // Extrae_event(60000000,2);
       if (!item.first) break;
       auto out = output_item_value_type{transform_op(*item.first)};
+      //Extrae_event(60000000,0);
       output_queue.push(make_pair(out, item.second));
     }
     output_queue.push(make_pair(output_item_value_type{},-1));
@@ -1290,10 +1327,29 @@ void parallel_execution_native::do_pipeline(
 {
     using namespace std;
     using namespace experimental;
-    
+   
+/*    using window_type = typename std::result_of<decltype(&Policy::get_window)(Policy)>::type;
+    using window_optional_type = std::experimental::optional<window_type>;
+    using value_type = std::pair <window_optional_type, long> ;
+
+    auto window_queue = make_queue<value_type>();
+    std::thread windower([&](){
+       auto win =win_obj.get_window();
+       auto item = input_queue.pop();
+       int order = 0;
+       while(item.first){
+         if(win.add_item(std::move(*item.first))){
+           window_queue.push(make_pair(make_optional(win.get_window()), order));
+         }
+         item = input_queue.pop();
+       }
+       window_queue.push(make_pair(window_optional_type{},-1));
+
+    });
+ */
     windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
     do_pipeline(window_queue, std::forward<OtherTransformers>(other_transform_ops)...);
-
+//    windower.join();
 }
 
 
@@ -1315,14 +1371,13 @@ void parallel_execution_native::do_pipeline(
 
     auto split_queue = make_split_queue( input_queue, split_obj.num_transformers(), split_obj.get_policy() );
     joiner_queue<output_item_type> join_queue{split_obj.num_transformers(), queue_size_, queue_mode_};
-
+    
     std::vector<std::thread> tasks{};
     create_flow<0>(split_queue, join_queue, std::forward<SplitJoin<Policy,Transformers...>>(split_obj), tasks);
     
  
     do_pipeline(join_queue, std::forward<OtherTransformers>(other_transform_ops)...);
     std::for_each(tasks.begin(), tasks.end(), [](std::thread & thr ){thr.join();});
-
 }
 
 template <typename Queue, typename Predicate, 
@@ -1557,7 +1612,6 @@ void parallel_execution_native::do_pipeline_nested(
     std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
 {
-  std::cout<<"VUELVE A PIPELINE"<<std::endl;
   do_pipeline(input_queue,
       std::forward<Transformers>(std::get<I>(transform_ops))...);
 }

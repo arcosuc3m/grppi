@@ -41,7 +41,7 @@ namespace grppi {
 
 template <typename F>
 using requires_no_execution =
-  typename std::enable_if_t<internal::is_callable<F>::value||!is_no_pattern<F>, int>;
+  typename std::enable_if_t<internal::is_callable<F>::value || !is_no_pattern<std::decay_t<F>>, int>;
 
 
 /**
@@ -79,7 +79,7 @@ that can be composed in other streaming patterns.
 \param more_trasnform_ops Transformation operations for each additional stage.
 */
 template <typename Generator, typename ... Transformers,
-          requires_no_execution<std::decay_t<Generator>> = 0>
+          typename = void>
 auto pipeline(
     Generator && generate_op,
     Transformers && ... transform_ops)

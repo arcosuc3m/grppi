@@ -128,13 +128,24 @@ public:
     return {queue_size_, queue_mode_};
   }
 
-
+  /**
+  \brief Makes a special communication queue that splits the data stream
+  into a given number of consumer queues.
+  Constructs the internal queues using the attributes that can be set via 
+  set_queue_attributes(). The value is returned via move semantics.
+  \tparam Queue Queue type for the consumer queues.
+  \tparam Policy Policy type for the splitting management.
+  \param q Input queue to be splited in several streams
+  \param num_queue number of consumers queues
+  \param policy splitting policy  
+  */
   template <typename Queue, typename Policy>
   splitter_queue<typename Queue::value_type, Queue, Policy> make_split_queue (
       Queue & q, int num_queues, Policy policy) const
   {
      return {q, num_queues, policy, queue_size_, queue_mode_};
   }
+
   /**
   \brief Get index of current thread in the thread table
   */
@@ -255,7 +266,19 @@ public:
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
-
+  /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
   template <typename Population, typename Selection, typename Evolution,
             typename Evaluation, typename Predicate>
   void stream_pool(Population & population,
@@ -596,6 +619,13 @@ template <>
 constexpr bool supports_divide_conquer<parallel_execution_omp>() { return true; }
 
 /**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stream_pool<parallel_execution_omp>() { return true; }
+
+/**
 \brief Determines if an execution policy supports the pipeline pattern.
 \note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
 */
@@ -925,18 +955,11 @@ auto parallel_execution_omp::divide_conquer(
       while(lock.test_and_set());
       if( population.size() != 0 ){
         auto selection = selection_op(population);
+        lock.clear();
         selected_queue.push({selection});
-       /* #pragma omp task firstprivate(selection) shared(end, evolve_op, termination_op, eval_op, output_queue)
-        {
-          auto evolved = evolve_op(selection);
-          auto filtered = eval_op(selection, evolved);
-          if(termination_op(filtered)){
-            end = true;
-          }
-          output_queue.push({filtered});
-        }*/
+      }else{
+        lock.clear();
       }
-      lock.clear();
     }
     for(int i=0;i<concurrency_degree_-2;i++) selected_queue.push(selected_op_type{});
     //output_queue.push(individual_op_type{}); 

@@ -26,22 +26,20 @@
 namespace grppi {
 
 /** 
-\addtogroup stream_patterns
+\addtogroup stream_building_blocks
 @{
-\defgroup farm_pattern Farm pattern
-\brief Interface for applyinng the \ref md_farm.
+\defgroup window_pattern Window pattern
+\brief Interface for applyinng the \ref md_window.
 @{
 */
 
 
 
 /**
-\brief Invoke \ref md_farm on a data stream 
+\brief Invoke \ref md_window on a data stream 
 that can be composed in other streaming patterns.
-\tparam Execution Execution policy type.
-\tparam Transformer Callable type for the transformation operation.
-\param ex Execution policy object.
-\param transform_op Transformer operation.
+\tparam Window Type for the window policy.
+\param window_policy policy to generate the windows.
 */
 template <typename Window>
 auto window(Window && window_policy)

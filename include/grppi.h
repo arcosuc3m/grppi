@@ -51,15 +51,28 @@ namespace grppi {
 */
 }
 
+// Includes for building block patters
+#include "split_join.h"
+#include "window.h"
+namespace grppi {
+
+/** 
+\defgroup stream_building_blocks Building block patterns
+\brief Building block patterns for data stream processing.
+*/
+
+}
+
+
+
 // Includes for streaming patterns
 #include "farm.h"
 #include "pipeline.h"
 #include "stream_filter.h"
 #include "stream_iteration.h"
 #include "stream_reduce.h"
+#include "stream_pool.h"
 #include "windowed_farm.h"
-#include "split_join.h"
-#include "window.h"
 namespace grppi {
 
 /** 

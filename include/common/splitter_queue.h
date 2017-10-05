@@ -7,6 +7,8 @@
 #include <atomic>
 #include <condition_variable>
 
+#include <thread>
+
 namespace grppi {
 
 template <typename T, typename Queue, typename Splitting_policy>
@@ -15,14 +17,17 @@ class splitter_queue{
     using value_type = T; 
     using queue_type = Queue;
 
+
     auto pop(int queue_id) {
       while (consumer_queues_[queue_id].is_empty()) 
       {
         //Only one consumer can take elements from the input queue
-        std::unique_lock<std::mutex> lock(mut_);
+       // std::unique_lock<std::mutex> lock(mut_);
+        while(consuming_.test_and_set());
         if(can_consume_ && consumer_queues_[queue_id].is_empty()) {
           can_consume_ = false;
-          lock.unlock();
+         // lock.unlock();
+          consuming_.clear();
           do {
             auto next = policy_.next_queue();
             auto item = input_queue_.pop();
@@ -42,24 +47,28 @@ class splitter_queue{
             }
 
             //Wake up all the conusmer threads to check if they have any item to conusme
-            lock.lock();
-            cond_var_.notify_all(); 
-            lock.unlock(); 
+           // lock.lock();
+           // cond_var_.notify_all(); 
+           // lock.unlock(); 
 
           } while(consumer_queues_[queue_id].is_empty());
 
           //This is used to avoid potential everlasting waiting threads
-          lock.lock();
+  //        lock.lock();
+          //while(consuming_.test_and_set());
           can_consume_ = true;
-          cond_var_.notify_all(); 
-          lock.unlock();
+    //      cond_var_.notify_all(); 
+     //     lock.unlock();
         } 
         else {
-          if(!can_consume_ && consumer_queues_[queue_id].is_empty()) {
-            cond_var_.wait(lock);
+        //  if(!can_consume_ && consumer_queues_[queue_id].is_empty()) {
+           // cond_var_.wait(lock);
+        //  }
+      //    lock.unlock(); 
+          //while(consuming_.test_and_set());
+          consuming_.clear();
+          while(!can_consume_ && consumer_queues_[queue_id].is_empty()) {
           }
-          lock.unlock(); 
-          
         }
       }
       auto pop_item = consumer_queues_[queue_id].pop();
@@ -67,19 +76,19 @@ class splitter_queue{
       //return std::move(consumer_queues_[queue_id].pop());
     }
     
-    void push(T item,int queue_id) {
+    void push(T && item,int queue_id) {
       consumer_queues_[queue_id].push(item);
     }
 
     splitter_queue(Queue & q, int num_queues, Splitting_policy policy, int q_size, queue_mode q_mode) :
       input_queue_{q}, policy_{policy}, num_consumers_{num_queues}
     {
-      policy_.set_num_queues(num_consumers_);
+//      policy_.set_num_queues(num_consumers_);
       for (auto i = 0; i<num_queues; i++) {
         order_.push_back(0); 
         consumer_queues_.emplace_back(q_size,q_mode);
       }
-    
+
     } 
     
     splitter_queue(splitter_queue && q) :
@@ -94,17 +103,18 @@ class splitter_queue{
     splitter_queue(const splitter_queue &) = delete;
     splitter_queue & operator=(const splitter_queue &) = delete;
 
-
+  
   private:
     Queue& input_queue_;
-    int num_consumers_;
     std::vector<mpmc_queue<T>> consumer_queues_;
+    int num_consumers_;
     Splitting_policy policy_;
-    std::mutex mut_;
-    std::condition_variable cond_var_;
-    std::atomic_flag consuming_ = ATOMIC_FLAG_INIT;
-    bool can_consume_ {true};
     std::vector<long> order_;
+//    std::mutex mut_;
+//    std::condition_variable cond_var_;
+    std::atomic_flag consuming_ = ATOMIC_FLAG_INIT;
+    std::atomic<bool> can_consume_ {true};
+ //   std::thread splitter;
 };
 }
 #endif

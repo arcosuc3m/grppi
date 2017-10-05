@@ -45,6 +45,9 @@ public:
     transformers_{others...}
   {}
 
+  pipeline_t(std::tuple<Transformers...> functions) noexcept:
+    transformers_{functions}
+  {}
   /**
   \brief Invokes a trasnformer from the pipeline.
   \tparam I

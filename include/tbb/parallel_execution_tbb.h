@@ -226,7 +226,19 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
-
+  /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
   template <typename Population, typename Selection, typename Evolution,
             typename Evaluation, typename Predicate>
   void stream_pool(Population & population,
@@ -442,6 +454,7 @@ private:
   int num_tokens_ = default_num_tokens_;
 
   queue_mode queue_mode_ = queue_mode::blocking;
+//  queue_mode queue_mode_ = queue_mode::lockfree;
 };
 
 /**
@@ -494,6 +507,13 @@ constexpr bool supports_stencil<parallel_execution_tbb>() { return true; }
 */
 template <>
 constexpr bool supports_divide_conquer<parallel_execution_tbb>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stream_pool<parallel_execution_tbb>() { return true; }
 
 /**
 \brief Determines if an execution policy supports the pipeline pattern.
@@ -689,8 +709,10 @@ void parallel_execution_tbb::stream_pool(Population & population,
   std::atomic<int> done_threads{0};
   std::atomic_flag lock = ATOMIC_FLAG_INIT;
   tbb::task_group g;
-  for(auto i = 0; i< concurrency_degree_; i++)
+  
+  for(auto i = 0; i< concurrency_degree_; i++){
     g.run( [&](){
+
     auto selection = selected_queue.pop();
     while(selection){
       auto evolved = evolve_op(*selection);
@@ -699,31 +721,43 @@ void parallel_execution_tbb::stream_pool(Population & population,
         end = true;
       }
       output_queue.push({filtered});
-      selection = selected_queue.pop();
+      selection = selected_queue.pop(); 
     }
+     
     done_threads++;
-    if(done_threads == concurrency_degree_)
-     output_queue.push(individual_op_type{});
-  });
+    if(done_threads == concurrency_degree_){
+      output_queue.push(individual_op_type{});
+    }
+    
+   });
+  }
   g.run([&](){
     for(;;) {
       if(end) break;
-      while(lock.test_and_set());
+      while(lock.test_and_set()); 
+
       if( population.size() != 0 ){
         auto selection = selection_op(population);
+        lock.clear();
         selected_queue.push({selection});
+      }else{
+        lock.clear();
       }
-      lock.clear();
+
     }
-    for(int i=0;i<concurrency_degree_;i++) selected_queue.push(selected_op_type{});
+    for(int i=0;i<concurrency_degree_;i++){ 
+      selected_queue.push(selected_op_type{});
+    }
   });
 
  g.run([&](){
     auto item = output_queue.pop();
     while(item) {
+      
       while(lock.test_and_set());
       population.push_back(*item);
       lock.clear();
+
       item = output_queue.pop();
     }
   });

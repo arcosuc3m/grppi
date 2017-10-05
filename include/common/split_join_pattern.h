@@ -34,7 +34,7 @@ class split_join_t {
 public:
 
   using transformer_type = std::tuple<Transformers...>;
-
+  
   /**
   \brief Constructs a farm with a cardinality and a transformer.
   \param n Number of replicas for the farm.
@@ -42,7 +42,9 @@ public:
   */
   split_join_t(SplitPolicy policy, Transformers && ... t) noexcept :
     policy_{policy}, transformers_{t...}
-  {}
+  { 
+    policy_.set_num_queues(num_transformers());
+  }
 
 
   auto get_policy() {
@@ -53,6 +55,8 @@ public:
   auto flow() const noexcept {
     return std::get<I>(transformers_);
   }
+
+  
 
   void save_policy(SplitPolicy p)
   {
@@ -67,8 +71,8 @@ public:
   }
 
 private:
-  std::tuple<Transformers...> transformers_;
   SplitPolicy policy_;
+  std::tuple<Transformers...> transformers_;
 };
 
 namespace internal {
@@ -86,6 +90,8 @@ static constexpr bool is_split_join = internal::is_split_join<T, split_join_t >(
 
 template <class T>
 using requires_split_join = typename std::enable_if_t<is_split_join<T>, int>;
+
+
 
 }
 

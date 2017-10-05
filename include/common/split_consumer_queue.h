@@ -8,11 +8,11 @@ class split_consumer_queue{
   public:
      using value_type = typename std::decay<Queue_type>::type::value_type;
      auto pop(){
-       return splitter_queue_.pop(queue_id_);
+       return std::move(splitter_queue_.pop(queue_id_));
      }
      
-     void push(auto item) {
-       splitter_queue_.push(item,queue_id_);
+     void push(auto &&item) {
+       splitter_queue_.push( std::move(item), queue_id_ );
      }
      
      split_consumer_queue(Queue_type& queue, std::size_t id) :

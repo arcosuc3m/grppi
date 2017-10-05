@@ -28,18 +28,19 @@ namespace grppi {
 /** 
 \addtogroup stream_patterns
 @{
-\defgroup farm_pattern Farm pattern
-\brief Interface for applyinng the \ref md_farm.
+\defgroup windowed_farm_pattern Windowed Farm pattern
+\brief Interface for applyinng the \ref md_windowed_farm.
 @{
 */
 
 /**
-\brief Invoke \ref md_farm on a data stream 
+\brief Invoke \ref md_windowed_farm on a data stream 
 that can be composed in other streaming patterns.
-\tparam Execution Execution policy type.
 \tparam Transformer Callable type for the transformation operation.
-\param ex Execution policy object.
+\tparam Window Type for the window policy.
+\param ntask Concurrency degree.
 \param transform_op Transformer operation.
+\param window_policy policy to generate the windows.
 */
 template <typename Transformer, typename Window>
 auto farm(int ntasks, Transformer && transform_op, Window && window_policy)

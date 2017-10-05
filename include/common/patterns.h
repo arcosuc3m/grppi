@@ -88,45 +88,44 @@ constexpr bool is_no_pattern =
   !is_window<T>;
 
 template <typename T>
+constexpr bool is_pattern = !is_no_pattern<T>;
+
+template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
 
 template <typename T>
-using requires_pattern = std::enable_if_t<!is_no_pattern<T>, int>;
+using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
 
 
-//template <typename ...> struct input_type;
-
-
+//Base template to determine the input type of a function or pattern
 template<class T, class Enable = void>
 class input_type {}; // primary template
  
+//Specialization for patterns
 template<class T>
 class input_type<T, typename std::enable_if<  !is_no_pattern<T> >::type> {
   public:
   using type = typename T::input_type;
 };
 
+//Specialization for fuctions
 template<class T>
 class input_type<T, typename std::enable_if<  is_no_pattern<T> >::type> {
   public:
   using type = typename internal::function_traits<T>::template arg<0>::type;
 };
 
+//Base template to take the first argument of a function or a pattern
 template <typename T>
 struct next_type{
   using type = typename input_type<typename std::decay<T>::type>::type;
 };
 
+//Variadic template used for multiple functions/patterns
 template <typename T, typename ... Other>
 struct next_input_type{
   using type = typename next_type<T>::type;
 };
-
-/*template <typename T>
-using input_type = typename std::conditional<!is_no_pattern<T>, 
-    typename internal::function_traits<T>::template arg<0>::type,
-    typename T::input_type>::type;
-*/
 
 } // end namespace grppi
 

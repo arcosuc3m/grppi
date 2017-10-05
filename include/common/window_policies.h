@@ -20,6 +20,7 @@
 #ifndef GRPPI_COMMON_WINDOW_POLICIES_H
 #define GRPPI_COMMON_WINDOW_POLICIES_H
 
+#include <deque>
 #include <type_traits>
 #include <chrono>
 #include <algorithm>
@@ -42,11 +43,12 @@ public:
   */
   count_based(int n, int t) noexcept :
     window_size_{n}, offset_{t}
-  {}
+  {
+  }
 
-  auto add_item(ItemType && item) noexcept{
+  inline auto add_item(ItemType && item) noexcept{
     if (remaining == 0) {
-      items.push_back(item);
+      items.emplace_back(item);
     } 
     else {
       remaining--;
@@ -54,7 +56,7 @@ public:
     return (items.size() == window_size_);
   }
  
-  auto get_window() noexcept{
+  inline auto get_window() noexcept{
     auto aux{items};
     if (offset_ >= window_size_) {
       remaining = offset_ - window_size_;
@@ -69,8 +71,8 @@ public:
 private:
   int window_size_;
   int offset_;
- 
   std::vector<ItemType> items{};
+//  std::deque<ItemType> items{};
   int remaining = 0;
 };
 
@@ -93,17 +95,17 @@ public:
   auto add_item(ItemType && item){
     time_type current_time = std::chrono::high_resolution_clock::now();
     auto time = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - last_time);
-    if ( time.count() > 0.0 )
+    if ( time.count() > 0.0000 )
       items.emplace_back(current_time, item);
     return time.count() > window_size_;
   }
   
   auto get_window(){
     std::vector<ItemType> aux;
-    std::transform( items.begin(), items.end()-1, std::back_inserter( aux ),
+    std::transform( items.begin(), items.end(), std::back_inserter( aux ),
       [](const std::pair<time_type, int> &p) { return p.second; } );
     
-    if (offset_ > window_size_) {   
+    if (offset_ >= window_size_) {   
       items.clear();
     }
     else {
@@ -111,7 +113,10 @@ public:
         [&](const std::pair<time_type, ItemType> &p) { 
           return std::chrono::duration_cast<std::chrono::duration<double>>(p.first - last_time).count() >= offset_; } 
       );
-      items.erase(items.begin(), next_slide);
+      if(next_slide != items.end())
+        items.erase(items.begin(), next_slide);
+      else
+        items.clear();
     }
     int seconds = offset_;
     int milliseconds = (offset_ * 1000) - seconds;    

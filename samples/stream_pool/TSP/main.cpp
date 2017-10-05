@@ -82,7 +82,7 @@ void travel(E & e, int num_threads, int num_cities/*,
   e.set_concurrency_degree(num_threads);
   auto problem = generate_problem(num_cities);
 
-  int popsize = 100;
+  int popsize = 500;
   std::vector<std::vector<int>> population;
   for(auto i = 0; i<popsize;i++){
      std::vector<int> cities;
@@ -99,7 +99,7 @@ void travel(E & e, int num_threads, int num_cities/*,
   int lastCost = 1000;
   std::atomic<int> count{0};
   bool first = true;
-  int NITER = 1000;
+  int NITER = 3000;
   
   auto start = std::chrono::high_resolution_clock::now();
 
@@ -116,7 +116,7 @@ void travel(E & e, int num_threads, int num_cities/*,
          individual[swap] = individual[swap+1];
          individual[swap+1] = aux;
          auto k = aux;
-         for(int j = 0;j<3;j++){
+         for(int j = 0;j<3000;j++){
            k = pow(k,k);
            k =sqrt(k);
          }

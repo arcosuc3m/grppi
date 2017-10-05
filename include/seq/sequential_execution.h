@@ -187,11 +187,17 @@ public:
 
 
   /**
-  \brief Invoke \ref md_pipeline.
-  \tparam Generator Callable type for the generator operation.
-  \tparam Transformers Callable types for the transformers in the pipeline.
-  \param generate_op Generator operation.
-  \param transform_ops Transformer operations.
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
   */
   template <typename Population, typename Selection, typename Evolution,
             typename Evaluation, typename Predicate>
@@ -314,7 +320,7 @@ private:
     SplitJoin<Policy,Transformers...> & split_obj,
     OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline(item, std::move(split_obj),
+    do_pipeline(item, std::forward<SplitJoin>(split_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
 
   }
@@ -469,6 +475,13 @@ constexpr bool supports_stencil<sequential_execution>() { return true; }
 */
 template <>
 constexpr bool supports_divide_conquer<sequential_execution>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stream_pool<sequential_execution>() { return true; }
 
 /**
 \brief Determines if an execution policy supports the pipeline pattern.
@@ -706,11 +719,11 @@ void sequential_execution::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
     auto policy = split_obj.get_policy();
-    policy.set_num_queues(split_obj.num_transformers());
-    auto next_flows = policy.next_queue();
-    split_obj.save_policy(policy);
+    //policy.set_num_queues(split_obj.num_transformers());
+    auto next_flows= policy.next_queue();
     create_flow<0>(item,next_flows, std::forward<SplitJoin<Policy,Transformers...>>(split_obj),
       std::forward<OtherTransformers>(other_transform_ops)...);
+    
 }
 
 

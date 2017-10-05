@@ -26,7 +26,8 @@ class windower_queue{
     auto pop() { 
       using namespace std;
       using namespace experimental;
-      mut_.lock();
+     // mut_.lock();
+      while(consuming_.test_and_set());
       if(!end_){
         auto item = input_queue_.pop();
         if(item.first){
@@ -34,18 +35,22 @@ class windower_queue{
             item = input_queue_.pop();
             if(!item.first){
                end_ = true;
-               break;
+               consuming_.clear();
+  //    mut_.unlock();
+               return std::move(make_pair(window_optional_type{}, -1));
             }
           }
           auto window = make_pair(make_optional(policy_.get_window()), order_);
           order_++;
-          mut_.unlock();
-          return window;
+          consuming_.clear();
+  //    mut_.unlock();
+          return std::move(window);
         }
         end_ = true;
       }
-        mut_.unlock();
-      return make_pair(window_optional_type{}, -1);
+  //    mut_.unlock();
+      consuming_.clear();
+      return std::move(make_pair(window_optional_type{}, -1));
    }
     
     windower_queue(InQueue & q, Window w) :
@@ -59,6 +64,7 @@ class windower_queue{
     windower_queue & operator=(const windower_queue &) = delete;
 
   private:
+std::atomic_flag consuming_ = ATOMIC_FLAG_INIT;
     std::mutex mut_;
     Window policy_;
     InQueue& input_queue_;    

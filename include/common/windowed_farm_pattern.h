@@ -36,7 +36,7 @@ public:
 
   using transformer_type = Transformer;
   using window_type = Window;
-
+//  using input_type = typename next_input_type<Transformer>::type;
   /**
   \brief Constructs a farm with a cardinality and a transformer.
   \param n Number of replicas for the farm.

@@ -89,8 +89,12 @@ constexpr bool supports_pipeline() { return false; }
 template <typename E>
 constexpr bool supports_split_join() { return false; }
 
-
+/**
+\brief Determines if an execution policy supports the split-join pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_stream_pool() { return false; }
 
 }
-
 #endif

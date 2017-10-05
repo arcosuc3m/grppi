@@ -143,6 +143,29 @@ public:
                       Combiner && combine_op) const; 
 
   /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
+
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
+
+
+  /**
   \brief Invoke \ref md_pipeline.
   \tparam Generator Callable type for the generator operation.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -223,6 +246,12 @@ constexpr bool supports_divide_conquer<dynamic_execution>() { return true; }
 template <>
 constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for dynamic_execution.
+*/
+//template <>
+//constexpr bool supports_stream_pool<parallel_execution_native>() { return true; }
 
 template <>
 constexpr bool supports_split_join<dynamic_execution>() { return true; }
@@ -319,6 +348,22 @@ auto dynamic_execution::divide_conquer(
       std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op));
 }
+
+
+template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+void dynamic_execution::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+ GRPPI_TRY_PATTERN_ALL(stream_pool, population, std::forward<Selection>(selection_op),
+      std::forward<Evolution>(evolve_op),
+      std::forward<Evaluation>(eval_op),
+      std::forward<Predicate>(termination_op));
+}
+
 
 template <typename Generator, typename ... Transformers>
 void dynamic_execution::pipeline(

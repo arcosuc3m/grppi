@@ -7,16 +7,17 @@ namespace grppi {
 
 class duplicate{
   public:
-    void set_num_queues(int n){
+    inline void set_num_queues(int n){
       num_queues_ = n;
+      for(int i = 0; i < num_queues_; i++) next.push_back(i);
     }
     
-    auto next_queue() {
-      std::vector<int> next;
-      for(int i = 0; i < num_queues_; i++) next.push_back(i);
+    inline auto& next_queue() {
+      //std::vector<int> next;
       return next;
     }
   private:
+    std::vector<int> next;
     int num_queues_ = 0;
 };
 
@@ -27,10 +28,9 @@ class round_robin{
       num_queues_ = n;
     }
 
-    auto next_queue() {
+    auto& next_queue() {
 
-      std::vector<int> next;
-      next.push_back(current_q_);
+      next[0] = current_q_;
       current_item_ += 1;
       if (current_item_ == items_per_queue_){
         current_item_ = 0;
@@ -39,12 +39,15 @@ class round_robin{
       return next;
     }
    
-    round_robin(int num_items) : items_per_queue_ { num_items } {}
+    round_robin(int num_items) : items_per_queue_ { num_items } {
+      next.push_back(current_q_);
+    }
   private:
     int num_queues_ = 0;
     int current_q_ = 0;
     int items_per_queue_ = 0;
     int current_item_ = 0;
+    std::vector<int> next;
 
 };
 
