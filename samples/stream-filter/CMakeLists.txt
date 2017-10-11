@@ -1,2 +1,0 @@
-add_subdirectory(print_primes)
-add_subdirectory(discard_words)
