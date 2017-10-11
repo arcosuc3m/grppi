@@ -4,6 +4,12 @@ if (NOT GIT_FOUND)
   message(ERROR "Git not found. Please install git")
 endif()
 
+# Require svn installed
+find_package(Subversion)
+if (NOT SUBVERSION_FOUND)
+  message(ERROR "Subversion not found. Please install svn")
+endif()
+
 # Support use of add_external_project 
 include(ExternalProject)
 
@@ -16,3 +22,6 @@ endif()
 
 # Build packages if required version not found
 include(${CMAKE_MODULE_PATH}/build-googletest.cmake)
+
+# Build FastFlow
+include(${CMAKE_MODULE_PATH}/build-fastflow.cmake)

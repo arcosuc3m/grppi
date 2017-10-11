@@ -1,5 +1,20 @@
 #################################
 #                               #
+# grPPI v0.3 - FastFlow backend #
+#                               #
+#################################
+10/10/2017 -- Started refactoring to version 0.3
+ - data parallel pattern have been updated and fixed.
+ - stream parallel patterns are almost done. Note that every pattern is now a 
+ Pipeline of at least 2 stages, the first being an emitter and the second the 
+ actual transforming pattern.
+ - cmake module for FastFlow automatic cloning and installation not yet worging
+ - samples updated
+
+
+
+#################################
+#                               #
 # grPPI v0.2 - FastFlow backend #
 #                               #
 #################################
