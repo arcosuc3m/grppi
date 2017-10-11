@@ -1,0 +1,3 @@
+add_subdirectory(double_sequence)
+add_subdirectory(add_sequences)
+add_subdirectory(daxpy)
