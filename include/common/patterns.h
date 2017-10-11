@@ -23,6 +23,12 @@
 
 #include <tuple> 
 
+#include "farm_pattern.h"
+#include "filter_pattern.h"
+#include "pipeline_pattern.h"
+#include "reduce_pattern.h"
+#include "iteration_pattern.h"
+
 namespace grppi{
 
 template <typename E,typename Stage, typename ... Stages>
@@ -66,6 +72,17 @@ class filter_info
       int filtertype;
       filter_info(E &s,Operation f) : task{f}, exectype{s}, filtertype{} {};
 };
+
+template <typename T>
+constexpr bool is_no_pattern =
+  !is_farm<T> && 
+  !is_filter<T> && 
+  !is_pipeline<T> &&
+  !is_reduce<T> &&
+  !is_iteration<T>;
+
+template <typename T>
+using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
 
 } // end namespace grppi
 

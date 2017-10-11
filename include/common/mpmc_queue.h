@@ -55,6 +55,9 @@ class mpmc_queue{
         empty{},
         full{}
       {}
+
+      mpmc_queue(const mpmc_queue &) = delete;
+      mpmc_queue & operator=(const mpmc_queue &) = delete;
      
       bool is_empty () const noexcept;
       T pop () ;
@@ -167,6 +170,23 @@ bool mpmc_queue<T>::is_full(unsigned long long current) const noexcept{
   return false;
 
 }
+
+namespace internal {
+
+template <typename T>
+struct is_queue : std::false_type {};
+
+template <typename T>
+struct is_queue<mpmc_queue<T>> : std::true_type {};
+
+}
+
+template <typename T>
+constexpr bool is_queue = internal::is_queue<T>();
+
+template <typename T>
+using requires_queue = std::enable_if_t<is_queue<T>, int>;
+
 
 }
 
