@@ -24,4 +24,4 @@ endif()
 include(${CMAKE_MODULE_PATH}/build-googletest.cmake)
 
 # Build FastFlow
-include(${CMAKE_MODULE_PATH}/build-fastflow.cmake)
+#include(${CMAKE_MODULE_PATH}/build-fastflow.cmake)

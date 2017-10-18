@@ -3,6 +3,21 @@
 # grPPI v0.3 - FastFlow backend #
 #                               #
 #################################
+18/10/2017 -- Refactoring to version 0.3 completed
+ - Problems when a Farm works on std::tuple object
+ - Pipe of Farm, where farm is not inlined, will not compile
+ - Working on unit_tests: added DaC tests adapted to FF interface
+ - All samples compile fine and run (except stream_reduce)
+ - stream_iterator does not give correct result
+ - Added cmake module for FastFlow checkout from Git
+ - Created new mFastFlow repository containing only headers
+ - Added cmake module for FastFlow checkout from SVN
+
+17/10/2017 -- Refactoring to version 0.3 almost completed
+ - All pattens have been updated to version 0.3
+ - Improved FastFlow backend, introducing typed ff node and ordered farm
+ - Stream_reduce pattern results are not correct: check	with David
+
 10/10/2017 -- Started refactoring to version 0.3
  - data parallel pattern have been updated and fixed.
  - stream parallel patterns are almost done. Note that every pattern is now a 

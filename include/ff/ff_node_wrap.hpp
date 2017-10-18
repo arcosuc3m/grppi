@@ -1,8 +1,9 @@
 /*
- * Author: Marco Aldinucci, University of Torino
- * Date: August 4, 2016
+ * ff_node_wrap.hpp
  *
- * TODO: change to typed ff_node to ensure a better static type checking at the interface level
+ * Created on: 24 Aug 2017
+ *      Author: fabio
+ *
  */
 
 
@@ -11,11 +12,11 @@
 
 #include <experimental/optional>
 #include <type_traits>
+#include <functional>
 
 #include <ff/node.hpp>
 #include <ff/allocator.hpp>
 
-//#include "../common/common.hpp"
 
 #ifndef FF_ALLOCATOR_IN_USE
 //static ff::ff_allocator * ffalloc = 0;
@@ -59,25 +60,20 @@ class ff_optional {
 
 // Middle stage (worker node)
 template <typename TSin, typename TSout, typename L>
-struct PMINode : ff_node {
+struct PMINode : ff_node_t<TSin,TSout> {
     L callable;
 
-    PMINode(L const &lf) : callable(lf) {};
+    PMINode(L&& lf) : callable(lf) {};
 
-    inline void * svc(void *t) {
+    TSout * svc(TSin *t) {
     	std::experimental::optional<TSin> check;
-        void * outslot = FF_MALLOC(sizeof(TSout));
-        TSout * out = new (outslot) TSout();
-        TSin * input_item = (TSin *) t;
-        check = *input_item;
+        TSout * out = new TSout();
+        check = *t;
 
-        if(check) {
+        if(check)
         	*out = std::move(callable(check.value()));
-        	input_item->~TSin();
-        	FF_FREE(input_item);
-        }
 
-        return outslot;
+        return out;
     }
 };
 
@@ -87,42 +83,38 @@ template <typename TSout, typename L >
 struct PMINode<void,TSout,L> : ff_node {
     L callable;
 
-    PMINode(L const &lf) : callable(lf) {};
+    PMINode(L&& lf) : callable(lf) {};
 
-    inline void * svc(void *) {
+    void * svc(void *) {
     	std::experimental::optional<TSout> ret;
-        void *outslot = FF_MALLOC(sizeof(TSout));
+        void *outslot = std::malloc(sizeof(TSout));
         TSout *out = new (outslot) TSout();
 
         ret = std::move(callable());
 
-        // if(ret.has_value()) // c++17 only - use bool operator
         if(ret) {
         	*out = ret.value();
         	return outslot;
-        } else
-        	return EOS;	// No GO_ON
+        } else return {};	// No GO_ON
     }
 };
 
 
 // Last stage
 template <typename TSin, typename L >
-struct PMINode<TSin,void,L> : ff_node {
-    L callable;
+struct PMINode<TSin,void,L> : ff_node_t<TSin,void> {
+	L callable;
 
-    PMINode(L const &lf) : callable(lf) {};
+    PMINode(L&& lf) : callable(std::move(lf)) {};
 
-    inline void * svc(void *t) {
+    void * svc(TSin *t) {
     	std::experimental::optional<TSin> check;
-        TSin * input_item = (TSin *) t;
-        check = *input_item;
+    	TSin *item = (TSin*) t;
+        check = *item;
 
-        if(check) {
+        if(check)
         	callable(check.value());
-        	input_item->~TSin();
-        	FF_FREE(input_item);
-        }
+
         return GO_ON;
     }
 };
@@ -132,26 +124,20 @@ struct PMINode<TSin,void,L> : ff_node {
 // Note that according to grPPI interface,
 // basic filter keeps matching items
 template <typename TSin, typename L>
-struct PMINodeFilter : ff_node {
+struct PMINodeFilter : ff_node_t<TSin> {
     L cond;
 
-    PMINodeFilter (L const &c) : cond(c) {};
+    PMINodeFilter(L&& c) : cond(c) {};
 
-    inline void * svc(void *t) {
+    TSin * svc(TSin *t) {
     	std::experimental::optional<TSin> check;
-    	void * outslot = GO_ON;
-        TSin * input_item = (TSin *) t;
-        check = *input_item;
+        check = *t;
 
         if(check) {
         	if ( cond(check.value()) ) {
-        		outslot = t;
-        	} else {
-        		input_item->~TSin();
-        		FF_FREE(input_item);
-        	}
-        }
-        return outslot;
+        		return t;
+        	} else return {};
+        } else return {};
     }
 };
 

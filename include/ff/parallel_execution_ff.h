@@ -12,16 +12,16 @@
 
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
-//#include "../seq/sequential_execution.h"
+#include "../common/patterns.h"
+#include "../common/farm_pattern.h"
 
 #include <type_traits>
 #include <tuple>
 
-#include <ff/node.hpp>
+#include "ff_streaming_wraps.hpp"
+
 #include <ff/parallel_for.hpp>
-#include <ff/farm.hpp>
-#include <ff/pipeline.hpp>
-#include "ff_node_wrap.hpp"
+#include <ff/dc.hpp>
 
 
 namespace grppi {
@@ -157,7 +157,6 @@ public:
 	  \tparam Divider Callable type for the divider operation.
 	  \tparam Solver Callable type for the solver operation.
 	  \tparam Combiner Callable type for the combiner operation.
-	  \param ex Sequential execution policy object.
 	  \param input Input problem to be solved.
 	  \param divider_op Divider operation.
 	  \param solver_op Solver operation.
@@ -166,6 +165,24 @@ public:
 	template <typename Input, typename Divider, typename Solver, typename Combiner>
 	auto divide_conquer(Input && input,
 			Divider && divide_op,
+			Solver && solve_op,
+			Combiner && combine_op) = delete;
+
+	/**
+	  \brief Invoke \ref md_divide-conquer.
+	  \tparam Input Type used for the input problem.
+	  \tparam Divider Callable type for the divider operation.
+	  \tparam Solver Callable type for the solver operation.
+	  \tparam Combiner Callable type for the combiner operation.
+	  \param input Input problem to be solved.
+	  \param divider_op Divider operation.
+	  \param solver_op Solver operation.
+	  \param combine_op Combiner operation.
+	 */
+	template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
+	auto divide_conquer(Input & input,
+			Divider && divide_op,
+			Predicate && condition_op,
 			Solver && solve_op,
 			Combiner && combine_op) const;
 
@@ -181,12 +198,32 @@ public:
 			Transformers && ... transform_op) const;
 
 
+//private:
+//	// TODO -- Do not know if divide_conquer needs an intermediate layer.
+//	template <typename Input, typename Divider, typename Solver, typename Combiner>
+//	auto divide_conquer(Input && input,
+//			Divider && divide_op,
+//			Solver && solve_op,
+//			Combiner && combine_op,
+//			std::atomic<int> & num_threads) = delete;
+//
+//	template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
+//	auto divide_conquer(Input && input,
+//			Divider && divide_op,
+//			Predicate && condition_op,
+//			Solver && solve_op,
+//			Combiner && combine_op,
+//			std::atomic<int> & num_threads) const;
+
 private:
 
   constexpr static int default_concurrency_degree = 4;
   int concurrency_degree_ = default_concurrency_degree;
 
 };
+
+
+// --------------------- METAFUNCTIONS ---------------------
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_ff
@@ -253,15 +290,54 @@ constexpr bool supports_divide_conquer<parallel_execution_ff>() { return true; }
 template <>
 constexpr bool supports_pipeline<parallel_execution_ff>() { return true; }
 
-// -------------------- INTERNALS --------------------
+
+// -------------------- PUBLIC FUNCTIONS IMPLEMENTATION --------------------
+
+// divide&conquer pattern
+template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
+auto parallel_execution_ff::divide_conquer(Input & input,
+		Divider && divide_op,
+		Predicate && condition_op,
+		Solver && solve_op,
+		Combiner && combine_op) const {
+
+	using output_type = typename std::result_of<Solver(Input)>::type;
+
+	// divide
+	auto divide_fn = [&](const Input &in, std::vector<Input> &subin) {
+		subin = divide_op(in);
+	};
+
+	// combine
+	auto combine_fn = [&] (std::vector<output_type>& in, output_type& out) {
+			out = combine_op(in[0], in[1]);
+	};
+
+	// sequential solver (base-case)
+	auto seq_fn = [&] (const Input & in , output_type & out) {
+		out = solve_op(in);
+	};
+
+	// condition
+	auto cond_fn = [&] (const Input &in) {
+		return condition_op(in);
+	};
+
+	output_type out_var;
+	// divide, combine, seq, condition, operand, res, wrks
+	ff::ff_DC<Input,output_type> dac(divide_fn, combine_fn, seq_fn, cond_fn, input, out_var, concurrency_degree_);
+
+	dac.run_and_wait_end();
+
+	return out_var;
+}
 
 // map pattern
 template <typename ... InputIterators, typename OutputIterator, typename Transformer>
 void parallel_execution_ff::map(std::tuple<InputIterators...> firsts,
 		OutputIterator first_out,
 		std::size_t sequence_size,
-		Transformer transform_op) const
-{
+		Transformer transform_op) const {
 	ff::ParallelFor pf(concurrency_degree_, true);
 	if(concurrency_degree_ < 16)
 		pf.disableScheduler();
@@ -271,7 +347,6 @@ void parallel_execution_ff::map(std::tuple<InputIterators...> firsts,
 		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
 			*(first_out+internal_it) = apply_iterators_indexed(transform_op, firsts, internal_it);
 	}, concurrency_degree_);
-
 }
 
 // reduce pattern
@@ -279,8 +354,7 @@ template <typename InputIterator, typename Identity, typename Combiner>
 auto parallel_execution_ff::reduce(InputIterator first,
 		std::size_t sequence_size,
 		Identity && identity,
-		Combiner && combine_op) const
-{
+		Combiner && combine_op) const {
 	ff::ParallelForReduce<Identity> pfr(concurrency_degree_, true);
 	if(concurrency_degree_ < 16)
 		pfr.disableScheduler();
@@ -304,12 +378,12 @@ auto parallel_execution_ff::reduce(InputIterator first,
 // map+reduce pattern
 template <typename ... InputIterators, typename Identity,
           typename Transformer, typename Combiner>
-auto parallel_execution_ff::map_reduce(
-    std::tuple<InputIterators...> firsts,
+auto parallel_execution_ff::map_reduce(std::tuple<InputIterators...> firsts,
     std::size_t sequence_size,
     Identity && identity,
-    Transformer && transform_op, Combiner && combine_op) const
-{
+    Transformer && transform_op,
+	Combiner && combine_op) const {
+
 	ff::ParallelForReduce<Identity> pfr(concurrency_degree_, true);
 	if(concurrency_degree_ < 16)
 		pfr.disableScheduler();
@@ -351,8 +425,8 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
 		OutputIterator first_out,
 		std::size_t sequence_size,
 		StencilTransformer && transform_op,
-		Neighbourhood && neighbour_op) const
-{
+		Neighbourhood && neighbour_op) const {
+
 	ff::ParallelFor pf(concurrency_degree_, true);
 	if(concurrency_degree_ < 16)
 		pf.disableScheduler();
@@ -367,22 +441,27 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
 					);
 		}
 	}, concurrency_degree_);
+}
+
+
+// pipeline pattern
+template <typename Generator, typename ... Transformers>
+void parallel_execution_ff::pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops) const {
+	ff_wrap_pipeline pipe(concurrency_degree_, generate_op, std::forward<Transformers>(transform_ops)...);
+
+	pipe.setFixedSize(false);
+	//pipe.setXNodeInputQueueLength(1024);
+	//pipe.setXNodeOutputQueueLength(1024);
+
+	pipe.run_and_wait_end();
 
 }
 
-// divide&conquer pattern -- TODO
-template <typename Input, typename Divider, typename Solver, typename Combiner>
-auto parallel_execution_ff::divide_conquer(
-    Input && input,
-    Divider && divide_op,
-    Solver && solve_op,
-    Combiner && combine_op) const { }
 
-// pipeline pattern -- TODO
-template <typename Generator, typename ... Transformers>
-void parallel_execution_omp::pipeline(
-    Generator && generate_op,
-    Transformers && ... transform_ops) const { }
+// -------------------- PRIVATE FUNCTIONS IMPLEMENTATION --------------------
+
 
 
 } // end namespace grppi
