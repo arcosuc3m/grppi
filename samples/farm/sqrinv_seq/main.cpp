@@ -36,14 +36,18 @@ void test_pipeline(grppi::dynamic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
+  auto inner = grppi::farm(4,[](double x) {
+      return 1/(x*x);
+    });
+
   grppi::pipeline(e, 
     [x=1,n]() mutable -> optional<double> { 
       if (x<=n) return x++;
       else return {}; 
     },
-    grppi::farm(4,[](double x) {
-      return 1/(x*x);
-    }),
+	grppi::farm(4,[](double x) {
+	      return 1/(x*x);
+	    }),
     [](double x) { cout << x << endl; }
   );
 }
@@ -62,8 +66,6 @@ void print_message(const std::string & prog, const std::string & msg) {
 int main(int argc, char **argv) {
     
   using namespace std;
-
-  print_message(argv[0], "Not implemented waiting for fix of issue #231");
 
   if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");

@@ -92,17 +92,17 @@ private:
 	template <typename T>
 	void add2pipeall() { }
 
-	// ALL OTHER CASES -- TODO
+	// ALL OTHER CASES
 
 	// last stage -- no output value expected
 	template <typename Input, typename Transformer,
 	requires_no_pattern<Transformer> = 0>
 	auto add2pipeall(Transformer &&stage) {
-		auto n = new ff::PMINode<Input,void,Transformer>(std::move(stage));
+		auto n = new ff::PMINode<Input,void,Transformer>(std::forward<Transformer>(stage));
 		add2pipe(n);
 	}
 
-	// sequential stage -- intermediate sequential stage
+	// sequential stage -- intermediate stage, no pattern
 	template <typename Input, typename Transformer, typename ... OtherTransformers,
 	requires_no_pattern<Transformer> = 0>
 	auto add2pipeall(Transformer && transform_op,
@@ -114,7 +114,7 @@ private:
 		static_assert(!std::is_void<output_type>::value,
 				"Transformer must return a non-void result");
 
-		auto n = new ff::PMINode<Input,output_type,Transformer>(std::move(transform_op));
+		auto n = new ff::PMINode<Input,output_type,Transformer>(std::forward<Transformer>(transform_op));
 
 		// add node to pipeline
 		add2pipe(n);
@@ -136,7 +136,9 @@ private:
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ff::PMINode<Input,output_type,Farm<FarmTransformer>>>(std::move(farm_obj)) );
+			w.push_back( std::make_unique<ff::PMINode<Input,output_type,Farm<FarmTransformer>>>(
+					std::forward<Farm<FarmTransformer>>(farm_obj))
+					);
 
 		ff::ff_OFarm<Input,output_type> * theFarm = new ff::ff_OFarm<Input,output_type>(std::move(w));
 
@@ -161,7 +163,9 @@ private:
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ff::PMINode<Input,output_type,Farm<FarmTransformer>>>(std::move(farm_obj)) );
+			w.push_back( std::make_unique<ff::PMINode<Input,output_type,Farm<FarmTransformer>>>(
+					std::forward<Farm<FarmTransformer>>(farm_obj))
+					);
 
 		ff::ff_OFarm<Input,output_type> * theFarm = new ff::ff_OFarm<Input,output_type>(std::move(w));
 
@@ -183,7 +187,7 @@ private:
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::move(filter_obj)) );
+			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::forward<Filter<Predicate>>(filter_obj)) );
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>(std::move(w));
 
@@ -204,7 +208,7 @@ private:
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::move(filter_obj)) );
+			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::forward<Filter<Predicate>>(filter_obj)) );
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>(std::move(w));
 
@@ -228,7 +232,9 @@ private:
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ReduceWorker<Input,Reduce<Combiner,Identity>>>(reduce_obj) );
+			w.push_back( std::make_unique<ReduceWorker<Input,Reduce<Combiner,Identity>>>(
+					std::forward<Reduce<Combiner,Identity>>(reduce_obj))
+					);
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>( std::move(w) );
 
@@ -251,7 +257,9 @@ private:
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<IterationWorker<Input,Iteration<Transformer,Predicate>>>(iteration_obj) );
+			w.push_back( std::make_unique<IterationWorker<Input,Iteration<Transformer,Predicate>>>(
+					std::forward<Iteration<Transformer,Predicate>>(iteration_obj))
+					);
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>( std::move(w) );
 
@@ -307,7 +315,7 @@ public:
 				using generator_value_type = typename result_type::value_type;
 
 				// First stage
-				auto n = new ff::PMINode<void,generator_value_type,Generator>(std::move(gen_func));
+				auto n = new ff::PMINode<void,generator_value_type,Generator>(std::forward<Generator>(gen_func));
 				add2pipe(n);
 
 				// Other stages

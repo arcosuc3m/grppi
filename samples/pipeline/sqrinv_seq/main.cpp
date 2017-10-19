@@ -27,26 +27,33 @@
 #include <stdexcept>
 
 // grppi
-#include "poly/polymorphic_execution.h"
-#include "pipeline.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_pipeline(grppi::polymorphic_execution & e, int n) {
+void test_pipeline(grppi::dynamic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
+  auto t0 = chrono::system_clock::now();
   grppi::pipeline(e, 
-    [n]() -> optional<double> { 
+    [n]() -> optional<int> {
       static int x = 0;
       if (x<n) return x++;
       else return {}; 
     },
-    [](double x) { return x*x; },
-    [](double x) { return 1/x; },
-    [](double x) { cout << x << endl; }
+    [](int x) { return x*x; },
+	grppi::farm(2, [](int x) {
+	      return x * 3;
+	    }),
+    [](int x) { return 1+x; },
+    [](int x) { cout << x << endl; }
   );
+  auto t1 = chrono::system_clock::now();
+  auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
+
+  cout << "Execution time = " << diff.count() << " (ms)" << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {

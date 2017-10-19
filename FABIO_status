@@ -3,10 +3,24 @@
 # grPPI v0.3 - FastFlow backend #
 #                               #
 #################################
+19/10/2017 -- Fixed last type deduction problems and patterng nesting problems
+ - Problems with tests '*_keep_multiple' and '*_discard_multiple' with 
+   stream_filter pattern.
+ - Run unit_tests, 96% tests passed, 5 tests failed out of 128:
+ 	18 - divideconquer_test_pred/*.static_multiple_five_threads_pred (Failed)
+	125 - stream_reduce_test/*.static_window_offset (Failed)
+	126 - stream_reduce_test/*.dyn_window_offset (Failed)
+	127 - stream_reduce_test/*.static_offset_window (Failed)
+	128 - stream_reduce_test/*.dyn_offset_window (Failed)
+ - Resolved all problems related to pattern nesting, and input handling
+ - Resolved all problems related to type deduction 
+
 18/10/2017 -- Refactoring to version 0.3 completed
- - Problems when a Farm works on std::tuple object
- - Pipe of Farm, where farm is not inlined, will not compile
- - Working on unit_tests: added DaC tests adapted to FF interface
+ - Problems when a nested Farm deals with a std::tuple object.
+ - Pipe of Farm, where Farm is not inlined (i.e. declared as outer lambda func) 
+   will not compile.
+ - Type deduction problem with functions returning void
+ - Working on unit_tests: added DaC tests adapted to FF interface.
  - All samples compile fine and run (except stream_reduce)
  - stream_iterator does not give correct result
  - Added cmake module for FastFlow checkout from Git

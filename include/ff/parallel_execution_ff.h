@@ -54,8 +54,9 @@ public:
 	  \param concurrency_degree Number of threads used for parallel algorithms.
 	  \param order Whether ordered executions is enabled or disabled.
 	 */
-	parallel_execution_ff(int concurrency_degree) noexcept :
-			concurrency_degree_{concurrency_degree}
+	parallel_execution_ff(int concurrency_degree, bool order=false) noexcept :
+			concurrency_degree_{concurrency_degree},
+			ordering_{order}
 	{}
 
 	/**
@@ -67,6 +68,21 @@ public:
 	  \brief Get number of grppi threads.
 	 */
 	int concurrency_degree() const noexcept { return concurrency_degree_; }
+
+	/**
+	  \brief Enable ordering.
+	 */
+	void enable_ordering() noexcept { ordering_=true; }
+
+	/**
+	  \brief Disable ordering.
+	 */
+	void disable_ordering() noexcept { ordering_=false; }
+
+	/**
+	  \brief Is execution ordered.
+	 */
+	bool is_ordered() const noexcept { return ordering_; }
 
 	/**
 	  \brief Applies a transformation to multiple sequences leaving the result in
@@ -219,6 +235,7 @@ private:
 
   constexpr static int default_concurrency_degree = 4;
   int concurrency_degree_ = default_concurrency_degree;
+  bool ordering_ = false; // needed to comply with unit_tests
 
 };
 

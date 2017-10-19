@@ -105,7 +105,7 @@ template <typename TSin, typename L >
 struct PMINode<TSin,void,L> : ff_node_t<TSin,void> {
 	L callable;
 
-    PMINode(L&& lf) : callable(std::move(lf)) {};
+    PMINode(L&& lf) : callable(lf) {};
 
     void * svc(TSin *t) {
     	std::experimental::optional<TSin> check;

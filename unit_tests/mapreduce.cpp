@@ -23,7 +23,7 @@
 #include <iostream>
 
 #include "mapreduce.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -34,8 +34,7 @@ template <typename T>
 class map_reduce_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Variables
   int output;
@@ -45,6 +44,18 @@ public:
 
   // Invocation counter
   std::atomic<int> invocations_transformer{0};
+
+  template <typename E>
+  auto run_square_sum(const E & e) {
+    return grppi::map_reduce(e, v.begin(), v.end(), 0,
+      [this](int x) { 
+        invocations_transformer++; 
+        return x*2; 
+      },
+      [](int x, int y) { 
+        return x + y; 
+      });
+  }
 
   void setup_single() {
     v = vector<int>{1};
@@ -74,30 +85,14 @@ TYPED_TEST_CASE(map_reduce_test, executions);
 TYPED_TEST(map_reduce_test, static_single)
 {
   this->setup_single();
-  this->output = grppi::map_reduce(this->execution_, begin(this->v), end(this->v), 0, 
-    [this](int x) { 
-      this->invocations_transformer++; 
-      return x*2; 
-    },
-    [this](int x, int y) { 
-      return x + y; 
-    }
-  );
+  this->output = this->run_square_sum(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, poly_single)
+TYPED_TEST(map_reduce_test, dyn_single)
 {
   this->setup_single();
-  this->output = grppi::map_reduce(this->poly_execution_, begin(this->v), end(this->v), 0,  
-    [this](int x) { 
-      this->invocations_transformer++; 
-      return x*2; 
-    },
-    [this](int x, int y) { 
-      return x + y; 
-    }
-  );
+  this->output = this->run_square_sum(this->dyn_execution_);
   this->check_single();
 }
 
@@ -106,29 +101,13 @@ TYPED_TEST(map_reduce_test, poly_single)
 TYPED_TEST(map_reduce_test, static_multiple)
 {
   this->setup_multiple();
-  this->output = grppi::map_reduce(this->execution_, begin(this->v), end(this->v), 0, 
-    [this](int x) { 
-      this->invocations_transformer++; 
-      return x*2; 
-    },
-    [this](int x, int y) { 
-      return x + y; 
-    }
-  );
+  this->output = this->run_square_sum(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, poly_multiple)
+TYPED_TEST(map_reduce_test, dyn_multiple)
 {
   this->setup_multiple();
-  this->output = grppi::map_reduce(this->poly_execution_, begin(this->v), end(this->v), 0, 
-    [this](int x) { 
-      this->invocations_transformer++; 
-      return x*2; 
-    },
-    [this](int x, int y) { 
-      return x + y; 
-    }
-  );
+  this->output = this->run_square_sum(this->dyn_execution_);
   this->check_multiple();
 }

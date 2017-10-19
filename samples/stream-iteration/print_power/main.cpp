@@ -56,7 +56,7 @@ void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
 
   cerr << msg << endl;
-  cerr << "Usage: " << prog << " size window_size offset mode" << endl;
+  cerr << "Usage: " << prog << " size mode" << endl;
   cerr << "  size: Size of the initially generated sequence" << endl;
   cerr << "  mode:" << endl;
   print_available_modes(cerr);

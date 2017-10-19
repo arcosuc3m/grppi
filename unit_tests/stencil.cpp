@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 
 #include "stencil.h"
-#include "poly/polymorphic_execution.h"
+#include "dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
@@ -35,8 +35,7 @@ template <typename T>
 class stencil_test : public ::testing::Test {
 public:
   T execution_;
-  polymorphic_execution poly_execution_ = 
-    make_polymorphic_execution<T>();
+  dynamic_execution dyn_execution_{execution_};
 
   // Vectors
   vector<int> v{};
@@ -198,10 +197,10 @@ TYPED_TEST(stencil_test, static_empty)
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, poly_empty)
+TYPED_TEST(stencil_test, dyn_empty)
 {
   this->setup_empty();
-  this->run_unary(this->poly_execution_);
+  this->run_unary(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -212,10 +211,10 @@ TYPED_TEST(stencil_test, static_empty_ary)
   this->check_empty_ary();
 }
 
-TYPED_TEST(stencil_test, poly_empty_ary)
+TYPED_TEST(stencil_test, dyn_empty_ary)
 {
   this->setup_empty_ary();
-  this->run_nary(this->poly_execution_);
+  this->run_nary(this->dyn_execution_);
   this->check_empty_ary();
 }
 
@@ -226,10 +225,10 @@ TYPED_TEST(stencil_test, static_single)
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, poly_single)
+TYPED_TEST(stencil_test, dyn_single)
 {
   this->setup_single();
-  this->run_unary(this->poly_execution_);
+  this->run_unary(this->dyn_execution_);
   this->check_single();
 }
 
@@ -240,10 +239,10 @@ TYPED_TEST(stencil_test, static_single_ary)
   this->check_single_ary();
 }
 
-TYPED_TEST(stencil_test, poly_single_ary)
+TYPED_TEST(stencil_test, dyn_single_ary)
 {
   this->setup_single_ary();
-  this->run_nary(this->poly_execution_);
+  this->run_nary(this->dyn_execution_);
   this->check_single_ary();
 }
 
@@ -254,10 +253,10 @@ TYPED_TEST(stencil_test, static_multiple_ary)
   this->check_multiple_ary();
 }
 
-TYPED_TEST(stencil_test, poly_multiple_ary)
+TYPED_TEST(stencil_test, dyn_multiple_ary)
 {
   this->setup_multiple_ary();
-  this->run_nary(this->poly_execution_);
+  this->run_nary(this->dyn_execution_);
   this->check_multiple_ary();
 }
 
@@ -269,9 +268,9 @@ TYPED_TEST(stencil_test, static_multiple)
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, poly_multiple)
+TYPED_TEST(stencil_test, dyn_multiple)
 {
   this->setup_multiple();
-  this->run_unary(this->poly_execution_);
+  this->run_unary(this->dyn_execution_);
   this->check_multiple();
 }

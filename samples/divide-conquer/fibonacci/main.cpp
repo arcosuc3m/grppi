@@ -33,22 +33,30 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
+
 void fibonacci(grppi::dynamic_execution & exec, int n) {
   using namespace std;
 
+  auto t0 = chrono::system_clock::now();
+
+  // ex, input, divider, condition, solver (seq), combiner
   auto res = grppi::divide_conquer(exec,
     n,
-    [](int x) -> vector<int> {
-      if (x<2) { return {x}; }
-      else { return { x-1, x-2 }; }
+    [](int x) -> vector<int> { // divider
+      return { x-1, x-2 };
     },
-    [](int x) { return 1; },
-    [](int s1, int s2) {
-      return s1+s2;
+	[](int x) {return x<=2; }, // condition
+    [](int x) { return 1; }, // solver for base-case
+    [](int s1, int s2) { // combiner
+    	return s1+s2;
     }
   );
+  auto t1 = chrono::system_clock::now();
+  auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
 
-  cout << "Fibonacci(" << n << ")= " << res << endl;
+  cout << "Fibonacci(" << n << ") = " << res << endl;
+
+  cout << "Execution time = " << diff.count() << " (ms)" << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
