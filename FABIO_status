@@ -3,6 +3,9 @@
 # grPPI v0.3 - FastFlow backend #
 #                               #
 #################################
+20/10/2017 -- Fixed memory leaks problems
+ - Stream-iterator and stream-reduce examples still do not yield correct results. 
+   Investigate behaviour of FF collector in ordered farm
 19/10/2017 -- Fixed last type deduction problems and patterng nesting problems
  - Problems with tests '*_keep_multiple' and '*_discard_multiple' with 
    stream_filter pattern.

@@ -15,15 +15,16 @@
 #include <functional>
 
 #include <ff/node.hpp>
+#include <ff/farm.hpp>
 #include <ff/allocator.hpp>
 
 
-#ifndef FF_ALLOCATOR_IN_USE
-//static ff::ff_allocator * ffalloc = 0;
-#define FF_MALLOC(size)   (FFAllocator::instance()->malloc(size))
-#define FF_FREE(ptr) (FFAllocator::instance()->free(ptr))
-#define FF_ALLOCATOR_IN_USE 1
-#endif
+//#ifndef FF_ALLOCATOR_IN_USE
+////static ff::ff_allocator * ffalloc = 0;
+//#define FF_MALLOC(size)   (FFAllocator::instance()->malloc(size))
+//#define FF_FREE(ptr) (FFAllocator::instance()->free(ptr))
+//#define FF_ALLOCATOR_IN_USE 1
+//#endif
 
 
 namespace ff {
@@ -67,38 +68,39 @@ struct PMINode : ff_node_t<TSin,TSout> {
 
     TSout * svc(TSin *t) {
     	std::experimental::optional<TSin> check;
-        TSout * out = new TSout();
+        TSout * out = (TSout*) ff::ff_malloc(sizeof(TSout));
         check = *t;
 
         if(check)
-        	*out = std::move(callable(check.value()));
+        	*out = callable(check.value());
 
         return out;
     }
 };
 
-
 // First stage
 template <typename TSout, typename L >
-struct PMINode<void,TSout,L> : ff_node {
+struct PMINode<void,TSout,L> : ff_node_t<TSout,TSout> {
     L callable;
 
     PMINode(L&& lf) : callable(lf) {};
 
-    void * svc(void *) {
+    TSout * svc(TSout *) {
     	std::experimental::optional<TSout> ret;
-        void *outslot = std::malloc(sizeof(TSout));
+        void *outslot = ff::ff_malloc(sizeof(TSout));
         TSout *out = new (outslot) TSout();
 
-        ret = std::move(callable());
+        ret = callable();
 
         if(ret) {
         	*out = ret.value();
-        	return outslot;
-        } else return {};	// No GO_ON
+        	return out;
+        } else {
+        	ff::ff_free(outslot);
+        	return {};	// No GO_ON
+        }
     }
 };
-
 
 // Last stage
 template <typename TSin, typename L >
@@ -112,32 +114,40 @@ struct PMINode<TSin,void,L> : ff_node_t<TSin,void> {
     	TSin *item = (TSin*) t;
         check = *item;
 
-        if(check)
+        if(check) {
         	callable(check.value());
+        	item->~TSin();
+        	ff::ff_free(item);
+        	return GO_ON;
+        }
 
-        return GO_ON;
+        return GO_ON; // {} -- problems when returning an empty object at this stage
     }
 };
 
+// tag sent by workers when an element is filtered out
+//static constexpr size_t FILTERED = (FF_EOS-0x11);
 
-// Filter - cond is the filtering function
-// Note that according to grPPI interface,
-// basic filter keeps matching items
+// Middle stage - Filter
 template <typename TSin, typename L>
 struct PMINodeFilter : ff_node_t<TSin> {
-    L cond;
+    L condition;
 
-    PMINodeFilter(L&& c) : cond(c) {};
+    PMINodeFilter(L&& c) : condition(c) {};
 
     TSin * svc(TSin *t) {
     	std::experimental::optional<TSin> check;
         check = *t;
 
         if(check) {
-        	if ( cond(check.value()) ) {
+        	if ( condition(check.value()) ) {
         		return t;
-        	} else return {};
-        } else return {};
+        	} else {
+        		t->~TSin();
+        		ff::ff_free(t);
+        		return (TSin*) GO_ON; // GO_ON -- apparently ofarmC skips GO_OUT tags
+        	}
+        } else return nullptr;
     }
 };
 

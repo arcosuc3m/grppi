@@ -185,11 +185,13 @@ private:
 				"Filter must take non-void argument");
 
 		std::vector<std::unique_ptr<ff::ff_node>> w;
+		//ff::MyFilter coll;
 
 		for(int i=0; i<nworkers; ++i)
 			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::forward<Filter<Predicate>>(filter_obj)) );
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>(std::move(w));
+		//theFarm->setCollectorF(coll);
 
 		// add node to pipeline
 		add2pipe(theFarm);
@@ -206,11 +208,13 @@ private:
 				"Filter must take non-void argument");
 
 		std::vector<std::unique_ptr<ff::ff_node>> w;
+		//ff::MyFilter coll;
 
 		for(int i=0; i<nworkers; ++i)
 			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::forward<Filter<Predicate>>(filter_obj)) );
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>(std::move(w));
+		//theFarm->setCollectorF(coll);
 
 		// add node to pipeline
 		add2pipe(theFarm);
