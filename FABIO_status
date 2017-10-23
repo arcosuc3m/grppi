@@ -3,6 +3,13 @@
 # grPPI v0.3 - FastFlow backend #
 #                               #
 #################################
+23/10/2017 -- Added performance tests with Hayai
+ - Added performance tests written using Hayai. Added tesys for map, reduce, map+reduce, 
+   stencil, farm, pipeline.
+ - Added Hayai library as an external project to theCMake file, so that it is installed 
+   and configured alongside GRPPI. The library helps creating and running performance 
+   benchmarks on C++ code. compile with boolean flag '-DGRPPI_HAYAI_TEST_ENABLE=ON' and 
+   hayai will be marked for git cloning and installation at compile time.
 20/10/2017 -- Fixed memory leaks problems
  - Stream-iterator and stream-reduce examples still do not yield correct results. 
    Investigate behaviour of FF collector in ordered farm

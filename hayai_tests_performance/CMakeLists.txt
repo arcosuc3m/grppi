@@ -12,7 +12,9 @@ if(GRPPI_HAYAI_TEST_ENABLE)
 
   include_directories(${HAYAI_ROOT}/include/hayai)
   
-  set(TESTS map	reduce	mapreduce	stencil)	
+  set(TESTS	map	reduce	mapreduce	stencil
+  		divideandconquer	farm	pipeline
+  )	
   
   # Determine system-dependant library paths.
   include(CheckLibraryExists)
@@ -33,7 +35,7 @@ if(GRPPI_HAYAI_TEST_ENABLE)
   foreach( t ${TESTS} )
     add_executable( ${t} ${t}.cpp)
     target_link_libraries(${t}
-    	hayai_main
+    	${HAYAI_ROOT}/lib/libhayai_main.a
       	${LIB_TIMING} 
       	${TBB_LIBRARIES}
       	${CMAKE_THREAD_LIBS_INIT}
@@ -43,7 +45,7 @@ if(GRPPI_HAYAI_TEST_ENABLE)
 
   add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
   target_link_libraries(${PROJECT_TEST_NAME} 
-      hayai_main
+      ${HAYAI_ROOT}/lib/libhayai_main.a
       ${LIB_TIMING} 
       ${TBB_LIBRARIES}
       ${CMAKE_THREAD_LIBS_INIT}

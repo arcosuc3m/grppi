@@ -23,17 +23,19 @@
 
 #include "supported_executions.h"
 
+#define SIZE 10000000
+#define RUNS 10
+#define ITRS 10
+#define FILE "/space/Desk/GeneralNotes.txt" // path to input file
+
+
 using namespace std;
 using namespace grppi;
 
-class TestClass {
-	//T execution_;
-
+class MapReduceTest {
 	// Vectors
 	vector<double> v;
 	vector<string> words;
-//	vector<double> v3;
-//	vector<double> w;
 
 	int n;
 
@@ -44,7 +46,7 @@ class TestClass {
 
 public:
 
-	TestClass(int size=10000000) : n{size} { }
+	MapReduceTest(int size=1000) : n{size} { }
 
 	void setup_square_sum() {
 		v.reserve(n);
@@ -53,25 +55,24 @@ public:
 	}
 
 	void setup_word_count() {
-		// change here the path to input file
-		ifstream file("/space/Desk/GeneralNotes.txt");
-		//v2.reserve(n); v3.reserve(n); w.reserve(n);
+		ifstream file(FILE);
 		copy(istream_iterator<string>{file}, istream_iterator<string>{},
 				back_inserter(words));
-	}
-
-	void clear_word() {
-		words.clear();
+		file.close();
 	}
 
 	void clear_square_sum() {
 		v.clear();
 	}
 
+	void clear_word() {
+		words.clear();
+	}
+
 	auto run_square_sum(const dynamic_execution & e) {
 		return grppi::map_reduce(e, v.begin(), v.end(), 0,
-				[this](double x) { return x*2; },
-				[](double x, double y) { return x + y; }
+				[&](double x) { return x*2; },
+				[](double x, double y) { return x+y; }
 				);
 	}
 
@@ -89,86 +90,85 @@ public:
 	}
 };
 
-// -- Define fixtures for map tests
+// -- Define fixtures for tests
 
 class SquareSumFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->maptest =	new TestClass();
-		maptest->setup_square_sum();
+		this->test = new MapReduceTest(SIZE);
+		test->setup_square_sum();
 	}
 
 	virtual void TearDown() {
-		maptest->clear_square_sum();
-		delete this->maptest;
+		test->clear_square_sum();
+		delete this->test;
 	}
 
-	TestClass* maptest;
+	MapReduceTest* test;
 };
 
-class WordClassFixture : public ::hayai::Fixture {
+BENCHMARK_F(SquareSumFixture, square_sum_seq, RUNS, ITRS) {
+	sequential_execution sequq;
+	test->run_square_sum(sequq);
+}
+
+BENCHMARK_F(SquareSumFixture, square_sum_ff, RUNS, ITRS) {
+	parallel_execution_ff ffexec;
+	test->run_square_sum(ffexec);
+}
+
+BENCHMARK_F(SquareSumFixture, square_sum_tbb, RUNS, ITRS) {
+	parallel_execution_tbb tbbexec;
+	test->run_square_sum(tbbexec);
+}
+
+BENCHMARK_F(SquareSumFixture, square_sum_omp, RUNS, ITRS) {
+	parallel_execution_omp ompexec;
+	test->run_square_sum(ompexec);
+}
+
+BENCHMARK_F(SquareSumFixture, square_sum_nat, RUNS, ITRS) {
+	parallel_execution_native natexec;
+	test->run_square_sum(natexec);
+}
+
+// words count
+class WordsCountFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->maptest =	new TestClass();
-		maptest->setup_word_count();
+		this->test = new MapReduceTest();
+		test->setup_word_count();
 	}
 
 	virtual void TearDown() {
-		maptest->clear_word();
-		delete this->maptest;
+		test->clear_word();
+		delete this->test;
 	}
 
-	TestClass* maptest;
+	MapReduceTest* test;
 };
 
-BENCHMARK_F(SquareSumFixture, square_sum_seq, 10, 10) {
+BENCHMARK_F(WordsCountFixture, words_count_seq, RUNS, ITRS) {
 	sequential_execution sequq;
-	maptest->run_square_sum(sequq);
+	test->run_square_sum(sequq);
 }
 
-BENCHMARK_F(SquareSumFixture, square_sum_ff, 10, 10) {
+BENCHMARK_F(WordsCountFixture, words_count_ff, RUNS, ITRS) {
 	parallel_execution_ff ffexec;
-	maptest->run_square_sum(ffexec);
+	test->run_square_sum(ffexec);
 }
 
-BENCHMARK_F(SquareSumFixture, square_sum_tbb, 10, 10) {
+BENCHMARK_F(WordsCountFixture, words_count_tbb, RUNS, ITRS) {
 	parallel_execution_tbb tbbexec;
-	maptest->run_square_sum(tbbexec);
+	test->run_square_sum(tbbexec);
 }
 
-BENCHMARK_F(SquareSumFixture, square_sum_omp, 10, 10) {
+BENCHMARK_F(WordsCountFixture, words_count_omp, RUNS, ITRS) {
 	parallel_execution_omp ompexec;
-	maptest->run_square_sum(ompexec);
+	test->run_square_sum(ompexec);
 }
 
-BENCHMARK_F(SquareSumFixture, square_sum_nat, 10, 10) {
+BENCHMARK_F(WordsCountFixture, words_count_nat, RUNS, ITRS) {
 	parallel_execution_native natexec;
-	maptest->run_square_sum(natexec);
-}
-
-// word count
-
-BENCHMARK_F(WordClassFixture, words_count_seq, 10, 10) {
-	sequential_execution sequq;
-	maptest->run_square_sum(sequq);
-}
-
-BENCHMARK_F(WordClassFixture, words_count_ff, 10, 10) {
-	parallel_execution_ff ffexec;
-	maptest->run_square_sum(ffexec);
-}
-
-BENCHMARK_F(WordClassFixture, words_count_tbb, 10, 10) {
-	parallel_execution_tbb tbbexec;
-	maptest->run_square_sum(tbbexec);
-}
-
-BENCHMARK_F(WordClassFixture, words_count_omp, 10, 10) {
-	parallel_execution_omp ompexec;
-	maptest->run_square_sum(ompexec);
-}
-
-BENCHMARK_F(WordClassFixture, words_count_nat, 10, 10) {
-	parallel_execution_native natexec;
-	maptest->run_square_sum(natexec);
+	test->run_square_sum(natexec);
 }

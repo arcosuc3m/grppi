@@ -23,11 +23,14 @@
 
 #include "supported_executions.h"
 
+#define SIZE 10000000
+#define RUNS 10
+#define ITRS 10
+
 using namespace std;
 using namespace grppi;
 
-class TestClass {
-	//T execution_;
+class ReduceTest {
 
 	// Vectors
 	vector<double> v;
@@ -41,7 +44,7 @@ class TestClass {
 
 public:
 
-	TestClass(int size=10000000) : n{size} { }
+	ReduceTest(int size=10000000) : n{size} { }
 
 	void setup_reduce() {
 		v.reserve(n);
@@ -55,7 +58,7 @@ public:
 
 	auto run_square_sum(const dynamic_execution & e) {
 		return grppi::reduce(e, begin(v), end(v), 0.0,
-				[&](auto x, auto y) { return x + y; }
+				[&](auto x, auto y) { return x+y; }
 		);
 	}
 };
@@ -65,39 +68,39 @@ public:
 class ReduceFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->maptest =	new TestClass();
-		maptest->setup_reduce();
+		this->test = new ReduceTest();
+		test->setup_reduce();
 	}
 
 	virtual void TearDown() {
-		maptest->clear_reduce();
-		delete this->maptest;
+		test->clear_reduce();
+		delete this->test;
 	}
 
-	TestClass* maptest;
+	ReduceTest* test;
 };
 
-BENCHMARK_F(ReduceFixture, reduce_seq, 10, 10) {
+BENCHMARK_F(ReduceFixture, reduce_seq, RUNS, ITRS) {
 	sequential_execution sequq;
-	maptest->run_square_sum(sequq);
+	test->run_square_sum(sequq);
 }
 
-BENCHMARK_F(ReduceFixture, reduce_ff, 10, 10) {
+BENCHMARK_F(ReduceFixture, reduce_ff, RUNS, ITRS) {
 	parallel_execution_ff ffexec;
-	maptest->run_square_sum(ffexec);
+	test->run_square_sum(ffexec);
 }
 
-BENCHMARK_F(ReduceFixture, reduce_tbb, 10, 10) {
+BENCHMARK_F(ReduceFixture, reduce_tbb, RUNS, ITRS) {
 	parallel_execution_tbb tbbexec;
-	maptest->run_square_sum(tbbexec);
+	test->run_square_sum(tbbexec);
 }
 
-BENCHMARK_F(ReduceFixture, reduce_omp, 10, 10) {
+BENCHMARK_F(ReduceFixture, reduce_omp, RUNS, ITRS) {
 	parallel_execution_omp ompexec;
-	maptest->run_square_sum(ompexec);
+	test->run_square_sum(ompexec);
 }
 
-BENCHMARK_F(ReduceFixture, reduce_nat, 10, 10) {
+BENCHMARK_F(ReduceFixture, reduce_nat, RUNS, ITRS) {
 	parallel_execution_native natexec;
-	maptest->run_square_sum(natexec);
+	test->run_square_sum(natexec);
 }

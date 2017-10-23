@@ -23,12 +23,14 @@
 
 #include "supported_executions.h"
 
+#define SIZE 10000000
+#define RUNS 10
+#define ITRS 10
+
 using namespace std;
 using namespace grppi;
 
-class TestClass {
-	//T execution_;
-
+class StencilTest {
 	// Vectors
 	vector<double> v{};
 	vector<double> v2{};
@@ -43,7 +45,7 @@ class TestClass {
 
 public:
 
-	TestClass(int size=10000000) : n{size} { }
+	StencilTest(int size=1000) : n{size} { }
 
 	void setup_unary() {
 		v.reserve(n); w.reserve(n);
@@ -68,7 +70,7 @@ public:
 	}
 
 	// Stencil on a single sequence.
-	// Every v[i] is assigned v[i] + v[i+1] or v[i] + 0 if v[i+1] does not exist
+	// w[i] <- v[i] + v[i+1] or v[i] + 0 if v[i+1] does not exist
 	void run_unary(const dynamic_execution & ex) {
 		grppi::stencil(ex, begin(v), end(v), begin(w),
 				[this](auto it, auto n) {
@@ -84,26 +86,23 @@ public:
 	}
 
 	// Stencil on two sequences.
-	// Each v[i] is made
-	//     v[i-2] + v[i-1] + v[i+1] + v[i+2] +
-	//     w[i-2] + w[i-1] + w[i+1] + w[i+2] +
+	// w[i] <- v[i-2] + v[i-1] + v[i+1] + v[i+2] +
+	//         v2[i-2] + v2[i-1] + v2[i+1] + v2[i+2]
 	void run_nary(const dynamic_execution & ex) {
 		auto vec_surronding = [](auto first, auto last, auto it) {
-			vector<int> result;
-			if (distance(first,it)>=2) result.push_back(*prev(it,2));
-			if (distance(first,it)>=1) result.push_back(*prev(it,1));
-			if (distance(it,last)>1) result.push_back(*next(it,1));
-			if (distance(it,last)>2) result.push_back(*next(it,2));
+			vector<double> result;
+			if (std::distance(first,it)>=2) result.push_back(*prev(it,2));
+			if (std::distance(first,it)>=1) result.push_back(*prev(it,1));
+			if (std::distance(it,last)>1)   result.push_back(*next(it,1));
+			if (std::distance(it,last)>2)   result.push_back(*next(it,2));
 			return result;
 		};
 
 		grppi::stencil(ex, begin(v), end(v), begin(w),
-				// Stencil computes average of neighbours
 				[this](auto it, const auto & n) {
 			return std::accumulate(begin(n),end(n),0);
 		},
-		// Neighbours are i-2, i-1, i+1, i+2 of currrent position
-		[&,this](auto it, auto it2) {
+		[&](auto it, auto it2) {
 			auto r1 = vec_surronding(begin(v), end(v), it);
 			auto r2 = vec_surronding(begin(v2), end(v2), it2);
 			r1.insert(end(r1), begin(r2), end(r2));
@@ -114,46 +113,46 @@ public:
 	}
 };
 
-// -- Define fixtures for map tests
+// -- Define fixtures for tests
 
 class StencilUnaryFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->maptest =	new TestClass();
-		maptest->setup_unary();
+		this->test = new StencilTest(SIZE);
+		test->setup_unary();
 	}
 
 	virtual void TearDown() {
-		maptest->clear_unary();
-		delete this->maptest;
+		test->clear_unary();
+		delete this->test;
 	}
 
-	TestClass* maptest;
+	StencilTest* test;
 };
 
-BENCHMARK_F(StencilUnaryFixture, stencil_unary_seq, 10, 10) {
+BENCHMARK_F(StencilUnaryFixture, stencil_unary_seq, RUNS, ITRS) {
 	sequential_execution sequq;
-	maptest->run_unary(sequq);
+	test->run_unary(sequq);
 }
 
-BENCHMARK_F(StencilUnaryFixture, stencil_unary_ff, 10, 10) {
+BENCHMARK_F(StencilUnaryFixture, stencil_unary_ff, RUNS, ITRS) {
 	parallel_execution_ff ffexec;
-	maptest->run_unary(ffexec);
+	test->run_unary(ffexec);
 }
 
-BENCHMARK_F(StencilUnaryFixture, stencil_unary_tbb, 10, 10) {
+BENCHMARK_F(StencilUnaryFixture, stencil_unary_tbb, RUNS, ITRS) {
 	parallel_execution_tbb tbbexec;
-	maptest->run_unary(tbbexec);
+	test->run_unary(tbbexec);
 }
 
-BENCHMARK_F(StencilUnaryFixture, stencil_unary_omp, 10, 10) {
+BENCHMARK_F(StencilUnaryFixture, stencil_unary_omp, RUNS, ITRS) {
 	parallel_execution_omp ompexec;
-	maptest->run_unary(ompexec);
+	test->run_unary(ompexec);
 }
 
-BENCHMARK_F(StencilUnaryFixture, stencil_unary_nat, 10, 10) {
+BENCHMARK_F(StencilUnaryFixture, stencil_unary_nat, RUNS, ITRS) {
 	parallel_execution_native natexec;
-	maptest->run_unary(natexec);
+	test->run_unary(natexec);
 }
 
 // nary stencil
@@ -161,39 +160,39 @@ BENCHMARK_F(StencilUnaryFixture, stencil_unary_nat, 10, 10) {
 class StencilNaryFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->maptest =	new TestClass();
-		maptest->setup_unary();
+		this->test =	new StencilTest(SIZE);
+		test->setup_nary();
 	}
 
 	virtual void TearDown() {
-		maptest->clear_unary();
-		delete this->maptest;
+		test->clear_nary();
+		delete this->test;
 	}
 
-	TestClass* maptest;
+	StencilTest* test;
 };
 
-BENCHMARK_F(StencilNaryFixture, stencil_nary_seq, 10, 10) {
+BENCHMARK_F(StencilNaryFixture, stencil_nary_seq, RUNS, ITRS) {
 	sequential_execution sequq;
-	maptest->run_nary(sequq);
+	test->run_nary(sequq);
 }
 
-BENCHMARK_F(StencilNaryFixture, stencil_nary_ff, 10, 10) {
+BENCHMARK_F(StencilNaryFixture, stencil_nary_ff, RUNS, ITRS) {
 	parallel_execution_ff ffexec;
-	maptest->run_nary(ffexec);
+	test->run_nary(ffexec);
 }
 
-BENCHMARK_F(StencilNaryFixture, stencil_nary_tbb, 10, 10) {
+BENCHMARK_F(StencilNaryFixture, stencil_nary_tbb, RUNS, ITRS) {
 	parallel_execution_tbb tbbexec;
-	maptest->run_nary(tbbexec);
+	test->run_nary(tbbexec);
 }
 
-BENCHMARK_F(StencilNaryFixture, stencil_nary_omp, 10, 10) {
+BENCHMARK_F(StencilNaryFixture, stencil_nary_omp, RUNS, ITRS) {
 	parallel_execution_omp ompexec;
-	maptest->run_nary(ompexec);
+	test->run_nary(ompexec);
 }
 
-BENCHMARK_F(StencilNaryFixture, stencil_nary_nat, 10, 10) {
+BENCHMARK_F(StencilNaryFixture, stencil_nary_nat, RUNS, ITRS) {
 	parallel_execution_native natexec;
-	maptest->run_nary(natexec);
+	test->run_nary(natexec);
 }

@@ -234,7 +234,7 @@ public:
 private:
 
   constexpr static int default_concurrency_degree = 4;
-  int concurrency_degree_ = default_concurrency_degree;
+  int concurrency_degree_ = (int) ff_numCores(); // default_concurrency_degree;
   bool ordering_ = false; // needed to comply with unit_tests
 
 };

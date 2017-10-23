@@ -9,5 +9,13 @@
 #include "ff/parallel_execution_ff.h"
 #include "dyn/dynamic_execution.h"
 
+#include <time.h>
+
+static inline void ticks_wait(long nanosec) {
+	if (nanosec > 1000000L) nanosec =  1000000L;
+	struct timespec req = {0, nanosec};
+	nanosleep(&req, (struct timespec *)NULL);
+}
+
 
 #endif
