@@ -23,5 +23,5 @@ endif()
 # Build packages if required version not found
 include(${CMAKE_MODULE_PATH}/build-googletest.cmake)
 
-# Build FastFlow
-#include(${CMAKE_MODULE_PATH}/build-fastflow.cmake)
+# Build packages if required version not found
+#include(${CMAKE_MODULE_PATH}/build-hayai.cmake)

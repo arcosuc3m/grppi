@@ -4,7 +4,7 @@ if (NOT EXISTS ${CMAKE_BINARY_DIR}/fastflow)
 
   ExternalProject_Add(fastflow
     GIT_REPOSITORY git@github.com:fa-vio/mFastFlow.git
-    GIT_TAG "master"
+    #GIT_TAG "master"
     PREFIX fastflow
     BUILD_IN_SOURCE
     UPDATE_COMMAND ""
