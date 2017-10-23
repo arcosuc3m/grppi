@@ -13,7 +13,7 @@ if(GRPPI_HAYAI_TEST_ENABLE)
   include_directories(${HAYAI_ROOT}/include/hayai)
   
   set(TESTS	map	reduce	mapreduce	stencil
-  		divideandconquer	farm	pipeline
+  		farm	pipeline
   )	
   
   # Determine system-dependant library paths.

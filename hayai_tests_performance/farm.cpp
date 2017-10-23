@@ -16,6 +16,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <random>
+#include <experimental/optional>
 
 #include <hayai.hpp>
 
@@ -40,8 +41,8 @@ class FarmTest {
 	atomic<double> output;
 
 	int n;
-	atomic<int> idx_in = 0;
-	atomic<int> idx_out = 0;
+	atomic<int> idx_in;
+	atomic<int> idx_out;
 
 	random_device rengine;
 	uniform_real_distribution<double> value_gen{-100.4, 100.7};
@@ -88,7 +89,7 @@ public:
 
 	void run_multiple(const dynamic_execution & e) {
 		grppi::pipeline(e,
-				[&]() -> optional<double> {
+				[&]() -> experimental::optional<double> {
 			if (idx_in < v.size()) {
 				idx_in++;
 				return v[idx_in-1];

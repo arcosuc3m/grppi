@@ -58,8 +58,8 @@ public:
 	// run_vecsum_chunked
 	auto run_vecsum_chunked(const dynamic_execution & e) {
 		return grppi::divide_conquer(e, v,
-				[&](auto & v) { // Divide
-			std::vector<std::vector<int>> subproblem;
+				[this](auto & v) { // Divide
+			std::vector<std::vector<double>> subproblem;
 			auto mid1 = std::next(v.begin(), v.size()/3);
 			auto mid2 = std::next(v.begin(), 2*v.size()/3);
 			subproblem.push_back({v.begin(), mid1});
@@ -68,15 +68,15 @@ public:
 			return subproblem;
 		},
 		// predicate
-		[&](auto x) {
+		[this](auto x) {
 			return x.size()>3;
 		},
 		// Solve base case
-		[&](auto problem) {
+		[this](auto problem) {
 			return std::accumulate(problem.begin(), problem.end(), 0);
 		},
 		// Combine
-		[&](auto  p1, auto  p2) {
+		[this](auto  p1, auto  p2) {
 			return p1 + p2;
 		});
 	}
