@@ -38,30 +38,16 @@ using optional = std::experimental::optional<T>;
 
 class PipelineTest {
 	// Vectors
-	map<string,size_t> vowels;
-
-	int n;
+	//map<string,size_t> vowels;
 	atomic<long long> out;
 
 public:
 
-	PipelineTest(int size=1000) : n{size} { }
+	PipelineTest() { }
 
-	void setup_three_stages() {
-	}
-
-	void clear_multiple() {
-	}
-
-	void setup_vowels() {
-	}
-
-	void clear_all() {
-	}
-
-	void run_three_stages(const dynamic_execution & e) {
+	void run_three_stages(const dynamic_execution & e, size_t n) {
 		grppi::pipeline(e,
-				[&,i=0]() mutable -> optional<long long> {
+				[this,&n,i=0]() mutable -> optional<long long> {
 			if (++i<=n) return i;
 			else return {};
 		},
@@ -126,7 +112,7 @@ public:
 class PipelineFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->test = new PipelineTest(SIZE);
+		this->test = new PipelineTest();
 	}
 
 	virtual void TearDown() {
@@ -136,29 +122,30 @@ public:
 	PipelineTest* test;
 };
 
+
 BENCHMARK_F(PipelineFixture, pipe_three_stages_seq, RUNS, ITRS) {
 	sequential_execution seq;
-	test->run_three_stages(seq);
+	test->run_three_stages(seq,SIZE);
 }
 
 BENCHMARK_F(PipelineFixture, pipe_three_stages_ff, RUNS, ITRS) {
 	parallel_execution_ff ffexec;
-	test->run_three_stages(ffexec);
+	test->run_three_stages(ffexec,SIZE);
 }
 
 BENCHMARK_F(PipelineFixture, pipe_three_stages_tbb, RUNS, ITRS) {
 	parallel_execution_tbb tbbexec;
-	test->run_three_stages(tbbexec);
+	test->run_three_stages(tbbexec,SIZE);
 }
 
 BENCHMARK_F(PipelineFixture, pipe_three_stages_omp, RUNS, ITRS) {
 	parallel_execution_omp ompexec;
-	test->run_three_stages(ompexec);
+	test->run_three_stages(ompexec,SIZE);
 }
 
 BENCHMARK_F(PipelineFixture, pipe_three_stages_nat, RUNS, ITRS) {
 	parallel_execution_native natexec;
-	test->run_three_stages(natexec);
+	test->run_three_stages(natexec,SIZE);
 }
 
 
@@ -166,12 +153,10 @@ BENCHMARK_F(PipelineFixture, pipe_three_stages_nat, RUNS, ITRS) {
 class PipeComposedFixture : public ::hayai::Fixture {
 public:
 	virtual void SetUp() {
-		this->test = new PipelineTest(SIZE);
-		test->setup_vowels();
+		this->test = new PipelineTest();
 	}
 
 	virtual void TearDown() {
-		test->clear_all();
 		delete this->test;
 	}
 

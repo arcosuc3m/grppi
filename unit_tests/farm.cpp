@@ -19,6 +19,7 @@
 */
 #include <atomic>
 #include <utility>
+#include <tuple>
 #include <experimental/optional>
 
 #include <gtest/gtest.h>
@@ -300,7 +301,7 @@ public:
         if (idx_in < v.size()) {
           idx_in++;
           return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-        } 
+        }
         else return {};
       },
       grppi::farm(4,
@@ -434,7 +435,7 @@ public:
         if (idx_in < v.size()) {
           idx_in++;
           return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-      } 
+      }
       else return {};
     },
     grppi::farm(4,

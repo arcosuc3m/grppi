@@ -18,46 +18,7 @@
 #include <ff/farm.hpp>
 #include <ff/allocator.hpp>
 
-
-//#ifndef FF_ALLOCATOR_IN_USE
-////static ff::ff_allocator * ffalloc = 0;
-//#define FF_MALLOC(size)   (FFAllocator::instance()->malloc(size))
-//#define FF_FREE(ptr) (FFAllocator::instance()->free(ptr))
-//#define FF_ALLOCATOR_IN_USE 1
-//#endif
-
-
 namespace ff {
-
-/* Class for managing optional contained values, i.e., a value that may or
- * may not be present.
- * std::optional will be available in C++17, this is a sort of custom preview */
-template <typename T>
-class ff_optional {
-    public:
-        typedef T type;
-        typedef T value_type;
-        T elem;
-        bool end;
-        ff_optional(): end(true) { }
-        ff_optional(const T& i): elem(i), end(false) { }
-
-        /* copy assignment operator */
-        ff_optional& operator=(const ff_optional& o) {
-                 elem = o.elem;
-                 end = o.end;
-                 return *this;
-        }
-
-        T& value(){ return elem; }
-
-        // true if object contains a value
-        constexpr explicit operator bool() const {
-            return !end;
-        }
-};
-
-// -------------------------------------------------------------------------
 
 // Middle stage (worker node)
 template <typename TSin, typename TSout, typename L>
@@ -80,12 +41,12 @@ struct PMINode : ff_node_t<TSin,TSout> {
 
 // First stage
 template <typename TSout, typename L >
-struct PMINode<void,TSout,L> : ff_node_t<TSout,TSout> {
+struct PMINode<void,TSout,L> : ff_node {
     L callable;
 
     PMINode(L&& lf) : callable(lf) {};
 
-    TSout * svc(TSout *) {
+    void * svc(void *) {
     	std::experimental::optional<TSout> ret;
         void *outslot = ff::ff_malloc(sizeof(TSout));
         TSout *out = new (outslot) TSout();
@@ -94,7 +55,7 @@ struct PMINode<void,TSout,L> : ff_node_t<TSout,TSout> {
 
         if(ret) {
         	*out = ret.value();
-        	return out;
+        	return outslot;
         } else {
         	ff::ff_free(outslot);
         	return {};	// No GO_ON
@@ -116,6 +77,7 @@ struct PMINode<TSin,void,L> : ff_node_t<TSin,void> {
 
         if(check) {
         	callable(check.value());
+
         	item->~TSin();
         	ff::ff_free(item);
         	return GO_ON;
@@ -124,9 +86,6 @@ struct PMINode<TSin,void,L> : ff_node_t<TSin,void> {
         return GO_ON; // {} -- problems when returning an empty object at this stage
     }
 };
-
-// tag sent by workers when an element is filtered out
-//static constexpr size_t FILTERED = (FF_EOS-0x11);
 
 // Middle stage - Filter
 template <typename TSin, typename L>
@@ -145,7 +104,7 @@ struct PMINodeFilter : ff_node_t<TSin> {
         	} else {
         		t->~TSin();
         		ff::ff_free(t);
-        		return (TSin*) GO_ON; // GO_ON -- apparently ofarmC skips GO_OUT tags
+        		return this->EOSW; // GO_ON -- ofarmC skips GO_ON and GO_OUT tags
         	}
         } else return nullptr;
     }

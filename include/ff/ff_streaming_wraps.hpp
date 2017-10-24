@@ -98,7 +98,9 @@ private:
 	template <typename Input, typename Transformer,
 	requires_no_pattern<Transformer> = 0>
 	auto add2pipeall(Transformer &&stage) {
-		auto n = new ff::PMINode<Input,void,Transformer>(std::forward<Transformer>(stage));
+		using input_type = std::decay_t<Input>;
+
+		auto n = new ff::PMINode<input_type,void,Transformer>(std::forward<Transformer>(stage));
 		add2pipe(n);
 	}
 
