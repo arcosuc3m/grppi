@@ -57,8 +57,8 @@ void test_map(grppi::dynamic_execution & e, int n) {
   auto t1 = chrono::system_clock::now();
   auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
 
-  copy(begin(y), end(y), ostream_iterator<double>(cout, " "));
-  cout << endl;
+//  copy(begin(y), end(y), ostream_iterator<double>(cout, " "));
+//  cout << endl;
 
   cout << "Execution time = " << diff.count() << " (ms)" << endl;
 }
