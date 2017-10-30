@@ -27,9 +27,9 @@ struct PMINode : ff_node_t<TSin,TSout> {
 
     PMINode(L&& lf) : callable(lf) {};
 
-    TSout * svc(TSin *t) {
+    TSout *svc(TSin *t) {
     	std::experimental::optional<TSin> check;
-        TSout * out = (TSout*) ff::ff_malloc(sizeof(TSout));
+        TSout *out = (TSout*) ff::ff_malloc(sizeof(TSout));
         check = *t;
 
         if(check)
@@ -46,7 +46,7 @@ struct PMINode<void,TSout,L> : ff_node {
 
     PMINode(L&& lf) : callable(lf) {};
 
-    void * svc(void *) {
+    void *svc(void *) {
     	std::experimental::optional<TSout> ret;
         void *outslot = ff::ff_malloc(sizeof(TSout));
         TSout *out = new (outslot) TSout();
@@ -58,7 +58,7 @@ struct PMINode<void,TSout,L> : ff_node {
         	return outslot;
         } else {
         	ff::ff_free(outslot);
-        	return {};	// No GO_ON
+        	return {};
         }
     }
 };
@@ -70,31 +70,28 @@ struct PMINode<TSin,void,L> : ff_node_t<TSin,void> {
 
     PMINode(L&& lf) : callable(lf) {};
 
-    void * svc(TSin *t) {
+    void *svc(TSin *t) {
     	std::experimental::optional<TSin> check;
-    	TSin *item = (TSin*) t;
-        check = *item;
+        check = *t;
 
         if(check) {
         	callable(check.value());
 
-        	item->~TSin();
-        	ff::ff_free(item);
-        	return GO_ON;
+        	t->~TSin();
+        	ff::ff_free(t);
         }
-
-        return GO_ON; // {} -- problems when returning an empty object at this stage
+        return GO_ON;
     }
 };
 
-// Middle stage - Filter
+// Middle stage - Filter for unordered farm
 template <typename TSin, typename L>
 struct PMINodeFilter : ff_node_t<TSin> {
     L condition;
 
     PMINodeFilter(L&& c) : condition(c) {};
 
-    TSin * svc(TSin *t) {
+    TSin *svc(TSin *t) {
     	std::experimental::optional<TSin> check;
         check = *t;
 
@@ -104,9 +101,9 @@ struct PMINodeFilter : ff_node_t<TSin> {
         	} else {
         		t->~TSin();
         		ff::ff_free(t);
-        		return this->EOSW; // GO_ON -- ofarmC skips GO_ON and GO_OUT tags
         	}
-        } else return nullptr;
+        }
+        return this->GO_ON;
     }
 };
 

@@ -5,8 +5,8 @@
  *      Author: fabio
  */
 
-#ifndef FF_PIPELINE_WRAP_HPP
-#define FF_PIPELINE_WRAP_HPP
+#ifndef FF_STREAMING_WRAPS_HPP
+#define FF_STREAMING_WRAPS_HPP
 
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
@@ -17,6 +17,7 @@
 #include <tuple>
 
 #include "ff_node_wrap.hpp"
+#include "ff_helper_classes.hpp"
 
 #include <ff/farm.hpp>
 #include <ff/pipeline.hpp>
@@ -24,32 +25,7 @@
 
 namespace grppi {
 
-// wraps stream reduce worker
-template<typename TSin, typename Reducer>
-struct ReduceWorker : ff::ff_node_t<TSin> {
-
-	ReduceWorker(const Reducer& red_t) :
-		_reduction_obj(red_t) { }
-
-	TSin *svc(TSin *t) {
-		TSin *result = t;
-		std::experimental::optional<TSin> check;
-		constexpr grppi::sequential_execution seq;
-
-		check = *t;
-		if(check) {
-			_reduction_obj.add_item(std::forward<TSin>(check.value()));
-			if (_reduction_obj.reduction_needed())
-				*result = _reduction_obj.reduce_window(seq);
-		} else return {};
-
-		return result;
-	}
-	// Class variables
-	Reducer _reduction_obj;
-};
-
-// wrapper for stream iteration worker
+// wrapper for stream-iteration workers
 template<typename TSin, typename Iterator>
 struct IterationWorker : ff::ff_node_t<TSin> {
 
@@ -62,9 +38,8 @@ struct IterationWorker : ff::ff_node_t<TSin> {
 
 		check = *t;
 		if(check) {
-			do {
-				*item = _iterator_obj.transform(std::forward<TSin>(*item));
-			} while (!_iterator_obj.predicate(std::forward<TSin>(*item)));
+			do *item = _iterator_obj.transform(std::forward<TSin>(*item));
+			while (!_iterator_obj.predicate(std::forward<TSin>(*item)));
 
 			return item;
 		} else return {};
@@ -73,10 +48,11 @@ struct IterationWorker : ff::ff_node_t<TSin> {
 	Iterator _iterator_obj;
 };
 
+// ----------------------------------------------
 
-// Class supporting FastFlow backend for pipeline pattern
-// constructs a pipeline whose stages can be sequential stages or
-// nested streaming patterns.
+// Class supporting FastFlow backend for pipeline
+// pattern. Constructs a pipeline whose stages can
+// be sequential stages or nested streaming patterns.
 class ff_wrap_pipeline: public ff::ff_pipeline {
 private:
 
@@ -118,10 +94,7 @@ private:
 
 		auto n = new ff::PMINode<Input,output_type,Transformer>(std::forward<Transformer>(transform_op));
 
-		// add node to pipeline
 		add2pipe(n);
-
-		// recurse - template deduction should stop this recursion when no more args are given
 		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -144,7 +117,6 @@ private:
 
 		ff::ff_OFarm<Input,output_type> * theFarm = new ff::ff_OFarm<Input,output_type>(std::move(w));
 
-		// Add farm to the pipeline
 		add2pipe(theFarm);
 	}
 
@@ -171,10 +143,7 @@ private:
 
 		ff::ff_OFarm<Input,output_type> * theFarm = new ff::ff_OFarm<Input,output_type>(std::move(w));
 
-		// Add farm to the pipeline
 		add2pipe(theFarm);
-
-		// recurse - template deduction stops the recursion when no more args are given
 		add2pipeall<Input>( std::forward<OtherTransformers>(other_transform_ops)... );
 	}
 
@@ -186,16 +155,11 @@ private:
 		static_assert(!std::is_void<Input>::value,
 				"Filter must take non-void argument");
 
-		std::vector<std::unique_ptr<ff::ff_node>> w;
-		//ff::MyFilter coll;
+		ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
+				new ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>>(
+						std::forward<Filter<Predicate>>(filter_obj), nworkers
+				);
 
-		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::forward<Filter<Predicate>>(filter_obj)) );
-
-		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>(std::move(w));
-		//theFarm->setCollectorF(coll);
-
-		// add node to pipeline
 		add2pipe(theFarm);
 	}
 
@@ -209,19 +173,12 @@ private:
 		static_assert(!std::is_void<Input>::value,
 				"Filter must take non-void argument");
 
-		std::vector<std::unique_ptr<ff::ff_node>> w;
-		//ff::MyFilter coll;
+		ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
+				new ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>>(
+						std::forward<Filter<Predicate>>(filter_obj), nworkers
+				);
 
-		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ff::PMINodeFilter<Input,Filter<Predicate>>>(std::forward<Filter<Predicate>>(filter_obj)) );
-
-		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>(std::move(w));
-		//theFarm->setCollectorF(coll);
-
-		// add node to pipeline
 		add2pipe(theFarm);
-
-		// recurse - template deduction stops the recursion when no more args are given
 		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -235,19 +192,12 @@ private:
 		static_assert(!std::is_void<Input>::value,
 				"Reduce must take non-void argument");
 
-		std::vector<std::unique_ptr<ff::ff_node>> w;
+		ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>> *theFarm =
+				new ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>>(
+						std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
+				);
 
-		for(int i=0; i<nworkers; ++i)
-			w.push_back( std::make_unique<ReduceWorker<Input,Reduce<Combiner,Identity>>>(
-					std::forward<Reduce<Combiner,Identity>>(reduce_obj))
-					);
-
-		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>( std::move(w) );
-
-		// add node to pipeline
 		add2pipe(theFarm);
-
-		// recurse - template deduction stops the recursion when no more args are given
 		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -269,10 +219,7 @@ private:
 
 		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>( std::move(w) );
 
-		// add node to pipeline
 		add2pipe(theFarm);
-
-		// recurse - template deduction stops the recursion when no more args are given
 		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -314,7 +261,7 @@ protected:
 
 public:
 	template<typename Generator, typename... Transformers>
-	ff_wrap_pipeline(size_t nw, Generator& gen_func,
+	ff_wrap_pipeline(size_t nw, Generator&& gen_func,
 			Transformers&&...stages_ops) : nworkers{nw} {
 
 				using result_type = std::decay_t<typename std::result_of<Generator()>::type>;
@@ -332,7 +279,7 @@ public:
 				for (auto s: cleanup_stages) delete s;
 			}
 
-			operator ff_node* () { return this;}
+			operator ff_node* () { return this; }
 };
 
 } // namespace
@@ -340,4 +287,4 @@ public:
 
 
 
-#endif /* FF_PIPELINE_WRAP_HPP */
+#endif /* FF_STREAMING_WRAPS_HPP */

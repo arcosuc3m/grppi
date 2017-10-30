@@ -46,7 +46,7 @@ void discard_words(grppi::dynamic_execution & ex,
       if (!file) { return {}; }
       else { return word; }
     },
-    grppi::keep([](string w) -> bool { return w.length() < 4; }),
+    grppi::keep([](string w) -> bool { return w.length() > 15; }),
     [](string w) {
       cout << w << endl;
     }

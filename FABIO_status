@@ -3,6 +3,13 @@
 # grPPI v0.3 - FastFlow backend #
 #                               #
 #################################
+30/10/2017 -- Fixed issues on StreamFilter and StreamReduce patterns.
+ - Both patterns have been rewritten using ad-hoc ff_farms
+ - Added three public functions to reduce_t object, needed to properly manage 
+   windowed slide
+ - OPEN ISSUES: Pipeline: piecewise nesting
+ 				Farm: problems with 'std::tuple<T1,T2,T3>' objects.
+ 				
 24/10/2017 -- Last commit before Stuttgart meeting: open issues
  - StreamFilter: tests 'keep_multiple' and 'discard_multiple' hang forever. 
  				 suspected problems with ff_OFarm collector when dealing with
@@ -12,7 +19,6 @@
  				 own emitter.
  - Pipeline:	 piecewise nesting not working, type deduction failed
  - Farm:		 problems with 'std::tuple<T1,T2,T3>' objects.
- - DAC:			 FF can only use one interface
 
 23/10/2017 -- Added performance tests with Hayai
  - Added performance tests written using Hayai. Added tesys for map, reduce, map+reduce, 
@@ -52,6 +58,7 @@
  - All pattens have been updated to version 0.3
  - Improved FastFlow backend, introducing typed ff node and ordered farm
  - Stream_reduce pattern results are not correct: check	with David
+ - DAC: FF can only use one interface
 
 10/10/2017 -- Started refactoring to version 0.3
  - data parallel pattern have been updated and fixed.

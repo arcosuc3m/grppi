@@ -26,6 +26,8 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <unistd.h>
+
 // grppi
 #include "grppi.h"
 
@@ -36,6 +38,10 @@ void test_pipeline(grppi::dynamic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
+  auto inner = grppi::farm(2, [](int x) {
+      return x * 3;
+    });
+
   auto t0 = chrono::system_clock::now();
   grppi::pipeline(e, 
     [n]() -> optional<int> {
@@ -44,9 +50,7 @@ void test_pipeline(grppi::dynamic_execution & e, int n) {
       else return {}; 
     },
     [](int x) { return x*x; },
-	grppi::farm(2, [](int x) {
-	      return x * 3;
-	    }),
+	std::move(inner),
     [](int x) { return 1+x; },
     [](int x) { cout << x << endl; }
   );

@@ -85,6 +85,12 @@ public:
     return red;
   }
 
+#ifdef GRPPI_FF
+  void add_items(const std::vector<Identity>& vec) { items = vec; }
+  inline int getWinSize() const { return window_size_; }
+  inline int getOffset()  const { return offset_; }
+#endif
+
 private:
   int window_size_;
   int offset_;
