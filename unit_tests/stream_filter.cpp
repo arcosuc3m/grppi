@@ -289,30 +289,30 @@ TYPED_TEST(stream_filter_test, dyn_discard_single)
   this->check_discard_single();
 }
 
-//TYPED_TEST(stream_filter_test, static_keep_multiple)
-//{
-//  this->setup_multiple();
-//  this->run_keep_multiple(this->execution_);
-//  this->check_keep_multiple();
-//}
+TYPED_TEST(stream_filter_test, static_keep_multiple)
+{
+  this->setup_multiple();
+  this->run_keep_multiple(this->execution_);
+  this->check_keep_multiple();
+}
 
-//TYPED_TEST(stream_filter_test, dyn_keep_multiple)
-//{
-//  this->setup_multiple();
-//  this->run_keep_multiple(this->dyn_execution_);
-//  this->check_keep_multiple();
-//}
+TYPED_TEST(stream_filter_test, dyn_keep_multiple)
+{
+  this->setup_multiple();
+  this->run_keep_multiple(this->dyn_execution_);
+  this->check_keep_multiple();
+}
 
-//TYPED_TEST(stream_filter_test, static_discard_multiple)
-//{
-//  this->setup_multiple();
-//  this->run_discard_multiple(this->execution_);
-//  this->check_discard_multiple();
-//}
+TYPED_TEST(stream_filter_test, static_discard_multiple)
+{
+  this->setup_multiple();
+  this->run_discard_multiple(this->execution_);
+  this->check_discard_multiple();
+}
 
-//TYPED_TEST(stream_filter_test, dyn_discard_multiple)
-//{
-//  this->setup_multiple();
-//  this->run_discard_multiple(this->dyn_execution_);
-//  this->check_discard_multiple();
-//}
+TYPED_TEST(stream_filter_test, dyn_discard_multiple)
+{
+  this->setup_multiple();
+  this->run_discard_multiple(this->dyn_execution_);
+  this->check_discard_multiple();
+}

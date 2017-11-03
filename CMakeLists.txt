@@ -109,12 +109,3 @@ option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
-
-# Performance Tests -- Hayai
-enable_testing()
-option( GRPPI_HAYAI_TEST_ENABLE "Hayai Performance tests" OFF )
-if( GRPPI_HAYAI_TEST_ENABLE )
-	find_package( HAYAI )
-    add_subdirectory(hayai_tests_performance)
-endif( GRPPI_HAYAI_TEST_ENABLE )
-

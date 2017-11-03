@@ -43,7 +43,8 @@ void fibonacci(grppi::dynamic_execution & exec, int n) {
   auto res = grppi::divide_conquer(exec,
     n,
     [](int x) -> vector<int> { // divider
-      return { x-1, x-2 };
+	//  if(x<=2) return {x};
+	  return { x-1, x-2 };
     },
 	[](int x) {return x<=2; }, // condition
     [](int x) { return 1; }, // solver for base-case

@@ -21,8 +21,11 @@
 #define GRPPI_DIVIDECONQUER_H
 
 #include <utility>
+#include <iostream>
 
 #include "common/execution_traits.h"
+
+//#include "ff/parallel_execution_ff.h"
 
 namespace grppi {
 
@@ -57,7 +60,8 @@ auto divide_conquer(
     Combiner && combiner_op) 
 {
   static_assert(supports_divide_conquer<Execution>(),
-      "divide/conquer pattern not supported for execution type");
+		  "divide/conquer pattern not supported for execution type");
+
   return ex.divide_conquer(std::forward<Input>(input), 
         std::forward<Divider>(divider_op), std::forward<Solver>(solver_op), 
         std::forward<Combiner>(combiner_op));
