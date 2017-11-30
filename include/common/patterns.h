@@ -85,7 +85,8 @@ constexpr bool is_no_pattern =
   !is_iteration<T>&&
   !is_window_farm<T>&&
   !is_split_join<T>&&
-  !is_window<T>;
+  !is_window<T> &&
+  !is_active_window<T>;
 
 template <typename T>
 constexpr bool is_pattern = !is_no_pattern<T>;

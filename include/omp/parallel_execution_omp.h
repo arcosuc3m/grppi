@@ -297,8 +297,16 @@ private:
                       std::atomic<int> & num_threads) const; 
 
   template <typename Queue, typename Consumer,
-            requires_no_pattern<Consumer> = 0>
+            requires_no_pattern<Consumer> = 0,
+            requires_no_join_queue<Consumer> = 0>
   void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
+
+  template <typename Queue, typename JoinQueue,
+          requires_no_pattern<JoinQueue> = 0,
+          requires_join_queue<JoinQueue> = 0>
+  void do_pipeline(
+    Queue & input_queue,
+    std::tuple<JoinQueue &, int> & join_queue) const;
 
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
@@ -364,6 +372,28 @@ private:
     Window<Policy> && win_obj,
     OtherTransformers && ... other_transform_ops) const;
 
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_active_window< Window <Policy> > = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    Window<Policy> & win_obj,
+    OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(win_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+
+  template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_active_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Queue && input_queue,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const;
 
   template <std::size_t index, typename InQueue, typename OutQueue,
           typename ...Transformers, typename Policy,
@@ -981,9 +1011,20 @@ auto parallel_execution_omp::divide_conquer(
   }
 }
 
+template <typename Queue, typename JoinQueue,
+          requires_no_pattern<JoinQueue> = 0,
+          requires_join_queue<JoinQueue> = 0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue,
+    std::tuple<JoinQueue&,int> & joiner_tuple) const
+{
+    std::get<0>(joiner_tuple).add_queue(input_queue,std::get<1>(joiner_tuple));
+    std::get<0>(joiner_tuple).wait();
+}
 
 template <typename Queue, typename Consumer,
-          requires_no_pattern<Consumer> =0>
+            requires_no_pattern<Consumer> = 0,
+            requires_no_join_queue<Consumer> = 0>
 void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consume_op) const
 {
   using namespace std;
@@ -1189,6 +1230,42 @@ void parallel_execution_omp::do_pipeline(
 }
 
 
+template <typename Queue, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_active_window< Window <Policy>> = 0 >
+void parallel_execution_omp::do_pipeline(
+    Queue && input_queue,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+    using namespace std;
+    using namespace experimental;
+
+    using window_type = typename std::result_of<decltype(&Policy::get_window)(Policy)>::type;
+    using window_optional_type = std::experimental::optional<window_type>;
+    using value_type = std::pair <window_optional_type, long> ;
+    auto window_queue = make_queue<value_type>();
+    #pragma omp task untied shared(window_queue, input_queue, win_obj)
+    {
+       auto win = win_obj.get_window();
+       auto item = input_queue.pop();
+       long order = 0;
+       while(item.first){
+         if(win.add_item(std::move(*item.first))){
+           window_queue.push(make_pair(make_optional(win.get_window()), order));
+           order++;
+         }
+         item = input_queue.pop();
+       }
+       window_queue.push(make_pair(window_optional_type{},-1));
+    }
+
+//    windower_queue<Queue,Policy> window_queue{input_queue, win_obj.get_window()};
+    do_pipeline(window_queue, std::forward<OtherTransformers>(other_transform_ops)...);
+    #pragma omp taskwait
+}
+
 template <std::size_t index, typename InQueue, typename OutQueue,
           typename ...Transformers, typename Policy,
           template <typename P, typename ... T> class SplitJoin,
@@ -1203,12 +1280,9 @@ typename std::enable_if<(index == (sizeof...(Transformers)-1)),void>::type
 
    #pragma omp task untied shared(split_queue, join_queue, split_obj)
    {
-     auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
-       join_queue.push( item, index);
-     };
+     auto joiner_tuple = std::tuple<OutQueue &, int> (join_queue, index);
      split_consumer_queue<InQueue> input_queue(split_queue,index);
-     do_pipeline(input_queue, split_obj.template flow<index>(), consumer);
-     join_queue.push( typename std::decay<OutQueue>::type::value_type::first_type{},index);
+     do_pipeline(input_queue, split_obj.template flow<index>(), joiner_tuple);
   }
    // #pragma omp taskwait
 }
@@ -1227,12 +1301,9 @@ typename std::enable_if<(index != (sizeof...(Transformers)-1)),void>::type
 
    #pragma omp task untied shared(split_queue, join_queue, split_obj) 
    {
-     auto consumer = [&](typename std::decay<OutQueue>::type::value_type::first_type item){
-       join_queue.push( item, index);
-     };
+     auto joiner_tuple = std::tuple<OutQueue &, int> (join_queue, index);
      split_consumer_queue<InQueue> input_queue(split_queue,index);
-     do_pipeline(input_queue, split_obj.template flow<index>(), consumer);
-     join_queue.push(typename std::decay<OutQueue>::type::value_type::first_type{}, index);
+     do_pipeline(input_queue, split_obj.template flow<index>(), joiner_tuple);
      //#pragma omp taskwait
      
    }

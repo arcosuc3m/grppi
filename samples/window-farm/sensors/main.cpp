@@ -64,17 +64,20 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
        }else
           return optional<int>{};
      },
+     grppi::active_window(window),
      grppi::farm(ntask, [](auto window) {
        double value = 0.0;
-       for(auto i = 0; i < 20000000; i++){
+       for(auto i = 0; i < 200000; i++){
       // for( auto it = window.begin(); it != window.end(); it ++){
 //         std::cout<<window.size()<<std::endl;
-         double aux = window[0]; 
-         value = sqrt(aux*aux + value*value);
+         for( auto t=0;t<window.size();t++){
+            double aux = window[0]; 
+            value = sqrt(aux*aux + value*value);
+         }
        }
        return value;
-     },
-     window),
+     }),
+    // window),
      [&](double a){
        //std::cout<<a<<std::endl;
        num_windows+=1;
@@ -110,7 +113,7 @@ int main(int argc, char **argv) {
     return -1;
   }
   auto e = execution_mode(string(argv[1]));
-
+//  auto e = grppi::parallel_execution_omp{};
   if(string(argv[3]) == "count"){
     auto w = grppi::count_based<int>(atoi(argv[4]),atoi(argv[5]));
     sensor_analysis(e, w, atoi(argv[2]),true );

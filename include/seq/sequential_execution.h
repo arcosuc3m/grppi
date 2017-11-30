@@ -270,6 +270,8 @@ private:
     Farm<Transformer,Window> && farm_obj,
     OtherTransformers && ... other_transform_ops) const;
 
+
+
   template <typename Item, typename Policy, typename ... Transformers,
           template <typename P> class Window,
           typename ... OtherTransformers,
@@ -287,6 +289,28 @@ private:
           template <typename P> class Window,
           typename ... OtherTransformers,
           requires_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Item && item,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Item, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_active_window< Window <Policy>> = 0 >
+  void do_pipeline(
+    Item && item,
+    Window<Policy> & win_obj,
+    OtherTransformers & ... other_transform_ops) const
+  {     
+    do_pipeline(item, std::forward<Window<Policy>>(win_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+          
+  template <typename Item, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_active_window< Window <Policy>> = 0 >
   void do_pipeline(
     Item && item,
     Window<Policy> && win_obj,
@@ -668,6 +692,23 @@ void sequential_execution::do_pipeline(
     Window<Policy> && win_obj,
     OtherTransformers && ... other_transform_ops) const
 {
+   auto win = win_obj.get_window();
+   if(win.add_item( std::move(input_item) )){
+       do_pipeline(win.get_window(),
+          std::forward<OtherTransformers>(other_transform_ops)...);
+   }
+   win_obj.save_window(win);
+}
+
+template <typename Item, typename Policy, typename ... Transformers,
+          template <typename P> class Window,
+          typename ... OtherTransformers,
+          requires_active_window< Window <Policy>> = 0 >
+void sequential_execution::do_pipeline(
+    Item && input_item,
+    Window<Policy> && win_obj,
+    OtherTransformers && ... other_transform_ops) const
+{     
    auto win = win_obj.get_window();
    if(win.add_item( std::move(input_item) )){
        do_pipeline(win.get_window(),

@@ -109,18 +109,24 @@ void travel(E & e, int num_threads, int num_cities/*,
        population.erase(population.begin());
        return individual;
      },
-     [num_cities](auto individual){
+     [&](auto individual){
        for(int i= 0; i<num_cities;i++){
+         auto cost = computeCost(individual,problem);
          int swap = rand() % (individual.size()-1);
          auto aux = individual[swap];
          individual[swap] = individual[swap+1];
          individual[swap+1] = aux;
-         auto k = aux;
+         if(cost < computeCost(individual,problem)){
+           individual[swap+1] = individual[swap];
+           individual[swap+1] = aux;
+         }
+         
+        /* auto k = aux;
          for(int j = 0;j<3000;j++){
            k = pow(k,k);
            k =sqrt(k);
          }
-
+        */
        }
        return individual;
      },

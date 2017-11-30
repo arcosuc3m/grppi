@@ -22,6 +22,8 @@
 #define GRPPI_WINDOW_H
 
 #include "common/window_pattern.h"
+#include "common/active_window_pattern.h"
+
 
 namespace grppi {
 
@@ -51,6 +53,18 @@ template <typename Window>
 auto window(Window & window_policy)
 {
    return window(std::forward<Window>(window_policy));
+}
+
+template <typename Window>
+auto active_window(Window && window_policy)
+{
+   return active_window_t<Window>{std::forward<Window>(window_policy)};
+}
+
+template <typename Window>
+auto active_window(Window & window_policy)
+{
+   return active_window(std::forward<Window>(window_policy));
 }
 /**
 @}
