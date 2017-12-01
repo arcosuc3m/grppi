@@ -51,6 +51,8 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
   int value = 0;
   
   auto start = std::chrono::high_resolution_clock::now();
+
+
   grppi::pipeline( e,
      [&](){
        n++;
@@ -68,8 +70,6 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
      grppi::farm(ntask, [](auto window) {
        double value = 0.0;
        for(auto i = 0; i < 200000; i++){
-      // for( auto it = window.begin(); it != window.end(); it ++){
-//         std::cout<<window.size()<<std::endl;
          for( auto t=0;t<window.size();t++){
             double aux = window[0]; 
             value = sqrt(aux*aux + value*value);
@@ -83,7 +83,7 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
        num_windows+=1;
      }
   );
-   
+  
   auto end = std::chrono::high_resolution_clock::now();
   int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>
                              (end-start).count();

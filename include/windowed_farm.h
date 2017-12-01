@@ -22,6 +22,9 @@
 #define GRPPI_WINDOWED_FARM_H
 
 #include "common/windowed_farm_pattern.h"
+#include "common/window_pattern.h"
+#include "common/farm_pattern.h"
+#include <type_traits>
 
 namespace grppi {
 
@@ -50,6 +53,17 @@ auto farm(int ntasks, Transformer && transform_op, Window && window_policy)
        std::forward<Window>(window_policy)};
 }
 
+
+template <typename ExecutionPolicy, typename Input, 
+          typename Transformer, typename Output>
+void window_farm(ExecutionPolicy & ex, Input && gen,  Transformer && transform_op, Output && out, int wsize, int slide)
+{
+   ex.pipeline(std::forward<Input>(gen),
+       active_window(count_based<typename std::result_of<Input()>::type::value_type>(wsize,slide)),
+       farm(ex.concurrency_degree(),
+       std::forward<Transformer>(transform_op)),
+       std::forward<Output>(out));
+}
 /**
 @}
 @}

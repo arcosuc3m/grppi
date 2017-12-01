@@ -22,6 +22,7 @@
 #define GRPPI_STREAM_ITERATION_H
 
 #include "common/iteration_pattern.h"
+#include "common/iteration_multout_pattern.h"
 
 namespace grppi {
 
@@ -43,6 +44,16 @@ auto repeat_until(
       std::forward<Predicate>(predicate_op));
 }
 
+template <typename Transformer, typename Predicate, typename OutputGuard>
+auto repeat_until(
+    Transformer && transform_op,
+    Predicate && predicate_op,
+    OutputGuard && guard_op)
+{
+  return iteration_multout_t<Transformer,Predicate, OutputGuard>(
+      std::forward<Transformer>(transform_op),
+      std::forward<Predicate>(predicate_op),
+      std::forward<OutputGuard>(guard_op));
 }
-
+}
 #endif

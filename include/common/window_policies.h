@@ -68,9 +68,10 @@ public:
     return std::move(aux);
   }
 
-private:
   int window_size_;
   int offset_;
+
+private:
   std::vector<ItemType> items{};
 //  std::deque<ItemType> items{};
   int remaining = 0;

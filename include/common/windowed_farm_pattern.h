@@ -22,6 +22,7 @@
 
 #include <type_traits>
 #include <memory>
+#include "window_policies.h"
 
 namespace grppi {
 

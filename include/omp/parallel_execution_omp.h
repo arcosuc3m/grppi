@@ -532,12 +532,40 @@ private:
   void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
+    template <typename Queue, typename Transformer, typename Predicate, typename Guard,
+            template <typename T, typename P, typename G> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration_multout<Iteration<Transformer,Predicate,Guard>> =0,
+            requires_no_pattern<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate,Guard> & iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const
+  {
+    do_pipeline(input_queue, std::move(iteration_obj),
+        std::forward<OtherTransformers>(other_transform_ops)...);
+  }
+
+  template <typename Queue, typename Transformer, typename Predicate, typename Guard,
+            template <typename T, typename P, typename G> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration_multout<Iteration<Transformer,Predicate,Guard>> =0,
+            requires_no_pattern<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate,Guard> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
   template <typename Queue, typename Transformer, typename Predicate,
             template <typename T, typename P> class Iteration,
             typename ... OtherTransformers,
             requires_iteration<Iteration<Transformer,Predicate>> =0,
             requires_pipeline<Transformer> =0>
   void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
+                   OtherTransformers && ... other_transform_ops) const;
+
+  template <typename Queue, typename Transformer, typename Predicate, typename Guard,
+            template <typename T, typename P, typename G> class Iteration,
+            typename ... OtherTransformers,
+            requires_iteration_multout<Iteration<Transformer,Predicate,Guard>> =0,
+            requires_pipeline<Transformer> =0>
+  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate,Guard> && iteration_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Queue, typename ... Transformers,
@@ -1561,6 +1589,62 @@ void parallel_execution_omp::do_pipeline(
 
 }
 
+template <typename Queue, typename Transformer, typename Predicate,typename Guard,
+          template <typename T, typename P, typename G> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration_multout<Iteration<Transformer,Predicate,Guard>> =0,
+          requires_no_pattern<Transformer> =0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue,
+    Iteration<Transformer,Predicate,Guard> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename decay_t<Queue>::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+  auto output_queue = make_queue<input_item_type>();
+
+  auto iteration_task = [&]() {
+    for (;;) {
+      auto item = input_queue.pop();
+      if (!item.first) break;
+    //  std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
+      auto value = iteration_obj.transform(*item.first);
+      auto new_item = input_item_type{value,item.second};
+      if (!iteration_obj.predicate(value)) {
+        input_queue.push(new_item);
+      }
+      if(iteration_obj.output_guard(value)){
+        output_queue.push(new_item);
+      }
+    }
+    while (!input_queue.is_empty()) {
+      auto item = input_queue.pop();
+      // std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
+      auto value = iteration_obj.transform(*item.first);
+      auto new_item = input_item_type{value,item.second};
+      if (!iteration_obj.predicate(value)) {
+        input_queue.push(new_item);
+      }
+      if(iteration_obj.output_guard(value)){
+        output_queue.push(new_item);
+      }
+    }
+    output_queue.push(input_item_type{{},-1});
+  };
+
+  #pragma omp task untied shared(iteration_obj,input_queue,output_queue)
+  {
+    iteration_task();
+  }
+  do_pipeline(output_queue,
+      std::forward<OtherTransformers>(other_transform_ops)...);
+
+}
+
+
 template <typename Queue, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
@@ -1569,6 +1653,19 @@ template <typename Queue, typename Transformer, typename Predicate,
 void parallel_execution_omp::do_pipeline(
     Queue & input_queue, 
     Iteration<Transformer,Predicate> && iteration_obj,
+    OtherTransformers && ... other_transform_ops) const
+{
+  static_assert(!is_pipeline<Transformer>, "Not implemented");
+}
+
+template <typename Queue, typename Transformer, typename Predicate,typename Guard,
+          template <typename T, typename P,typename G> class Iteration,
+          typename ... OtherTransformers,
+          requires_iteration_multout<Iteration<Transformer,Predicate, Guard>> =0,
+          requires_pipeline<Transformer> =0>
+void parallel_execution_omp::do_pipeline(
+    Queue & input_queue,
+    Iteration<Transformer,Predicate,Guard> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   static_assert(!is_pipeline<Transformer>, "Not implemented");
