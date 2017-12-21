@@ -1,9 +1,22 @@
-/*
- * parallel_execution_ff.h
- *
- *  Created on: 10 Oct 2017
- *      Author: fabio
- */
+/**
+* @version		GrPPI v0.3
+* @copyright	Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+* @license		GNU/GPL, see LICENSE.txt
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You have received a copy of the GNU General Public License in LICENSE.txt
+* also available in <http://www.gnu.org/licenses/gpl.html>.
+*
+* See COPYRIGHT.txt for copyright notices and details.
+*/
 
 #ifndef GRPPI_FF_PARALLEL_EXECUTION_FF_H
 #define GRPPI_FF_PARALLEL_EXECUTION_FF_H
@@ -18,7 +31,7 @@
 #include <type_traits>
 #include <tuple>
 
-#include "ff_streaming_wraps.hpp"
+#include "internals/ff_streaming_wraps.hpp"
 
 #include <ff/parallel_for.hpp>
 #include <ff/dc.hpp>
@@ -43,7 +56,7 @@ public:
 
 	 */
 	parallel_execution_ff() noexcept :
-	parallel_execution_ff{(int) ff_numCores()}
+	parallel_execution_ff{get_physical_cores()}
 	{}
 
 	/**
@@ -178,23 +191,6 @@ public:
 	  \param solver_op Solver operation.
 	  \param combine_op Combiner operation.
 	 */
-	template <typename Input, typename Divider, typename Solver, typename Combiner>
-	auto divide_conquer(Input && input,
-			Divider && divide_op,
-			Solver && solve_op,
-			Combiner && combine_op) = delete;
-
-	/**
-	  \brief Invoke \ref md_divide-conquer.
-	  \tparam Input Type used for the input problem.
-	  \tparam Divider Callable type for the divider operation.
-	  \tparam Solver Callable type for the solver operation.
-	  \tparam Combiner Callable type for the combiner operation.
-	  \param input Input problem to be solved.
-	  \param divider_op Divider operation.
-	  \param solver_op Solver operation.
-	  \param combine_op Combiner operation.
-	 */
 	template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
 	auto divide_conquer(Input & input,
 			Divider && divide_op,
@@ -214,28 +210,11 @@ public:
 			Transformers && ... transform_op) const;
 
 
-//private:
-//	// TODO -- Do not know if divide_conquer needs an intermediate layer.
-//	template <typename Input, typename Divider, typename Solver, typename Combiner>
-//	auto divide_conquer(Input && input,
-//			Divider && divide_op,
-//			Solver && solve_op,
-//			Combiner && combine_op,
-//			std::atomic<int> & num_threads) = delete;
-//
-//	template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
-//	auto divide_conquer(Input && input,
-//			Divider && divide_op,
-//			Predicate && condition_op,
-//			Solver && solve_op,
-//			Combiner && combine_op,
-//			std::atomic<int> & num_threads) const;
-
 private:
 
   constexpr static int default_concurrency_degree = 4;
-  int concurrency_degree_ = (int) ff_numCores(); // default_concurrency_degree;
-  bool ordering_ = false; // needed to comply with unit_tests
+  int concurrency_degree_ = get_physical_cores();
+  bool ordering_ = false; // needed in order to comply with unit_tests
 
 };
 
@@ -356,12 +335,9 @@ void parallel_execution_ff::map(std::tuple<InputIterators...> firsts,
 		std::size_t sequence_size,
 		Transformer transform_op) const {
 	ff::ParallelFor pf(concurrency_degree_, true);
-	if(concurrency_degree_ < 16)
-		pf.disableScheduler();
 
-	pf.parallel_for_idx(0, sequence_size, 1, sequence_size/concurrency_degree_,
-			[&](const long internal_start, const long internal_stop, const int thid) {
-		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
+	pf.parallel_for(0, sequence_size,
+			[&](const long internal_it) {
 			*(first_out+internal_it) = apply_iterators_indexed(transform_op, firsts, internal_it);
 	}, concurrency_degree_);
 }
@@ -373,8 +349,6 @@ auto parallel_execution_ff::reduce(InputIterator first,
 		Identity && identity,
 		Combiner && combine_op) const {
 	ff::ParallelForReduce<Identity> pfr(concurrency_degree_, true);
-	if(concurrency_degree_ < 16)
-		pfr.disableScheduler();
 
 	Identity vaR = identity;
 	Identity vaR_identity = identity;
@@ -384,7 +358,7 @@ auto parallel_execution_ff::reduce(InputIterator first,
 		vaR = combine_op(a, r);
 	};
 
-	pfr.parallel_reduce(vaR, vaR_identity, 0, sequence_size, 1, sequence_size/concurrency_degree_,
+	pfr.parallel_reduce(vaR, vaR_identity, 0, sequence_size,
 			[&](const long internal_it, typename std::iterator_traits<InputIterator>::value_type &vaR) {
 		vaR = combine_op( vaR, *(first+internal_it) );
 	}, final_red, concurrency_degree_);
@@ -402,23 +376,19 @@ auto parallel_execution_ff::map_reduce(std::tuple<InputIterators...> firsts,
 	Combiner && combine_op) const {
 
 	ff::ParallelForReduce<Identity> pfr(concurrency_degree_, true);
-	if(concurrency_degree_ < 16)
-		pfr.disableScheduler();
 
 	Identity vaR = identity;
 	Identity var_id = identity;
 	std::vector<Identity> partial_outs(sequence_size);
 
 	// Map function
-	auto Map = [&](const long internal_start, const long internal_stop, const int thid) {
-		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it)
+	auto Map = [&](const long internal_it) {
 			partial_outs[internal_it] = apply_iterators_indexed(transform_op, firsts, internal_it);
 	};
 
 	// Reduce function - this is the partial reduce function, executed in parallel
 	auto Reduce = [&](const long internal_it, Identity &vaR) {
 		vaR = combine_op( vaR, partial_outs[internal_it] );
-
 	};
 
 	// Final reduce - this reduces partial results and is executed sequentially
@@ -426,11 +396,8 @@ auto parallel_execution_ff::map_reduce(std::tuple<InputIterators...> firsts,
 		vaR = combine_op(a, b);
 	};
 
-	pfr.parallel_for_idx(0, sequence_size, 1, sequence_size/concurrency_degree_,
-			Map, concurrency_degree_ );
-
-	pfr.parallel_reduce(vaR, var_id, 0, sequence_size, 1, sequence_size/concurrency_degree_,
-			Reduce, final_red, concurrency_degree_);
+	pfr.parallel_for(0, sequence_size, Map, concurrency_degree_ );
+	pfr.parallel_reduce(vaR, var_id, 0, sequence_size, Reduce, final_red, concurrency_degree_);
 
 	return vaR;
 }
@@ -445,18 +412,13 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
 		Neighbourhood && neighbour_op) const {
 
 	ff::ParallelFor pf(concurrency_degree_, true);
-	if(concurrency_degree_ < 16)
-		pf.disableScheduler();
 
-	pf.parallel_for_idx(0, sequence_size, 1, sequence_size/concurrency_degree_,
-			[&](const long internal_start, const long internal_stop, const int thid) {
+	pf.parallel_for(0, sequence_size,
+			[&](const long internal_it) {
 		const auto first_it = std::get<0>(firsts);
-		for (size_t internal_it = internal_start; internal_it < internal_stop; ++internal_it) {
-			auto next_chunks = iterators_next(firsts, internal_it);
-			*(first_out+internal_it) = transform_op( (first_it+internal_it),
-					apply_increment(neighbour_op, next_chunks)
-					);
-		}
+		auto next_chunks = iterators_next(firsts, internal_it);
+		*(first_out+internal_it) = transform_op( (first_it+internal_it),
+					apply_increment(neighbour_op, next_chunks) );
 	}, concurrency_degree_);
 }
 
@@ -469,11 +431,8 @@ void parallel_execution_ff::pipeline(
 	ff_wrap_pipeline pipe(concurrency_degree_, generate_op, std::forward<Transformers>(transform_ops)...);
 
 	pipe.setFixedSize(false);
-	//pipe.setXNodeInputQueueLength(1024);
-	//pipe.setXNodeOutputQueueLength(1024);
 
 	pipe.run_and_wait_end();
-
 }
 
 
