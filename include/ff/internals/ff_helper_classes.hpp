@@ -1,20 +1,30 @@
-/*
- * ff_helper_classes.hpp
- *
- *  Created on: 18 Oct 2017
- *      Author: fabio
- */
+/**
+* @version		GrPPI v0.3
+* @copyright	Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+* @license		GNU/GPL, see LICENSE.txt
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You have received a copy of the GNU General Public License in LICENSE.txt
+* also available in <http://www.gnu.org/licenses/gpl.html>.
+*
+* See COPYRIGHT.txt for copyright notices and details.
+*/
 
 #ifndef FF_HELPER_CLASSES_HPP
 #define FF_HELPER_CLASSES_HPP
 
-#include <iostream>
-
-
-#include "../common/iterator.h"
-#include "../common/execution_traits.h"
-#include "../common/patterns.h"
-#include "../common/reduce_pattern.h"
+#include "../../common/iterator.h"
+#include "../../common/execution_traits.h"
+#include "../../common/patterns.h"
+#include "../../common/reduce_pattern.h"
 
 #include <experimental/optional>
 #include <type_traits>
@@ -26,7 +36,7 @@
 
 namespace ff {
 
-// helper classes for streming patterns that require custom emitters and
+// helper classes for streaming patterns that require custom emitters and
 // custom ordered collectors
 
 // ----- STREAM-REDUCE
@@ -41,7 +51,7 @@ public:
 		for(int i=0; i<wrks; ++i)
 			workers.push_back( new ReduceWorker<TSin,Reducer>(std::forward<Reducer>(red_obj)) );
 
-		em = new ReduceEmitter<TSin,Reducer>(red_obj.getWinSize(), red_obj.getOffset());
+		em = new ReduceEmitter<TSin,Reducer>(red_obj.get_window_size(), red_obj.get_offset());
 		cl = new ReduceCollector<TSin>(this->getgt());
 		this->add_workers(workers);
 		this->add_emitter(em);
@@ -73,7 +83,7 @@ private:
 	struct ReduceEmitter : ff_node {
 
 		ReduceEmitter(int win_size, int offset) :
-			_window(win_size), _offset(offset), nextone(0), skip(0) {
+			_window(win_size), _offset(offset), nextone(0), skip(-1) {
 			win_items.reserve(win_size);
 		}
 
@@ -82,7 +92,7 @@ private:
 			InType *item = (InType*) t;
 			check = *item;
 
-			if(!check) return EOS;
+			if(!check) return {};
 
 			if(win_items.size() != _window)
 				win_items.push_back( std::forward<InType>(check.value()) );
@@ -93,11 +103,11 @@ private:
 					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
 					return GO_ON;
 				} else {
-					if(skip == 0) {
+					if(skip == -1) {
 						this->ff_send_out( new reduce_task_t<InType>(win_items) );
 						skip++;
-					} else if(skip == _offset) {
-						skip = 0;
+					} else if(skip == (_offset-_window)) {
+						skip = -1;
 						win_items.clear();
 						win_items.push_back( std::forward<InType>(check.value()) );
 					} else skip++;
@@ -223,10 +233,10 @@ public:
 
 private:
 
-	template <typename InType, typename L>
+	template <typename InType, typename Predicate>
 	struct FilterWorker : ff_node_t<InType> {
 
-		FilterWorker(L&& c) : condition(c) { };
+		FilterWorker(Predicate&& c) : condition(c) { };
 
 		InType * svc(InType *t) {
 			std::experimental::optional<InType> check;
@@ -240,11 +250,11 @@ private:
 					ff_free(t);
 				}
 			}
-			return this->GO_ON;;
+			return this->GO_ON;
 		}
 
 	private:
-		L condition;
+		Predicate condition;
 	};
 
 	template <typename InType>
@@ -303,12 +313,7 @@ private:
 
 };
 
-
-
 } // namespace ff
-
-
-
 
 
 #endif /* FF_HELPER_CLASSES_HPP */

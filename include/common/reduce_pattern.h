@@ -85,11 +85,21 @@ public:
     return red;
   }
 
-#ifdef GRPPI_FF
+  /**
+    \brief Add a bulk of items to the reduction buffer
+    \param vector containing items to be added
+   */
   void add_items(const std::vector<Identity>& vec) { items = vec; }
-  inline int getWinSize() const { return window_size_; }
-  inline int getOffset()  const { return offset_; }
-#endif
+
+  /**
+   * \brief Get the window_size parameter
+   */
+  inline int get_window_size() const { return window_size_; }
+
+  /**
+   * \brief Get the offest parameter
+   */
+  inline int get_offset() const { return offset_; }
 
 private:
   int window_size_;

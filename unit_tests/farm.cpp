@@ -199,13 +199,7 @@ public:
         } else
           return {};
       },
-      //inner
-	  grppi::farm(4,
-			  [this](int x) {
-    	  invocations_op++;
-    	  w[idx_out] = x * 2;
-    	  idx_out++;
-      })
+      inner
     );
   }
 

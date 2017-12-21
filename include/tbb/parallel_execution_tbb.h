@@ -478,7 +478,6 @@ constexpr bool supports_divide_conquer<parallel_execution_tbb>() { return true; 
 template <>
 constexpr bool supports_pipeline<parallel_execution_tbb>() { return true; }
 
-
 // INTERNALS --------------------------------------------------------------
 
 template <typename ... InputIterators, typename OutputIterator, 

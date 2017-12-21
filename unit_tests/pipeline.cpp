@@ -163,11 +163,7 @@ public:
         if (++i<=max) return i;
         else return {};
       },
-	  inner,
-	  [this](int x) {
-    	  invocations_last++;
-    	  out +=x;
-      }
+	  inner
    );
   }
 
@@ -292,12 +288,12 @@ TYPED_TEST(pipeline_test, static_composed_last)
   this->check_composed_last();
 }
 
-//TYPED_TEST(pipeline_test, static_composed_piecewise_last)
-//{
-//  this->setup_composed_last();
-//  this->run_composed_last_piecewise(this->execution_);
-//  this->check_composed_last();
-//}
+TYPED_TEST(pipeline_test, static_composed_piecewise_last)
+{
+  this->setup_composed_last();
+  this->run_composed_last_piecewise(this->execution_);
+  this->check_composed_last();
+}
 
 TYPED_TEST(pipeline_test, static_composed)
 {
@@ -306,9 +302,9 @@ TYPED_TEST(pipeline_test, static_composed)
   this->check_composed();
 }
 
-//TYPED_TEST(pipeline_test, static_composed_piecewise)
-//{
-//  this->setup_composed();
-//  this->run_composed_piecewise(this->execution_);
-//  this->check_composed();
-//}
+TYPED_TEST(pipeline_test, static_composed_piecewise)
+{
+  this->setup_composed();
+  this->run_composed_piecewise(this->execution_);
+  this->check_composed();
+}

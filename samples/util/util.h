@@ -63,7 +63,7 @@ void print_available_modes(std::ostream & os) {
     os << "    omp -> OpenMP backend" << endl;
   }
 
-  if (is_supported<parallel_execution_omp>()) {
+  if (is_supported<parallel_execution_ff>()) {
     os << "    ff  -> FastFlow backend" << endl;
   }
 }
