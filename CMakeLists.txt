@@ -77,7 +77,6 @@ if( GRPPI_OMP_ENABLE )
 endif( GRPPI_OMP_ENABLE )
 
 # Fastflow library
-
 option( GRPPI_FF_ENABLE "Require FastFlow framework" OFF )
 message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE} )
 if( GRPPI_FF_ENABLE )
@@ -107,6 +106,7 @@ endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 enable_testing()
 option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
 if( GRPPI_UNIT_TEST_ENABLE )
+    include(${CMAKE_MODULE_PATH}/build-googletest.cmake)
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
 
