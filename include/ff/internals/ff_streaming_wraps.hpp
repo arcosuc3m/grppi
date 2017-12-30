@@ -387,7 +387,7 @@ inline int get_physical_cores() {
 	char cmd[] = "sysctl hw.physicalcpu | awk '{print $2}'";
 
 	run_command(cmd, res);
-	count = std::atoi(res);
+	count = std::stoi(res);
 
 #else
 #pragma message ("Cannot determine physical cores number on this platform")
