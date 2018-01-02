@@ -84,7 +84,12 @@ int main(int argc, char **argv) {
 	int cores = stoi(argv[1]);
 	int insize = stoi(argv[2]);
 
+#ifdef GRPPI_FF
 	parallel_execution_ff e(cores);
+#else
+	parallel_execution_native e(cores);
+#endif
+
 
 	StencilTest* test = new StencilTest(insize);
 	test->setup_test();
