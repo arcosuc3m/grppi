@@ -10,7 +10,7 @@
 #include <random>
 #include <experimental/optional>
 
-#include "map.h"
+#include "grppi.h"
 #include "supported_executions.h"
 
 using namespace std;
@@ -62,18 +62,21 @@ int main(int argc, char **argv) {
 	using namespace chrono;
 
 	if(argc < 3) {
-		cerr << "Usage: map_GRPPI cores input_size" << endl;
+		cerr << "Usage: map_GRPPI cores input_size exec_mode" << endl;
+		cerr << "Available exec_mode are:" << endl;
+		print_available_modes(cerr);
+		cerr << "Set \'cores\' to 0 to use all available physical cores (" << get_phys_cores() << ")." << endl;
 		return -1;
 	}
 
-	int cores = stoi(argv[1]);
+	int cores = stoi(argv[1]) != 0 ? stoi(argv[1]) : get_phys_cores();
 	int insize = stoi(argv[2]);
+	dynamic_execution e(execution_mode(argv[3], cores));
 
-#ifdef GRPPI_FF
-	parallel_execution_ff e(cores);
-#else
-	parallel_execution_native e(cores);
-#endif
+	if(!e.has_execution()) {
+		cerr << "Exec_mode " << argv[3] << " not supported" << endl;
+		return -1;
+	}
 	
 	MapTest* test = new MapTest(insize);
 	test->setup_daxpy();
@@ -87,7 +90,7 @@ int main(int argc, char **argv) {
 	delete test;
 
 	cerr << "[MAP-GRPPI] Cores: " << cores
-				<< "; InSize: " << insize
-				<< "; Time: " << diff.count() << "ms"
-				<< endl;
+			<< "; InSize: " << insize
+			<< "; Time: " << diff.count() << "ms"
+			<< endl;
 }

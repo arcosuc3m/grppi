@@ -1,12 +1,6 @@
-#ifndef GRPPI_HAYAI_TESTS_SUPPORTED_EXECUTION_H
-#define GRPPI_HAYAI_TESTS_SUPPORTED_EXECUTION_H
+#ifndef GRPPI_PERFORMANCE_TESTS_H
+#define GRPPI_PERFORMANCE_TESTS_H
 
-
-#include "seq/sequential_execution.h"
-#include "native/parallel_execution_native.h"
-#include "omp/parallel_execution_omp.h"
-#include "tbb/parallel_execution_tbb.h"
-#include "ff/parallel_execution_ff.h"
 #include "dyn/dynamic_execution.h"
 
 #include <cstdio>
@@ -17,6 +11,41 @@
 #include <array>
 
 #include <time.h>
+
+grppi::dynamic_execution execution_mode(const std::string & opt, int conc_degr=0) {
+  using namespace grppi;
+  if ("seq" == opt) return sequential_execution{};
+  if ("thr" == opt) return conc_degr != 0 ? parallel_execution_native{conc_degr} : parallel_execution_native{};
+  if ("omp" == opt) return conc_degr != 0 ? parallel_execution_omp{conc_degr} : parallel_execution_omp{};
+  if ("tbb" == opt) return conc_degr != 0 ? parallel_execution_tbb{conc_degr} : parallel_execution_tbb{};
+  if ("ff" == opt)  return conc_degr != 0 ? parallel_execution_ff{conc_degr} : parallel_execution_ff{};
+  return {};
+}
+
+void print_available_modes(std::ostream & os) {
+  using namespace std;
+  using namespace grppi;
+
+  if (is_supported<sequential_execution>()) {
+    os << "    seq -> Sequential execution" << endl;
+  }
+
+  if (is_supported<parallel_execution_native>()) {
+    os << "    thr -> ISO C++ Threads backend" << endl;
+  }
+
+  if (is_supported<parallel_execution_tbb>()) {
+    os << "    tbb -> Intel TBB backend" << endl;
+  }
+
+  if (is_supported<parallel_execution_omp>()) {
+    os << "    omp -> OpenMP backend" << endl;
+  }
+
+  if (is_supported<parallel_execution_ff>()) {
+    os << "    ff  -> FastFlow backend" << endl;
+  }
+}
 
 static inline void ticks_wait(long nanosec) {
 	if (nanosec > 1000000L) nanosec =  1000000L;
@@ -49,10 +78,10 @@ inline int get_phys_cores() {
 	char socks[] = "lscpu | grep 'Socket(s)' | awk '{print $2}'";
 
 	run_cmd(cores, res);
-	cs = std::atoi(res.c_str());
+	cs = std::stoi(res);
 
 	run_cmd(socks, res);
-	sk = std::atoi(res.c_str());
+	sk = std::stoi(res);
 
 	count = cs*sk;
 

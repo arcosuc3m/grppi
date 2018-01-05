@@ -58,10 +58,10 @@ public:
 
 		// First stage
 		auto n = new ff::FFNode<void,generator_value_type,Generator>(std::forward<Generator>(gen_func));
-		add2pipe(n);
+		add_stage(n);
 
 		// Other stages
-		add2pipeall<generator_value_type>( std::forward<Transformers>(stages_ops)... );
+		add_stages<generator_value_type>( std::forward<Transformers>(stages_ops)... );
 	}
 
 	~ff_wrap_pipeline() {
@@ -72,34 +72,34 @@ public:
 
 private:
 
-	inline void add2pipe(ff_node &node) {
+	inline void add_stage(ff_node &node) {
 		ff::ff_pipeline::add_stage(&node);
 	}
-	inline void add2pipe(ff_node *node) {
+	inline void add_stage(ff_node *node) {
 		cleanup_stages.push_back(node);
 		ff::ff_pipeline::add_stage(node);
 	}
 
 	// base case -- empty
 	template <typename T>
-	void add2pipeall() { }
+	void add_stages() { }
 
 	// -- ALL OTHER CASES
 
 	// last stage -- no output value expected
 	template <typename Input, typename Transformer,
 	requires_no_pattern<Transformer> = 0>
-	auto add2pipeall(Transformer &&stage) {
+	auto add_stages(Transformer &&stage) {
 		using input_type = std::decay_t<Input>;
 
 		auto n = new ff::FFNode<input_type,void,Transformer>(std::forward<Transformer>(stage));
-		add2pipe(n);
+		add_stage(n);
 	}
 
 	// intermediate sequential stage -- no pattern
 	template <typename Input, typename Transformer, typename ... OtherTransformers,
 	requires_no_pattern<Transformer> = 0>
-	auto add2pipeall(Transformer && transform_op,
+	auto add_stages(Transformer && transform_op,
 			OtherTransformers && ... other_transform_ops) {
 		static_assert(!std::is_void<Input>::value,
 				"Transformer must take non-void argument");
@@ -110,23 +110,23 @@ private:
 
 		auto n = new ff::FFNode<Input,output_type,Transformer>(std::forward<Transformer>(transform_op));
 
-		add2pipe(n);
-		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		add_stage(n);
+		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
 	// parallel stage -- Farm pattern ref
 	template <typename Input, typename FarmTransformer,
 	template <typename> class Farm,
 	requires_farm<Farm<FarmTransformer>> = 0>
-	auto add2pipeall(Farm<FarmTransformer> & farm_obj) {
-		return this->template add2pipeall<Input>(std::move(farm_obj));
+	auto add_stages(Farm<FarmTransformer> & farm_obj) {
+		return this->template add_stages<Input>(std::move(farm_obj));
 	}
 
 	// parallel stage -- Farm pattern
 	template <typename Input, typename FarmTransformer,
 	template <typename> class Farm,
 	requires_farm<Farm<FarmTransformer>> = 0>
-	auto add2pipeall(Farm<FarmTransformer> && farm_obj) {
+	auto add_stages(Farm<FarmTransformer> && farm_obj) {
 		static_assert(!std::is_void<Input>::value,
 				"Farm must take non-void argument");
 		using output_type =
@@ -139,9 +139,10 @@ private:
 					std::forward<Farm<FarmTransformer>>(farm_obj))
 					);
 
-		ff::ff_OFarm<Input,output_type> * theFarm = new ff::ff_OFarm<Input,output_type>(std::move(w));
+		ff::ff_OFarm<Input,output_type> *theFarm =
+				new ff::ff_OFarm<Input,output_type>(std::move(w));
 
-		add2pipe(theFarm);
+		add_stage(theFarm);
 	}
 
 	// parallel stage -- Farm pattern ref with variadic
@@ -149,9 +150,9 @@ private:
 	template <typename> class Farm,
 	typename ... OtherTransformers,
 	requires_farm<Farm<FarmTransformer>> = 0>
-	auto add2pipeall(Farm<FarmTransformer> & farm_obj,
+	auto add_stages(Farm<FarmTransformer> & farm_obj,
 			OtherTransformers && ... other_transform_ops) {
-		return this->template add2pipeall<Input>(std::move(farm_obj),
+		return this->template add_stages<Input>(std::move(farm_obj),
 				std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -160,7 +161,7 @@ private:
 	template <typename> class Farm,
 	typename ... OtherTransformers,
 	requires_farm<Farm<FarmTransformer>> = 0>
-	auto add2pipeall( Farm<FarmTransformer> && farm_obj,
+	auto add_stages( Farm<FarmTransformer> && farm_obj,
 			OtherTransformers && ... other_transform_ops) {
 		static_assert(!std::is_void<Input>::value,
 				"Farm must take non-void argument");
@@ -176,25 +177,26 @@ private:
 					std::forward<Farm<FarmTransformer>>(farm_obj))
 					);
 
-		ff::ff_OFarm<Input,output_type> * theFarm = new ff::ff_OFarm<Input,output_type>(std::move(w));
+		ff::ff_OFarm<Input,output_type> *theFarm =
+				new ff::ff_OFarm<Input,output_type>(std::move(w));
 
-		add2pipe(theFarm);
-		add2pipeall<Input>( std::forward<OtherTransformers>(other_transform_ops)... );
+		add_stage(theFarm);
+		add_stages<Input>( std::forward<OtherTransformers>(other_transform_ops)... );
 	}
 
 	// parallel stage -- Filter pattern ref
 	template <typename Input, typename Predicate,
 	template <typename> class Filter,
 	requires_filter<Filter<Predicate>> = 0>
-	auto add2pipeall(Filter<Predicate> & filter_obj) {
-		return this->template add2pipeall<Input>(std::move(filter_obj));
+	auto add_stages(Filter<Predicate> & filter_obj) {
+		return this->template add_stages<Input>(std::move(filter_obj));
 	}
 
 	// parallel stage -- Filter pattern
 	template <typename Input, typename Predicate,
 	template <typename> class Filter,
 	requires_filter<Filter<Predicate>> = 0>
-	auto add2pipeall(Filter<Predicate> && filter_obj) {
+	auto add_stages(Filter<Predicate> && filter_obj) {
 		static_assert(!std::is_void<Input>::value,
 				"Filter must take non-void argument");
 
@@ -203,7 +205,7 @@ private:
 						std::forward<Filter<Predicate>>(filter_obj), nworkers
 				);
 
-		add2pipe(theFarm);
+		add_stage(theFarm);
 	}
 
 	// parallel stage -- Filter pattern ref with variadics
@@ -211,11 +213,10 @@ private:
 	template <typename> class Filter,
 	typename ... OtherTransformers,
 	requires_filter<Filter<Predicate>> = 0>
-	auto add2pipeall(Filter<Predicate> & filter_obj,
+	auto add_stages(Filter<Predicate> & filter_obj,
 			OtherTransformers && ... other_transform_ops) {
-		return this->template add2pipeall<Input>(std::move(filter_obj),
+		return this->template add_stages<Input>(std::move(filter_obj),
 				std::forward<OtherTransformers>(other_transform_ops)...);
-
 	}
 
 	// parallel stage -- Filter pattern with variadics
@@ -223,7 +224,7 @@ private:
 	template <typename> class Filter,
 	typename ... OtherTransformers,
 	requires_filter<Filter<Predicate>> = 0>
-	auto add2pipeall(Filter<Predicate> && filter_obj,
+	auto add_stages(Filter<Predicate> && filter_obj,
 			OtherTransformers && ... other_transform_ops) {
 		static_assert(!std::is_void<Input>::value,
 				"Filter must take non-void argument");
@@ -233,8 +234,8 @@ private:
 						std::forward<Filter<Predicate>>(filter_obj), nworkers
 				);
 
-		add2pipe(theFarm);
-		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		add_stage(theFarm);
+		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
 	// parallel stage -- Reduce pattern ref with variadics
@@ -242,9 +243,9 @@ private:
 	template <typename C, typename I> class Reduce,
 	typename ... OtherTransformers,
 	requires_reduce<Reduce<Combiner,Identity>> = 0>
-	auto add2pipeall(Reduce<Combiner,Identity> & reduce_obj,
+	auto add_stages(Reduce<Combiner,Identity> & reduce_obj,
 			OtherTransformers && ... other_transform_ops) {
-		return this->template add2pipeall<Input>(std::move(reduce_obj),
+		return this->template add_stages<Input>(std::move(reduce_obj),
 				std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -253,7 +254,7 @@ private:
 	template <typename C, typename I> class Reduce,
 	typename ... OtherTransformers,
 	requires_reduce<Reduce<Combiner,Identity>> = 0>
-	auto add2pipeall(Reduce<Combiner,Identity> && reduce_obj,
+	auto add_stages(Reduce<Combiner,Identity> && reduce_obj,
 			OtherTransformers && ... other_transform_ops) {
 		static_assert(!std::is_void<Input>::value,
 				"Reduce must take non-void argument");
@@ -263,8 +264,8 @@ private:
 						std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
 				);
 
-		add2pipe(theFarm);
-		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		add_stage(theFarm);
+		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
 	// parallel stage -- iterator pattern ref with variadics
@@ -273,9 +274,9 @@ private:
 	typename ... OtherTransformers,
 	requires_iteration<Iteration<Transformer,Predicate>> =0,
 	requires_no_pattern<Transformer> =0>
-	auto add2pipeall(Iteration<Transformer,Predicate> & iteration_obj,
+	auto add_stages(Iteration<Transformer,Predicate> & iteration_obj,
 			OtherTransformers && ... other_transform_ops) {
-		return this->template add2pipeall<Input>(std::move(iteration_obj),
+		return this->template add_stages<Input>(std::move(iteration_obj),
 				std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -285,9 +286,8 @@ private:
 	typename ... OtherTransformers,
 	requires_iteration<Iteration<Transformer,Predicate>> =0,
 	requires_no_pattern<Transformer> =0>
-	auto add2pipeall(Iteration<Transformer,Predicate> && iteration_obj,
+	auto add_stages(Iteration<Transformer,Predicate> && iteration_obj,
 			OtherTransformers && ... other_transform_ops) {
-
 		std::vector<std::unique_ptr<ff::ff_node>> w;
 
 		for(int i=0; i<nworkers; ++i)
@@ -295,10 +295,10 @@ private:
 					std::forward<Iteration<Transformer,Predicate>>(iteration_obj))
 					);
 
-		ff::ff_OFarm<Input> * theFarm = new ff::ff_OFarm<Input>( std::move(w) );
+		ff::ff_OFarm<Input> *theFarm = new ff::ff_OFarm<Input>( std::move(w) );
 
-		add2pipe(theFarm);
-		add2pipeall<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		add_stage(theFarm);
+		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
 	// parallel stage -- iterator pattern
@@ -307,7 +307,7 @@ private:
 	typename ... OtherTransformers,
 	requires_iteration<Iteration<Transformer,Predicate>> =0,
 	requires_pipeline<Transformer> =0>
-	auto add2pipeall(Iteration<Transformer,Predicate> && iteration_obj,
+	auto add_stages(Iteration<Transformer,Predicate> && iteration_obj,
 			OtherTransformers && ... other_transform_ops) {
 		static_assert(!is_pipeline<Transformer>, "Not implemented");
 	}
@@ -317,9 +317,9 @@ private:
 	template <typename...> class Pipeline,
 	typename ... OtherTransformers,
 	requires_pipeline<Pipeline<Transformers...>> = 0>
-	auto add2pipeall(Pipeline<Transformers...> & pipeline_obj,
+	auto add_stages(Pipeline<Transformers...> & pipeline_obj,
 			OtherTransformers && ... other_transform_ops) {
-		return this->template add2pipeall<Input>(std::move(pipeline_obj),
+		return this->template add_stages<Input>(std::move(pipeline_obj),
 					std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
@@ -328,9 +328,9 @@ private:
 	template <typename...> class Pipeline,
 	typename ... OtherTransformers,
 	requires_pipeline<Pipeline<Transformers...>> = 0>
-	auto add2pipeall(Pipeline<Transformers...> && pipeline_obj,
+	auto add_stages(Pipeline<Transformers...> && pipeline_obj,
 			OtherTransformers && ... other_transform_ops) {
-		add2pipe_nested<Input>(std::tuple_cat(pipeline_obj.transformers(),
+		add_stages_nested<Input>(std::tuple_cat(pipeline_obj.transformers(),
 				std::forward_as_tuple(other_transform_ops...)),
 				std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
 	}
@@ -338,9 +338,9 @@ private:
 	// nested type recursion
 	template <typename Input, typename ... Transformers,
 	std::size_t ... I>
-	auto add2pipe_nested(std::tuple<Transformers...> && transform_ops,
+	auto add_stages_nested(std::tuple<Transformers...> && transform_ops,
 			std::index_sequence<I...>) {
-		return add2pipeall<Input>(std::forward<Transformers>(std::get<I>(transform_ops))...);
+		return add_stages<Input>(std::forward<Transformers>(std::get<I>(transform_ops))...);
 	}
 
 
@@ -368,20 +368,20 @@ inline void run_command(const char *cmd, std::string& result) {
 }
 
 inline int get_physical_cores() {
-	int count=1, nc, ns;
+	int count=1, nc=0, ns=0;
 	std::string res{};
 
 #if defined(__linux__)
 	char cores[] = "lscpu | grep 'Core(s)' | awk '{print $4}'";
-	char sockets[] = "lscpu | grep 'Socket(s)' | awk '{print $2}'";
+	char socks[] = "lscpu | grep 'Socket(s)' | awk '{print $2}'";
 
 	run_command(cores, res);
-	nc = std::atoi(res.c_str());
+	nc = std::stoi(res);
 
-	run_command(sockets, res);
-	ns = std::atoi(res.c_str());
+	run_command(socks, res);
+	ns = std::stoi(res);
 
-	count = nc / ns;
+	count = nc*ns;
 
 #elif defined (__APPLE__)
 	char cmd[] = "sysctl hw.physicalcpu | awk '{print $2}'";

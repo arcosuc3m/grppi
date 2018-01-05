@@ -22,6 +22,3 @@ endif()
 
 # Build packages if required version not found - Moved to root CMakeFile
 #include(${CMAKE_MODULE_PATH}/build-googletest.cmake)
-
-# Build packages if required version not found
-#include(${CMAKE_MODULE_PATH}/build-hayai.cmake)

@@ -77,19 +77,21 @@ int main(int argc, char **argv) {
 	using namespace chrono;
 
 	if(argc < 3) {
-		cerr << "Usage: stencil_GRPPI cores input_size" << endl;
+		cerr << "Usage: stencil_GRPPI cores input_size exec_mode" << endl;
+		cerr << "Available exec_mode are:" << endl;
+		print_available_modes(cerr);
+		cerr << "Set \'cores\' to 0 to use all available physical cores (" << get_phys_cores() << ")." << endl;
 		return -1;
 	}
 
-	int cores = stoi(argv[1]);
+	int cores = stoi(argv[1]) != 0 ? stoi(argv[1]) : get_phys_cores();
 	int insize = stoi(argv[2]);
+	dynamic_execution e(execution_mode(argv[3], cores));
 
-#ifdef GRPPI_FF
-	parallel_execution_ff e(cores);
-#else
-	parallel_execution_native e(cores);
-#endif
-
+	if(!e.has_execution()) {
+		cerr << "Exec_mode " << argv[3] << " not supported" << endl;
+		return -1;
+	}
 
 	StencilTest* test = new StencilTest(insize);
 	test->setup_test();
