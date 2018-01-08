@@ -14,17 +14,11 @@
 
 grppi::dynamic_execution execution_mode(const std::string & opt, int conc_degr=0) {
   using namespace grppi;
-  if ("seq" == opt) return sequential_execution{};
-  if ("thr" == opt) return conc_degr != 0 ? parallel_execution_native{conc_degr} : parallel_execution_native{};
-  if ("omp" == opt) return conc_degr != 0 ? parallel_execution_omp{conc_degr} : parallel_execution_omp{};
-  if ("tbb" == opt)
-    if (conc_degr != 0)
-      parallel_execution_tbb(conc_degr);
-    else parallel_execution_tbb();
-  if ("ff" == opt)
-    if (conc_degr != 0)
-      parallel_execution_ff(conc_degr);
-    else parallel_execution_ff();
+  if ("seq" == opt) return sequential_execution();
+  if ("thr" == opt) return conc_degr != 0 ? parallel_execution_native(conc_degr) : parallel_execution_native();
+  if ("omp" == opt) return conc_degr != 0 ? parallel_execution_omp(conc_degr) : parallel_execution_omp();
+  if ("tbb" == opt) return conc_degr != 0 ? parallel_execution_tbb(conc_degr) : parallel_execution_tbb();
+  if ("ff" == opt)  return conc_degr != 0 ? parallel_execution_ff(conc_degr) : parallel_execution_ff();
   return {};
 }
 
@@ -108,3 +102,4 @@ inline int get_phys_cores() {
 
 
 #endif
+

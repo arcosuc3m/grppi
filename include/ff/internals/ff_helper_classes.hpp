@@ -1,22 +1,22 @@
 /**
-* @version		GrPPI v0.3
-* @copyright	Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You have received a copy of the GNU General Public License in LICENSE.txt
-* also available in <http://www.gnu.org/licenses/gpl.html>.
-*
-* See COPYRIGHT.txt for copyright notices and details.
-*/
+ * @version		GrPPI v0.3
+ * @copyright	Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+ * @license		GNU/GPL, see LICENSE.txt
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You have received a copy of the GNU General Public License in LICENSE.txt
+ * also available in <http://www.gnu.org/licenses/gpl.html>.
+ *
+ * See COPYRIGHT.txt for copyright notices and details.
+ */
 
 #ifndef FF_HELPER_CLASSES_HPP
 #define FF_HELPER_CLASSES_HPP
@@ -88,14 +88,10 @@ private:
 		}
 
 		void *svc(void *t) {
-			std::experimental::optional<InType> check;
 			InType *item = (InType*) t;
-			check = *item;
-
-			if(!check) return {};
 
 			if(win_items.size() != _window)
-				win_items.push_back( std::forward<InType>(check.value()) );
+				win_items.push_back( std::forward<InType>(*item) );
 
 			if(win_items.size() == _window) {
 				if(_offset <= _window) {
@@ -109,7 +105,7 @@ private:
 					} else if(skip == (_offset-_window)) {
 						skip = -1;
 						win_items.clear();
-						win_items.push_back( std::forward<InType>(check.value()) );
+						win_items.push_back( std::forward<InType>(*item) );
 					} else skip++;
 					return GO_ON;
 				}
@@ -172,15 +168,8 @@ private:
 		}
 
 		InType * svc(InType * t) {
-			std::experimental::optional<InType> check;
-			check = *t;
+			this->ff_send_out(t);
 
-			if(check)
-				this->ff_send_out(t);
-			else {
-				t->~InType();
-				ff_free(t);
-			}
 			donextone();
 			return this->GO_ON;
 		}
@@ -239,16 +228,12 @@ private:
 		FilterWorker(Predicate&& c) : condition(c) { };
 
 		InType * svc(InType *t) {
-			std::experimental::optional<InType> check;
-			check = *t;
 
-			if(check) {
-				if ( condition(check.value()) ) {
-					return t;
-				} else {
-					t->~InType();
-					ff_free(t);
-				}
+			if ( condition(*t) ) return t;
+			else {
+				t->~InType();
+				ff_free(t);
+				return (InType*)FILTERED;
 			}
 			return this->GO_ON;
 		}
@@ -276,13 +261,9 @@ private:
 		}
 
 		InType *svc(InType * t) {
-			std::experimental::optional<InType> check;
-			check = *t;
+			if( t != (InType*)FILTERED && ff_node::get_out_buffer() )
+				this->ff_send_out(t);
 
-			if(check) {
-				if( t != (InType*)FILTERED )
-					this->ff_send_out(t);
-			}
 			donextone();
 			return this->GO_ON;
 		}
@@ -309,7 +290,7 @@ private:
 	std::vector<ff_node *> workers;
 
 	FilterCollector<TSin> *oc;
-	static constexpr size_t FILTERED = (FF_EOS-0x7);
+	static constexpr size_t FILTERED = (FF_EOS-0x11);
 
 };
 
@@ -317,3 +298,4 @@ private:
 
 
 #endif /* FF_HELPER_CLASSES_HPP */
+

@@ -137,7 +137,7 @@ private:
 		for(int i=0; i<nworkers; ++i)
 			w.push_back( std::make_unique<ff::FFNode<Input,output_type,Farm<FarmTransformer>>>(
 					std::forward<Farm<FarmTransformer>>(farm_obj))
-					);
+			);
 
 		ff::ff_OFarm<Input,output_type> *theFarm =
 				new ff::ff_OFarm<Input,output_type>(std::move(w));
@@ -175,7 +175,7 @@ private:
 		for(int i=0; i<nworkers; ++i)
 			w.push_back( std::make_unique<ff::FFNode<Input,output_type,Farm<FarmTransformer>>>(
 					std::forward<Farm<FarmTransformer>>(farm_obj))
-					);
+			);
 
 		ff::ff_OFarm<Input,output_type> *theFarm =
 				new ff::ff_OFarm<Input,output_type>(std::move(w));
@@ -293,7 +293,7 @@ private:
 		for(int i=0; i<nworkers; ++i)
 			w.push_back( std::make_unique<ff::IterationWorker<Input,Iteration<Transformer,Predicate>>>(
 					std::forward<Iteration<Transformer,Predicate>>(iteration_obj))
-					);
+			);
 
 		ff::ff_OFarm<Input> *theFarm = new ff::ff_OFarm<Input>( std::move(w) );
 
@@ -400,3 +400,4 @@ inline int get_physical_cores() {
 
 
 #endif /* FF_STREAMING_WRAPS_HPP */
+
