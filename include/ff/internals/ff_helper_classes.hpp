@@ -42,25 +42,22 @@ namespace ff {
 // ----- STREAM-REDUCE
 
 template <typename TSin, typename Reducer>
-class ff_StreamReduce_grPPI : public ff_farm<ofarm_lb,ofarm_gt> {
+class ff_StreamReduce_grPPI : public ff_ofarm {
 
 public:
 	ff_StreamReduce_grPPI(Reducer && red_obj, unsigned int wrks=1) :
-		ff_farm<ofarm_lb,ofarm_gt>(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, false, wrks),
+		ff_ofarm(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, false, wrks),
 		conc_degr(wrks) {
 		for(int i=0; i<wrks; ++i)
 			workers.push_back( new ReduceWorker<TSin,Reducer>(std::forward<Reducer>(red_obj)) );
 
 		em = new ReduceEmitter<TSin,Reducer>(red_obj.get_window_size(), red_obj.get_offset());
-		cl = new ReduceCollector<TSin>(this->getgt());
 		this->add_workers(workers);
-		this->add_emitter(em);
-		this->add_collector(cl);
+		this->setEmitterF(em);
 	}
 
 	~ff_StreamReduce_grPPI() {
 		delete em;
-		delete cl;
 	}
 
 private:
@@ -94,9 +91,15 @@ private:
 				win_items.push_back( std::forward<InType>(*item) );
 
 			if(win_items.size() == _window) {
-				if(_offset <= _window) {
+				if(_offset < _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
+					return GO_ON;
+				}
+
+				if (_offset == _window) {
+					this->ff_send_out( new reduce_task_t<InType>(win_items) );
+					win_items.erase(win_items.begin(), win_items.end());
 					return GO_ON;
 				} else {
 					if(skip == -1) {
@@ -146,74 +149,31 @@ private:
 	private:
 		// Class variables
 		RedObj&& _reduction_obj;
-
 	};
-
-	// simple ordered collector for stream-reduce pattern
-	template <typename InType>
-	struct ReduceCollector : ff_node_t<InType> {
-		ReduceCollector(ofarm_gt * const cl) :
-			nextone(0), gt(cl) { }
-
-		void donextone() {
-			do nextone = (nextone+1) % gt->getrunning();
-			while(!gt->set_victim(nextone));
-		}
-
-		int svc_init() {
-			assert(gt->getrunning()>0);
-			gt->revive();
-			gt->set_victim(nextone);
-			return 0;
-		}
-
-		InType * svc(InType * t) {
-			this->ff_send_out(t);
-
-			donextone();
-			return this->GO_ON;
-		}
-
-		void eosnotify(ssize_t id=-1) {
-			gt->set_dead(id);
-			if (nextone == (size_t)id) {
-				nextone = (nextone+1) % gt->getrunning();
-				gt->set_victim(nextone);
-			}
-		}
-
-		void svc_end() { }
-
-	private:
-		size_t nextone;
-		ofarm_gt *gt;
-	};
-
 
 private:
 	size_t conc_degr;
 	std::vector<ff_node*> workers;
 
 	ReduceEmitter<TSin,Reducer> *em;
-	ReduceCollector<TSin> *cl;
 };
 
 
 // ----- STREAM-FILTER
 
 template <typename TSin, typename Filter>
-class ff_StreamFilter_grPPI : public ff_farm<ofarm_lb,ofarm_gt> {
+class ff_StreamFilter_grPPI : public ff_ofarm {
 
 public:
 	ff_StreamFilter_grPPI(Filter&& pre, unsigned int wrks=1):
-		ff_farm<ofarm_lb,ofarm_gt>(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
+		ff_ofarm(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
 		_predicate(pre), conc_degr(wrks) {
 		for(int i=0;i<conc_degr;i++)
 			workers.push_back(new FilterWorker<TSin,Filter>( std::forward<Filter>(_predicate)) );
 
 		this->add_workers(workers);
-		oc = new FilterCollector<TSin>(this->getgt());
-		this->add_collector(oc);
+		oc = new FilterCollector<TSin>();
+		this->setCollectorF(oc);
 	}
 
 	~ff_StreamFilter_grPPI() {
@@ -235,7 +195,6 @@ private:
 				ff_free(t);
 				return (InType*)FILTERED;
 			}
-			return this->GO_ON;
 		}
 
 	private:
@@ -245,43 +204,14 @@ private:
 	template <typename InType>
 	struct FilterCollector : ff_node_t<InType> {
 
-		FilterCollector(ofarm_gt * const gt) :
-			nextone(0), gt(gt) { }
-
-		void donextone() {
-			do nextone = (nextone+1) % gt->getrunning();
-			while(!gt->set_victim(nextone));
-		}
-
-		int svc_init() {
-			assert(gt->getrunning()>0);
-			gt->revive();
-			gt->set_victim(nextone);
-			return 0;
-		}
+		FilterCollector() { }
 
 		InType *svc(InType * t) {
-			if( t != (InType*)FILTERED && ff_node::get_out_buffer() )
-				this->ff_send_out(t);
+			if( t == (InType*)FILTERED )
+				return this->GO_ON;
 
-			donextone();
-			return this->GO_ON;
+			return t;
 		}
-
-		void eosnotify(ssize_t id=-1) {
-			gt->set_dead(id);
-			if (nextone == (size_t)id) {
-				nextone = (nextone+1) % gt->getrunning();
-				gt->set_victim(nextone);
-			}
-		}
-
-		void svc_end() { }
-
-
-	private:
-		size_t nextone;
-		ofarm_gt  * gt;
 	};
 
 private:
