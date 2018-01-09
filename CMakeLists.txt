@@ -110,5 +110,5 @@ if( GRPPI_UNIT_TEST_ENABLE )
 endif( GRPPI_UNIT_TEST_ENABLE )
 
 # Perf test
-add_subdirectory(performance_tests)
+#add_subdirectory(performance_tests)
 

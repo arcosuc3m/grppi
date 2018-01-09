@@ -40,7 +40,7 @@ struct FFNode : ff_node_t<TSin,TSout> {
 	FFNode(L&& lf) : callable(lf) {};
 
 	TSout *svc(TSin *t) {
-		TSout *out = (TSout*) ff::ff_malloc(sizeof(TSout));
+		TSout *out = (TSout*) ff_malloc(sizeof(TSout));
 
 		*out = callable(*t);
 
@@ -57,7 +57,7 @@ struct FFNode<void,TSout,L> : ff_node {
 
 	void *svc(void *) {
 		std::experimental::optional<TSout> ret;
-		void *outslot = ff::ff_malloc(sizeof(TSout));
+		void *outslot = ff_malloc(sizeof(TSout));
 		TSout *out = new (outslot) TSout();
 
 		ret = callable();
@@ -66,7 +66,7 @@ struct FFNode<void,TSout,L> : ff_node {
 			*out = ret.value();
 			return outslot;
 		} else {
-			ff::ff_free(outslot);
+			ff_free(outslot);
 			return EOS;
 		}
 	}
@@ -83,7 +83,7 @@ struct FFNode<TSin,void,L> : ff_node_t<TSin,void> {
 		callable(*t);
 
 		t->~TSin();
-		ff::ff_free(t);
+		ff_free(t);
 		return GO_ON;
 	}
 };
@@ -100,7 +100,7 @@ struct FFNodeFilter : ff_node_t<TSin> {
 			return t;
 		} else {
 			t->~TSin();
-			ff::ff_free(t);
+			ff_free(t);
 		}
 		return this->GO_ON;
 	}

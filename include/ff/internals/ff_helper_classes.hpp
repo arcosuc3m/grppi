@@ -26,6 +26,7 @@
 #include "../../common/patterns.h"
 #include "../../common/reduce_pattern.h"
 
+
 #include <experimental/optional>
 #include <type_traits>
 
@@ -94,12 +95,14 @@ private:
 				if(_offset < _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
+					ff_free(item);
 					return GO_ON;
 				}
 
 				if (_offset == _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), win_items.end());
+					ff_free(item);
 					return GO_ON;
 				} else {
 					if(skip == -1) {
@@ -110,9 +113,13 @@ private:
 						win_items.clear();
 						win_items.push_back( std::forward<InType>(*item) );
 					} else skip++;
+					ff_free(item);
 					return GO_ON;
 				}
-			} else return GO_ON;
+			} else {
+				ff_free(item);
+				return GO_ON;
+			}
 		}
 
 	private:
@@ -138,9 +145,15 @@ private:
 			void *outslot = ff_malloc(sizeof(InType));
 			InType *result = new (outslot) InType();
 
+#if 0
 			_reduction_obj.add_items(task->vals);
-			if(_reduction_obj.reduction_needed())
-				*result = _reduction_obj.reduce_window(seq);
+			//if(_reduction_obj.reduction_needed())
+			*result = _reduction_obj.reduce_window(seq);
+#else
+#include <numeric>
+
+			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
+#endif
 
 			delete task;
 			return outslot;
