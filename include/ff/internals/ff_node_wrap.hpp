@@ -36,14 +36,10 @@ namespace ff {
 template <typename TSin, typename TSout, typename L>
 struct FFNode : ff_node_t<TSin,TSout> {
 	L callable;
-
 	FFNode(L&& lf) : callable(lf) {};
-
 	TSout *svc(TSin *t) {
-		TSout *out = (TSout*) ff_malloc(sizeof(TSout));
-
+		TSout *out = (TSout*) ::malloc(sizeof(TSout));
 		*out = callable(*t);
-
 		return out;
 	}
 };
@@ -52,21 +48,17 @@ struct FFNode : ff_node_t<TSin,TSout> {
 template <typename TSout, typename L >
 struct FFNode<void,TSout,L> : ff_node {
 	L callable;
-
 	FFNode(L&& lf) : callable(lf) {};
-
 	void *svc(void *) {
 		std::experimental::optional<TSout> ret;
-		void *outslot = ff_malloc(sizeof(TSout));
+		void *outslot = ::malloc(sizeof(TSout));
 		TSout *out = new (outslot) TSout();
-
 		ret = callable();
-
 		if(ret) {
 			*out = ret.value();
 			return outslot;
 		} else {
-			ff_free(outslot);
+			::free(outslot);
 			return EOS;
 		}
 	}
@@ -76,18 +68,16 @@ struct FFNode<void,TSout,L> : ff_node {
 template <typename TSin, typename L >
 struct FFNode<TSin,void,L> : ff_node_t<TSin,void> {
 	L callable;
-
 	FFNode(L&& lf) : callable(lf) {};
-
 	void *svc(TSin *t) {
 		callable(*t);
-
 		t->~TSin();
-		ff_free(t);
+		::free(t);
 		return GO_ON;
 	}
 };
 
+# if 0
 // Middle stage - Filter for unordered farm
 template <typename TSin, typename L>
 struct FFNodeFilter : ff_node_t<TSin> {
@@ -100,25 +90,22 @@ struct FFNodeFilter : ff_node_t<TSin> {
 			return t;
 		} else {
 			t->~TSin();
-			ff_free(t);
+			::free(t);
 		}
 		return this->GO_ON;
 	}
 };
+#endif
 
 // ----- STREAM-ITERATION (workers)
 template<typename TSin, typename Iterator>
 struct IterationWorker : ff_node_t<TSin> {
-
 	IterationWorker(Iterator&& iter_t) :
 		_iterator_obj(iter_t) { }
-
 	TSin *svc(TSin *t) {
 		TSin *item = (TSin*) t;
-
 		do *item = _iterator_obj.transform(std::forward<TSin>(*item));
 		while (!_iterator_obj.predicate(std::forward<TSin>(*item)));
-
 		return item;
 	}
 	// class variable

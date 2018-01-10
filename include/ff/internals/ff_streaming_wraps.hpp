@@ -51,8 +51,8 @@ namespace grppi {
 class ff_wrap_pipeline: public ff::ff_pipeline {
 public:
 	template<typename Generator, typename... Transformers>
-	ff_wrap_pipeline(size_t nw, Generator&& gen_func, Transformers&&...stages_ops)
-		: nworkers{nw} {
+	ff_wrap_pipeline(size_t nw, bool ord, Generator&& gen_func, Transformers&&...stages_ops)
+		: nworkers{nw}, ordered(ord) {
 		using result_type = std::decay_t<typename std::result_of<Generator()>::type>;
 		using generator_value_type = typename result_type::value_type;
 
@@ -139,10 +139,15 @@ private:
 					std::forward<Farm<FarmTransformer>>(farm_obj))
 			);
 
-		ff::ff_OFarm<Input,output_type> *theFarm =
-				new ff::ff_OFarm<Input,output_type>(std::move(w));
-
-		add_stage(theFarm);
+		if(ordered) {
+			ff::ff_OFarm<Input,output_type> *theFarm =
+					new ff::ff_OFarm<Input,output_type>(std::move(w));
+			add_stage(theFarm);
+		} else {
+			ff::ff_Farm<Input,output_type> *theFarm =
+					new ff::ff_Farm<Input,output_type>(std::move(w));
+			add_stage(theFarm);
+		}
 	}
 
 	// parallel stage -- Farm pattern ref with variadic
@@ -177,11 +182,17 @@ private:
 					std::forward<Farm<FarmTransformer>>(farm_obj))
 			);
 
-		ff::ff_OFarm<Input,output_type> *theFarm =
-				new ff::ff_OFarm<Input,output_type>(std::move(w));
-
-		add_stage(theFarm);
-		add_stages<Input>( std::forward<OtherTransformers>(other_transform_ops)... );
+		if(ordered) {
+			ff::ff_OFarm<Input,output_type> *theFarm =
+					new ff::ff_OFarm<Input,output_type>(std::move(w));
+			add_stage(theFarm);
+			add_stages<Input>( std::forward<OtherTransformers>(other_transform_ops)... );
+		} else {
+			ff::ff_Farm<Input,output_type> *theFarm =
+					new ff::ff_Farm<Input,output_type>(std::move(w));
+			add_stage(theFarm);
+			add_stages<Input>( std::forward<OtherTransformers>(other_transform_ops)... );
+		}
 	}
 
 	// parallel stage -- Filter pattern ref
@@ -200,12 +211,19 @@ private:
 		static_assert(!std::is_void<Input>::value,
 				"Filter must take non-void argument");
 
-		ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
-				new ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>>(
-						std::forward<Filter<Predicate>>(filter_obj), nworkers
-				);
-
-		add_stage(theFarm);
+		if(ordered) {
+			ff::ff_OStreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
+					new ff::ff_OStreamFilter_grPPI<Input,Filter<Predicate>>(
+							std::forward<Filter<Predicate>>(filter_obj), nworkers
+					);
+			add_stage(theFarm);
+		} else {
+			ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
+					new ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>>(
+							std::forward<Filter<Predicate>>(filter_obj), nworkers
+					);
+			add_stage(theFarm);
+		}
 	}
 
 	// parallel stage -- Filter pattern ref with variadics
@@ -229,13 +247,21 @@ private:
 		static_assert(!std::is_void<Input>::value,
 				"Filter must take non-void argument");
 
-		ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
-				new ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>>(
-						std::forward<Filter<Predicate>>(filter_obj), nworkers
-				);
-
-		add_stage(theFarm);
-		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		if(ordered) {
+			ff::ff_OStreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
+					new ff::ff_OStreamFilter_grPPI<Input,Filter<Predicate>>(
+							std::forward<Filter<Predicate>>(filter_obj), nworkers
+					);
+			add_stage(theFarm);
+			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		} else {
+			ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>> *theFarm =
+					new ff::ff_StreamFilter_grPPI<Input,Filter<Predicate>>(
+							std::forward<Filter<Predicate>>(filter_obj), nworkers
+					);
+			add_stage(theFarm);
+			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		}
 	}
 
 	// parallel stage -- Reduce pattern ref with variadics
@@ -259,13 +285,22 @@ private:
 		static_assert(!std::is_void<Input>::value,
 				"Reduce must take non-void argument");
 
-		ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>> *theFarm =
-				new ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>>(
-						std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
-				);
+		if(ordered) {
+			ff::ff_OStreamReduce_grPPI<Input,Reduce<Combiner,Identity>> *theFarm =
+					new ff::ff_OStreamReduce_grPPI<Input,Reduce<Combiner,Identity>>(
+							std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
+					);
+			add_stage(theFarm);
+			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 
-		add_stage(theFarm);
-		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		} else {
+			ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>> *theFarm =
+					new ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>>(
+							std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
+					);
+			add_stage(theFarm);
+			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		}
 	}
 
 	// parallel stage -- iterator pattern ref with variadics
@@ -295,10 +330,15 @@ private:
 					std::forward<Iteration<Transformer,Predicate>>(iteration_obj))
 			);
 
-		ff::ff_OFarm<Input> *theFarm = new ff::ff_OFarm<Input>( std::move(w) );
-
-		add_stage(theFarm);
-		add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		if(ordered) {
+			ff::ff_OFarm<Input> *theFarm = new ff::ff_OFarm<Input>( std::move(w) );
+			add_stage(theFarm);
+			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		} else {
+			ff::ff_Farm<Input> *theFarm = new ff::ff_Farm<Input>( std::move(w) );
+			add_stage(theFarm);
+			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
+		}
 	}
 
 	// parallel stage -- iterator pattern
@@ -344,9 +384,10 @@ private:
 	}
 
 
-protected:
+private:
 	std::vector<ff_node*> cleanup_stages;
 	size_t nworkers;
+	bool ordered;
 };
 
 } // namespace

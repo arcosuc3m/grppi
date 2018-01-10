@@ -86,12 +86,6 @@ public:
   }
 
   /**
-    \brief Add a bulk of items to the reduction buffer
-    \param vector containing items to be added
-   */
-  void add_items(const std::vector<Identity>& vec) { items = vec; }
-
-  /**
    * \brief Get the window_size parameter
    */
   inline int get_window_size() const { return window_size_; }

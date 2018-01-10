@@ -67,7 +67,7 @@ public:
 	  \param concurrency_degree Number of threads used for parallel algorithms.
 	  \param order Whether ordered executions is enabled or disabled.
 	 */
-	parallel_execution_ff(int concurrency_degree, bool order=false) noexcept :
+	parallel_execution_ff(int concurrency_degree, bool order=true) noexcept :
 			concurrency_degree_{concurrency_degree},
 			ordering_{order}
 	{}
@@ -85,12 +85,12 @@ public:
 	/**
 	  \brief Enable ordering.
 	 */
-	void enable_ordering() noexcept { ordering_=true; }
+	void enable_ordering() noexcept { ordering_= true; }
 
 	/**
 	  \brief Disable ordering.
 	 */
-	void disable_ordering() noexcept { ordering_=false; }
+	void disable_ordering() noexcept { ordering_= false; }
 
 	/**
 	  \brief Is execution ordered.
@@ -211,10 +211,9 @@ public:
 
 
 private:
-
   constexpr static int default_concurrency_degree = 4;
   int concurrency_degree_ = get_physical_cores();
-  bool ordering_ = false; // needed in order to comply with unit_tests
+  bool ordering_ = true; // needed in order to comply with unit_tests
 
 };
 
@@ -428,7 +427,7 @@ template <typename Generator, typename ... Transformers>
 void parallel_execution_ff::pipeline(
     Generator && generate_op,
     Transformers && ... transform_ops) const {
-	ff_wrap_pipeline pipe(concurrency_degree_, generate_op, std::forward<Transformers>(transform_ops)...);
+	ff_wrap_pipeline pipe(concurrency_degree_, ordering_, generate_op, std::forward<Transformers>(transform_ops)...);
 
 	pipe.setFixedSize(false);
 
@@ -467,3 +466,4 @@ constexpr bool is_parallel_execution_ff() {
 
 
 #endif /* GRPPI_FF_PARALLEL_EXECUTION_FF_H */
+

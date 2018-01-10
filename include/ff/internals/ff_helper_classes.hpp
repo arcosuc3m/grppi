@@ -26,7 +26,7 @@
 #include "../../common/patterns.h"
 #include "../../common/reduce_pattern.h"
 
-
+#include <numeric>
 #include <experimental/optional>
 #include <type_traits>
 
@@ -40,14 +40,13 @@ namespace ff {
 // helper classes for streaming patterns that require custom emitters and
 // custom ordered collectors
 
-// ----- STREAM-REDUCE
-
+// ----- ORDERED STREAM-REDUCE
 template <typename TSin, typename Reducer>
-class ff_StreamReduce_grPPI : public ff_ofarm {
+class ff_OStreamReduce_grPPI : public ff_ofarm {
 
 public:
-	ff_StreamReduce_grPPI(Reducer && red_obj, unsigned int wrks=1) :
-		ff_ofarm(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, false, wrks),
+	ff_OStreamReduce_grPPI(Reducer && red_obj, unsigned int wrks=1) :
+		ff_ofarm(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
 		conc_degr(wrks) {
 		for(int i=0; i<wrks; ++i)
 			workers.push_back( new ReduceWorker<TSin,Reducer>(std::forward<Reducer>(red_obj)) );
@@ -57,12 +56,11 @@ public:
 		this->setEmitterF(em);
 	}
 
-	~ff_StreamReduce_grPPI() {
+	~ff_OStreamReduce_grPPI() {
 		delete em;
 	}
 
 private:
-
 	// workers' actual task
 	template<typename T>
 	struct reduce_task_t {
@@ -95,14 +93,14 @@ private:
 				if(_offset < _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
-					ff_free(item);
+					::free(item);
 					return GO_ON;
 				}
 
 				if (_offset == _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), win_items.end());
-					ff_free(item);
+					::free(item);
 					return GO_ON;
 				} else {
 					if(skip == -1) {
@@ -113,17 +111,16 @@ private:
 						win_items.clear();
 						win_items.push_back( std::forward<InType>(*item) );
 					} else skip++;
-					ff_free(item);
+					::free(item);
 					return GO_ON;
 				}
 			} else {
-				ff_free(item);
+				::free(item);
 				return GO_ON;
 			}
 		}
 
 	private:
-		// Class variables
 		int _window;
 		int _offset;
 		size_t nextone;
@@ -142,16 +139,15 @@ private:
 			reduce_task_t<InType> * task = (reduce_task_t<InType> *) t;
 			grppi::sequential_execution seq{};
 
-			void *outslot = ff_malloc(sizeof(InType));
+			void *outslot = ::malloc(sizeof(InType));
 			InType *result = new (outslot) InType();
 
-#if 0
-			_reduction_obj.add_items(task->vals);
+#if 1
+			for(auto i : task->vals)
+				_reduction_obj.add_item(std::forward<InType>(i));
 			//if(_reduction_obj.reduction_needed())
 			*result = _reduction_obj.reduce_window(seq);
 #else
-#include <numeric>
-
 			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 #endif
 
@@ -160,7 +156,6 @@ private:
 		}
 
 	private:
-		// Class variables
 		RedObj&& _reduction_obj;
 	};
 
@@ -172,13 +167,150 @@ private:
 };
 
 
-// ----- STREAM-FILTER
-
-template <typename TSin, typename Filter>
-class ff_StreamFilter_grPPI : public ff_ofarm {
+// ----- UNORDERED STREAM-REDUCE
+template <typename TSin, typename Reducer>
+class ff_StreamReduce_grPPI : public ff_farm<> {
 
 public:
-	ff_StreamFilter_grPPI(Filter&& pre, unsigned int wrks=1):
+	ff_StreamReduce_grPPI(Reducer && red_obj, unsigned int wrks=1) :
+		ff_farm<>(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
+		conc_degr(wrks) {
+		for(int i=0; i<wrks; ++i)
+			workers.push_back( new ReduceWorker<TSin,Reducer>(std::forward<Reducer>(red_obj)) );
+
+		em = new ReduceEmitter<TSin,Reducer>(red_obj.get_window_size(), red_obj.get_offset());
+		cl = new ReduceCollector();
+		this->add_workers(workers);
+		this->add_emitter(em);
+		this->add_collector(cl);
+	}
+
+	~ff_StreamReduce_grPPI() {
+		delete em; delete cl;
+	}
+
+private:
+	// workers' actual task
+	template<typename T>
+	struct reduce_task_t {
+		reduce_task_t(const std::vector<T>& v) {
+			vals.reserve(v.size());
+			vals = v;
+		}
+		~reduce_task_t() {
+			vals.clear();
+		}
+		std::vector<T> vals;
+	};
+
+	// -- emitter for stream-reduce pattern
+	template<typename InType, typename RedObj>
+	struct ReduceEmitter : ff_node {
+
+		ReduceEmitter(int win_size, int offset) :
+			_window(win_size), _offset(offset), nextone(0), skip(-1) {
+			win_items.reserve(win_size);
+		}
+
+		void *svc(void *t) {
+			InType *item = (InType*) t;
+
+			if(win_items.size() != _window)
+				win_items.push_back( std::forward<InType>(*item) );
+
+			if(win_items.size() == _window) {
+				if(_offset < _window) {
+					this->ff_send_out( new reduce_task_t<InType>(win_items) );
+					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
+					::free(item);
+					return GO_ON;
+				}
+
+				if (_offset == _window) {
+					this->ff_send_out( new reduce_task_t<InType>(win_items) );
+					win_items.erase(win_items.begin(), win_items.end());
+					::free(item);
+					return GO_ON;
+				} else {
+					if(skip == -1) {
+						this->ff_send_out( new reduce_task_t<InType>(win_items) );
+						skip++;
+					} else if(skip == (_offset-_window)) {
+						skip = -1;
+						win_items.clear();
+						win_items.push_back( std::forward<InType>(*item) );
+					} else skip++;
+					::free(item);
+					return GO_ON;
+				}
+			} else {
+				::free(item);
+				return GO_ON;
+			}
+		}
+
+	private:
+		int _window;
+		int _offset;
+		size_t nextone;
+		int skip;
+		std::vector<InType> win_items;
+	};
+
+	// -- stream-reduce workers
+	template<typename InType, typename RedObj>
+	struct ReduceWorker : ff_node {
+
+		ReduceWorker(RedObj&& red_t) :
+			_reduction_obj(std::move(red_t)) { }
+
+		void *svc(void *t) {
+			reduce_task_t<InType> * task = (reduce_task_t<InType> *) t;
+			grppi::sequential_execution seq{};
+
+			void *outslot = ::malloc(sizeof(InType));
+			InType *result = new (outslot) InType();
+
+#if 1
+			for(auto i : task->vals)
+				_reduction_obj.add_item(std::forward<InType>(i));
+			//if(_reduction_obj.reduction_needed())
+			*result = _reduction_obj.reduce_window(seq);
+#else
+			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
+#endif
+
+			delete task;
+			return outslot;
+		}
+
+	private:
+		RedObj&& _reduction_obj;
+	};
+
+	// dummy collector needed by ff_farm. only forwards tasks
+	struct ReduceCollector : ff_node {
+		ReduceCollector() {}
+		void * svc(void *t) {
+			return t;
+		}
+	};
+
+private:
+	size_t conc_degr;
+	std::vector<ff_node*> workers;
+
+	ReduceEmitter<TSin,Reducer> *em;
+	ReduceCollector *cl;
+};
+
+
+// ----- ORDERED STREAM-FILTER
+template <typename TSin, typename Filter>
+class ff_OStreamFilter_grPPI : public ff_ofarm {
+
+public:
+	ff_OStreamFilter_grPPI(Filter&& pre, unsigned int wrks=1):
 		ff_ofarm(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
 		_predicate(pre), conc_degr(wrks) {
 		for(int i=0;i<conc_degr;i++)
@@ -189,23 +321,19 @@ public:
 		this->setCollectorF(oc);
 	}
 
-	~ff_StreamFilter_grPPI() {
+	~ff_OStreamFilter_grPPI() {
 		delete oc;
 	}
 
 private:
-
 	template <typename InType, typename Predicate>
 	struct FilterWorker : ff_node_t<InType> {
-
 		FilterWorker(Predicate&& c) : condition(c) { };
-
 		InType * svc(InType *t) {
-
 			if ( condition(*t) ) return t;
 			else {
 				t->~InType();
-				ff_free(t);
+				::free(t);
 				return (InType*)FILTERED;
 			}
 		}
@@ -216,13 +344,10 @@ private:
 
 	template <typename InType>
 	struct FilterCollector : ff_node_t<InType> {
-
 		FilterCollector() { }
-
 		InType *svc(InType * t) {
 			if( t == (InType*)FILTERED )
 				return this->GO_ON;
-
 			return t;
 		}
 	};
@@ -232,6 +357,76 @@ private:
 	unsigned int conc_degr;
 	std::vector<ff_node *> workers;
 
+	FilterCollector<TSin> *oc;
+	static constexpr size_t FILTERED = (FF_EOS-0x11);
+
+};
+
+
+// ----- UNORDERED STREAM-FILTER
+template <typename TSin, typename Filter>
+class ff_StreamFilter_grPPI : public ff_farm<> {
+
+public:
+	ff_StreamFilter_grPPI(Filter&& pre, unsigned int wrks=1):
+		ff_farm<>(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
+		_predicate(pre), conc_degr(wrks) {
+		for(int i=0;i<conc_degr;i++)
+			workers.push_back(new FilterWorker<TSin,Filter>( std::forward<Filter>(_predicate)) );
+
+		this->add_workers(workers);
+		em = new FilterEmitter<TSin>();
+		oc = new FilterCollector<TSin>();
+		this->add_emitter(em);
+		this->add_collector(oc);
+	}
+
+	~ff_StreamFilter_grPPI() {
+		delete em; delete oc;
+	}
+
+private:
+	// dummy emitter needed by ff_farm. only forwards tasks
+	template <typename InType>
+	struct FilterEmitter : ff_node_t<InType> {
+		FilterEmitter() {}
+		InType * svc(InType *t) {
+			return t;
+		}
+	};
+
+	template <typename InType, typename Predicate>
+	struct FilterWorker : ff_node_t<InType> {
+		FilterWorker(Predicate&& c) : condition(c) { };
+		InType * svc(InType *t) {
+			if ( condition(*t) ) return t;
+			else {
+				t->~InType();
+				::free(t);
+				return (InType*)FILTERED;
+			}
+		}
+
+	private:
+		Predicate condition;
+	};
+
+	template <typename InType>
+	struct FilterCollector : ff_node_t<InType> {
+		FilterCollector() { }
+		InType *svc(InType * t) {
+			if( t == (InType*)FILTERED )
+				return this->GO_ON;
+			return t;
+		}
+	};
+
+private:
+	Filter _predicate;
+	unsigned int conc_degr;
+	std::vector<ff_node *> workers;
+
+	FilterEmitter<TSin> *em;
 	FilterCollector<TSin> *oc;
 	static constexpr size_t FILTERED = (FF_EOS-0x11);
 
