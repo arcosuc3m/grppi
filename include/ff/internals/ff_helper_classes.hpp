@@ -146,18 +146,10 @@ private:
 			InType *result = new (outslot) InType();
 			InType identity_{}; // initialize
 
-#if 1
-//			for(auto i : task->vals)
-//				_reduction_obj.add_item(std::forward<InType>(i));
-//			if(_reduction_obj.reduction_needed())
-//			*result = _reduction_obj.reduce_window(seq);
-
 			*result = grppi::reduce(seq, task->vals.begin(), task->vals.end(),
 					identity_, std::forward<Combiner>(_combine_op));
 
-#else
-			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
-#endif
+			//*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 
 			delete task;
 			return outslot;
@@ -282,18 +274,10 @@ private:
 			InType *result = new (outslot) InType();
 			InType identity_{}; // initialize
 
-#if 1
-//			for(auto i : task->vals)
-//				_reduction_obj.add_item(std::forward<InType>(i));
-//			if(_reduction_obj.reduction_needed())
-//			*result = _reduction_obj.reduce_window(seq);
-
 			*result = grppi::reduce(seq, task->vals.begin(), task->vals.end(),
 					identity_, std::forward<Combiner>(_combine_op));
 
-#else
-			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
-#endif
+			//*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 
 			delete task;
 			return outslot;
