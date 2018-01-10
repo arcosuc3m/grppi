@@ -94,6 +94,11 @@ public:
    * \brief Get the offest parameter
    */
   inline int get_offset() const { return offset_; }
+  
+#ifdef GRPPI_FF
+  // FT: we better perform our own windowed reduction
+  inline Combiner get_combiner() const { return combiner_; }
+#endif
 
 private:
   int window_size_;

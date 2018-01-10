@@ -25,6 +25,7 @@
 #include "../../common/execution_traits.h"
 #include "../../common/patterns.h"
 #include "../../common/reduce_pattern.h"
+#include "reduce.h"
 
 #include <numeric>
 #include <experimental/optional>
@@ -41,7 +42,7 @@ namespace ff {
 // custom ordered collectors
 
 // ----- ORDERED STREAM-REDUCE
-template <typename TSin, typename Reducer>
+template <typename TSin, typename Reducer, typename CombineOp>
 class ff_OStreamReduce_grPPI : public ff_ofarm {
 
 public:
@@ -49,7 +50,9 @@ public:
 		ff_ofarm(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
 		conc_degr(wrks) {
 		for(int i=0; i<wrks; ++i)
-			workers.push_back( new ReduceWorker<TSin,Reducer>(std::forward<Reducer>(red_obj)) );
+			workers.push_back( new ReduceWorker<TSin,CombineOp>(
+					std::forward<CombineOp>(red_obj.get_combiner()))
+			);
 
 		em = new ReduceEmitter<TSin,Reducer>(red_obj.get_window_size(), red_obj.get_offset());
 		this->add_workers(workers);
@@ -129,11 +132,11 @@ private:
 	};
 
 	// -- stream-reduce workers
-	template<typename InType, typename RedObj>
+	template<typename InType, typename Combiner>
 	struct ReduceWorker : ff_node {
 
-		ReduceWorker(RedObj&& red_t) :
-			_reduction_obj(std::move(red_t)) { }
+		ReduceWorker(Combiner&& red_t) :
+			_combine_op(std::move(red_t)) { }
 
 		void *svc(void *t) {
 			reduce_task_t<InType> * task = (reduce_task_t<InType> *) t;
@@ -141,12 +144,17 @@ private:
 
 			void *outslot = ::malloc(sizeof(InType));
 			InType *result = new (outslot) InType();
+			InType identity_{}; // initialize
 
 #if 1
-			for(auto i : task->vals)
-				_reduction_obj.add_item(std::forward<InType>(i));
-			//if(_reduction_obj.reduction_needed())
-			*result = _reduction_obj.reduce_window(seq);
+//			for(auto i : task->vals)
+//				_reduction_obj.add_item(std::forward<InType>(i));
+//			if(_reduction_obj.reduction_needed())
+//			*result = _reduction_obj.reduce_window(seq);
+
+			*result = grppi::reduce(seq, task->vals.begin(), task->vals.end(),
+					identity_, std::forward<Combiner>(_combine_op));
+
 #else
 			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 #endif
@@ -156,7 +164,7 @@ private:
 		}
 
 	private:
-		RedObj&& _reduction_obj;
+		Combiner&& _combine_op;
 	};
 
 private:
@@ -168,7 +176,7 @@ private:
 
 
 // ----- UNORDERED STREAM-REDUCE
-template <typename TSin, typename Reducer>
+template <typename TSin, typename Reducer, typename CombineOp>
 class ff_StreamReduce_grPPI : public ff_farm<> {
 
 public:
@@ -176,7 +184,9 @@ public:
 		ff_farm<>(false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, wrks),
 		conc_degr(wrks) {
 		for(int i=0; i<wrks; ++i)
-			workers.push_back( new ReduceWorker<TSin,Reducer>(std::forward<Reducer>(red_obj)) );
+			workers.push_back( new ReduceWorker<TSin,CombineOp>(
+					std::forward<CombineOp>(red_obj.get_combiner()))
+			);
 
 		em = new ReduceEmitter<TSin,Reducer>(red_obj.get_window_size(), red_obj.get_offset());
 		cl = new ReduceCollector();
@@ -258,11 +268,11 @@ private:
 	};
 
 	// -- stream-reduce workers
-	template<typename InType, typename RedObj>
+	template<typename InType, typename Combiner>
 	struct ReduceWorker : ff_node {
 
-		ReduceWorker(RedObj&& red_t) :
-			_reduction_obj(std::move(red_t)) { }
+		ReduceWorker(Combiner&& red_t) :
+			_combine_op(std::move(red_t)) { }
 
 		void *svc(void *t) {
 			reduce_task_t<InType> * task = (reduce_task_t<InType> *) t;
@@ -270,12 +280,17 @@ private:
 
 			void *outslot = ::malloc(sizeof(InType));
 			InType *result = new (outslot) InType();
+			InType identity_{}; // initialize
 
 #if 1
-			for(auto i : task->vals)
-				_reduction_obj.add_item(std::forward<InType>(i));
-			//if(_reduction_obj.reduction_needed())
-			*result = _reduction_obj.reduce_window(seq);
+//			for(auto i : task->vals)
+//				_reduction_obj.add_item(std::forward<InType>(i));
+//			if(_reduction_obj.reduction_needed())
+//			*result = _reduction_obj.reduce_window(seq);
+
+			*result = grppi::reduce(seq, task->vals.begin(), task->vals.end(),
+					identity_, std::forward<Combiner>(_combine_op));
+
 #else
 			*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 #endif
@@ -285,7 +300,7 @@ private:
 		}
 
 	private:
-		RedObj&& _reduction_obj;
+		Combiner&& _combine_op;
 	};
 
 	// dummy collector needed by ff_farm. only forwards tasks

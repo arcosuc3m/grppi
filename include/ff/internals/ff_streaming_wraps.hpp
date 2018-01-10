@@ -286,16 +286,16 @@ private:
 				"Reduce must take non-void argument");
 
 		if(ordered) {
-			ff::ff_OStreamReduce_grPPI<Input,Reduce<Combiner,Identity>> *theFarm =
-					new ff::ff_OStreamReduce_grPPI<Input,Reduce<Combiner,Identity>>(
+			ff::ff_OStreamReduce_grPPI<Input,Reduce<Combiner,Identity>,Combiner> *theFarm =
+					new ff::ff_OStreamReduce_grPPI<Input,Reduce<Combiner,Identity>,Combiner>(
 							std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
 					);
 			add_stage(theFarm);
 			add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
 
 		} else {
-			ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>> *theFarm =
-					new ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>>(
+			ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>,Combiner> *theFarm =
+					new ff::ff_StreamReduce_grPPI<Input,Reduce<Combiner,Identity>,Combiner>(
 							std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers
 					);
 			add_stage(theFarm);
