@@ -28,12 +28,12 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
+#include "grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void count_vowels(grppi::polymorphic_execution & ex,
+void count_vowels(grppi::dynamic_execution & ex,
                   std::istream & file)
 {
   using namespace std;

@@ -27,13 +27,14 @@
 #include <stdexcept>
 
 // grppi
-#include "poly/polymorphic_execution.h"
-#include "pipeline.h"
+#include "grppi.h"
+#include "dyn/dynamic_execution.h"
+//#include "pipeline.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_pipeline(grppi::polymorphic_execution & e, int n) {
+void test_pipeline(grppi::dynamic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
   grppi::pipeline(e, 

@@ -708,8 +708,8 @@ private:
   constexpr static int default_queue_size = 100;
   int queue_size_ = default_queue_size;
 
-  queue_mode queue_mode_ = queue_mode::blocking;
-//  queue_mode queue_mode_ = queue_mode::lockfree;
+//  queue_mode queue_mode_ = queue_mode::blocking;
+  queue_mode queue_mode_ = queue_mode::lockfree;
 };
 
 /**
