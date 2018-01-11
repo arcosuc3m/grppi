@@ -23,6 +23,7 @@
 
 #include <tuple> 
 
+#include "callable_traits.h"
 #include "farm_pattern.h"
 #include "filter_pattern.h"
 #include "pipeline_pattern.h"
