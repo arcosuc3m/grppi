@@ -14,7 +14,6 @@ namespace grppi {
 template <typename InQueue,typename Window>
 class windower_queue{
   public:
-//    using value_type = std::vector<typename std::decay<InQueue>::type::value_type>;
     using window_type = typename std::result_of<decltype(&Window::get_window)(Window)>::type;
     using window_optional_type = std::experimental::optional<window_type>;
     using value_type = std::pair <window_optional_type, long> ;
@@ -26,7 +25,6 @@ class windower_queue{
     auto pop() { 
       using namespace std;
       using namespace experimental;
-     // mut_.lock();
       while(consuming_.test_and_set());
       if(!end_){
         auto item = input_queue_.pop();
@@ -36,19 +34,16 @@ class windower_queue{
             if(!item.first){
                end_ = true;
                consuming_.clear();
-  //    mut_.unlock();
                return std::move(make_pair(window_optional_type{}, -1));
             }
           }
           auto window = make_pair(make_optional(policy_.get_window()), order_);
           order_++;
           consuming_.clear();
-  //    mut_.unlock();
           return std::move(window);
         }
         end_ = true;
       }
-  //    mut_.unlock();
       consuming_.clear();
       return std::move(make_pair(window_optional_type{}, -1));
    }

@@ -17,8 +17,6 @@ class joiner_queue{
     T pop()
     {
       while(added_queues_ != num_producers_);
-      //while(consuming_.test_and_set());
-      //auto item = std::remove_reference<mpmc_queue<T>&>::type(output_queues_[not_finished_[current_]]).pop();
       auto item = output_queues_[not_finished_[current_]].get().pop();
       while(!item.first) 
       {
@@ -27,7 +25,6 @@ class joiner_queue{
           not_finished_.erase(position);
         }
         if(not_finished_.size() == 0) {
-       // consuming_.clear();
           std::unique_lock<std::mutex> lock(mut_);
           finished=true;
           cond_var_.notify_all();
@@ -37,7 +34,6 @@ class joiner_queue{
         auto item = output_queues_[not_finished_[current_]].get().pop();
       }
       current_= (current_+1)%not_finished_.size();
-     // consuming_.clear();
       return T{item.first,order++};
     }
 
@@ -58,16 +54,14 @@ class joiner_queue{
     }
 
     joiner_queue(int num_producers, int q_size, queue_mode q_mode) :
-      num_producers_{num_producers}/*, mut_{}, cond_var_{}*/
+      num_producers_{num_producers}
     {
       for( auto i = 0; i < num_producers_; i++) not_finished_.push_back(i);
-      //std::vector<mpmc_queue<T>&> output_queues_ = std::vector<mpmc_queue<T>&>(num_producers_);
-      //for(auto i = 0; i < num_producers_; i++) output_queues_.emplace_back(q_size,q_mode);
       output_queues_.reserve(num_producers_);
     }
  
     joiner_queue(joiner_queue && q) :
-      output_queues_{q.output_queues_},/* num_producers_{q.num_producers_},*/ /*mut_{}, cond_var_{},*/ not_finished_{q.not_finished_}
+      output_queues_{q.output_queues_}, not_finished_{q.not_finished_}
     { 
       for( auto i = 0; i < num_producers_; i++) not_finished_.push_back(i);
     }

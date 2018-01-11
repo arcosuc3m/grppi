@@ -47,25 +47,12 @@ class splitter_queue{
             }
 
             //Wake up all the conusmer threads to check if they have any item to conusme
-           // lock.lock();
-           // cond_var_.notify_all(); 
-           // lock.unlock(); 
-
           } while(consumer_queues_[queue_id].is_empty());
 
           //This is used to avoid potential everlasting waiting threads
-  //        lock.lock();
-          //while(consuming_.test_and_set());
           can_consume_ = true;
-    //      cond_var_.notify_all(); 
-     //     lock.unlock();
         } 
         else {
-        //  if(!can_consume_ && consumer_queues_[queue_id].is_empty()) {
-           // cond_var_.wait(lock);
-        //  }
-      //    lock.unlock(); 
-          //while(consuming_.test_and_set());
           consuming_.clear();
           while(!can_consume_ && consumer_queues_[queue_id].is_empty()) {
           }
@@ -83,7 +70,6 @@ class splitter_queue{
     splitter_queue(Queue & q, int num_queues, Splitting_policy policy, int q_size, queue_mode q_mode) :
       input_queue_{q}, policy_{policy}, num_consumers_{num_queues}
     {
-//      policy_.set_num_queues(num_consumers_);
       for (auto i = 0; i<num_queues; i++) {
         order_.push_back(0); 
         consumer_queues_.emplace_back(q_size,q_mode);
@@ -110,11 +96,8 @@ class splitter_queue{
     int num_consumers_;
     Splitting_policy policy_;
     std::vector<long> order_;
-//    std::mutex mut_;
-//    std::condition_variable cond_var_;
     std::atomic_flag consuming_ = ATOMIC_FLAG_INIT;
     std::atomic<bool> can_consume_ {true};
- //   std::thread splitter;
 };
 }
 #endif
