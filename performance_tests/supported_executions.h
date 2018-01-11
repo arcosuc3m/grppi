@@ -12,13 +12,49 @@
 
 #include <time.h>
 
-grppi::dynamic_execution execution_mode(const std::string & opt, int conc_degr=0) {
+grppi::dynamic_execution execution_mode(const std::string & opt, int conc_degr=0, bool order=true) {
   using namespace grppi;
   if ("seq" == opt) return sequential_execution();
-  if ("thr" == opt) return conc_degr != 0 ? parallel_execution_native(conc_degr) : parallel_execution_native();
-  if ("omp" == opt) return conc_degr != 0 ? parallel_execution_omp(conc_degr) : parallel_execution_omp();
-  if ("tbb" == opt) return conc_degr != 0 ? parallel_execution_tbb(conc_degr) : parallel_execution_tbb();
-  if ("ff" == opt)  return conc_degr != 0 ? parallel_execution_ff(conc_degr) : parallel_execution_ff();
+  if ("thr" == opt) { 
+  	if(conc_degr != 0)
+  		return parallel_execution_native(conc_degr, order);
+  	else {
+  		parallel_execution_native e{};
+  		if(!order)
+  			e.disable_ordering();
+  		return e;
+  	}
+  }
+  if ("omp" == opt) { 
+  	if(conc_degr != 0)
+  		return parallel_execution_omp(conc_degr, order);
+  	else {
+  		parallel_execution_omp e{};
+  		if(!order)
+  			e.disable_ordering();
+  		return e;
+  	}
+  }
+  if ("tbb" == opt) { 
+  	if(conc_degr != 0)
+  		return parallel_execution_tbb(conc_degr, order);
+  	else {
+  		parallel_execution_tbb e{};
+  		if(!order)
+  			e.disable_ordering();
+  		return e;
+  	}
+  }
+  if ("ff" == opt) { 
+  	if(conc_degr != 0)
+  		return parallel_execution_ff(conc_degr, order);
+  	else {
+  		parallel_execution_ff e{};
+  		if(!order)
+  			e.disable_ordering();
+  		return e;
+  	}
+  }
   return {};
 }
 

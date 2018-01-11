@@ -251,7 +251,7 @@ TYPED_TEST(divideconquer_test_pred, static_multiple_single_thread_pred)
 TYPED_TEST(divideconquer_test_pred, static_multiple_five_threads_pred)
 {
   this->setup_multiple_pred();
-  this->execution_.set_concurrency_degree(5);
+  //this->execution_.set_concurrency_degree(5);
   this->out =  this->run_vecsum_pred(this->execution_);
   this->check_multiple_pred();
 }

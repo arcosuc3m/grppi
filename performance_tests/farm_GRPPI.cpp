@@ -8,6 +8,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <random>
+#include <cstring>
 #include <experimental/optional>
 
 #include "grppi.h"
@@ -71,16 +72,22 @@ int main(int argc, char **argv) {
 
 	using namespace chrono;
 	if(argc < 4) {
-		cerr << "Usage: farm_GRPPI cores input_size exec_mode" << endl;
+		cerr << "Usage: farm_GRPPI cores input_size exec_mode [ordered=T]" << endl;
 		cerr << "Available exec_mode are:" << endl;
 		print_available_modes(cerr);
 		cerr << "Set \'cores\' to 0 to use all available physical cores (" << get_phys_cores() << ")." << endl;
+		cerr << "Set \'ordered\' to F to use unordered versions of farm." << endl;
 		return -1;
 	}
 
+	bool ord = true;
+	if(argc == 5)
+		if(std::strcmp(argv[4], "T") != 0)
+			ord = false;
+
 	int cores = stoi(argv[1]) != 0 ? stoi(argv[1]) : get_phys_cores();
 	int insize = stoi(argv[2]);
-	dynamic_execution e(execution_mode(argv[3], cores));
+	dynamic_execution e(execution_mode(argv[3], cores, ord));
 
 	if(!e.has_execution()) {
 		cerr << "Exec_mode " << argv[3] << " not supported" << endl;

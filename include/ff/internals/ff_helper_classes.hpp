@@ -82,7 +82,7 @@ private:
 	struct ReduceEmitter : ff_node {
 
 		ReduceEmitter(int win_size, int offset) :
-			_window(win_size), _offset(offset), nextone(0), skip(-1) {
+			_window(win_size), _offset(offset), skip(-1) {
 			win_items.reserve(win_size);
 		}
 
@@ -96,14 +96,13 @@ private:
 				if(_offset < _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
-					::free(item);
+					ff_free(item);
 					return GO_ON;
 				}
-
 				if (_offset == _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), win_items.end());
-					::free(item);
+					ff_free(item);
 					return GO_ON;
 				} else {
 					if(skip == -1) {
@@ -114,11 +113,11 @@ private:
 						win_items.clear();
 						win_items.push_back( std::forward<InType>(*item) );
 					} else skip++;
-					::free(item);
+					ff_free(item);
 					return GO_ON;
 				}
 			} else {
-				::free(item);
+				ff_free(item);
 				return GO_ON;
 			}
 		}
@@ -126,7 +125,6 @@ private:
 	private:
 		int _window;
 		int _offset;
-		size_t nextone;
 		int skip;
 		std::vector<InType> win_items;
 	};
@@ -141,15 +139,12 @@ private:
 		void *svc(void *t) {
 			reduce_task_t<InType> * task = (reduce_task_t<InType> *) t;
 			grppi::sequential_execution seq{};
-
-			void *outslot = ::malloc(sizeof(InType));
+			void *outslot = ff_malloc(sizeof(InType));
 			InType *result = new (outslot) InType();
 			InType identity_{}; // initialize
 
 			*result = grppi::reduce(seq, task->vals.begin(), task->vals.end(),
 					identity_, std::forward<Combiner>(_combine_op));
-
-			//*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 
 			delete task;
 			return outslot;
@@ -224,14 +219,13 @@ private:
 				if(_offset < _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), std::next(win_items.begin(), _offset));
-					::free(item);
+					ff_free(item);
 					return GO_ON;
 				}
-
 				if (_offset == _window) {
 					this->ff_send_out( new reduce_task_t<InType>(win_items) );
 					win_items.erase(win_items.begin(), win_items.end());
-					::free(item);
+					ff_free(item);
 					return GO_ON;
 				} else {
 					if(skip == -1) {
@@ -242,11 +236,11 @@ private:
 						win_items.clear();
 						win_items.push_back( std::forward<InType>(*item) );
 					} else skip++;
-					::free(item);
+					ff_free(item);
 					return GO_ON;
 				}
 			} else {
-				::free(item);
+				ff_free(item);
 				return GO_ON;
 			}
 		}
@@ -270,14 +264,12 @@ private:
 			reduce_task_t<InType> * task = (reduce_task_t<InType> *) t;
 			grppi::sequential_execution seq{};
 
-			void *outslot = ::malloc(sizeof(InType));
+			void *outslot = ff_malloc(sizeof(InType));
 			InType *result = new (outslot) InType();
 			InType identity_{}; // initialize
 
 			*result = grppi::reduce(seq, task->vals.begin(), task->vals.end(),
 					identity_, std::forward<Combiner>(_combine_op));
-
-			//*result = std::accumulate(task->vals.begin(), task->vals.end(), 0);
 
 			delete task;
 			return outslot;
@@ -332,7 +324,7 @@ private:
 			if ( condition(*t) ) return t;
 			else {
 				t->~InType();
-				::free(t);
+				ff_free(t);
 				return (InType*)FILTERED;
 			}
 		}
@@ -358,7 +350,6 @@ private:
 
 	FilterCollector<TSin> *oc;
 	static constexpr size_t FILTERED = (FF_EOS-0x11);
-
 };
 
 
@@ -401,7 +392,7 @@ private:
 			if ( condition(*t) ) return t;
 			else {
 				t->~InType();
-				::free(t);
+				ff_free(t);
 				return (InType*)FILTERED;
 			}
 		}
@@ -428,7 +419,6 @@ private:
 	FilterEmitter<TSin> *em;
 	FilterCollector<TSin> *oc;
 	static constexpr size_t FILTERED = (FF_EOS-0x11);
-
 };
 
 } // namespace ff

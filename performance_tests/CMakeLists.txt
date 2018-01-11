@@ -25,7 +25,14 @@ target_link_libraries(stencil_GRPPI
   ${CMAKE_THREAD_LIBS_INIT} 
   ${TBB_LIBRARIES} 
   ${Boost_LIBRARIES} )
+  
+add_executable(stream-reduce_GRPPI stream-reduce_GRPPI.cpp )
 
+target_link_libraries(stream-reduce_GRPPI
+  ${CMAKE_THREAD_LIBS_INIT} 
+  ${TBB_LIBRARIES} 
+  ${Boost_LIBRARIES} )
+  
 if ( GRPPI_FF_ENABLE )
 
   add_executable(farm_FF farm_FF.cpp )

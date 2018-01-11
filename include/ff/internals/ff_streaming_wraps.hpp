@@ -1,22 +1,22 @@
 /**
-* @version		GrPPI v0.3
-* @copyright	Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You have received a copy of the GNU General Public License in LICENSE.txt
-* also available in <http://www.gnu.org/licenses/gpl.html>.
-*
-* See COPYRIGHT.txt for copyright notices and details.
-*/
+ * @version		GrPPI v0.3
+ * @copyright	Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
+ * @license		GNU/GPL, see LICENSE.txt
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You have received a copy of the GNU General Public License in LICENSE.txt
+ * also available in <http://www.gnu.org/licenses/gpl.html>.
+ *
+ * See COPYRIGHT.txt for copyright notices and details.
+ */
 
 #ifndef FF_STREAMING_WRAPS_HPP
 #define FF_STREAMING_WRAPS_HPP
@@ -52,7 +52,7 @@ class ff_wrap_pipeline: public ff::ff_pipeline {
 public:
 	template<typename Generator, typename... Transformers>
 	ff_wrap_pipeline(size_t nw, bool ord, Generator&& gen_func, Transformers&&...stages_ops)
-		: nworkers{nw}, ordered(ord) {
+	: nworkers{nw}, ordered(ord) {
 		using result_type = std::decay_t<typename std::result_of<Generator()>::type>;
 		using generator_value_type = typename result_type::value_type;
 
@@ -360,7 +360,7 @@ private:
 	auto add_stages(Pipeline<Transformers...> & pipeline_obj,
 			OtherTransformers && ... other_transform_ops) {
 		return this->template add_stages<Input>(std::move(pipeline_obj),
-					std::forward<OtherTransformers>(other_transform_ops)...);
+				std::forward<OtherTransformers>(other_transform_ops)...);
 	}
 
 	// pipeline of pipelines

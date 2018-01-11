@@ -214,11 +214,11 @@ private:
   constexpr static int default_concurrency_degree = 4;
   int concurrency_degree_ = get_physical_cores();
   bool ordering_ = true; // needed in order to comply with unit_tests
-
 };
 
 
 // --------------------- METAFUNCTIONS ---------------------
+
 
 /**
 \brief Metafunction that determines if type E is parallel_execution_ff
@@ -288,6 +288,7 @@ constexpr bool supports_pipeline<parallel_execution_ff>() { return true; }
 
 // -------------------- PUBLIC FUNCTIONS IMPLEMENTATION --------------------
 
+
 // divide&conquer pattern
 template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
 auto parallel_execution_ff::divide_conquer(Input & input,
@@ -295,37 +296,33 @@ auto parallel_execution_ff::divide_conquer(Input & input,
 		Predicate && condition_op,
 		Solver && solve_op,
 		Combiner && combine_op) const {
-
 	using output_type = typename std::result_of<Solver(Input)>::type;
-
+	
 	// divide
 	auto divide_fn = [&](const Input &in, std::vector<Input> &subin) {
 		subin = divide_op(in);
 	};
-
 	// combine
 	auto combine_fn = [&] (std::vector<output_type>& in, output_type& out) {
 			out = combine_op(in[0], in[1]);
 	};
-
 	// sequential solver (base-case)
 	auto seq_fn = [&] (const Input & in , output_type & out) {
 		out = solve_op(in);
 	};
-
 	// condition
 	auto cond_fn = [&] (const Input &in) {
 		return condition_op(in);
 	};
-
-	output_type out_var;
-	// divide, combine, seq, condition, operand, res, wrks
+	output_type out_var{};
+	// divide, combine, seq, condition, input, res, wrks
 	ff::ff_DC<Input,output_type> dac(divide_fn, combine_fn, seq_fn, cond_fn, input, out_var, concurrency_degree_);
-
+	// run
 	dac.run_and_wait_end();
 
 	return out_var;
 }
+
 
 // map pattern
 template <typename ... InputIterators, typename OutputIterator, typename Transformer>
@@ -334,12 +331,12 @@ void parallel_execution_ff::map(std::tuple<InputIterators...> firsts,
 		std::size_t sequence_size,
 		Transformer transform_op) const {
 	ff::ParallelFor pf(concurrency_degree_, true);
-
 	pf.parallel_for(0, sequence_size,
 			[&](const long internal_it) {
 			*(first_out+internal_it) = apply_iterators_indexed(transform_op, firsts, internal_it);
 	}, concurrency_degree_);
 }
+
 
 // reduce pattern
 template <typename InputIterator, typename Identity, typename Combiner>
@@ -348,15 +345,14 @@ auto parallel_execution_ff::reduce(InputIterator first,
 		Identity && identity,
 		Combiner && combine_op) const {
 	ff::ParallelForReduce<Identity> pfr(concurrency_degree_, true);
-
-	Identity vaR = identity;
-	Identity vaR_identity = identity;
+	Identity vaR{identity};
+	Identity vaR_identity{identity};
 
 	auto final_red = [&](typename std::iterator_traits<InputIterator>::value_type a,
 			typename std::iterator_traits<InputIterator>::value_type r) {
 		vaR = combine_op(a, r);
 	};
-
+	
 	pfr.parallel_reduce(vaR, vaR_identity, 0, sequence_size,
 			[&](const long internal_it, typename std::iterator_traits<InputIterator>::value_type &vaR) {
 		vaR = combine_op( vaR, *(first+internal_it) );
@@ -365,31 +361,28 @@ auto parallel_execution_ff::reduce(InputIterator first,
 	return vaR;
 }
 
+
 // map+reduce pattern
 template <typename ... InputIterators, typename Identity,
           typename Transformer, typename Combiner>
 auto parallel_execution_ff::map_reduce(std::tuple<InputIterators...> firsts,
-    std::size_t sequence_size,
-    Identity && identity,
-    Transformer && transform_op,
-	Combiner && combine_op) const {
-
+    	std::size_t sequence_size,
+    	Identity && identity,
+    	Transformer && transform_op,
+		Combiner && combine_op) const {
 	ff::ParallelForReduce<Identity> pfr(concurrency_degree_, true);
-
-	Identity vaR = identity;
-	Identity var_id = identity;
+	Identity vaR{identity};
+	Identity var_id{identity};
 	std::vector<Identity> partial_outs(sequence_size);
 
 	// Map function
 	auto Map = [&](const long internal_it) {
 			partial_outs[internal_it] = apply_iterators_indexed(transform_op, firsts, internal_it);
 	};
-
 	// Reduce function - this is the partial reduce function, executed in parallel
 	auto Reduce = [&](const long internal_it, Identity &vaR) {
 		vaR = combine_op( vaR, partial_outs[internal_it] );
 	};
-
 	// Final reduce - this reduces partial results and is executed sequentially
 	auto final_red = [&](Identity a, Identity b) {
 		vaR = combine_op(a, b);
@@ -401,6 +394,7 @@ auto parallel_execution_ff::map_reduce(std::tuple<InputIterators...> firsts,
 	return vaR;
 }
 
+
 // stencil pattern
 template <typename ... InputIterators, typename OutputIterator,
           typename StencilTransformer, typename Neighbourhood>
@@ -409,9 +403,7 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
 		std::size_t sequence_size,
 		StencilTransformer && transform_op,
 		Neighbourhood && neighbour_op) const {
-
 	ff::ParallelFor pf(concurrency_degree_, true);
-
 	pf.parallel_for(0, sequence_size,
 			[&](const long internal_it) {
 		const auto first_it = std::get<0>(firsts);
@@ -425,26 +417,19 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
 // pipeline pattern
 template <typename Generator, typename ... Transformers>
 void parallel_execution_ff::pipeline(
-    Generator && generate_op,
-    Transformers && ... transform_ops) const {
+    	Generator && generate_op,
+    	Transformers && ... transform_ops) const {
 	ff_wrap_pipeline pipe(concurrency_degree_, ordering_, generate_op, std::forward<Transformers>(transform_ops)...);
 
 	pipe.setFixedSize(false);
-
 	pipe.run_and_wait_end();
 }
-
-
-// -------------------- PRIVATE FUNCTIONS IMPLEMENTATION --------------------
-
-
 
 } // end namespace grppi
 
 #else // GRPPI_FF undefined
 
 namespace grppi {
-
 
 /// Parallel execution policy.
 /// Empty type if GRPPI_FF disabled.
@@ -460,10 +445,8 @@ constexpr bool is_parallel_execution_ff() {
   return false;
 }
 
-}
+} // end anonymous namespace
 
 #endif // GRPPI_FF
-
-
 #endif /* GRPPI_FF_PARALLEL_EXECUTION_FF_H */
 

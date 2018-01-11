@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
 	using namespace chrono;
 
-	if(argc < 3) {
+	if(argc < 4) {
 		cerr << "Usage: stencil_GRPPI cores input_size exec_mode" << endl;
 		cerr << "Available exec_mode are:" << endl;
 		print_available_modes(cerr);
