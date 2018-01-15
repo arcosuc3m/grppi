@@ -45,6 +45,25 @@ public:
     transformers_{others...}
   {}
 
+
+
+  template <std::size_t index, typename T, typename std::enable_if< index == (sizeof...(Transformers) -1) ,int>::type = 0 >
+  auto invoke_all(T item) const
+  {
+      return invoke<index>(item);
+  }
+
+  template <std::size_t index, typename T, typename std::enable_if< index != (sizeof...(Transformers) -1) ,int>::type = 0 >
+  auto invoke_all(T item) const
+  {
+      return invoke_all<index+1>(invoke<index>(item));
+  }
+ 
+  template <typename T>
+  auto operator()(T item) const{
+    return invoke_all<0>(item);
+  }
+
   /**
   \brief Invokes a trasnformer from the pipeline.
   \tparam I

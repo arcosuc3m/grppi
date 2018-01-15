@@ -42,6 +42,7 @@ public:
     predicate_{p}
   {}
 
+
   /**
   \brief Invokes the predicate of the iteration over a data item.
   */
@@ -56,6 +57,11 @@ public:
   template <typename Item>
   auto transform(Item && item) const {
     return transform_(std::forward<Item>(item));
+  }
+
+  template<typename T>
+  auto operator()(T && item){
+    return transform(item);
   }
 
 private:

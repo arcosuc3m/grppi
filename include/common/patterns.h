@@ -22,6 +22,7 @@
 #define GRPPI_COMMON_PATTERNS_H
 
 #include <tuple> 
+#include <type_traits>
 
 #include "callable_traits.h"
 #include "farm_pattern.h"
@@ -107,36 +108,24 @@ using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
 template <typename T>
 using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
 
-//Base template to determine the input type of a function or pattern
-template<class T, class Enable = void>
-class input_type {}; // primary template
- 
-//Specialization for patterns
-template<class T>
-class input_type<T, typename std::enable_if<  !is_no_pattern<T> >::type> {
-  public:
-  using type = typename T::input_type;
+
+template <typename return_type, typename ... Ts>
+struct get_return{
+  using type = return_type;
 };
 
-//Specialization for fuctions
-template<class T>
-class input_type<T, typename std::enable_if<  is_no_pattern<T> >::type> {
-  public:
-  using type = typename internal::function_traits<T>::template arg<0>::type;
+template <typename Input, typename Transformer>
+using result_type = typename std::result_of<Transformer(Input)>::type; 
+
+template <typename Input, typename Transformer>
+struct get_return<Input, Transformer> {
+  using type = typename get_return< result_type<Input,Transformer>>::type;       
 };
 
-//Base template to take the first argument of a function or a pattern
-template <typename T>
-struct next_type{
-  using type = typename input_type<typename std::decay<T>::type>::type;
+template <typename Input, typename Transformer, typename ... Other>
+struct get_return<Input, Transformer, Other ...> {
+  using type = typename get_return< result_type<Input,Transformer> , Other...>::type; 
 };
-
-//Variadic template used for multiple functions/patterns
-template <typename T, typename ... Other>
-struct next_input_type{
-  using type = typename next_type<T>::type;
-};
-
 
 } // end namespace grppi
 
