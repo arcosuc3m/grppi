@@ -258,6 +258,11 @@ private:
             requires_no_pattern<Consumer> = 0>
   void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
 
+  template <typename Inqueue, typename Transformer, typename output_type,
+            requires_no_pattern<Transformer> = 0>
+  void do_pipeline(Inqueue & input_queue, Transformer && transform_op, 
+      mpmc_queue<output_type> & output_queue) const;
+
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
   void do_pipeline(Queue & input_queue, Transformer && transform_op,
@@ -810,6 +815,27 @@ void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consum
   }
 }
 
+
+template <typename Inqueue, typename Transformer, typename output_type,
+            requires_no_pattern<Transformer> = 0>
+void parallel_execution_omp::do_pipeline(Inqueue & input_queue, Transformer && transform_op,
+      mpmc_queue<output_type> & output_queue) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Inqueue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+
+  using output_item_value_type = typename output_type::first_type::value_type;
+  for (;;) {
+    auto item{input_queue.pop()}; 
+    if(!item.first) break;
+    auto out = output_item_value_type{transform_op(*item.first)};
+    output_queue.push(make_pair(out,item.second)) ;
+  }
+}
+
 template <typename Queue, typename Transformer, typename ... OtherTransformers,
           requires_no_pattern<Transformer> =0>
 void parallel_execution_omp::do_pipeline(
@@ -879,26 +905,23 @@ void parallel_execution_omp::do_pipeline(
   using namespace experimental;
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
-  using result_type = 
-      decay_t<typename result_of<FarmTransformer(input_value_type)>::type>;
-  using output_value_type = optional<result_type>;
-  using output_type = pair<output_value_type,long>;
+
+  using result_type = typename get_return<input_value_type, FarmTransformer>::type;
+  using output_optional_type = optional<result_type>;
+  using output_type = pair<output_optional_type,long>;
  
   auto output_queue = make_queue<output_type>();
   atomic<int> done_threads{0};
+  int ntask = farm_obj.cardinality();
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue)
+    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue,ntask)
     {
-      auto item = input_queue.pop();
-      while (item.first) {
-        auto out = output_value_type{farm_obj(*item.first)};
-        output_queue.push(make_pair(out,item.second));
-        item = input_queue.pop();
-      }
-      input_queue.push(item);
+      do_pipeline(input_queue, farm_obj.get_transformer(), output_queue);
       done_threads++;
-      if (done_threads==farm_obj.cardinality()) {
-        output_queue.push(make_pair(output_value_type{}, -1));
+      if (done_threads == ntask){
+        output_queue.push(make_pair(output_optional_type{}, -1));
+      }else{
+        input_queue.push(input_type{});
       }
     }              
   }
