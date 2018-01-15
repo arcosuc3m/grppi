@@ -52,6 +52,9 @@ public:
     return cardinality_;
   }
 
+  Transformer & get_transformer(){
+    return transformer_;
+  }
   /**
   \brief Invokes the trasnformer of the farm over a data item.
   */

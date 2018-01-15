@@ -355,6 +355,11 @@ private:
             requires_no_pattern<Consumer> = 0>
   void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
 
+  template <typename Inqueue, typename Transformer, typename output_type,
+            requires_no_pattern<Transformer> = 0>
+  void do_pipeline(Inqueue & input_queue, Transformer && transform_op, 
+      mpmc_queue<output_type> & output_queue) const;
+
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
   void do_pipeline(Queue & input_queue, Transformer && transform_op,
@@ -827,7 +832,6 @@ void parallel_execution_native::do_pipeline(
   using input_value_type = typename input_type::first_type;
 
   auto manager = thread_manager();
-
   if (!is_ordered()) {
     for (;;) {
       auto item = input_queue.pop();
@@ -870,6 +874,29 @@ void parallel_execution_native::do_pipeline(
     }
   }
 }
+
+
+template <typename Inqueue, typename Transformer, typename output_type,
+            requires_no_pattern<Transformer> = 0>
+void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer && transform_op,
+      mpmc_queue<output_type> & output_queue) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Inqueue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+
+  using output_item_value_type = typename output_type::first_type::value_type;
+  for (;;) {
+    auto item{input_queue.pop()}; 
+    if(!item.first) break;
+    auto out = output_item_value_type{transform_op(*item.first)};
+    output_queue.push(make_pair(out,item.second)) ;
+  }
+}
+
+
 
 template <typename Queue, typename Transformer, 
           typename ... OtherTransformers,
@@ -953,25 +980,22 @@ void parallel_execution_native::do_pipeline(
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
-  using transform_result_type = 
-      decay_t<typename result_of<FarmTransformer(input_item_value_type)>::type>;
-  using output_item_value_type = experimental::optional<transform_result_type>;
-  using output_item_type = pair<output_item_value_type,long>;
+
+  using output_type = typename get_return<input_item_value_type, FarmTransformer>::type;
+  using output_optional_type = experimental::optional<output_type>;
+  using output_item_type = pair <output_optional_type, long> ;
 
   auto output_queue = make_queue<output_item_type>();
+
   atomic<int> done_threads{0};
+
   auto farm_task = [&](int nt) {
-    long order = 0;
-    auto item{input_queue.pop()}; 
-    while (item.first) {
-      auto out = output_item_value_type{farm_obj(*item.first)};
-      output_queue.push(make_pair(out,item.second)) ;
-      item = input_queue.pop(); 
-    }
-    input_queue.push(item);
+    do_pipeline(input_queue, farm_obj.get_transformer(), output_queue);
     done_threads++;
     if (done_threads == nt) {
-      output_queue.push(make_pair(output_item_value_type{}, -1));
+      output_queue.push(make_pair(output_optional_type{}, -1));
+    }else{
+      input_queue.push(input_item_type{});
     }
   };
 
@@ -981,7 +1005,6 @@ void parallel_execution_native::do_pipeline(
 
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_transform_ops)... );
-
   workers.wait();
 }
 
@@ -1217,6 +1240,7 @@ void parallel_execution_native::do_pipeline_nested(
     std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
 {
+
   do_pipeline(input_queue,
       std::forward<Transformers>(std::get<I>(transform_ops))...);
 }

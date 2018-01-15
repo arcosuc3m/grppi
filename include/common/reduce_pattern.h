@@ -84,6 +84,11 @@ public:
     }
     return red;
   }
+  
+  template<typename T>
+  auto operator()(T &&item){
+    return Identity{};
+  }
 
 private:
   int window_size_;

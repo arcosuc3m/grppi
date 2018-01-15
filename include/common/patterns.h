@@ -22,7 +22,9 @@
 #define GRPPI_COMMON_PATTERNS_H
 
 #include <tuple> 
+#include <type_traits>
 
+#include "callable_traits.h"
 #include "farm_pattern.h"
 #include "filter_pattern.h"
 #include "pipeline_pattern.h"
@@ -30,6 +32,21 @@
 #include "iteration_pattern.h"
 
 namespace grppi{
+
+template <typename,typename...> struct get_return_type;
+
+
+template <typename Input, typename Stage>
+struct get_return_type<Input,Stage>
+{
+  using type = typename std::result_of<Stage(Input)>::type;
+};
+
+template <typename Input, typename Stage, typename ...Stages> 
+struct get_return_type<Input, Stage, Stages ...>
+{
+  using type = typename get_return_type<typename std::result_of<Stage(Input)>::type, Stages...>::type;
+};
 
 template <typename E,typename Stage, typename ... Stages>
 class pipeline_info{
@@ -81,8 +98,34 @@ constexpr bool is_no_pattern =
   !is_reduce<T> &&
   !is_iteration<T>;
 
+
+template <typename T>
+constexpr bool is_pattern = !is_no_pattern<T>;
+
 template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
+
+template <typename T>
+using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
+
+
+template <typename return_type, typename ... Ts>
+struct get_return{
+  using type = return_type;
+};
+
+template <typename Input, typename Transformer>
+using result_type = typename std::result_of<Transformer(Input)>::type; 
+
+template <typename Input, typename Transformer>
+struct get_return<Input, Transformer> {
+  using type = typename get_return< result_type<Input,Transformer>>::type;       
+};
+
+template <typename Input, typename Transformer, typename ... Other>
+struct get_return<Input, Transformer, Other ...> {
+  using type = typename get_return< result_type<Input,Transformer> , Other...>::type; 
+};
 
 } // end namespace grppi
 
