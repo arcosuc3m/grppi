@@ -232,6 +232,16 @@ public:
   mpmc_queue<T> make_queue() const {
     return {queue_size_, queue_mode_};
   }
+  
+  template <typename T, typename ... Transformers>
+  mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers ...) const {
+    return queue;
+  }
+
+  template <typename T, typename ... Transformers>
+  mpmc_queue<T> get_output_queue(Transformers ... ) const{
+    return std::move(make_queue<T>());
+  }
 
   /**
   \brief Applies a trasnformation to multiple sequences leaving the result in
@@ -359,6 +369,13 @@ private:
             requires_no_pattern<Transformer> = 0>
   void do_pipeline(Inqueue & input_queue, Transformer && transform_op, 
       mpmc_queue<output_type> & output_queue) const;
+
+  template <typename T, typename ... Others>
+  void do_pipeline(mpmc_queue<T> & in_q, mpmc_queue<T> & same_queue, Others &&... ops) const
+  { }
+   
+  template <typename T>
+  void do_pipeline(mpmc_queue<T> & in_q) const {}
 
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
@@ -915,7 +932,12 @@ void parallel_execution_native::do_pipeline(
       decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
   using output_item_value_type = optional<transform_result_type>;
   using output_item_type = pair<output_item_value_type,long>;
-  auto output_queue = make_queue<output_item_type>();
+
+  using queue_type = mpmc_queue<output_item_type>;
+  using conditional_queue_type =
+    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  conditional_queue_type output_queue =
+    get_output_queue<output_item_type>(other_transform_ops...);
 
   thread task([&,this]() {
     auto manager = thread_manager();
@@ -985,12 +1007,16 @@ void parallel_execution_native::do_pipeline(
   using output_optional_type = experimental::optional<output_type>;
   using output_item_type = pair <output_optional_type, long> ;
 
-  auto output_queue = make_queue<output_item_type>();
+  using queue_type = mpmc_queue<output_item_type>;
+  using conditional_queue_type = 
+    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  conditional_queue_type output_queue = 
+    get_output_queue<output_item_type>(other_transform_ops...);
 
   atomic<int> done_threads{0};
 
   auto farm_task = [&](int nt) {
-    do_pipeline(input_queue, farm_obj.get_transformer(), output_queue);
+    do_pipeline(input_queue, farm_obj.transformer(), output_queue);
     done_threads++;
     if (done_threads == nt) {
       output_queue.push(make_pair(output_optional_type{}, -1));
@@ -1002,9 +1028,9 @@ void parallel_execution_native::do_pipeline(
   auto ntasks = farm_obj.cardinality();
   worker_pool workers{ntasks};
   workers.launch_tasks(*this, farm_task, ntasks);  
-
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_transform_ops)... );
+  
   workers.wait();
 }
 
@@ -1040,7 +1066,12 @@ void parallel_execution_native::do_pipeline(
   };
   thread filter_thread{filter_task};
 
-  auto output_queue = make_queue<input_item_type>();
+  using queue_type = mpmc_queue<input_item_type>;
+  using conditional_queue_type =
+    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  conditional_queue_type output_queue =
+    get_output_queue<input_item_type>(other_transform_ops...);
+
   thread ordering_thread;
   if (is_ordered()) {
     auto ordering_task = [&]() {
@@ -1119,7 +1150,11 @@ void parallel_execution_native::do_pipeline(
   using input_item_value_type = typename input_item_type::first_type::value_type;
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
-  auto output_queue = make_queue<output_item_type>();
+   using queue_type = mpmc_queue<output_item_type>;
+  using conditional_queue_type =
+    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  conditional_queue_type output_queue =
+    get_output_queue<output_item_type>(other_transform_ops...);
 
   auto reduce_task = [&,this]() {
     auto manager = thread_manager();
@@ -1156,7 +1191,12 @@ void parallel_execution_native::do_pipeline(
 
   using input_item_type = typename decay_t<Queue>::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
-  auto output_queue = make_queue<input_item_type>();
+
+  using queue_type = mpmc_queue<input_item_type>;
+  using conditional_queue_type =
+    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  conditional_queue_type output_queue =
+    get_output_queue<input_item_type>(other_transform_ops...);
 
   auto iteration_task = [&]() {
     for (;;) {

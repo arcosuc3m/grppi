@@ -52,7 +52,7 @@ public:
     return cardinality_;
   }
 
-  Transformer & get_transformer(){
+  Transformer & transformer(){
     return transformer_;
   }
   /**
