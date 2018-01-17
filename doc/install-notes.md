@@ -30,9 +30,9 @@ cmake ..
 make
 ~~~
 
-**Important Note:** Be sure to invoke make once before modifying you `CMakeCache.txt`
+**Important Note:** Be sure to invoke make once before modifying your `CMakeCache.txt`
 file. This will allow CMake to compile and setup dependent libraries (e.g.
-GoogleTest).
+GoogleTest) and to download FastFlow headers and place them to the proper include path.
 
 ### Building the unit tests
 
