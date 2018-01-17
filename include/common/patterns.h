@@ -95,7 +95,7 @@ using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
 
 
 template <typename return_type, typename ... Ts>
-struct get_return{
+struct get_return_type{
   using type = return_type;
 };
 
@@ -103,13 +103,13 @@ template <typename Input, typename Transformer>
 using result_type = typename std::result_of<Transformer(Input)>::type; 
 
 template <typename Input, typename Transformer>
-struct get_return<Input, Transformer> {
-  using type = typename get_return< result_type<Input,Transformer>>::type;       
+struct get_return_type<Input, Transformer> {
+  using type = typename get_return_type< result_type<Input,Transformer>>::type;       
 };
 
 template <typename Input, typename Transformer, typename ... Other>
-struct get_return<Input, Transformer, Other ...> {
-  using type = typename get_return< result_type<Input,Transformer> , Other...>::type; 
+struct get_return_type<Input, Transformer, Other ...> {
+  using type = typename get_return_type< result_type<Input,Transformer> , Other...>::type; 
 };
 
 } // end namespace grppi

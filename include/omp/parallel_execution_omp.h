@@ -869,9 +869,9 @@ void parallel_execution_omp::do_pipeline(
   using output_type = pair<output_value_type,long>;
 
   using queue_type = mpmc_queue<output_type>;
-  using conditional_queue_type =
-    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  conditional_queue_type output_queue =
+  using output_queue_type =
+    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  output_queue_type output_queue =
     get_output_queue<output_type>(other_ops...);
 
   #pragma omp task shared(transform_op, input_queue, output_queue)
@@ -929,14 +929,14 @@ void parallel_execution_omp::do_pipeline(
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
 
-  using result_type = typename get_return<input_value_type, FarmTransformer>::type;
+  using result_type = typename get_return_type<input_value_type, FarmTransformer>::type;
   using output_optional_type = optional<result_type>;
   using output_type = pair<output_optional_type,long>;
  
   using queue_type = mpmc_queue<output_type>;
-  using conditional_queue_type =
-    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  conditional_queue_type output_queue =
+  using output_queue_type =
+    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  output_queue_type output_queue =
     get_output_queue<output_type>(other_transform_ops...);
 
 //  auto output_queue = make_queue<output_type>();
@@ -1001,9 +1001,9 @@ void parallel_execution_omp::do_pipeline(
     };
 
     using queue_type = mpmc_queue<input_type>;
-    using conditional_queue_type =
-      typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-    conditional_queue_type output_queue =
+    using output_queue_type =
+      typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+    output_queue_type output_queue =
       get_output_queue<input_type>(other_transform_ops...);
 
 
@@ -1109,9 +1109,9 @@ void parallel_execution_omp::do_pipeline(
   using output_item_type = pair<output_item_value_type,long>;
   
   using queue_type = mpmc_queue<output_item_type>;
-  using conditional_queue_type =
-    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  conditional_queue_type output_queue =
+  using output_queue_type =
+    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  output_queue_type output_queue =
     get_output_queue<output_item_type>(other_transform_ops...);
 
   auto reduce_task = [&,this]() {
@@ -1155,9 +1155,9 @@ void parallel_execution_omp::do_pipeline(
   using input_item_value_type = typename input_item_type::first_type::value_type;
 //  auto output_queue = make_queue<input_item_type>();
   using queue_type = mpmc_queue<input_item_type>;
-  using conditional_queue_type =
-    typename std::conditional<check_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  conditional_queue_type output_queue =
+  using output_queue_type =
+    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
+  output_queue_type output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);
 
 

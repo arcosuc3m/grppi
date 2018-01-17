@@ -52,6 +52,10 @@ public:
     return cardinality_;
   }
 
+  /**
+  \brief Return the transformer function stored in the farm pattern.
+  \return The transformer function. 
+  */
   Transformer & transformer(){
     return transformer_;
   }

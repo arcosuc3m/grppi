@@ -56,7 +56,7 @@ class mpmc_queue{
         full{}
       {}
 
-      mpmc_queue(const mpmc_queue & x) = delete; 
+      mpmc_queue(const mpmc_queue &) = delete; 
       mpmc_queue & operator=(const mpmc_queue &) = delete;
     
       bool is_empty () const noexcept;
@@ -187,8 +187,13 @@ constexpr bool is_queue = internal::is_queue<T>();
 template <typename T>
 using requires_queue = std::enable_if_t<is_queue<T>, int>;
 
+/**
+\brief Check if the first type of a list of template parameters matches with a given type.
+\tparam Queue Queue type to be checked
+\tparam T First template parameter of the list
+*/
 template <typename Queue, typename T, typename ...>
-constexpr bool check_queue_type() { return std::is_same<Queue,T>::value;}
+constexpr bool is_queue_type() { return std::is_same<Queue,T>::value;}
 
 }
 

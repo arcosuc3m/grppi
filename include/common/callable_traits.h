@@ -27,8 +27,6 @@ namespace grppi {
 
 namespace internal {
 
-
-
 /// Identity type trait
 template <typename T>
 struct identity {
