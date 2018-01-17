@@ -254,6 +254,21 @@ public:
       std::size_t sequence_size, Transformer transform_op) const;
 
   /**
+  \brief Applies a transformation function 'n' times that receives an index value.
+  \tparam IndexType type of the of the index.
+  \tparam Transformer Callable object type for the transformation.
+  \param first Initial value of the index.
+  \param last End value of the index.
+  \param step Increment of the index on each transformation call.
+  \param transform_op Transformation callable object.
+  \pre IndexType supports the operators +,-,/ and <. 
+  */
+  template <typename IndexType, typename Transformer>
+  void parallel_for(IndexType first, IndexType last,
+      IndexType step, Transformer transform_op) const;
+
+
+  /**
   \brief Applies a reduction to a sequence of data items. 
   \tparam InputIterator Iterator type for the input sequence.
   \tparam Identity Type for the identity value.
@@ -540,6 +555,13 @@ template <>
 constexpr bool supports_map<parallel_execution_native>() { return true; }
 
 /**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_parallel_for<parallel_execution_native>() { return true; }
+
+/**
 \brief Determines if an execution policy supports the reduce pattern.
 \note Specialization for parallel_execution_native.
 */
@@ -610,6 +632,37 @@ void parallel_execution_native::map(
     process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
   } // Pool synch
 }
+
+template <typename IndexType, typename Transformer>
+void parallel_execution_native::parallel_for(IndexType first, IndexType last,
+    IndexType step, Transformer transform_op) const
+{
+  using namespace std;
+
+  auto niter = (last-first)/step;
+  auto iter_per_thr = niter / concurrency_degree_;
+  auto process_chunk =  [&](IndexType begin, IndexType end){
+    for(auto i = begin; i<end; i+=step){
+      transform_op(i);
+    }
+  };
+
+  worker_pool workers{concurrency_degree_};
+  int i;
+  for (i=0; i!=concurrency_degree_-1; ++i) {
+    const auto delta = (iter_per_thr * i)*step;
+    const auto delta_end = (iter_per_thr * (i+1)) *step;
+    const auto chunk_first = first+delta;
+    const auto chunk_end = first+delta_end;
+    workers.launch(*this, process_chunk, chunk_first, chunk_end);
+  } 
+  const auto delta = (iter_per_thr * i)*step;
+  const auto chunk_first = first+delta;
+  process_chunk(chunk_first,last);
+
+}
+
+
 
 template <typename InputIterator, typename Identity, typename Combiner>
 auto parallel_execution_native::reduce(

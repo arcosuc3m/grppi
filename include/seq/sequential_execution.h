@@ -93,7 +93,22 @@ public:
   constexpr void map(std::tuple<InputIterators...> firsts,
       OutputIterator first_out, std::size_t sequence_size, 
       Transformer && transform_op) const;
-  
+ 
+  /**
+  \brief Applies a transformation function 'n' times that receives an index value.
+  \tparam IndexType type of the of the index.
+  \tparam Transformer Callable object type for the transformation.
+  \param first Initial value of the index.
+  \param last End value of the index.
+  \param step Increment of the index on each transformation call.
+  \param transform_op Transformation callable object.
+  \pre IndexType supports the operators +,-,/ and <. 
+  */
+  template <typename IndexType, typename Transformer>
+  void parallel_for(IndexType first, IndexType last, 
+      IndexType step, Transformer transform_op) const;
+
+ 
   /**
   \brief Applies a reduction to a sequence of data items. 
   \tparam InputIterator Iterator type for the input sequence.
@@ -340,6 +355,13 @@ template <>
 constexpr bool supports_map<sequential_execution>() { return true; }
 
 /**
+\brief Determines if an execution policy supports the map pattern.
+\note Specialization for sequential_execution.
+*/
+template <>
+constexpr bool supports_parallel_for<sequential_execution>() { return true; }
+
+/**
 \brief Determines if an execution policy supports the reduce pattern.
 \note Specialization for sequential_execution.
 */
@@ -388,6 +410,16 @@ constexpr void sequential_execution::map(
         std::forward<Transformer>(transform_op), firsts);
   }
 }
+
+template <typename IndexType, typename Transformer>
+void sequential_execution::parallel_for(IndexType first, IndexType last,
+    IndexType step, Transformer transform_op) const
+{
+  for(auto i = first; i < last; i+=step){
+    transform_op(i);
+  }
+}
+
 
 template <typename InputIterator, typename Identity, typename Combiner>
 constexpr auto sequential_execution::reduce(

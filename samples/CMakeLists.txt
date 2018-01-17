@@ -6,6 +6,7 @@ add_subdirectory(stencil)
 
 # Task-parallel patterns
 add_subdirectory(divide-conquer)
+add_subdirectory(parallel-for)
 
 # Streaming patterns
 add_subdirectory(pipeline)

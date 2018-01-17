@@ -48,6 +48,13 @@ template <typename E>
 constexpr bool supports_map() { return false; }
 
 /**
+\brief Determines if an execution policy supports the map pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_parallel_for() { return false; }
+
+/**
 \brief Determines if an execution policy supports the reduce pattern.
 \note This must be specialized by every execution policy supporting the pattern.
 */

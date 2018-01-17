@@ -38,6 +38,7 @@ namespace grppi {
 
 // Includes for task patterns
 #include "divideconquer.h"
+#include "parallel_for.h"
 
 namespace grppi {
 
