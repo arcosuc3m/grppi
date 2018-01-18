@@ -21,6 +21,9 @@
 #ifndef GRPPI_GRPPI_H
 #define GRPPI_GRPPI_H
 
+// Includes for execution policies
+#include "dyn/dynamic_execution.h"
+
 // Includes for data parallel patterns
 #include "map.h"
 #include "mapreduce.h"
