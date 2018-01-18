@@ -124,11 +124,26 @@ public:
     return {queue_size_, queue_mode_};
   }
 
+  /**
+  \brief Returns the reference of a communication queue for elements of type T 
+  if the queue has been created in an outer pattern.
+  Returns the reference of the queue received as argument.
+  \tparam T Element type for the queue.
+  \tparam Transformers List of the next transformers.
+  \param queue Reference of a queue of type T
+  */
   template <typename T, typename ... Transformers>
   mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers ...) const {
     return queue;
   }
 
+  /**
+  \brief Makes a communication queue for elements of type T 
+  if the queue has not been created in an outer pattern.
+  Call to the make_queue function and the value is returned via move semantics.
+  \tparam T Element type for the queue.
+  \tparam Transformers List of the next transformers.
+  */
   template <typename T, typename ... Transformers>
   mpmc_queue<T> get_output_queue(Transformers ... ) const{
     return std::move(make_queue<T>());
@@ -868,10 +883,7 @@ void parallel_execution_omp::do_pipeline(
   using output_value_type = experimental::optional<result_type>;
   using output_type = pair<output_value_type,long>;
 
-  using queue_type = mpmc_queue<output_type>;
-  using output_queue_type =
-    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  output_queue_type output_queue =
+  decltype(auto) output_queue =
     get_output_queue<output_type>(other_ops...);
 
   #pragma omp task shared(transform_op, input_queue, output_queue)
@@ -929,14 +941,11 @@ void parallel_execution_omp::do_pipeline(
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
 
-  using result_type = typename get_return_type<input_value_type, FarmTransformer>::type;
+  using result_type = typename stage_return_type<input_value_type, FarmTransformer>::type;
   using output_optional_type = optional<result_type>;
   using output_type = pair<output_optional_type,long>;
  
-  using queue_type = mpmc_queue<output_type>;
-  using output_queue_type =
-    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  output_queue_type output_queue =
+  decltype(auto) output_queue =
     get_output_queue<output_type>(other_transform_ops...);
 
 //  auto output_queue = make_queue<output_type>();
@@ -1000,10 +1009,7 @@ void parallel_execution_omp::do_pipeline(
       }
     };
 
-    using queue_type = mpmc_queue<input_type>;
-    using output_queue_type =
-      typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-    output_queue_type output_queue =
+    decltype(auto) output_queue =
       get_output_queue<input_type>(other_transform_ops...);
 
 
@@ -1108,10 +1114,7 @@ void parallel_execution_omp::do_pipeline(
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
   
-  using queue_type = mpmc_queue<output_item_type>;
-  using output_queue_type =
-    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  output_queue_type output_queue =
+  decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_transform_ops...);
 
   auto reduce_task = [&,this]() {
@@ -1153,11 +1156,7 @@ void parallel_execution_omp::do_pipeline(
 
   using input_item_type = typename decay_t<Queue>::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
-//  auto output_queue = make_queue<input_item_type>();
-  using queue_type = mpmc_queue<input_item_type>;
-  using output_queue_type =
-    typename std::conditional<is_queue_type<queue_type&, OtherTransformers...>(), queue_type&, queue_type>::type;
-  output_queue_type output_queue =
+  decltype(auto) output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);
 
 

@@ -83,7 +83,6 @@ constexpr bool is_no_pattern =
   !is_reduce<T> &&
   !is_iteration<T>;
 
-
 template <typename T>
 constexpr bool is_pattern = !is_no_pattern<T>;
 
@@ -93,23 +92,36 @@ using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
 template <typename T>
 using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
 
-
+/**
+\brief Determines the return type after appliying a list of 
+transformers (stages) on a input type
+*/
 template <typename return_type, typename ... Ts>
-struct get_return_type{
+struct stage_return_type{
   using type = return_type;
 };
 
+/**
+\brief Determines the return type of appliying a function on a input type.
+*/
 template <typename Input, typename Transformer>
 using result_type = typename std::result_of<Transformer(Input)>::type; 
 
+/**
+\brief Determines the return type of appliying a function on a input type.
+*/
 template <typename Input, typename Transformer>
-struct get_return_type<Input, Transformer> {
-  using type = typename get_return_type< result_type<Input,Transformer>>::type;       
+struct stage_return_type<Input, Transformer> {
+  using type = typename stage_return_type< result_type<Input,Transformer>>::type;       
 };
 
+/**
+\brief Determines the return type of consecutively appliying a set of 
+transformer functions on a input type.
+*/
 template <typename Input, typename Transformer, typename ... Other>
-struct get_return_type<Input, Transformer, Other ...> {
-  using type = typename get_return_type< result_type<Input,Transformer> , Other...>::type; 
+struct stage_return_type<Input, Transformer, Other ...> {
+  using type = typename stage_return_type< result_type<Input,Transformer> , Other...>::type; 
 };
 
 } // end namespace grppi
