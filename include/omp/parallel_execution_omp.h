@@ -30,6 +30,7 @@
 
 #include <type_traits>
 #include <tuple>
+#include <experimental/optional>
 
 #include <omp.h>
 
