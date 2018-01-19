@@ -126,6 +126,31 @@ public:
   }
 
   /**
+  \brief Returns the reference of a communication queue for elements of type T 
+  if the queue has been created in an outer pattern.
+  Returns the reference of the queue received as argument.
+  \tparam T Element type for the queue.
+  \tparam Transformers List of the next transformers.
+  \param queue Reference of a queue of type T
+  */
+  template <typename T, typename ... Transformers>
+  mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers ...) const {
+    return queue;
+  }
+
+  /**
+  \brief Makes a communication queue for elements of type T 
+  if the queue has not been created in an outer pattern.
+  Call to the make_queue function and the value is returned via move semantics.
+  \tparam T Element type for the queue.
+  \tparam Transformers List of the next transformers.
+  */
+  template <typename T, typename ... Transformers>
+  mpmc_queue<T> get_output_queue(Transformers ... ) const{
+    return std::move(make_queue<T>());
+  }
+
+  /**
   \brief Get index of current thread in the thread table
   */
   int get_thread_id() const noexcept {
@@ -258,6 +283,19 @@ private:
   template <typename Queue, typename Consumer,
             requires_no_pattern<Consumer> = 0>
   void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
+
+  template <typename Inqueue, typename Transformer, typename output_type,
+            requires_no_pattern<Transformer> = 0>
+  void do_pipeline(Inqueue & input_queue, Transformer && transform_op, 
+      mpmc_queue<output_type> & output_queue) const;
+
+  template <typename T, typename ... Others>
+  void do_pipeline(mpmc_queue<T> & in_q, mpmc_queue<T> & same_queue, Others &&... ops) const
+  { }
+   
+  template <typename T>
+  void do_pipeline(mpmc_queue<T> & in_q) const {}
+
 
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
@@ -811,6 +849,27 @@ void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consum
   }
 }
 
+
+template <typename Inqueue, typename Transformer, typename output_type,
+            requires_no_pattern<Transformer> = 0>
+void parallel_execution_omp::do_pipeline(Inqueue & input_queue, Transformer && transform_op,
+      mpmc_queue<output_type> & output_queue) const
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Inqueue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+
+  using output_item_value_type = typename output_type::first_type::value_type;
+  for (;;) {
+    auto item{input_queue.pop()}; 
+    if(!item.first) break;
+    auto out = output_item_value_type{transform_op(*item.first)};
+    output_queue.push(make_pair(out,item.second)) ;
+  }
+}
+
 template <typename Queue, typename Transformer, typename ... OtherTransformers,
           requires_no_pattern<Transformer> =0>
 void parallel_execution_omp::do_pipeline(
@@ -824,7 +883,9 @@ void parallel_execution_omp::do_pipeline(
   using result_type = typename result_of<Transformer(input_value_type)>::type;
   using output_value_type = experimental::optional<result_type>;
   using output_type = pair<output_value_type,long>;
-  auto output_queue = make_queue<output_type>();
+
+  decltype(auto) output_queue =
+    get_output_queue<output_type>(other_ops...);
 
   #pragma omp task shared(transform_op, input_queue, output_queue)
   {
@@ -880,26 +941,27 @@ void parallel_execution_omp::do_pipeline(
   using namespace experimental;
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
-  using result_type = 
-      decay_t<typename result_of<FarmTransformer(input_value_type)>::type>;
-  using output_value_type = optional<result_type>;
-  using output_type = pair<output_value_type,long>;
+
+  using result_type = typename stage_return_type<input_value_type, FarmTransformer>::type;
+  using output_optional_type = optional<result_type>;
+  using output_type = pair<output_optional_type,long>;
  
-  auto output_queue = make_queue<output_type>();
+  decltype(auto) output_queue =
+    get_output_queue<output_type>(other_transform_ops...);
+
+//  auto output_queue = make_queue<output_type>();
+
   atomic<int> done_threads{0};
+  int ntask = farm_obj.cardinality();
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue)
+    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue,ntask)
     {
-      auto item = input_queue.pop();
-      while (item.first) {
-        auto out = output_value_type{farm_obj(*item.first)};
-        output_queue.push(make_pair(out,item.second));
-        item = input_queue.pop();
-      }
-      input_queue.push(item);
+      do_pipeline(input_queue, farm_obj.transformer(), output_queue);
       done_threads++;
-      if (done_threads==farm_obj.cardinality()) {
-        output_queue.push(make_pair(output_value_type{}, -1));
+      if (done_threads == ntask){
+        output_queue.push(make_pair(output_optional_type{}, -1));
+      }else{
+        input_queue.push(input_type{});
       }
     }              
   }
@@ -948,7 +1010,10 @@ void parallel_execution_omp::do_pipeline(
       }
     };
 
-    auto output_queue = make_queue<input_type>();
+    decltype(auto) output_queue =
+      get_output_queue<input_type>(other_transform_ops...);
+
+
     auto reorder_task = [&]() {
       vector<input_type> elements;
       int current = 0;
@@ -1049,13 +1114,14 @@ void parallel_execution_omp::do_pipeline(
   using input_item_value_type = typename input_item_type::first_type::value_type;
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
-  auto output_queue = make_queue<output_item_type>();
+  
+  decltype(auto) output_queue =
+    get_output_queue<output_item_type>(other_transform_ops...);
 
   auto reduce_task = [&,this]() {
     auto item{input_queue.pop()};
     int order = 0;
     while (item.first) {
-      std::cerr << "item: " << *item.first << " , " << item.second << "\n";
       reduce_obj.add_item(std::forward<Identity>(*item.first));
       item = input_queue.pop();
       if (reduce_obj.reduction_needed()) {
@@ -1091,7 +1157,9 @@ void parallel_execution_omp::do_pipeline(
 
   using input_item_type = typename decay_t<Queue>::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
-  auto output_queue = make_queue<input_item_type>();
+  decltype(auto) output_queue =
+    get_output_queue<input_item_type>(other_transform_ops...);
+
 
   auto iteration_task = [&]() {
     for (;;) {
