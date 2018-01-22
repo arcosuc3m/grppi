@@ -1,4 +1,4 @@
-/**
+/*
 * @version		GrPPI v0.2
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
@@ -30,6 +30,7 @@
 #include "pipeline_pattern.h"
 #include "reduce_pattern.h"
 #include "iteration_pattern.h"
+#include "context.h"
 
 namespace grppi{
 
@@ -81,7 +82,8 @@ constexpr bool is_no_pattern =
   !is_filter<T> && 
   !is_pipeline<T> &&
   !is_reduce<T> &&
-  !is_iteration<T>;
+  !is_iteration<T>&&
+  !is_context<T>;
 
 template <typename T>
 constexpr bool is_pattern = !is_no_pattern<T>;

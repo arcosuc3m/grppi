@@ -367,6 +367,23 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_ops) const;
 
+  /**
+  \brief Invoke \ref md_pipeline comming from another context
+  that uses mpmc_queues as communication channels.
+  \tparam InputType Type of the input stream.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \tparam InputType Type of the output stream.
+  \param input_queue Input stream communicator.
+  \param transform_ops Transformer operations.
+  \param output_queue Input stream communicator.
+  */
+  template <typename InputType, typename Transformer, typename OutputType>
+  void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
+                mpmc_queue<OutputType> &output_queue) const
+  {
+    do_pipeline(input_queue, std::forward<Transformer>(transform_op), output_queue);
+  }
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -392,6 +409,7 @@ private:
   template <typename T>
   void do_pipeline(mpmc_queue<T> & in_q) const {}
 
+
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
   void do_pipeline(Queue & input_queue, Transformer && transform_op,
@@ -411,6 +429,24 @@ private:
             requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline( Queue & input_queue, 
       Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Queue, typename Execution, typename Transformer, 
+            template <typename, typename> class Context,
+            typename ... OtherTransformers,
+            requires_context<Context<Execution,Transformer>> = 0>
+  void do_pipeline(Queue & input_queue, Context<Execution,Transformer> && context_op, 
+       OtherTransformers &&... other_ops) const;
+
+  template <typename Queue, typename Execution, typename Transformer, 
+            template <typename, typename> class Context,
+            typename ... OtherTransformers,
+            requires_context<Context<Execution,Transformer>> = 0>
+  void do_pipeline(Queue & input_queue, Context<Execution,Transformer> & context_op, 
+       OtherTransformers &&... other_ops) const
+  {
+    do_pipeline(input_queue, std::move(context_op),
+      std::forward<OtherTransformers>(other_ops)...);
+  }
 
   template <typename Queue, typename FarmTransformer, 
             template <typename> class Farm,
@@ -999,6 +1035,39 @@ void parallel_execution_native::do_pipeline(
   workers.launch_tasks(*this, farm_task, ntasks);  
   workers.wait();
 }
+
+
+template <typename Queue, typename Execution, typename Transformer,
+          template <typename, typename> class Context,
+          typename ... OtherTransformers,
+          requires_context<Context<Execution,Transformer>> = 0>
+void parallel_execution_native::do_pipeline(Queue & input_queue, 
+    Context<Execution,Transformer> && context_op,
+    OtherTransformers &&... other_ops) const 
+{
+  using namespace std;
+  using namespace experimental;
+
+  using input_item_type = typename Queue::value_type;
+  using input_item_value_type = typename input_item_type::first_type::value_type;
+
+  using output_type = typename stage_return_type<input_item_value_type, Transformer>::type;
+  using output_optional_type = experimental::optional<output_type>;
+  using output_item_type = pair <output_optional_type, long> ;
+
+  decltype(auto) output_queue =
+    get_output_queue<output_item_type>(other_ops...);
+  
+  auto context_task = [&](int nt) {
+    context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);
+  };
+  worker_pool workers{1};
+  workers.launch_tasks(*this, context_task, 1);
+  do_pipeline(output_queue,
+      forward<OtherTransformers>(other_ops)... );
+  workers.wait();
+}
+
 
 template <typename Queue, typename FarmTransformer, 
           template <typename> class Farm,

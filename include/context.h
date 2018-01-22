@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -18,48 +18,39 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_GRPPI_H
-#define GRPPI_GRPPI_H
+#ifndef GRPPI_CONTEXT_H
+#define GRPPI_CONTEXT_H
 
-// Includes for data parallel patterns
-#include "map.h"
-#include "mapreduce.h"
-#include "reduce.h"
-#include "stencil.h"
+#include "common/context.h"
 
 namespace grppi {
 
 /** 
-\defgroup data_patterns Data parallel patterns
-\brief Patterns for data parallel processing.
+\addtogroup stream_patterns
+@{
+\defgroup context Context
+\brief Interface for defining a new \ref md_context to run a given function or pattern.
+@{
 */
 
-}
-
-// Includes for task patterns
-#include "divideconquer.h"
-
-namespace grppi {
-
-/** 
-\defgroup task_patterns Task parallel patterns
-\brief Patterns for task parallel processing.
+/**
+\brief Define a new \ref md_context on a data stream 
+that can be composed in other streaming patterns.
+\tparam Execution Execution policy type.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param transform_op Transformer operation.
 */
+template <typename ExecutionPolicy, typename Transformer>
+auto context(ExecutionPolicy & ex, Transformer && transform_op)
+{
+   return context_t<ExecutionPolicy,Transformer>{ex,
+       std::forward<Transformer>(transform_op)};
 }
 
-// Includes for streaming patterns
-#include "context.h"
-#include "farm.h"
-#include "pipeline.h"
-#include "stream_filter.h"
-#include "stream_iteration.h"
-#include "stream_reduce.h"
-
-namespace grppi {
-
-/** 
-\defgroup stream_patterns Streaming patterns
-\brief Patterns for data stream processing.
+/**
+@}
+@}
 */
 
 }
