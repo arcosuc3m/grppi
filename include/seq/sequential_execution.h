@@ -527,6 +527,30 @@ void sequential_execution::do_pipeline(
   consume_op(std::forward<Item>(item));
 }
 
+template <typename Generator, typename ... Transformers>
+void sequential_execution::pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops) const
+{
+  static_assert(is_generator<Generator>,
+    "First pipeline stage must be a generator");
+
+  for (;;) {
+    auto x = generate_op();
+    if (!x) break;
+    do_pipeline(*x, std::forward<Transformers>(transform_ops)...);
+  }
+}
+
+template <typename Item, typename Consumer,
+          requires_no_pattern<Consumer> = 0>
+void sequential_execution::do_pipeline(
+    Item && item,
+    Consumer && consume_op) const
+{
+  consume_op(std::forward<Item>(item));
+}
+
 template <typename Item, typename Transformer, typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
 void sequential_execution::do_pipeline(

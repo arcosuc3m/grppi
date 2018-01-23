@@ -120,7 +120,6 @@ public:
         return p1 + p2;
       });
   }
-
   void setup_empty() {
   }
 

@@ -25,7 +25,6 @@
 
 #include "common/execution_traits.h"
 
-//#include "ff/parallel_execution_ff.h"
 
 namespace grppi {
 
@@ -99,7 +98,6 @@ auto divide_conquer(
 			std::forward<Solver>(solver_op),
 			std::forward<Combiner>(combiner_op));
 }
-
 /**
 @}
 @}

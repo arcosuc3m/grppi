@@ -27,7 +27,6 @@
 #include <numeric>
 #include <stdexcept>
 #include <random>
-#include <atomic>
 
 // grppi
 #include "grppi.h"
@@ -63,22 +62,21 @@ void sort_sequence(grppi::dynamic_execution & exec, int n) {
   for (int i=0; i<n; ++i) {
     v.push_back(gen(rdev));
   }
-
+  
   range problem{begin(v), end(v)};
 
   auto res = grppi::divide_conquer(exec,
     problem,
     [](auto r) -> vector<range> {
-      { return divide(r); }
+      if (1>=r.size()) { return {r}; }
+      else { return divide(r); }
     },
-	[](auto x) {return x.size() <= 1; },
     [](auto x) { return x; },
     [](auto r1, auto r2) {
       std::inplace_merge(r1.first, r1.last, r2.last);
       return range{r1.first, r2.last};
     }
   );
-
 
   copy(begin(v), end(v), ostream_iterator<int>(cout, " "));
   cout << endl;

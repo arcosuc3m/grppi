@@ -295,13 +295,13 @@ public:
         if (idx_in < v.size()) {
           idx_in++;
           return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-        }
+        } 
         else return {};
       },
       grppi::farm(4,
         [this](tuple<int,int,int> x) {
           invocations_op++;
-          return get<0>(x) + get<1>(x) + get<2>(x);
+          return get<0>(x) + get<1>(x) + get<2>(x);;
         }),
       [this](int x) {
         invocations_sk++;
@@ -429,7 +429,7 @@ public:
         if (idx_in < v.size()) {
           idx_in++;
           return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-      }
+      } 
       else return {};
     },
     grppi::farm(4,
@@ -567,19 +567,19 @@ TYPED_TEST(farm_test, dyn_single_ary)
   this->check_single_ary();
 }
 
-//TYPED_TEST(farm_test, static_single_ary_sink)
-//{
-//  this->setup_single_ary_sink();
-//  this->run_single_ary_sink(this->dyn_execution_);
-//  this->check_single_ary_sink();
-//}
-//
-//TYPED_TEST(farm_test, dyn_single_ary_sink)
-//{
-//  this->setup_single_ary_sink();
-//  this->run_single_ary_sink(this->dyn_execution_);
-//  this->check_single_ary_sink();
-//}
+TYPED_TEST(farm_test, static_single_ary_sink)
+{
+  this->setup_single_ary_sink();
+  this->run_single_ary_sink(this->dyn_execution_);
+  this->check_single_ary_sink();
+}
+
+TYPED_TEST(farm_test, dyn_single_ary_sink)
+{
+  this->setup_single_ary_sink();
+  this->run_single_ary_sink(this->dyn_execution_);
+  this->check_single_ary_sink();
+}
 
 TYPED_TEST(farm_test, static_multiple)
 {
@@ -623,16 +623,16 @@ TYPED_TEST(farm_test, dyn_multiple_ary)
   this->check_multiple_ary();
 }
 
-//TYPED_TEST(farm_test, static_multiple_ary_sink)
-//{
-//  this->setup_multiple_ary();
-//  this->run_multiple_ary_sink(this->execution_);
-//  this->check_multiple_ary_sink();
-//}
-//
-//TYPED_TEST(farm_test, dyn_multiple_ary_sink)
-//{
-//  this->setup_multiple_ary_sink();
-//  this->run_multiple_ary_sink(this->dyn_execution_);
-//  this->check_multiple_ary_sink();
-//}
+TYPED_TEST(farm_test, static_multiple_ary_sink)
+{
+  this->setup_multiple_ary();
+  this->run_multiple_ary_sink(this->execution_);
+  this->check_multiple_ary_sink();
+}
+
+TYPED_TEST(farm_test, dyn_multiple_ary_sink)
+{
+  this->setup_multiple_ary_sink();
+  this->run_multiple_ary_sink(this->dyn_execution_);
+  this->check_multiple_ary_sink();
+}

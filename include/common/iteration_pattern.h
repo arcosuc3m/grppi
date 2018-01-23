@@ -58,6 +58,14 @@ public:
     return transform_(std::forward<Item>(item));
   }
 
+  /**
+  \brief Applies the transformation over a data item.
+  */
+  template<typename T>
+  auto operator()(T && item){
+    return transform(item);
+  }
+
 private:
   Transformer transform_;
   Predicate predicate_;

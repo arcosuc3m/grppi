@@ -156,15 +156,13 @@ public:
           out +=x;
         }
     );
-
     grppi::pipeline(e,
       [this,i=0,max=counter]() mutable -> optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
       },
-	  inner
-   );
+      inner);
   }
 
 
@@ -180,7 +178,7 @@ public:
     out = 0;
   }
 
-  template <typename E>
+ template <typename E>
   void run_composed(const E & e) {
     grppi::pipeline(e,
       [this,i=0,max=counter]() mutable -> optional<int> {
@@ -233,7 +231,7 @@ public:
     EXPECT_EQ(5, invocations_intermediate);
     EXPECT_EQ(60, out);
   }
-
+  
 };
 
 // Test for execution policies defined in supported_executions.h

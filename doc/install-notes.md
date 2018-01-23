@@ -134,7 +134,7 @@ For using GrPPI you need a C++14 compliant compiler.
 
 GrPPI has been tested with the following compilers:
 
-  * **g++** 6.1. 
+  * **g++** 6.2. 
   * **clang++** 3.4.
 
 If you want to use a different compiler than the default one, you can specify it

@@ -215,7 +215,6 @@ public:
                       Solver && solve_op, 
                       Combiner && combine_op) const; 
 
-
   /**
   \brief Invoke \ref md_divide-conquer.
   \tparam Input Type used for the input problem.
@@ -254,7 +253,6 @@ private:
                       Solver && solve_op, 
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const; 
-
 
   template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
   auto divide_conquer(Input && input,
@@ -477,8 +475,6 @@ constexpr bool supports_divide_conquer<parallel_execution_tbb>() { return true; 
 */
 template <>
 constexpr bool supports_pipeline<parallel_execution_tbb>() { return true; }
-
-// INTERNALS --------------------------------------------------------------
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>

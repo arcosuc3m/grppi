@@ -12,6 +12,13 @@ first argument an execution policy.
 grppi::pipeline(exec, other_arguments...);
 ~~~
 
+Additionally, there is a variant where the execution policy may be omitted. This
+variant is meant to be used in pipeline nesting.
+
+~~~{.cpp}
+grppi::pipeline(arguments...);
+~~~
+
 ## Pipeline variants
 
 There are several variants:
@@ -90,6 +97,9 @@ grppi::pipeline(e,
 A *composable pipeline* returns a representation of the pipeline that can be
 used to perform declarative composition of streaming patterns.
 
+A composable pipeline does not take an execution policy as it inherits the
+execution policy from its enclosing pattern.
+
 ---
 **Example**: Use a farm to read intenger from a file and write to another file
 strings. The transformation phase is a pipeline that performs transformation in
@@ -102,7 +112,7 @@ grppi::farm(ex1,
     if (!input) return {};
     else return n;
   },
-  grppi::pipeline(ex2,
+  grppi::pipeline(
     [](int x) -> double { return func1(x); },
     [](double x) -> string { return func2(x); },
   ),
@@ -126,7 +136,7 @@ auto reader = [&input]() -> optional<int> {
   else return n;
 };
 
-auto processor = grppi::pipeline(ex2,
+auto processor = grppi::pipeline(
   [](int x) -> double { return func1(x); },
   [](double x) -> string { return func2(x); },
 );

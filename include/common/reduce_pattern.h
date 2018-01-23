@@ -84,6 +84,11 @@ public:
     }
     return red;
   }
+  
+  template<typename T>
+  auto operator()(T &&item){
+    return Identity{};
+  }
 
   /**
    * \brief Get the window_size parameter
@@ -99,6 +104,7 @@ public:
    * \brief Get the combiner object, used to perform the reduction
    */
   inline Combiner get_combiner() const { return combiner_; }
+
 
 private:
   int window_size_;
