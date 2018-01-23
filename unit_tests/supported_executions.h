@@ -7,6 +7,7 @@
 #include "native/parallel_execution_native.h"
 #include "omp/parallel_execution_omp.h"
 #include "tbb/parallel_execution_tbb.h"
+#include "cuda/parallel_execution_cuda.h"
 
 using executions = ::testing::Types<
   grppi::sequential_execution,
@@ -33,6 +34,11 @@ using executions_notbb = ::testing::Types<
   grppi::parallel_execution_omp
 #endif
 
+/*#ifdef GRPPI_CUDA
+  ,
+  grppi::parallel_execution_cuda
+#endif
+*/
 >;
 
 #endif

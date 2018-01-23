@@ -25,6 +25,7 @@
 #include "../native/parallel_execution_native.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
+#include "../cuda/parallel_execution_cuda.h"
 
 #include <memory>
 
