@@ -25,9 +25,12 @@
 namespace grppi {
 
 /**
-\brief Representation of farm pattern.
-Represents a farm of n replicas from a transformer.
-\tparam Transformer Callable type for the farm transformer.
+\brief Representation of a context pattern.
+Represents a context that uses a given policy to run a transformer.
+This pattern is intended to switch between execution policies 
+in a pattern composition.
+\tparam ExecutionPolicy Execution policy type for the context.
+\tparam Transformer Callable type for the context transformer.
 */
 template <typename ExecutionPolicy, typename Transformer>
 class context_t {
@@ -63,7 +66,7 @@ public:
   }
 
   /**
-  \brief Invokes the trasnformer of the farm over a data item.
+  \brief Invokes the trasnformer of the context over a data item.
   */
   template <typename I>
   auto operator()(I && item) const {
@@ -71,7 +74,6 @@ public:
   }
 
 private:
-  int cardinality_;
   Transformer transformer_;
   ExecutionPolicy& execution_policy_;
 };

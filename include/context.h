@@ -42,7 +42,7 @@ that can be composed in other streaming patterns.
 \param transform_op Transformer operation.
 */
 template <typename ExecutionPolicy, typename Transformer>
-auto context(ExecutionPolicy & ex, Transformer && transform_op)
+auto run_with(ExecutionPolicy & ex, Transformer && transform_op)
 {
    return context_t<ExecutionPolicy,Transformer>{ex,
        std::forward<Transformer>(transform_op)};
