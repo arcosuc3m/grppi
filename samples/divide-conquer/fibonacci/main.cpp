@@ -39,9 +39,9 @@ void fibonacci(grppi::dynamic_execution & exec, int n) {
   auto res = grppi::divide_conquer(exec,
     n,
     [](int x) -> vector<int> {
-      if (x<2) { return {x}; }
-      else { return { x-1, x-2 }; }
+      return { x-1, x-2 };
     },
+    [](int x) { return x<2; },
     [](int x) { return 1; },
     [](int s1, int s2) {
       return s1+s2;
