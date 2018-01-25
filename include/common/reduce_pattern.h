@@ -90,6 +90,22 @@ public:
     return Identity{};
   }
 
+  /**
+   * \brief Get the window_size parameter
+   */
+  inline int get_window_size() const { return window_size_; }
+
+  /**
+   * \brief Get the offest parameter
+   */
+  inline int get_offset() const { return offset_; }
+  
+  /**
+   * \brief Get the combiner object, used to perform the reduction
+   */
+  inline Combiner get_combiner() const { return combiner_; }
+
+
 private:
   int window_size_;
   int offset_;

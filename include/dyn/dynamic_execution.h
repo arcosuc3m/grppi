@@ -25,6 +25,7 @@
 #include "../native/parallel_execution_native.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
+#include "../ff/parallel_execution_ff.h"
 
 #include <memory>
 
@@ -143,6 +144,25 @@ public:
                       Combiner && combine_op) const; 
 
   /**
+   \brief Invoke \ref md_divide-conquer.
+   \tparam Input Type used for the input problem.
+   \tparam Divider Callable type for the divider operation.
+   \tparam Solver Callable type for the solver operation.
+   \tparam Combiner Callable type for the combiner operation.
+   \param ex Sequential execution policy object.
+   \param input Input problem to be solved.
+   \param divider_op Divider operation.
+   \param solver_op Solver operation.
+   \param combine_op Combiner operation.
+   */
+  template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
+  auto divide_conquer(Input && input,
+		  Divider && divide_op,
+		  Predicate && condition_op,
+		  Solver && solve_op,
+		  Combiner && combine_op) const;
+
+  /**
   \brief Invoke \ref md_pipeline.
   \tparam Generator Callable type for the generator operation.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -249,7 +269,21 @@ GRPPI_TRY_PATTERN(parallel_execution_tbb,PATTERN,__VA_ARGS__)
 #define GRPPI_TRY_PATTERN_TBB(PATTERN,...)
 #endif
 
+#ifdef GRPPI_FF
+#define GRPPI_TRY_PATTERN_FF(PATTERN,...) \
+GRPPI_TRY_PATTERN(parallel_execution_ff,PATTERN,__VA_ARGS__)
+#else
+#define GRPPI_TRY_PATTERN_FF(PATTERN,...)
+#endif
+
 #define GRPPI_TRY_PATTERN_ALL(...) \
+GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
+GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
+GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
+GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
+GRPPI_TRY_PATTERN_FF(__VA_ARGS__) \
+
+#define GRPPI_TRY_PATTERN_NOFF(...) \
 GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
 GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
@@ -312,8 +346,23 @@ auto dynamic_execution::divide_conquer(
     Solver && solve_op, 
     Combiner && combine_op) const
 {
+  GRPPI_TRY_PATTERN_NOFF(divide_conquer, std::forward<Input>(input),
+      std::forward<Divider>(divide_op),
+      std::forward<Solver>(solve_op),
+      std::forward<Combiner>(combine_op));
+}
+
+template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
+auto dynamic_execution::divide_conquer(
+    Input && input,
+    Divider && divide_op,
+    Predicate && condition_op,
+    Solver && solve_op,
+    Combiner && combine_op) const
+{
   GRPPI_TRY_PATTERN_ALL(divide_conquer, std::forward<Input>(input),
       std::forward<Divider>(divide_op),
+      std::forward<Predicate>(condition_op),
       std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op));
 }
@@ -328,8 +377,10 @@ void dynamic_execution::pipeline(
 }
 
 #undef GRPPI_TRY_PATTERN
+#undef GRPPI_TRY_PATTERN_FF
 #undef GRPPI_TRY_PATTERN_OMP
 #undef GRPPI_TRY_PATTERN_TBB
+#undef GRPPI_TRY_PATTERN_NOFF
 #undef GRPPI_TRY_PATTERN_ALL
 
 } // end namespace grppi

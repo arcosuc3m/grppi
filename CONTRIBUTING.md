@@ -22,7 +22,7 @@ You may contribute in a number of ways, including:
 * Contributing with unit test cases.
 * Contributing with sample applications.
 
-# Contributing go GrPPI
+# Contributing to GrPPI
 
 ## General rules
 

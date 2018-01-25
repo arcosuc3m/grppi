@@ -30,9 +30,9 @@ cmake ..
 make
 ~~~
 
-**Important Note:** Be sure to invoke make once before modifying you `CMakeCache.txt`
+**Important Note:** Be sure to invoke make once before modifying your `CMakeCache.txt`
 file. This will allow CMake to compile and setup dependent libraries (e.g.
-GoogleTest).
+GoogleTest) and to download FastFlow headers and place them to the proper include path.
 
 ### Building the unit tests
 
@@ -57,6 +57,7 @@ control this issue:
 
 * `GRPPI_OMP_ENABLE`: Enable/disable OpenMP back end.
 * `GRPPI_TBB_ENABLE`: Enable/disable TBB back end.
+* `GRPPI_FF_ENABLE`: Enable/disable FastFlow back end.
 
 ### Running the unit tests
 

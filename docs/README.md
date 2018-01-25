@@ -8,7 +8,8 @@ Currently, the following back ends are supported:
 * Sequential execution.
 * OpenMP.
 * Intel TBB.
-* Native implementation (using ISO C++ threads).
+* Native implementation (using ISO C++ threads)
+* FastFlow
 
 The API documentation can be found here:
 

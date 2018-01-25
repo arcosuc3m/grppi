@@ -76,6 +76,16 @@ if( GRPPI_OMP_ENABLE )
     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
 endif( GRPPI_OMP_ENABLE )
 
+# Fastflow library
+option( GRPPI_FF_ENABLE "Require FastFlow framework" OFF )
+message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE} )
+if( GRPPI_FF_ENABLE )
+	find_package( FF )
+    message( STATUS "FastFlow Path is: " ${FFPATH} )
+    add_definitions( "-DGRPPI_FF" )
+    include_directories( ${FFPATH}/include )
+endif( GRPPI_FF_ENABLE )
+
 # Doxygen Documentation
 option( GRPPI_DOXY_ENABLE "Require Doxygen library" OFF )
 if( GRPPI_DOXY_ENABLE )
@@ -98,4 +108,7 @@ option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
+
+# Perf test
+#add_subdirectory(performance_tests)
 
