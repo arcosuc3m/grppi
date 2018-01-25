@@ -133,7 +133,7 @@ public:
   \param queue Reference of a queue of type T
   */
   template <typename T, typename ... Transformers>
-  mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers ...) const {
+  mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers &&...) const {
     return queue;
   }
 
@@ -145,7 +145,7 @@ public:
   \tparam Transformers List of the next transformers.
   */
   template <typename T, typename ... Transformers>
-  mpmc_queue<T> get_output_queue(Transformers ... ) const{
+  mpmc_queue<T> get_output_queue(Transformers &&... ) const{
     return std::move(make_queue<T>());
   }
 
@@ -894,6 +894,7 @@ void parallel_execution_omp::do_pipeline(Inqueue & input_queue, Transformer && t
   using input_item_type = typename Inqueue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
 
+  using output_optional_type = typename output_type::first_type;
   using output_item_value_type = typename output_type::first_type::value_type;
   for (;;) {
     auto item{input_queue.pop()}; 
@@ -928,6 +929,7 @@ void parallel_execution_omp::do_pipeline(Queue & input_queue,
   #pragma omp task shared(input_queue,context_op,output_queue)
   {
     context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);
+    output_queue.push(make_pair(output_optional_type{},-1));
   }
 
   do_pipeline(output_queue,
