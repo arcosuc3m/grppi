@@ -68,11 +68,13 @@ auto divide_conquer(
 \parapm Execution Execution type.
 \tparam Input Type used for the input problem.
 \tparam Divider Callable type for the divider operation.
+\tparam Predicate Callable type for the stop condition predicate.
 \tparam Solver Callable type for the solver operation.
 \tparam Combiner Callable type for the combiner operation.
 \param ex Execution policy object.
 \param input Input problem to be solved.
 \param divider_op Divider operation.
+\param predicate_op Predicate operation.
 \param solver_op Solver operation.
 \param combiner_op Combiner operation.
 */
@@ -82,7 +84,7 @@ auto divide_conquer(
     const Execution & ex,
     Input && input,
     Divider && divider_op,
-    Predicate && condition_op,
+    Predicate && predicate_op,
     Solver && solver_op,
     Combiner && combiner_op)
 {
@@ -90,7 +92,7 @@ auto divide_conquer(
       "divide/conquer pattern not supported for execution type");
   return ex.divide_conquer(std::forward<Input>(input),
         std::forward<Divider>(divider_op),
-        std::forward<Predicate>(condition_op),
+        std::forward<Predicate>(predicate_op),
         std::forward<Solver>(solver_op),
         std::forward<Combiner>(combiner_op));
 }

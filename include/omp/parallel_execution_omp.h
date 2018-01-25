@@ -238,18 +238,20 @@ public:
   \brief Invoke \ref md_divide-conquer.
   \tparam Input Type used for the input problem.
   \tparam Divider Callable type for the divider operation.
+  \tparam Predicate Callable type for the stop condition predicate.
   \tparam Solver Callable type for the solver operation.
   \tparam Combiner Callable type for the combiner operation.
   \param ex Sequential execution policy object.
   \param input Input problem to be solved.
   \param divider_op Divider operation.
+  \param predicate_op Predicate operation.
   \param solver_op Solver operation.
   \param combine_op Combiner operation.
   */
   template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
   auto divide_conquer(Input && input,
                       Divider && divide_op,
-                      Predicate && condition_op,
+                      Predicate && predicate_op,
                       Solver && solve_op,
                       Combiner && combine_op) const;
 
@@ -277,7 +279,7 @@ private:
   template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
   auto divide_conquer(Input && input,
                       Divider && divide_op,
-                      Predicate && condition_op,
+                      Predicate && predicate_op,
                       Solver && solve_op,
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const;
@@ -677,14 +679,14 @@ template <typename Input, typename Divider,typename Predicate, typename Solver, 
 auto parallel_execution_omp::divide_conquer(
     Input && input,
     Divider && divide_op,
-    Predicate && condition_op,
+    Predicate && predicate_op,
     Solver && solve_op,
     Combiner && combine_op) const
 {
   std::atomic<int> num_threads{concurrency_degree_-1};
 
   return divide_conquer(std::forward<Input>(input),
-      std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+      std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
       std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op),
       num_threads);
@@ -741,7 +743,7 @@ template <typename Input, typename Divider,typename Predicate, typename Solver, 
 auto parallel_execution_omp::divide_conquer(
     Input && input,
     Divider && divide_op,
-    Predicate && condition_op,
+    Predicate && predicate_op,
     Solver && solve_op,
     Combiner && combine_op,
     std::atomic<int> & num_threads) const
@@ -749,12 +751,12 @@ auto parallel_execution_omp::divide_conquer(
   constexpr sequential_execution seq;
   if (num_threads.load()<=0) {
     return seq.divide_conquer(std::forward<Input>(input),
-        std::forward<Divider>(divide_op),std::forward<Predicate>(condition_op),
+        std::forward<Divider>(divide_op),std::forward<Predicate>(predicate_op),
         std::forward<Solver>(solve_op),
         std::forward<Combiner>(combine_op));
   }
 
-  if (condition_op(input)) { return solve_op(std::forward<Input>(input)); }
+  if (predicate_op(input)) { return solve_op(std::forward<Input>(input)); }
   auto subproblems = divide_op(std::forward<Input>(input));
 
   using subresult_type =
@@ -763,7 +765,7 @@ auto parallel_execution_omp::divide_conquer(
 
   auto process_subproblems = [&,this](auto it, std::size_t div) {
     partials[div] = this->divide_conquer(std::forward<Input>(*it),
-        std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+        std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
         std::forward<Solver>(solve_op),
         std::forward<Combiner>(combine_op), num_threads);
   };
@@ -789,7 +791,7 @@ auto parallel_execution_omp::divide_conquer(
 
       while (i!=subproblems.end()) {
         partials[division] = seq.divide_conquer(std::forward<Input>(*i++),
-          std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+          std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
           std::forward<Solver>(solve_op),
           std::forward<Combiner>(combine_op));
       }
@@ -797,13 +799,13 @@ auto parallel_execution_omp::divide_conquer(
       //Main thread works on the first subproblem.
       if (num_threads.load()>0) {
         subresult = divide_conquer(std::forward<Input>(*subproblems.begin()),
-            std::forward<Divider>(divide_op),std::forward<Predicate>(condition_op),
+            std::forward<Divider>(divide_op),std::forward<Predicate>(predicate_op),
             std::forward<Solver>(solve_op),
             std::forward<Combiner>(combine_op), num_threads);
       }
       else {
         subresult = seq.divide_conquer(std::forward<Input>(*subproblems.begin()),
-            std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+            std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
             std::forward<Solver>(solve_op),
             std::forward<Combiner>(combine_op));
       }
