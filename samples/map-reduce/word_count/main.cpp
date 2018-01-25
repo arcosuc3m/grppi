@@ -44,7 +44,6 @@ void test_mapreduce(grppi::dynamic_execution & ex,
   copy(istream_iterator<string>{file}, istream_iterator<string>{},
     back_inserter(words));
 
-  auto t0 = chrono::system_clock::now();
   // Word count for vector of lines
   auto result = map_reduce(ex,
     words.begin(), words.end(), map<string,int>{},
@@ -56,14 +55,11 @@ void test_mapreduce(grppi::dynamic_execution & ex,
       return lhs;
     }
   );
-  auto t1 = chrono::system_clock::now();
-  auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
 
   cout << "Word : count " << endl;
   for (const auto & w : result) {
     cout << w.first << " : " << w.second << endl;
   }
-  cout << "Execution time = " << diff.count() << " (ms)" << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {

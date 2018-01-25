@@ -41,10 +41,9 @@ void compute_avg(grppi::dynamic_execution & e, int n) {
 
   vector<double> out(n);
 
-  auto t0 = chrono::system_clock::now();
   grppi::stencil(e, begin(in), end(in), begin(out),
     [](auto it, auto n) {
-      return (*it + std::accumulate(begin(n), end(n), 0)) / (double)(n.size()+1);
+      return (*it + std::accumulate(begin(n), end(n), 0)) / double(n.size()+1);
     },
     [&in](auto it) {
       vector<double> r;
@@ -53,12 +52,9 @@ void compute_avg(grppi::dynamic_execution & e, int n) {
       return r;
     }
   );
-  auto t1 = chrono::system_clock::now();
-  auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
 
   copy(begin(out), end(out), ostream_iterator<double>(cout, " "));
   cout << endl;
-  cout << "Execution time = " << diff.count() << " (ms)" << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {

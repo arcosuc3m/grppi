@@ -258,7 +258,7 @@ public:
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
-                      Combiner && combine_op) const; 
+                      Combiner && combine_op) const;
 
   /**
    \brief Invoke \ref md_divide-conquer.
@@ -271,13 +271,13 @@ public:
    \param divider_op Divider operation.
    \param solver_op Solver operation.
    \param combine_op Combiner operation.
-   */
+  */
   template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
   auto divide_conquer(Input && input,
-		  Divider && divide_op,
-		  Predicate && condition_op,
-		  Solver && solve_op,
-		  Combiner && combine_op) const;
+		      Divider && divide_op,
+		      Predicate && condition_op,
+		      Solver && solve_op,
+		      Combiner && combine_op) const;
 
   /**
   \brief Invoke \ref md_pipeline.
@@ -301,164 +301,11 @@ private:
 
   template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
   auto divide_conquer(Input && input,
-		  Divider && divide_op,
-		  Predicate && condition_op,
-		  Solver && solve_op,
-		  Combiner && combine_op,
-		  std::atomic<int> & num_threads) const;
-
-
-  template <typename Queue, typename Consumer,
-            requires_no_pattern<Consumer> = 0>
-  void do_pipeline(Queue & input_queue, Consumer && consume_op) const;
-
-  template <typename Queue, typename Transformer, typename ... OtherTransformers,
-            requires_no_pattern<Transformer> = 0>
-  void do_pipeline(Queue & input_queue, Transformer && transform_op,
-    OtherTransformers && ... other_ops) const;
-
-  template <typename Queue, typename FarmTransformer,
-            template <typename> class Farm,
-            requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Queue & input_queue, 
-                   Farm<FarmTransformer> & farm_obj) const
-  {
-    do_pipeline(input_queue, std::move(farm_obj));
-  }
-
-  template <typename Queue, typename FarmTransformer,
-            template <typename> class Farm,
-            requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Queue & input_queue, 
-                   Farm<FarmTransformer> && farm_obj) const;
-
-  template <typename Queue, typename FarmTransformer, 
-            template <typename> class Farm,
-            typename ... OtherTransformers,
-            requires_farm<Farm<FarmTransformer>> =0>
-  void do_pipeline(Queue & input_queue, 
-       Farm<FarmTransformer> & farm_obj,
-       OtherTransformers && ... other_transform_ops) const
-  {
-    do_pipeline(input_queue, std::move(farm_obj),
-        std::forward<OtherTransformers>(other_transform_ops)...);
-  }
-
-  template <typename Queue, typename FarmTransformer, 
-            template <typename> class Farm,
-            typename ... OtherTransformers,
-            requires_farm<Farm<FarmTransformer>> =0>
-  void do_pipeline(Queue & input_queue, 
-       Farm<FarmTransformer> && farm_obj,
-       OtherTransformers && ... other_transform_ops) const;
-
-  template <typename Queue, typename Predicate,
-            template <typename> class Filter,
-            requires_filter<Filter<Predicate>> = 0>
-  void do_pipeline(Queue & input_queue, 
-                   Filter<Predicate> & filter_obj) const
-  {
-    do_pipeline(input_queue, std::move(filter_obj));
-  }
-
-  template <typename Queue, typename Predicate,
-            template <typename> class Filter,
-            requires_filter<Filter<Predicate>> = 0>
-  void do_pipeline(Queue & input_queue, 
-                   Filter<Predicate> && filter_obj) const;
-
-  template <typename Queue, typename Predicate, 
-            template <typename> class Filter,
-            typename ... OtherTransformers,
-            requires_filter<Filter<Predicate>> =0>
-  void do_pipeline(Queue & input_queue, 
-       Filter<Predicate> & filter_obj,
-       OtherTransformers && ... other_transform_ops) const
-  {
-    do_pipeline(input_queue, std::move(filter_obj),
-        std::forward<OtherTransformers>(other_transform_ops)...);
-  }
-
-  template <typename Queue, typename Predicate, 
-            template <typename> class Filter,
-            typename ... OtherTransformers,
-            requires_filter<Filter<Predicate>> =0>
-  void do_pipeline(Queue & input_queue, 
-       Filter<Predicate> && filter_obj,
-       OtherTransformers && ... other_transform_ops) const;
-
-  template <typename Queue, typename Combiner, typename Identity,
-            template <typename C, typename I> class Reduce,
-            typename ... OtherTransformers,
-            requires_reduce<Reduce<Combiner,Identity>> = 0>
-  void do_pipeline(Queue && input_queue, Reduce<Combiner,Identity> & reduce_obj,
-                   OtherTransformers && ... other_transform_ops) const
-  {
-    do_pipeline(input_queue, std::move(reduce_obj),
-        std::forward<OtherTransformers>(other_transform_ops)...);
-  }
-
-  template <typename Queue, typename Combiner, typename Identity,
-            template <typename C, typename I> class Reduce,
-            typename ... OtherTransformers,
-            requires_reduce<Reduce<Combiner,Identity>> = 0>
-  void do_pipeline(Queue && input_queue, Reduce<Combiner,Identity> && reduce_obj,
-                   OtherTransformers && ... other_transform_ops) const;
-
-  template <typename Queue, typename Transformer, typename Predicate,
-            template <typename T, typename P> class Iteration,
-            typename ... OtherTransformers,
-            requires_iteration<Iteration<Transformer,Predicate>> =0,
-            requires_no_pattern<Transformer> =0>
-  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> & iteration_obj,
-                   OtherTransformers && ... other_transform_ops) const
-  {
-    do_pipeline(input_queue, std::move(iteration_obj),
-        std::forward<OtherTransformers>(other_transform_ops)...);
-  }
-
-  template <typename Queue, typename Transformer, typename Predicate,
-            template <typename T, typename P> class Iteration,
-            typename ... OtherTransformers,
-            requires_iteration<Iteration<Transformer,Predicate>> =0,
-            requires_no_pattern<Transformer> =0>
-  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
-                   OtherTransformers && ... other_transform_ops) const;
-
-  template <typename Queue, typename Transformer, typename Predicate,
-            template <typename T, typename P> class Iteration,
-            typename ... OtherTransformers,
-            requires_iteration<Iteration<Transformer,Predicate>> =0,
-            requires_pipeline<Transformer> =0>
-  void do_pipeline(Queue & input_queue, Iteration<Transformer,Predicate> && iteration_obj,
-                   OtherTransformers && ... other_transform_ops) const;
-
-  template <typename Queue, typename ... Transformers,
-            template <typename...> class Pipeline,
-            typename ... OtherTransformers,
-            requires_pipeline<Pipeline<Transformers...>> = 0>
-  void do_pipeline(Queue & input_queue,
-      Pipeline<Transformers...> & pipeline_obj,
-      OtherTransformers && ... other_transform_ops) const
-  {
-    do_pipeline(input_queue, std::move(pipeline_obj),
-        std::forward<OtherTransformers>(other_transform_ops)...);
-  }
-
-  template <typename Queue, typename ... Transformers,
-            template <typename...> class Pipeline,
-            typename ... OtherTransformers,
-            requires_pipeline<Pipeline<Transformers...>> = 0>
-  void do_pipeline(Queue & input_queue,
-      Pipeline<Transformers...> && pipeline_obj,
-      OtherTransformers && ... other_transform_ops) const;
-
-  template <typename Queue, typename ... Transformers,
-            std::size_t ... I>
-  void do_pipeline_nested(
-      Queue & input_queue, 
-      std::tuple<Transformers...> && transform_ops,
-      std::index_sequence<I...>) const;
+		      Divider && divide_op,
+		      Predicate && condition_op,
+		      Solver && solve_op,
+		      Combiner && combine_op,
+		      std::atomic<int> & num_threads) const;
 
   template <typename Queue, typename Consumer,
             requires_no_pattern<Consumer> = 0>
@@ -878,22 +725,22 @@ auto parallel_execution_omp::divide_conquer(
       num_threads);
 }
 
-template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
-auto parallel_execution_omp::divide_conquer(
-    Input && input,
-    Divider && divide_op,
-    Predicate && condition_op,
-    Solver && solve_op,
-    Combiner && combine_op) const
-{
-  std::atomic<int> num_threads{concurrency_degree_-1};
+template <typename Input, typename Divider,typename Predicate,
+  typename Solver, typename Combiner>
+auto parallel_execution_omp::divide_conquer(Input && input,
+					    Divider && divide_op,
+					    Predicate && condition_op,
+					    Solver && solve_op,
+					    Combiner && combine_op) const
+ {
+   std::atomic<int> num_threads{concurrency_degree_-1};
 
-  return divide_conquer(std::forward<Input>(input),
-      std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
-      std::forward<Solver>(solve_op),
-      std::forward<Combiner>(combine_op),
-      num_threads);
-}
+   return divide_conquer(std::forward<Input>(input),
+			 std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+			 std::forward<Solver>(solve_op),
+			 std::forward<Combiner>(combine_op),
+			 num_threads);
+ }
 
 template <typename Generator, typename ... Transformers>
 void parallel_execution_omp::pipeline(
@@ -998,81 +845,80 @@ auto parallel_execution_omp::divide_conquer(
 }
 
 template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
-auto parallel_execution_omp::divide_conquer(
-    Input && input,
-    Divider && divide_op,
-    Predicate && condition_op,
-    Solver && solve_op,
-    Combiner && combine_op,
-    std::atomic<int> & num_threads) const
-{
-  constexpr sequential_execution seq;
-  if (num_threads.load()<=0) {
-    return seq.divide_conquer(std::forward<Input>(input),
-        std::forward<Divider>(divide_op),std::forward<Predicate>(condition_op),
-        std::forward<Solver>(solve_op),
-        std::forward<Combiner>(combine_op));
-  }
+auto parallel_execution_omp::divide_conquer(Input && input,
+					    Divider && divide_op,
+					    Predicate && condition_op,
+					    Solver && solve_op,
+					    Combiner && combine_op,
+					    std::atomic<int> & num_threads) const
+ {
+   constexpr sequential_execution seq;
+   if (num_threads.load()<=0) {
+     return seq.divide_conquer(std::forward<Input>(input),
+			       std::forward<Divider>(divide_op),std::forward<Predicate>(condition_op),
+			       std::forward<Solver>(solve_op),
+			       std::forward<Combiner>(combine_op));
+   }
 
-  if (condition_op(input)) { return solve_op(std::forward<Input>(input)); }
-  auto subproblems = divide_op(std::forward<Input>(input));
+   if (condition_op(input)) { return solve_op(std::forward<Input>(input)); }
+   auto subproblems = divide_op(std::forward<Input>(input));
 
-  using subresult_type =
-      std::decay_t<typename std::result_of<Solver(Input)>::type>;
-  std::vector<subresult_type> partials(subproblems.size()-1);
+     using subresult_type =
+       std::decay_t<typename std::result_of<Solver(Input)>::type>;
+     std::vector<subresult_type> partials(subproblems.size()-1);
 
-  auto process_subproblems = [&,this](auto it, std::size_t div) {
-    partials[div] = this->divide_conquer(std::forward<Input>(*it),
-        std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
-        std::forward<Solver>(solve_op),
-        std::forward<Combiner>(combine_op), num_threads);
-  };
+     auto process_subproblems = [&,this](auto it, std::size_t div) {
+       partials[div] = this->divide_conquer(std::forward<Input>(*it),
+					    std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+					    std::forward<Solver>(solve_op),
+					    std::forward<Combiner>(combine_op), num_threads);
+     };
 
-  int division = 0;
-  subresult_type subresult;
+     int division = 0;
+     subresult_type subresult;
 
-  #pragma omp parallel
-  {
-    #pragma omp single nowait
-    {
-      auto i = subproblems.begin() + 1;
-      while (i!=subproblems.end() && num_threads.load()>0) {
-        #pragma omp task firstprivate(i,division) \
-                shared(partials,divide_op,solve_op,combine_op,num_threads)
-        {
-           process_subproblems(i, division);
-        }
-        num_threads --;
-        i++;
-        division++;
-      }
+       #pragma omp parallel
+     {
+           #pragma omp single nowait
+       {
+	 auto i = subproblems.begin() + 1;
+	 while (i!=subproblems.end() && num_threads.load()>0) {
+#pragma omp task firstprivate(i,division) \
+  shared(partials,divide_op,solve_op,combine_op,num_threads)
+	   {
+	     process_subproblems(i, division);
+	   }
+	   num_threads --;
+	   i++;
+	   division++;
+	 }
 
-      while (i!=subproblems.end()) {
-        partials[division] = seq.divide_conquer(std::forward<Input>(*i++),
-          std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
-          std::forward<Solver>(solve_op),
-          std::forward<Combiner>(combine_op));
-      }
+	 while (i!=subproblems.end()) {
+	   partials[division] = seq.divide_conquer(std::forward<Input>(*i++),
+						   std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+						   std::forward<Solver>(solve_op),
+						   std::forward<Combiner>(combine_op));
+	 }
 
-      //Main thread works on the first subproblem.
-      if (num_threads.load()>0) {
-        subresult = divide_conquer(std::forward<Input>(*subproblems.begin()),
-            std::forward<Divider>(divide_op),std::forward<Predicate>(condition_op),
-            std::forward<Solver>(solve_op),
-            std::forward<Combiner>(combine_op), num_threads);
-      }
-      else {
-        subresult = seq.divide_conquer(std::forward<Input>(*subproblems.begin()),
-            std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
-            std::forward<Solver>(solve_op),
-            std::forward<Combiner>(combine_op));
-      }
-      #pragma omp taskwait
-    }
-  }
-  return seq.reduce(partials.begin(), partials.size(),
-      std::forward<subresult_type>(subresult), combine_op);
-}
+	 //Main thread works on the first subproblem.
+	 if (num_threads.load()>0) {
+	   subresult = divide_conquer(std::forward<Input>(*subproblems.begin()),
+				      std::forward<Divider>(divide_op),std::forward<Predicate>(condition_op),
+				      std::forward<Solver>(solve_op),
+				      std::forward<Combiner>(combine_op), num_threads);
+	 }
+	 else {
+	   subresult = seq.divide_conquer(std::forward<Input>(*subproblems.begin()),
+					  std::forward<Divider>(divide_op), std::forward<Predicate>(condition_op),
+					  std::forward<Solver>(solve_op),
+					  std::forward<Combiner>(combine_op));
+	 }
+	       #pragma omp taskwait
+       }
+     }
+     return seq.reduce(partials.begin(), partials.size(),
+		       std::forward<subresult_type>(subresult), combine_op);
+ }
 
 template <typename Queue, typename Consumer,
           requires_no_pattern<Consumer> =0>
@@ -1202,31 +1048,47 @@ void parallel_execution_omp::do_pipeline(
   #pragma omp taskwait
 }
 
-template <typename Queue, typename FarmTransformer,
+template <typename Queue, typename FarmTransformer, 
           template <typename> class Farm,
+          typename ... OtherTransformers,
           requires_farm<Farm<FarmTransformer>> =0>
 void parallel_execution_omp::do_pipeline(
     Queue & input_queue, 
-    Farm<FarmTransformer> && farm_obj) const
+    Farm<FarmTransformer> && farm_obj,
+    OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
   using namespace experimental;
   using input_type = typename Queue::value_type;
   using input_value_type = typename input_type::first_type::value_type;
+
+  using result_type = typename stage_return_type<input_value_type, FarmTransformer>::type;
+  using output_optional_type = optional<result_type>;
+  using output_type = pair<output_optional_type,long>;
  
+  decltype(auto) output_queue =
+    get_output_queue<output_type>(other_transform_ops...);
+
+//  auto output_queue = make_queue<output_type>();
+
+  atomic<int> done_threads{0};
+  int ntask = farm_obj.cardinality();
   for (int i=0; i<farm_obj.cardinality(); ++i) {
-    #pragma omp task shared(farm_obj,input_queue)
+    #pragma omp task shared(done_threads,output_queue,farm_obj,input_queue,ntask)
     {
-      auto item = input_queue.pop();
-      while (item.first) {
-        farm_obj(*item.first);
-        item = input_queue.pop();
+      do_pipeline(input_queue, farm_obj.transformer(), output_queue);
+      done_threads++;
+      if (done_threads == ntask){
+        output_queue.push(make_pair(output_optional_type{}, -1));
+      }else{
+        input_queue.push(input_type{});
       }
-      input_queue.push(item);
     }              
   }
+  do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
   #pragma omp taskwait
 }
+
 
 template <typename Queue, typename Predicate,
           template <typename> class Filter,
@@ -1270,6 +1132,7 @@ void parallel_execution_omp::do_pipeline(
 
     decltype(auto) output_queue =
       get_output_queue<input_type>(other_transform_ops...);
+
 
     auto reorder_task = [&]() {
       vector<input_type> elements;
@@ -1371,7 +1234,7 @@ void parallel_execution_omp::do_pipeline(
   using input_item_value_type = typename input_item_type::first_type::value_type;
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
-
+  
   decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_transform_ops...);
 
@@ -1416,8 +1279,8 @@ void parallel_execution_omp::do_pipeline(
   using input_item_value_type = typename input_item_type::first_type::value_type;
   decltype(auto) output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);
-    
-    
+
+
   auto iteration_task = [&]() {
     for (;;) {
       auto item = input_queue.pop();

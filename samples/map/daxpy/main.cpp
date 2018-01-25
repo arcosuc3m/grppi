@@ -36,9 +36,9 @@
 void test_map(grppi::dynamic_execution & e, int n) {
   using namespace std;
 
-  random_device rengine;
-  uniform_real_distribution<double> value_gen{-100.4, 100.7};
-  uniform_real_distribution<double> coef_gen{1.4, 10.7};
+  mt19937_64 rengine;
+  uniform_real_distribution<double> value_gen{-100.0, 100.0};
+  uniform_real_distribution<double> coef_gen{1.0, 10.0};
 
   vector<double> x;
   generate_n(back_inserter(x), n,
@@ -49,18 +49,12 @@ void test_map(grppi::dynamic_execution & e, int n) {
     [&]() { return value_gen(rengine); });
   double a = coef_gen(rengine);
 
-  auto t0 = chrono::system_clock::now();
   grppi::map(e, begin(x), end(x), begin(y),
-    [a](double vx, double vy) { return a * vx + vy; },
-    begin(y)
-  );
-  auto t1 = chrono::system_clock::now();
-  auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
+    [a](int vx, int vy) { return a * vx + vy; },
+    begin(y));
 
-//  copy(begin(y), end(y), ostream_iterator<double>(cout, " "));
-//  cout << endl;
-
-  cout << "Execution time = " << diff.count() << " (ms)" << endl;
+  copy(begin(y), end(y), ostream_iterator<int>(cout, " "));
+  cout << endl;
 }
 
 void print_message(const std::string & prog, const std::string & msg) {

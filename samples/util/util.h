@@ -29,7 +29,7 @@ grppi::dynamic_execution execution_mode(const std::string & opt) {
   if ("thr" == opt) return parallel_execution_native{};
   if ("omp" == opt) return parallel_execution_omp{};
   if ("tbb" == opt) return parallel_execution_tbb{};
-  if ("ff" == opt)  return parallel_execution_ff{};
+  if ( "ff" == opt) return parallel_execution_ff{}; 
   return {};
 }
 
@@ -64,7 +64,7 @@ void print_available_modes(std::ostream & os) {
   }
 
   if (is_supported<parallel_execution_ff>()) {
-    os << "    ff  -> FastFlow backend" << endl;
+    os << "    ff -> FastFlow backend" << endl;
   }
 }
 

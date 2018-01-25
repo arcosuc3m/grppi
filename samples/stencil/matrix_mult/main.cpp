@@ -70,44 +70,40 @@ int col_index(I it, C & cont, int ncols) {
 void matrix_mult(grppi::dynamic_execution & e, int n) {
   using namespace std;
 
-//  random_device rdev;
-//  uniform_real_distribution<double> gen{1.0, 100.00};
+  random_device rdev;
+  uniform_real_distribution<double> gen{1.0, 100.00};
 
-  std::vector<int> a;
+  std::vector<double> a;
   generate_n(back_inserter(a), n*n,
-    [i=1]() mutable { return i++; });
-  std::vector<int> b;
+    [&]() { return gen(rdev); });
+  std::vector<double> b;
   generate_n(back_inserter(b), n*n,
-    [i=3]() mutable { return i+=5; });
-  std::vector<int> c(n*n);
+    [&]() { return gen(rdev); });
+  std::vector<double> c(n*n);
 
-  auto t0 = chrono::system_clock::now();
   grppi::stencil(e, begin(a), end(a), begin(c),
     [=](auto it, auto nh) {
-      int r = 0;
+      double r = 0;
       for (int k=0;k<n;++k) { r+= nh.first[k] * nh.second[k]; }
       return r;
     },
     [&](auto it1, auto it2) {
       return make_pair(
-        row_span<int>{a, n, row_index(it1,a,n)},
-        col_span<int>{b, n, col_index(it2,b,n)}
+        row_span<double>{a, n, row_index(it1,a,n)},
+        col_span<double>{b, n, col_index(it2,b,n)}
       );
     },
     begin(b)
   );
-  auto t1 = chrono::system_clock::now();
-  auto diff = chrono::duration_cast<chrono::milliseconds>(t1-t0);
-  cout << "Execution time = " << diff.count() << " (ms)\n\n" << endl;
 
   cout << "size(a)" << a.size() << endl;
-  copy(begin(a), end(a), ostream_iterator<int>(cout, " "));
+  copy(begin(a), end(a), ostream_iterator<double>(cout, " "));
   cout << endl << endl;
   cout << "size(b)" << b.size() << endl;
-  copy(begin(b), end(b), ostream_iterator<int>(cout, " "));
+  copy(begin(b), end(b), ostream_iterator<double>(cout, " "));
   cout << endl << endl;
   cout << "size(c)" << c.size() << endl;
-  copy(begin(c), end(c), ostream_iterator<int>(cout, " "));
+  copy(begin(c), end(c), ostream_iterator<double>(cout, " "));
   cout << endl << endl;
 }
 

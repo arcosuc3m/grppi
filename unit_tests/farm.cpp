@@ -280,43 +280,6 @@ public:
     EXPECT_EQ(66, this->w[0]);
   }
 
-  void setup_single_ary_sink() {
-    v = vector<int>{11};
-    v2 = vector<int>{22};
-    v3 = vector<int>{33};
-    w = vector<int>{99};
-  }
-
-  template <typename E>
-  void run_single_ary_sink(const E & e) {
-    grppi::pipeline(e,
-      [this]() -> optional<tuple<int,int,int>> {
-        invocations_in++;
-        if (idx_in < v.size()) {
-          idx_in++;
-          return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-        } 
-        else return {};
-      },
-      grppi::farm(4,
-        [this](tuple<int,int,int> x) {
-          invocations_op++;
-          return get<0>(x) + get<1>(x) + get<2>(x);;
-        }),
-      [this](int x) {
-        invocations_sk++;
-        w[idx_out] = x;
-        idx_out++;
-      });
-  }
-
-  void check_single_ary_sink() {
-    EXPECT_EQ(2, invocations_in); // Functor in was invoked twice
-    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
-    EXPECT_EQ(1, this->invocations_sk); // one invocation of function sk
-    EXPECT_EQ(66, this->w[0]);
-  }
-
   void setup_multiple() {
     v = vector<int>{1,2,3,4,5};
     output = 0;
@@ -411,42 +374,6 @@ public:
   void check_multiple_ary() {
     EXPECT_EQ(6, this->invocations_in); // six invocations of function in
     EXPECT_EQ(5, this->invocations_op); // five invocations of function op
-    EXPECT_EQ(95, this->output);
-  }
-  
-  void setup_multiple_ary_sink() {
-    v = vector<int>{1,2,3,4,5};
-    v2 = vector<int>{2,4,6,8,10};
-    v3 = vector<int>{10,10,10,10,10};
-    output = 0;
-  }
-
-  template <typename E>
-  void run_multiple_ary_sink(const E & e) {
-    grppi::pipeline(e,
-      [this]() -> optional<tuple<int,int,int>> {
-        invocations_in++;
-        if (idx_in < v.size()) {
-          idx_in++;
-          return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
-      } 
-      else return {};
-    },
-    grppi::farm(4,
-      [this](tuple<int,int,int> x) {
-        invocations_op++;
-        return get<0>(x) + get<1>(x) + get<2>(x);
-      }),
-    [this](int x) {
-      invocations_sk++;
-      output += x;
-    });
-  }
-
-  void check_multiple_ary_sink() {
-    EXPECT_EQ(6, this->invocations_in); // six invocations of function in
-    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
-    EXPECT_EQ(5, this->invocations_sk); // five invocations of function sk
     EXPECT_EQ(95, this->output);
   }
 
@@ -567,20 +494,6 @@ TYPED_TEST(farm_test, dyn_single_ary)
   this->check_single_ary();
 }
 
-TYPED_TEST(farm_test, static_single_ary_sink)
-{
-  this->setup_single_ary_sink();
-  this->run_single_ary_sink(this->dyn_execution_);
-  this->check_single_ary_sink();
-}
-
-TYPED_TEST(farm_test, dyn_single_ary_sink)
-{
-  this->setup_single_ary_sink();
-  this->run_single_ary_sink(this->dyn_execution_);
-  this->check_single_ary_sink();
-}
-
 TYPED_TEST(farm_test, static_multiple)
 {
   this->setup_multiple();
@@ -623,16 +536,132 @@ TYPED_TEST(farm_test, dyn_multiple_ary)
   this->check_multiple_ary();
 }
 
-TYPED_TEST(farm_test, static_multiple_ary_sink)
+
+template <typename T>
+class farm_test_alt : public ::testing::Test {
+public:
+  T execution_;
+  dynamic_execution dyn_execution_{execution_};
+  
+  // Variables
+  std::atomic<int> output;
+
+  // Vectors
+  vector<int> v{};
+  vector<int> v2{};
+  vector<int> v3{};
+  vector<int> w{};
+
+  // entry counter
+  int idx_in = 0;
+  int idx_out = 0;
+
+  // Invocation counter
+  std::atomic<int> invocations_in{0};
+  std::atomic<int> invocations_op{0};
+  std::atomic<int> invocations_sk{0};
+  
+  void setup_single_ary_sink() {
+    v = vector<int>{11};
+    v2 = vector<int>{22};
+    v3 = vector<int>{33};
+    w = vector<int>{99};
+  }
+
+  template <typename E>
+  void run_single_ary_sink(const E & e) {
+    grppi::pipeline(e,
+      [this]() -> optional<tuple<int,int,int>> {
+        invocations_in++;
+        if (idx_in < v.size()) {
+          idx_in++;
+          return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
+        } 
+        else return {};
+      },
+      grppi::farm(4,
+        [this](tuple<int,int,int> x) {
+          invocations_op++;
+          return get<0>(x) + get<1>(x) + get<2>(x);;
+        }),
+      [this](int x) {
+        invocations_sk++;
+        w[idx_out] = x;
+        idx_out++;
+      });
+  }
+
+  void check_single_ary_sink() {
+    EXPECT_EQ(2, invocations_in); // Functor in was invoked twice
+    EXPECT_EQ(1, this->invocations_op); // one invocation of function op
+    EXPECT_EQ(1, this->invocations_sk); // one invocation of function sk
+    EXPECT_EQ(66, this->w[0]);
+  }
+  
+  void setup_multiple_ary_sink() {
+    v = vector<int>{1,2,3,4,5};
+    v2 = vector<int>{2,4,6,8,10};
+    v3 = vector<int>{10,10,10,10,10};
+    output = 0;
+  }
+
+  template <typename E>
+  void run_multiple_ary_sink(const E & e) {
+    grppi::pipeline(e,
+      [this]() -> optional<tuple<int,int,int>> {
+        invocations_in++;
+        if (idx_in < v.size()) {
+          idx_in++;
+          return make_tuple(v[idx_in-1], v2[idx_in-1], v3[idx_in-1]);
+      } 
+      else return {};
+    },
+    grppi::farm(4,
+      [this](tuple<int,int,int> x) {
+        invocations_op++;
+        return get<0>(x) + get<1>(x) + get<2>(x);
+      }),
+    [this](int x) {
+      invocations_sk++;
+      output += x;
+    });
+  }
+
+  void check_multiple_ary_sink() {
+    EXPECT_EQ(6, this->invocations_in); // six invocations of function in
+    EXPECT_EQ(5, this->invocations_op); // five invocations of function op
+    EXPECT_EQ(5, this->invocations_sk); // five invocations of function sk
+    EXPECT_EQ(95, this->output);
+  }  
+};
+
+
+TYPED_TEST_CASE(farm_test_alt, executions_noff);
+
+TYPED_TEST(farm_test_alt, static_single_ary_sink)
 {
-  this->setup_multiple_ary();
+  this->setup_single_ary_sink();
+  this->run_single_ary_sink(this->execution_);
+  this->check_single_ary_sink();
+}
+
+TYPED_TEST(farm_test_alt, dyn_single_ary_sink)
+{
+  this->setup_single_ary_sink();
+  this->run_single_ary_sink(this->execution_);
+  this->check_single_ary_sink();
+}
+
+TYPED_TEST(farm_test_alt, static_multiple_ary_sink)
+{
+  this->setup_multiple_ary_sink();
   this->run_multiple_ary_sink(this->execution_);
   this->check_multiple_ary_sink();
 }
 
-TYPED_TEST(farm_test, dyn_multiple_ary_sink)
+TYPED_TEST(farm_test_alt, dyn_multiple_ary_sink)
 {
   this->setup_multiple_ary_sink();
-  this->run_multiple_ary_sink(this->dyn_execution_);
+  this->run_multiple_ary_sink(this->execution_);
   this->check_multiple_ary_sink();
 }

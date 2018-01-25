@@ -1028,9 +1028,6 @@ void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer &
   }
 }
 
-
-
->>>>>>> upstream/master
 template <typename Queue, typename Transformer, 
           typename ... OtherTransformers,
           requires_no_pattern<Transformer> =0>

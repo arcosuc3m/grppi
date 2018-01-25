@@ -97,7 +97,7 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PR
         FILES_MATCHING PATTERN "*.h")
 
 # Example applications
-option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" ON )
+option( GRPPI_EXAMPLE_APPLICATIONS_ENABLE "Sample tests" OFF )
 if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
     add_subdirectory(samples)
 endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
