@@ -83,7 +83,7 @@ if( GRPPI_FF_ENABLE )
 	find_package( FF )
     message( STATUS "FastFlow Path is: " ${FFPATH} )
     add_definitions( "-DGRPPI_FF" )
-    include_directories( ${FFPATH}/include )
+    include_directories( ${FFPATH}/fastflow )
 endif( GRPPI_FF_ENABLE )
 
 # Doxygen Documentation
