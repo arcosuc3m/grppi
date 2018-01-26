@@ -10,8 +10,14 @@ if(GRPPI_UNIT_TEST_ENABLE)
     cmake_policy(SET CMP0057 NEW)
   endif()
 
-  find_package(GTest REQUIRED) 
-  include_directories(${GTEST_INCLUDE_DIRS})
+  find_package(GTest)
+  if(GTEST_FOUND)
+    include_directories(${GTEST_INCLUDE_DIRS})
+  else(GTEST_FOUND)
+    include_directories(${GTEST_ROOT}/include)
+    link_directories(${GTEST_ROOT}/lib)
+    set(GTEST_BOTH_LIBRARIES "gtest" "gtest_main")
+  endif(GTEST_FOUND)
 
   # Unit testing should be made in debug mode
   set(CMAKE_BUILD_TYPE "Debug")
