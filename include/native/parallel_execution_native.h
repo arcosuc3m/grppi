@@ -25,6 +25,7 @@
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
+#include "../common/profiler.h"
 
 #include <thread>
 #include <atomic>
@@ -35,6 +36,10 @@
 #include <experimental/optional>
 
 namespace grppi {
+
+namespace{
+  profiler no_profile_;
+}
 
 /**
 \brief Thread index table to provide portable natural thread indices.
@@ -155,6 +160,12 @@ public:
           static_cast<int>(2 * std::thread::hardware_concurrency()), 
           true}
   {}
+  
+  parallel_execution_native(int concurrency_degree, profiler& p, bool ordering=true) noexcept :
+    concurrency_degree_{concurrency_degree},
+    ordering_{ordering},
+    profiler_{p}
+  {}
 
   /** 
   \brief Constructs a native parallel execution policy.
@@ -166,11 +177,12 @@ public:
   */
   parallel_execution_native(int concurrency_degree, bool ordering=true) noexcept :
     concurrency_degree_{concurrency_degree},
-    ordering_{ordering}
+    ordering_{ordering},
+    profiler_{no_profile_}
   {}
 
   parallel_execution_native(const parallel_execution_native & ex) :
-      parallel_execution_native{ex.concurrency_degree_, ex.ordering_}
+      parallel_execution_native{ex.concurrency_degree_, ex.profiler_, ex.ordering_}
   {}
 
   /**
@@ -521,6 +533,8 @@ private:
 
 private: 
   mutable thread_registry thread_registry_;
+
+  profiler& profiler_;
 
   int concurrency_degree_;
   bool ordering_;
