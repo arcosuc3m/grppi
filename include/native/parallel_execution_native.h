@@ -1689,7 +1689,7 @@ void parallel_execution_native::do_pipeline(
   using input_item_type = typename decay_t<Queue>::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
   auto output_queue = make_queue<input_item_type>();
-
+  long order = 0;
   auto iteration_task = [&]() {
     for (;;) {
       auto item = input_queue.pop();
@@ -1700,7 +1700,8 @@ void parallel_execution_native::do_pipeline(
         input_queue.push(new_item);
       }
       if(iteration_obj.output_guard(value)){
-        output_queue.push(new_item);
+        output_queue.push(input_item_type{value,order});
+        order++;
       }
     }
     while (!input_queue.is_empty()) {
@@ -1711,7 +1712,8 @@ void parallel_execution_native::do_pipeline(
         input_queue.push(new_item);
       }
       if(iteration_obj.output_guard(value)){
-        output_queue.push(new_item);
+        output_queue.push(input_item_type{value,order});
+        order++;
       }
     }
     output_queue.push(input_item_type{{},-1});

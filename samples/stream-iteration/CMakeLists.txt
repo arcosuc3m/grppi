@@ -1,1 +1,2 @@
 add_subdirectory(print_power)
+add_subdirectory(image_resolution)

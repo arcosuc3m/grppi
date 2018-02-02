@@ -875,14 +875,14 @@ void sequential_execution::do_pipeline(
     Iteration<Transformer,Predicate,Guard> && iteration_obj, 
     OtherTransformers && ... other_transform_ops) const
 {
-  auto new_item = iteration_obj.transform(std::forward<Item>(item));
-  while (!iteration_obj.predicate(new_item)) {
-    new_item = iteration_obj.transform(new_item);
-    if(iteration_obj.ouput_guard(new_item)){
-      do_pipeline(new_item,
+
+  do{
+    item = iteration_obj.transform(std::forward<Item>(item));
+    if(iteration_obj.output_guard(item)){
+      do_pipeline(item,
           std::forward<OtherTransformers...>(other_transform_ops)...);
     }
-  }
+  } while (!iteration_obj.predicate(item));
 }
 
 template <typename Item, typename Transformer, typename Predicate,
