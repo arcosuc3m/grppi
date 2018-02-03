@@ -134,7 +134,7 @@ public:
   \param queue Reference of a queue of type T
   */
   template <typename T, typename ... Transformers>
-  mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers ...) const {
+  mpmc_queue<T>& get_output_queue(mpmc_queue<T> & queue, Transformers &&...) const {
     return queue;
   }
 
@@ -146,7 +146,7 @@ public:
   \tparam Transformers List of the next transformers.
   */
   template <typename T, typename ... Transformers>
-  mpmc_queue<T> get_output_queue(Transformers ... ) const{
+  mpmc_queue<T> get_output_queue(Transformers &&... ) const{
     return std::move(make_queue<T>());
   }
 

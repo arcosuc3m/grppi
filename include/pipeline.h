@@ -80,7 +80,6 @@ auto pipeline(
         std::forward<Transformers>(transform_ops)...,
         std::forward<Consumer>(consume_op));
 }
-
 /**
 @}
 @}
