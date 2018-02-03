@@ -222,7 +222,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stream_filter_test, executions);
+TYPED_TEST_CASE(stream_filter_test, executions_noff);
 
 TYPED_TEST(stream_filter_test, static_ordered_keep_empty)
 {

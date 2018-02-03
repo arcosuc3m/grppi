@@ -25,6 +25,7 @@
 #include "../native/parallel_execution_native.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
+#include "../ff/parallel_execution_ff.h"
 
 #include <memory>
 
@@ -272,7 +273,21 @@ GRPPI_TRY_PATTERN(parallel_execution_tbb,PATTERN,__VA_ARGS__)
 #define GRPPI_TRY_PATTERN_TBB(PATTERN,...)
 #endif
 
+#ifdef GRPPI_FF
+#define GRPPI_TRY_PATTERN_FF(PATTERN,...) \
+GRPPI_TRY_PATTERN(parallel_execution_ff,PATTERN,__VA_ARGS__)
+#else
+#define GRPPI_TRY_PATTERN_FF(PATTERN,...)
+#endif
+
 #define GRPPI_TRY_PATTERN_ALL(...) \
+GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
+GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
+GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
+GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
+GRPPI_TRY_PATTERN_FF(__VA_ARGS__) \
+
+#define GRPPI_TRY_PATTERN_ALL_NOFF(...) \
 GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
 GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
@@ -295,7 +310,7 @@ auto dynamic_execution::reduce(InputIterator first, std::size_t sequence_size,
           Identity && identity,
           Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL(reduce, first, sequence_size, 
+  GRPPI_TRY_PATTERN_ALL_NOFF(reduce, first, sequence_size, 
       std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
 }
 
@@ -308,7 +323,7 @@ auto dynamic_execution::map_reduce(
     Transformer && transform_op, 
     Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL(map_reduce, firsts, sequence_size, 
+  GRPPI_TRY_PATTERN_ALL_NOFF(map_reduce, firsts, sequence_size, 
       std::forward<Identity>(identity), 
       std::forward<Transformer>(transform_op),
       std::forward<Combiner>(combine_op));
@@ -323,7 +338,7 @@ void dynamic_execution::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  GRPPI_TRY_PATTERN_ALL(stencil, firsts, first_out, sequence_size,
+  GRPPI_TRY_PATTERN_ALL_NOFF(stencil, firsts, first_out, sequence_size,
       std::forward<StencilTransformer>(transform_op),
       std::forward<Neighbourhood>(neighbour_op));
 }
@@ -335,7 +350,7 @@ auto dynamic_execution::divide_conquer(
     Solver && solve_op, 
     Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL(divide_conquer, std::forward<Input>(input),
+  GRPPI_TRY_PATTERN_ALL_NOFF(divide_conquer, std::forward<Input>(input),
       std::forward<Divider>(divide_op),
       std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op));
@@ -350,7 +365,7 @@ auto dynamic_execution::divide_conquer(
     Solver && solve_op,
     Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL(divide_conquer, std::forward<Input>(input),
+  GRPPI_TRY_PATTERN_ALL_NOFF(divide_conquer, std::forward<Input>(input),
       std::forward<Divider>(divide_op),
       std::forward<Predicate>(predicate_op),
       std::forward<Solver>(solve_op),
@@ -362,7 +377,7 @@ void dynamic_execution::pipeline(
     Generator && generate_op, 
     Transformers && ... transform_ops) const
 {
-  GRPPI_TRY_PATTERN_ALL(pipeline, std::forward<Generator>(generate_op),
+  GRPPI_TRY_PATTERN_ALL_NOFF(pipeline, std::forward<Generator>(generate_op),
       std::forward<Transformers>(transform_ops)...);
 }
 
@@ -370,6 +385,7 @@ void dynamic_execution::pipeline(
 #undef GRPPI_TRY_PATTERN_OMP
 #undef GRPPI_TRY_PATTERN_TBB
 #undef GRPPI_TRY_PATTERN_ALL
+#undef GRPPI_TRY_PATTERN_ALL_NOFF
 
 } // end namespace grppi
 
