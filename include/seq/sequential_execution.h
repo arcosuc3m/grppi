@@ -21,6 +21,7 @@
 #ifndef GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 #define GRPPI_SEQ_SEQUENTIAL_EXECUTION_H
 
+#include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/callable_traits.h"
 #include "../common/execution_traits.h"
@@ -30,7 +31,7 @@
 #include <type_traits>
 #include <tuple>
 #include <iterator>
-
+//#include <experimental/optional>
 
 namespace grppi {
 
@@ -207,6 +208,35 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
+    /**
+  \brief Invoke \ref md_pipeline comming from another context
+  that uses mpmc_queues as communication channels.
+  \tparam InputType Type of the input stream.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \tparam InputType Type of the output stream.
+  \param input_queue Input stream communicator.
+  \param transform_ops Transformer operations.
+  \param output_queue Input stream communicator.
+  */
+  template <typename InputType, typename Transformer, typename OutputType>
+  void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
+                mpmc_queue<OutputType> & output_queue) const
+  {
+    using namespace std;
+    using optional_output_type = typename OutputType::first_type;
+    for(;;){
+      auto item = input_queue.pop();
+      if(!item.first) break;
+      do_pipeline(*item.first, std::forward<Transformer>(transform_op),
+        [&](auto output_item) {
+          output_queue.push( make_pair(optional_output_type{output_item}, item.second) );
+        }
+      );
+    }
+    output_queue.push( make_pair(optional_output_type{}, -1) );
+  }
+
+
 private:
 
   template <typename Item, typename Consumer,
@@ -230,6 +260,29 @@ private:
             template <typename> class Farm,
             requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Item, typename Execution, typename Transformer,
+            template <typename, typename> class Context,
+            typename ... OtherTransformers,
+            requires_context<Context<Execution,Transformer>> = 0>
+  void do_pipeline(Item && item, Context<Execution,Transformer> && context_op,
+       OtherTransformers &&... other_ops) const
+  {
+     do_pipeline(item, std::forward<Transformer>(context_op.transformer()), 
+       std::forward<OtherTransformers>(other_ops)...);
+  }
+
+  template <typename Item, typename Execution, typename Transformer,
+            template <typename, typename> class Context,
+            typename ... OtherTransformers,
+            requires_context<Context<Execution,Transformer>> = 0>
+  void do_pipeline(Item && item, Context<Execution,Transformer> & context_op,
+       OtherTransformers &&... other_ops) const
+  {
+    do_pipeline(item, std::move(context_op),
+      std::forward<OtherTransformers>(other_ops)...);
+  }
+
 
   template <typename Item, typename FarmTransformer,
             template <typename> class Farm,

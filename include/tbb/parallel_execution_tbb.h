@@ -248,6 +248,25 @@ public:
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_op) const;
 
+  /**
+  \brief Invoke \ref md_pipeline comming from another context
+  that uses mpmc_queues as communication channels.
+  \tparam InputType Type of the input stream.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \tparam InputType Type of the output stream.
+  \param input_queue Input stream communicator.
+  \param transform_ops Transformer operations.
+  \param output_queue Input stream communicator.
+  */
+  template <typename InputType, typename Transformer, typename OutputType>
+  void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
+                mpmc_queue<OutputType> & output_queue) const
+  {
+    sequential_execution seq{};
+    seq.pipeline(input_queue, std::forward<Transformer>(transform_op), output_queue);
+  }
+
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -286,6 +305,29 @@ private:
             template <typename> class Farm,
             requires_farm<Farm<FarmTransformer>> = 0>
   auto make_filter(Farm<FarmTransformer> && farm_obj) const;
+
+  template <typename Input, typename Execution, typename Transformer,
+            template <typename, typename> class Context,
+            typename ... OtherTransformers,
+            requires_context<Context<Execution,Transformer>> = 0>
+  auto make_filter(Context<Execution,Transformer> && context_op,
+       OtherTransformers &&... other_ops) const
+  {
+     return this->template make_filter<Input>(std::forward<Transformer>(context_op.transformer()),
+       std::forward<OtherTransformers>(other_ops)...);
+  }
+
+  template <typename Input, typename Execution, typename Transformer,
+            template <typename, typename> class Context,
+            typename ... OtherTransformers,
+            requires_context<Context<Execution,Transformer>> = 0>
+  auto make_filter(Context<Execution,Transformer> & context_op,
+       OtherTransformers &&... other_ops) const
+  {
+    return this->template make_filter<Input>(std::move(context_op),
+      std::forward<OtherTransformers>(other_ops)...);
+  }
+
 
   template <typename Input, typename FarmTransformer, 
             template <typename> class Farm,
