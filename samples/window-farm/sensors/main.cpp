@@ -100,7 +100,6 @@ int main(int argc, char **argv) {
   }
   auto e = execution_mode(string(argv[1]));
   if(string(argv[3]) == "count"){
-std::cout << "hola" << stoi(argv[4]) <<  stoi(argv[5]) << std::endl;
     auto w = grppi::count_based<int>(stoi(argv[4]), stoi(argv[5]));
     sensor_analysis(e, w, stoi(argv[2]), true);
   }
