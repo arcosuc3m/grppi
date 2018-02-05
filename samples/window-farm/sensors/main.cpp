@@ -38,9 +38,8 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-
-template <typename E, typename W>
-void sensor_analysis(E & e, W window, int ntask, bool incremental)
+template <typename W>
+void sensor_analysis(grppi::dynamic_execution & e, W window, int ntask, bool incremental)
 {
   using namespace std;
   using namespace experimental;
@@ -50,46 +49,34 @@ void sensor_analysis(E & e, W window, int ntask, bool incremental)
   int num_windows = 0;
   int value = 0;
   
-  auto start = std::chrono::high_resolution_clock::now();
-
-
-  grppi::pipeline( e,
-     [&](){
-       n++;
-       nanosleep(time, NULL);
-       
-       if(n != 4000) {
-         if(incremental)
-           value+=rand() % 20;
-         else value = rand() %20;
-         return optional<int>{value}; 
-       }else
-          return optional<int>{};
-     },
-     grppi::active_window(window),
-     grppi::farm(ntask, [](auto window) {
-       double value = 0.0;
-       for(auto i = 0; i < 200000; i++){
-         for( auto t=0;t<window.size();t++){
-            double aux = window[0]; 
-            value = sqrt(aux*aux + value*value);
-         }
-       }
-       return value;
-     }),
-    // window),
-     [&](double a){
-       //std::cout<<a<<std::endl;
-       num_windows+=1;
-     }
+  grppi::pipeline(e,
+    [&]() -> optional<int> {
+      n++;
+      nanosleep(time, NULL);
+     
+      if (n!=4000) {
+        if (incremental) value+= rand() % 20;
+        else value = rand() % 20;
+        return value;
+      }
+      else return {};
+    },
+    grppi::active_window(window),
+    grppi::farm(ntask, [](auto window) {
+      double value= 0.0;
+      for (auto i= 0; i<200000; i++) {
+        for (auto t= 0; t<window.size(); t++) {
+          double aux = window[0]; 
+          value = sqrt(aux*aux + value*value);
+        }
+      }
+      return value;
+    }),
+    [&](double a){
+      std::cout << a << std::endl;
+      num_windows+= 1;
+    }
   );
-  
-  auto end = std::chrono::high_resolution_clock::now();
-  int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>
-                             (end-start).count();
- 
-  std::cout << num_windows << " " << elapsed_time <<std::endl;
-
 }
 
 void print_message(const std::string & prog, const std::string & msg) {
@@ -97,15 +84,14 @@ void print_message(const std::string & prog, const std::string & msg) {
 
   cerr << msg << endl;
   cerr << "Usage: " << prog << "mode num_threads window_policy window_arguments" <<endl;
-/*  cerr << "  input: Input file name" << endl;
-  cerr << "  output: Output file name" << endl;*/
+  cerr << "  num_threads: Number of threads" << endl;
+  cerr << "  window_policy: [count time punctuaction delta]" << endl;
+  cerr << "  window_arguments: [count time punctuation delta]" << endl;
   cerr << "  mode:" << endl;
   print_available_modes(cerr);
 }
 
-
 int main(int argc, char **argv) {
-    
   using namespace std;
 
   if(argc < 5){
@@ -113,22 +99,24 @@ int main(int argc, char **argv) {
     return -1;
   }
   auto e = execution_mode(string(argv[1]));
-//  auto e = grppi::parallel_execution_omp{};
   if(string(argv[3]) == "count"){
-    auto w = grppi::count_based<int>(atoi(argv[4]),atoi(argv[5]));
-    sensor_analysis(e, w, atoi(argv[2]),true );
+std::cout << "hola" << stoi(argv[4]) <<  stoi(argv[5]) << std::endl;
+    auto w = grppi::count_based<int>(stoi(argv[4]), stoi(argv[5]));
+    sensor_analysis(e, w, stoi(argv[2]), true);
   }
-  if(string(argv[3]) == "time"){
-    auto w = grppi::time_based<int>(atof(argv[4]),atof(argv[5]));
-    sensor_analysis(e, w, atoi(argv[2]),true );
+  else if(string(argv[3]) == "time"){
+    auto w = grppi::time_based<int>(stof(argv[4]), stof(argv[5]));
+    sensor_analysis(e, w, stoi(argv[2]), true);
   }
-  if(string(argv[3]) == "punctuation"){
-    auto w = grppi::punctuation_based<int>(atoi(argv[4]));
-    sensor_analysis(e, w, atoi(argv[2]),false );    
+
+  else if(string(argv[3]) == "punctuation"){
+    auto w = grppi::punctuation_based<int>(stoi(argv[4]));
+    sensor_analysis(e, w, stoi(argv[2]), false);
   }
-  if(string(argv[3]) == "delta"){
-    auto w = grppi::delta_based<int>(atoi(argv[4]),atoi(argv[5]),0);
-    sensor_analysis(e, w, atoi(argv[2]),true );
+  else if(string(argv[3]) == "delta"){
+    auto w = grppi::delta_based<int>(stoi(argv[4]), stoi(argv[5]), 0);
+    sensor_analysis(e, w, stoi(argv[2]), true);
   }
+
   return 0;
 }

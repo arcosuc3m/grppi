@@ -55,7 +55,7 @@ void stream_pool(Execution & ex,
                 Evaluation && eval_op,
                 Predicate && termination_op)
 {
-  ex.stream_pool(ex,population, std::forward<Selection>(selection_op),
+  ex.stream_pool(population, std::forward<Selection>(selection_op),
        std::forward<Evolution>(evolve_op), std::forward<Evaluation>(eval_op),
        std::forward<Predicate>(termination_op));
 }
