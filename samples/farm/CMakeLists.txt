@@ -1,2 +1,3 @@
 add_subdirectory(capitalize)
 add_subdirectory(sqrinv_seq)
+add_subdirectory(farm_pipeline)
