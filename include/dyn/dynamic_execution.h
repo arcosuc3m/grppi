@@ -252,12 +252,17 @@ constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
 {\
   if (supports_##PATTERN<E>()) {\
+    std::cerr << "Pattern is supported by " << #E << "\n";\
     auto * ex = dynamic_cast<execution<E>*>(execution_.get());\
     if (ex) {\
+      std::cerr << "Pattern is " << #E << "\n";\
       return ex->ex_.PATTERN(__VA_ARGS__);\
     }\
   }\
 }
+
+#define GRPPI_PATTERN_NOT_IMPLEMENTED(PATTERN,...)\
+throw std::runtime_error{"Pattern " #PATTERN " not implemented"};
 
 #ifdef GRPPI_OMP
 #define GRPPI_TRY_PATTERN_OMP(PATTERN,...) \
@@ -286,12 +291,14 @@ GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
 GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
 GRPPI_TRY_PATTERN_FF(__VA_ARGS__) \
+GRPPI_PATTERN_NOT_IMPLEMENTED(__VA_ARGS__)\
 
 #define GRPPI_TRY_PATTERN_ALL_NOFF(...) \
 GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
 GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
 GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
+GRPPI_PATTERN_NOT_IMPLEMENTED(__VA_ARGS__)\
 
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
