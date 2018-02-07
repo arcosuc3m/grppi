@@ -137,6 +137,28 @@ public:
       Identity && identity,
       Combiner && combine_op) const;
 
+  /**
+    \brief Applies a map/reduce operation to a sequence of data items.
+    \tparam InputIterator Iterator type for the input sequence.
+    \tparam Identity Type for the identity value.
+    \tparam Transformer Callable object type for the transformation.
+    \tparam Combiner Callable object type for the combination.
+    \param first Iterator to the first element of the sequence.
+    \param sequence_size Size of the input sequence.
+    \param identity Identity value for the reduction.
+    \param transform_op Transformation callable object.
+    \param combine_op Combination callable object.
+    \pre Iterators in the range `[first,last)` are valid.
+    \return The map/reduce result.
+   */
+  template <typename ... InputIterators, typename Identity,
+  typename Transformer, typename Combiner>
+  auto map_reduce(std::tuple<InputIterators...> firsts,
+      std::size_t sequence_size,
+      Identity && identity,
+      Transformer && transform_op,
+      Combiner && combine_op) const;
+
 private:
 
   int concurrency_degree_ = 
@@ -174,6 +196,14 @@ constexpr bool supports_map<parallel_execution_ff>() { return true; }
 template <>
 constexpr bool supports_reduce<parallel_execution_ff>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the map-reduce pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_map_reduce<parallel_execution_ff>() { return true; }
+
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_ff::map(
@@ -206,6 +236,23 @@ auto parallel_execution_ff::reduce(InputIterator first,
       concurrency_degree_);
 
   return result;
+}
+
+template <typename ... InputIterators, typename Identity,
+          typename Transformer, typename Combiner>
+auto parallel_execution_ff::map_reduce(std::tuple<InputIterators...> firsts,
+      std::size_t sequence_size,
+      Identity && identity,
+      Transformer && transform_op,
+      Combiner && combine_op) const 
+{
+  std::vector<Identity> partial_outs(sequence_size);
+  map(firsts, partial_outs.begin(), sequence_size, 
+      std::forward<Transformer>(transform_op));
+
+  return reduce(partial_outs.begin(), sequence_size, 
+      std::forward<Identity>(identity),
+      std::forward<Combiner>(combine_op));
 }
 
 
