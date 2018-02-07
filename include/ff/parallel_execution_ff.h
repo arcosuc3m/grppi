@@ -118,6 +118,25 @@ public:
       OutputIterator first_out, 
       std::size_t sequence_size, Transformer transform_op) const;
 
+  /**
+    \brief Applies a reduction to a sequence of data items.
+    \tparam InputIterator Iterator type for the input sequence.
+    \tparam Identity Type for the identity value.
+    \tparam Combiner Callable object type for the combination.
+    \param first Iterator to the first element of the sequence.
+    \param sequence_size Size of the input sequence.
+    \param last Iterator to one past the end of the sequence.
+    \param identity Identity value for the reduction.
+    \param combine_op Combination callable object.
+    \pre Iterators in the range `[first,last)` are valid.
+    \return The reduction result.
+   */
+  template <typename InputIterator, typename Identity, typename Combiner>
+  auto reduce(InputIterator first,
+      std::size_t sequence_size,
+      Identity && identity,
+      Combiner && combine_op) const;
+
 private:
 
   int concurrency_degree_ = 
@@ -148,6 +167,13 @@ constexpr bool is_supported<parallel_execution_ff>() { return true; }
 template <>
 constexpr bool supports_map<parallel_execution_ff>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the reduce pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_reduce<parallel_execution_ff>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_ff::map(
@@ -155,13 +181,33 @@ void parallel_execution_ff::map(
     OutputIterator first_out, 
     std::size_t sequence_size, Transformer transform_op) const
 {
-  ff::ParallelFor pf(concurrency_degree_, true);
+  ff::ParallelFor pf{concurrency_degree_, true};
   pf.parallel_for(0, sequence_size,
-    [&](const long delta) {
-      *(first_out+delta) = apply_iterators_indexed(transform_op, firsts, delta);
+    [=](const long delta) {
+      *std::next(first_out, delta) = apply_iterators_indexed(transform_op, firsts, delta);
     }, 
     concurrency_degree_);
 }
+
+template <typename InputIterator, typename Identity, typename Combiner>
+auto parallel_execution_ff::reduce(InputIterator first,
+    std::size_t sequence_size,
+    Identity && identity,
+    Combiner && combine_op) const 
+{
+  ff::ParallelForReduce<Identity> pfr{concurrency_degree_, true};
+  Identity result{identity};
+
+  pfr.parallel_reduce(result, identity, 0, sequence_size,
+      [combine_op,first](long delta, auto & value) {
+        value = combine_op(value, *std::next(first,delta));
+      }, 
+      [&result, combine_op](auto a, auto b) { result = combine_op(a,b); }, 
+      concurrency_degree_);
+
+  return result;
+}
+
 
 } // end namespace grppi
 

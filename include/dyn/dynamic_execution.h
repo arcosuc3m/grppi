@@ -315,7 +315,7 @@ auto dynamic_execution::reduce(InputIterator first, std::size_t sequence_size,
           Identity && identity,
           Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL_NOFF(reduce, first, sequence_size, 
+  GRPPI_TRY_PATTERN_ALL(reduce, first, sequence_size, 
       std::forward<Identity>(identity), std::forward<Combiner>(combine_op));
 }
 
