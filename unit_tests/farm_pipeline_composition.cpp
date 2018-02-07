@@ -335,7 +335,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(farm_pipeline_test, executions);
+TYPED_TEST_CASE(farm_pipeline_test, executions_noff);
 
 TYPED_TEST(farm_pipeline_test, static_empty)
 {
