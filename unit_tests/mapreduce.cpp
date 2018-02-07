@@ -80,7 +80,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(map_reduce_test, executions);
+TYPED_TEST_CASE(map_reduce_test, executions_noff);
 
 TYPED_TEST(map_reduce_test, static_single)
 {

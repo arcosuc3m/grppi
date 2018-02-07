@@ -69,7 +69,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(reduce_test, executions);
+TYPED_TEST_CASE(reduce_test, executions_noff);
 
 TYPED_TEST(reduce_test, static_single)
 {
