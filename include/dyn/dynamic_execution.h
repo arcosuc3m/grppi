@@ -252,10 +252,8 @@ constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
 {\
   if (supports_##PATTERN<E>()) {\
-    std::cerr << "Pattern is supported by " << #E << "\n";\
     auto * ex = dynamic_cast<execution<E>*>(execution_.get());\
     if (ex) {\
-      std::cerr << "Pattern is " << #E << "\n";\
       return ex->ex_.PATTERN(__VA_ARGS__);\
     }\
   }\
