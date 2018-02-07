@@ -31,6 +31,7 @@ using executions = ::testing::Types<
 >;
 
 using executions_notbb = ::testing::Types<
+  grppi::sequential_execution,
 
   grppi::parallel_execution_native
 
@@ -42,6 +43,8 @@ using executions_notbb = ::testing::Types<
 >;
 
 using executions_noff = ::testing::Types<
+
+  grppi::sequential_execution,
 
   grppi::parallel_execution_native
 
