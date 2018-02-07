@@ -156,7 +156,7 @@ public:
   }
 };
 
-TYPED_TEST_CASE(stream_iteration_test, executions);
+TYPED_TEST_CASE(stream_iteration_test, executions_noff);
 
 TYPED_TEST(stream_iteration_test, static_no_composed)
 { 
