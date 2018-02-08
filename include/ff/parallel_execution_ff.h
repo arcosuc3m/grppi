@@ -32,6 +32,7 @@
 #include <experimental/optional>
 
 #include <ff/parallel_for.hpp>
+#include <ff/dc.hpp>
 
 namespace grppi {
 
@@ -181,6 +182,27 @@ public:
       StencilTransformer && transform_op,
       Neighbourhood && neighbour_op) const;
 
+  /**
+    \brief Invoke \ref md_divide-conquer.
+    \tparam Input Type used for the input problem.
+    \tparam Divider Callable type for the divider operation.
+    \tparam Solver Callable type for the solver operation.
+    \tparam Combiner Callable type for the combiner operation.
+    \param input Input problem to be solved.
+    \param divider_op Divider operation.
+    \param solver_op Solver operation.
+    \param combine_op Combiner operation.
+   */
+  template <typename Input, typename Divider,typename Predicate, 
+            typename Solver, typename Combiner>
+  auto divide_conquer(Input & input,
+      Divider && divide_op,
+      Predicate && condition_op,
+      Solver && solve_op,
+      Combiner && combine_op) const;
+
+
+
 private:
 
   int concurrency_degree_ = 
@@ -231,6 +253,13 @@ constexpr bool supports_map_reduce<parallel_execution_ff>() { return true; }
 */
 template <>
 constexpr bool supports_stencil<parallel_execution_ff>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the divide_conquer pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_divide_conquer<parallel_execution_ff>() { return true; }
 
 
 template <typename ... InputIterators, typename OutputIterator, 
@@ -301,6 +330,41 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
           apply_increment(neighbour_op, next_chunks) );
     }, 
     concurrency_degree_);
+}
+
+template <typename Input, typename Divider,typename Predicate, 
+          typename Solver, typename Combiner>
+auto parallel_execution_ff::divide_conquer(Input & input,
+    Divider && divide_op,
+    Predicate && condition_op,
+    Solver && solve_op,
+    Combiner && combine_op) const 
+{
+  using output_type = typename std::result_of<Solver(Input)>::type;
+  
+  // divide
+  auto divide_fn = [&](const Input &in, std::vector<Input> &subin) {
+    subin = divide_op(in);
+  };
+  // combine
+  auto combine_fn = [&] (std::vector<output_type>& in, output_type& out) {
+      out = combine_op(in[0], in[1]);
+  };
+  // sequential solver (base-case)
+  auto seq_fn = [&] (const Input & in , output_type & out) {
+    out = solve_op(in);
+  };
+  // condition
+  auto cond_fn = [&] (const Input &in) {
+    return condition_op(in);
+  };
+  output_type out_var{};
+  // divide, combine, seq, condition, input, res, wrks
+  ff::ff_DC<Input,output_type> dac(divide_fn, combine_fn, seq_fn, cond_fn, input, out_var, concurrency_degree_);
+  // run
+  dac.run_and_wait_end();
+
+  return out_var;
 }
 
 
