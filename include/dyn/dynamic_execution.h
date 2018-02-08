@@ -343,7 +343,7 @@ void dynamic_execution::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  GRPPI_TRY_PATTERN_ALL_NOFF(stencil, firsts, first_out, sequence_size,
+  GRPPI_TRY_PATTERN_ALL(stencil, firsts, first_out, sequence_size,
       std::forward<StencilTransformer>(transform_op),
       std::forward<Neighbourhood>(neighbour_op));
 }
