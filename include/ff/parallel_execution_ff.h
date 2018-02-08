@@ -63,18 +63,24 @@ public:
   and ordering.
   \param concurrency_degree Number of threads used for parallel algorithms.
   \param order Whether ordered executions is enabled or disabled.
+  \note The concurrency_degree is a hint and the implementation might select
+        a lower value.
   */
   parallel_execution_ff(int concurrency_degree, bool order = true) noexcept :
-      concurrency_degree_{concurrency_degree},
+      concurrency_degree_{std::min(concurrency_degree, 
+          static_cast<int>(std::thread::hardware_concurrency()))},
       ordering_{order}
   {
   }
 
   /**
   \brief Set number of grppi threads.
+  \note The concurrency_degree is a hint and the implementation might select
+        a lower value.
   */
   void set_concurrency_degree(int degree) noexcept { 
-    concurrency_degree_ = degree; 
+    concurrency_degree_ = std::min(degree,
+        static_cast<int>(std::thread::hardware_concurrency())); 
   }
 
   /**
