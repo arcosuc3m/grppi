@@ -168,7 +168,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(divideconquer_test, executions);
+TYPED_TEST_CASE(divideconquer_test, executions_noff);
 
 TYPED_TEST(divideconquer_test, static_empty)
 {

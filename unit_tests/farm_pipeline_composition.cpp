@@ -68,7 +68,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(4,
+      grppi::farm(2,
         grppi::pipeline(
           [this](int x) {
             invocations_op++;
@@ -99,7 +99,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(4,
+      grppi::farm(2,
         grppi::pipeline(
           [this](int x) {
             invocations_op++;
@@ -133,7 +133,7 @@ public:
         invocations_in++;
         return {};
       },
-      grppi::farm(4,
+      grppi::farm(2,
         grppi::pipeline(
           [this](tuple<int,int,int> x) {
             invocations_op++;
@@ -173,7 +173,7 @@ public:
         } 
         else return {};
       },
-      grppi::farm(4,
+      grppi::farm(2,
         grppi::pipeline(
           [this](int x) {
             invocations_op++;
@@ -219,7 +219,7 @@ public:
         } 
         else return {};
       },
-      grppi::farm(4,
+      grppi::farm(2,
         grppi::pipeline(
           [this](tuple<int,int,int> x) {
             invocations_op++;
@@ -261,14 +261,14 @@ public:
           return v[idx_in-1];
         } else return {};
       },
-      grppi::farm(4,
+      grppi::farm(2,
         grppi::pipeline( 
           [this](int x) {
             invocations_op++;
             return x * 2;
           },
           [this](int x) {
-            invocations_op++;
+            invocations_op2++;
             return x * 2;
           }
         )
@@ -306,7 +306,7 @@ public:
       } 
       else return {};
     },
-    grppi::farm(4,
+    grppi::farm(2,
       grppi::pipeline(
         [this](tuple<int,int,int> x) {
           invocations_op++;
@@ -335,7 +335,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(farm_pipeline_test, executions);
+TYPED_TEST_CASE(farm_pipeline_test, executions_noff);
 
 TYPED_TEST(farm_pipeline_test, static_empty)
 {
@@ -343,7 +343,7 @@ TYPED_TEST(farm_pipeline_test, static_empty)
   this->run_empty(this->execution_);
   this->check_empty();
 }
-/*
+
 TYPED_TEST(farm_pipeline_test, dyn_empty)
 {
   this->setup_empty();
@@ -433,4 +433,4 @@ TYPED_TEST(farm_pipeline_test, dyn_multiple_ary_sink)
   this->setup_multiple_ary_sink();
   this->run_multiple_ary_sink(this->dyn_execution_);
   this->check_multiple_ary_sink();
-}*/
+}

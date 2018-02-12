@@ -235,7 +235,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(pipeline_test, executions);
+TYPED_TEST_CASE(pipeline_test, executions_noff);
 
 TYPED_TEST(pipeline_test, static_two_stages_empty)
 {

@@ -188,7 +188,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stencil_test, executions);
+TYPED_TEST_CASE(stencil_test, executions_noff);
 
 TYPED_TEST(stencil_test, static_empty)
 {

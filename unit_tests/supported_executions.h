@@ -7,6 +7,7 @@
 #include "native/parallel_execution_native.h"
 #include "omp/parallel_execution_omp.h"
 #include "tbb/parallel_execution_tbb.h"
+#include "ff/parallel_execution_ff.h"
 
 using executions = ::testing::Types<
   grppi::sequential_execution,
@@ -22,9 +23,15 @@ using executions = ::testing::Types<
   ,
   grppi::parallel_execution_tbb
 #endif
+
+#ifdef GRPPI_FF
+  ,
+  grppi::parallel_execution_ff
+#endif
 >;
 
 using executions_notbb = ::testing::Types<
+  grppi::sequential_execution,
 
   grppi::parallel_execution_native
 
@@ -34,5 +41,25 @@ using executions_notbb = ::testing::Types<
 #endif
 
 >;
+
+using executions_noff = ::testing::Types<
+
+  grppi::sequential_execution,
+
+  grppi::parallel_execution_native
+
+#ifdef GRPPI_OMP
+  ,
+  grppi::parallel_execution_omp
+#endif
+
+#ifdef GRPPI_TBB
+  ,
+  grppi::parallel_execution_tbb
+#endif
+
+>;
+
+
 
 #endif
