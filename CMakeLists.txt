@@ -82,6 +82,7 @@ message( STATUS "OpenMP: " ${GRPPI_OMP_ENABLE})
 if( GRPPI_OMP_ENABLE )
   add_definitions(-DGRPPI_OMP)
   add_compile_options(${OpenMP_CXX_FLAGS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif( GRPPI_OMP_ENABLE )
 
 #FastFlow library
