@@ -77,7 +77,7 @@ if( GRPPI_OMP_ENABLE )
 endif( GRPPI_OMP_ENABLE )
 
 #FastFlow library
-option( GRPPI_FF_ENABLE "Require FastFlow library" OFF )
+option( GRPPI_FF_ENABLE "Require FastFlow library" ON )
 message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE})
 if(GRPPI_FF_ENABLE)
   find_package(FF)
