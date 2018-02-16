@@ -15,4 +15,8 @@ if(NOT EXISTS ${CMAKE_BINARY_DIR}/fastflow)
   set(FF_FOUND TRUE)
 endif()
 
-set(FFPATH ${CMAKE_BINARY_DIR}/fastflow/src)
+if(EXISTS ${CMAKE_BINARY_DIR}/fastflow)
+  set(FF_FOUND TRUE)
+  set(FFPATH ${CMAKE_BINARY_DIR}/fastflow/src)
+endif()
+
