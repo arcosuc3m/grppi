@@ -110,6 +110,9 @@ static constexpr bool is_pipeline = internal::is_pipeline<std::decay_t<T>>();
 template <typename T>
 using requires_pipeline = typename std::enable_if_t<is_pipeline<T>, int>;
 
+template <typename T, typename U>
+using concept_pipeline = typename std::enable_if_t<is_pipeline<T>, void>;
+
 namespace internal {
 
 template <typename I, typename T>

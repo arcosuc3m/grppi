@@ -94,6 +94,9 @@ static constexpr bool is_context = internal::is_context<std::decay_t<T>>();
 template <typename T>
 using requires_context = typename std::enable_if_t<is_context<T>, int>;
 
+template <typename T, typename U>
+using concept_context = typename std::enable_if_t<is_context<T>, U>;
+
 }
 
 #endif

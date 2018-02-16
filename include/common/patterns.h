@@ -91,8 +91,22 @@ constexpr bool is_pattern = !is_no_pattern<T>;
 template <typename T>
 using requires_no_pattern = std::enable_if_t<is_no_pattern<T>,int>;
 
+template <typename T, typename U>
+using concept_no_pattern = std::enable_if<is_no_pattern<T>,U>;
+
 template <typename T>
 using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
+
+template <typename T, typename U>
+using concept_pattern = std::enable_if_t<is_pattern<T>, U>;
+
+template <typename I, typename T, typename U>
+using concept_iteration_plain =
+    std::enable_if_t<is_iteration<I> && is_no_pattern<T>, U>;
+
+template <typename I, typename T, typename U>
+using concept_iteration_pipeline =
+    std::enable_if_t<is_iteration<I> && is_pipeline<T>, U>;
 
 /**
 \brief Determines the return type after appliying a list of 

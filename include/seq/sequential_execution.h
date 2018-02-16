@@ -239,33 +239,33 @@ public:
 
 private:
 
-  template <typename Item, typename Consumer,
-            requires_no_pattern<Consumer> = 0>
-  void do_pipeline(Item && item, Consumer && consume_op) const;
+  template <typename Item, typename Consumer>
+  concept_no_pattern<Consumer,void>
+  do_pipeline(Item && item, Consumer && consume_op) const;
 
-  template <typename Item, typename Transformer, typename ... OtherTransformers,
-            requires_no_pattern<Transformer> = 0>
-  void do_pipeline(Item && item, Transformer && transform_op,
+  template <typename Item, typename Transformer, typename ... OtherTransformers>
+  concept_no_pattern<Transformer,void>
+  do_pipeline(Item && item, Transformer && transform_op,
           OtherTransformers && ... other_ops) const;
 
   template <typename Item, typename FarmTransformer,
-            template <typename> class Farm,
-            requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Item && item, Farm<FarmTransformer> & farm_obj) const
+            template <typename> class Farm>
+  concept_farm<Farm<FarmTransformer>,void>
+  do_pipeline(Item && item, Farm<FarmTransformer> & farm_obj) const
   {
     do_pipeline(std::forward<Item>(item), std::move(farm_obj));
   }
 
   template <typename Item, typename FarmTransformer,
-            template <typename> class Farm,
-            requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj) const;
+            template <typename> class Farm>
+  concept_farm<Farm<FarmTransformer>,void>
+  do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj) const;
 
   template <typename Item, typename Execution, typename Transformer,
             template <typename, typename> class Context,
-            typename ... OtherTransformers,
-            requires_context<Context<Execution,Transformer>> = 0>
-  void do_pipeline(Item && item, Context<Execution,Transformer> && context_op,
+            typename ... OtherTransformers>
+  concept_context<Context<Execution,Transformer>,void>
+  do_pipeline(Item && item, Context<Execution,Transformer> && context_op,
        OtherTransformers &&... other_ops) const
   {
      do_pipeline(item, std::forward<Transformer>(context_op.transformer()), 
@@ -274,9 +274,9 @@ private:
 
   template <typename Item, typename Execution, typename Transformer,
             template <typename, typename> class Context,
-            typename ... OtherTransformers,
-            requires_context<Context<Execution,Transformer>> = 0>
-  void do_pipeline(Item && item, Context<Execution,Transformer> & context_op,
+            typename ... OtherTransformers>
+  concept_context<Context<Execution,Transformer>,void>
+  do_pipeline(Item && item, Context<Execution,Transformer> & context_op,
        OtherTransformers &&... other_ops) const
   {
     do_pipeline(item, std::move(context_op),
@@ -286,9 +286,9 @@ private:
 
   template <typename Item, typename FarmTransformer,
             template <typename> class Farm,
-            typename... OtherTransformers,
-            requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Item && item, Farm<FarmTransformer> & farm_obj,
+            typename... OtherTransformers>
+  concept_farm<Farm<FarmTransformer>,void>
+  do_pipeline(Item && item, Farm<FarmTransformer> & farm_obj,
                    OtherTransformers && ... other_transform_ops) const
   {
     do_pipeline(std::forward<Item>(item), std::move(farm_obj),
@@ -297,16 +297,16 @@ private:
 
   template <typename Item, typename FarmTransformer,
             template <typename> class Farm,
-            typename... OtherTransformers,
-            requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj,
+            typename... OtherTransformers>
+  concept_farm<Farm<FarmTransformer>,void>
+  do_pipeline(Item && item, Farm<FarmTransformer> && farm_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Item, typename Predicate,
             template <typename> class Filter,
-            typename ... OtherTransformers,
-            requires_filter<Filter<Predicate>> = 0>
-  void do_pipeline(Item && item, Filter<Predicate> & filter_obj,
+            typename ... OtherTransformers>
+  concept_filter<Filter<Predicate>,void>
+  do_pipeline(Item && item, Filter<Predicate> & filter_obj,
                    OtherTransformers && ... other_transform_ops) const
   {
     do_pipeline(std::forward<Item>(item), std::move(filter_obj),
@@ -315,16 +315,16 @@ private:
 
   template <typename Item, typename Predicate,
             template <typename> class Filter,
-            typename ... OtherTransformers,
-            requires_filter<Filter<Predicate>> = 0>
-  void do_pipeline(Item && item, Filter<Predicate> && filter_obj,
+            typename ... OtherTransformers>
+  concept_filter<Filter<Predicate>,void>
+  do_pipeline(Item && item, Filter<Predicate> && filter_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Item, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
-            typename ... OtherTransformers,
-            requires_reduce<Reduce<Combiner,Identity>> = 0>
-  void do_pipeline(Item && item, Reduce<Combiner,Identity> & reduce_obj,
+            typename ... OtherTransformers>
+  concept_reducer<Reduce<Combiner,Identity>,void>
+  do_pipeline(Item && item, Reduce<Combiner,Identity> & reduce_obj,
                    OtherTransformers && ... other_transform_ops) const
   {
     do_pipeline(std::forward<Item>(item), std::move(reduce_obj),
@@ -334,16 +334,16 @@ private:
 
   template <typename Item, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
-            typename ... OtherTransformers,
-            requires_reduce<Reduce<Combiner,Identity>> = 0>
-  void do_pipeline(Item && item, Reduce<Combiner,Identity> && reduce_obj,
+            typename ... OtherTransformers>
+  concept_reducer<Reduce<Combiner,Identity>,void>
+  do_pipeline(Item && item, Reduce<Combiner,Identity> && reduce_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Item, typename Transformer, typename Predicate,
             template <typename T, typename P> class Iteration,
-            typename ... OtherTransformers,
-            requires_iteration<Iteration<Transformer,Predicate>> = 0>
-  void do_pipeline(Item && item, 
+            typename ... OtherTransformers>
+  concept_iteration<Iteration<Transformer,Predicate>,void>
+  do_pipeline(Item && item, 
           Iteration<Transformer,Predicate> & iteration_obj, 
           OtherTransformers && ... other_transform_ops) const
   {
@@ -353,19 +353,17 @@ private:
 
   template <typename Item, typename Transformer, typename Predicate,
             template <typename T, typename P> class Iteration,
-            typename ...OtherTransformers,
-            requires_iteration<Iteration<Transformer,Predicate>> = 0,
-            requires_no_pattern<Transformer> = 0>
-  void do_pipeline(Item && item, 
+            typename ...OtherTransformers>
+  concept_iteration_plain<Iteration<Transformer,Predicate>, Transformer,void>
+  do_pipeline(Item && item, 
           Iteration<Transformer,Predicate> && iteration_obj, 
           OtherTransformers && ... other_transform_ops) const;
 
   template <typename Item, typename Transformer, typename Predicate,
             template <typename T, typename P> class Iteration,
-            typename ...OtherTransformers,
-            requires_iteration<Iteration<Transformer,Predicate>> = 0,
-            requires_pipeline<Transformer> = 0>
-  void do_pipeline(Item && item, 
+            typename ...OtherTransformers>
+  concept_iteration_pipeline<Iteration<Transformer,Predicate>,Transformer,void>
+  do_pipeline(Item && item, 
           Iteration<Transformer,Predicate> && iteration_obj, 
           OtherTransformers && ... other_transform_ops) const;
 
@@ -373,7 +371,8 @@ private:
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
             requires_pipeline<Pipeline<Transformers...>> = 0>
-  void do_pipeline(Item && item, Pipeline<Transformers...> & pipeline_obj,
+  concept_pipeline<Pipeline<Transformers...>,void>
+  do_pipeline(Item && item, Pipeline<Transformers...> & pipeline_obj,
                    OtherTransformers && ... other_transform_ops) const
   {
     do_pipeline(std::forward<Item>(item), std::move(pipeline_obj),
@@ -384,7 +383,8 @@ private:
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
             requires_pipeline<Pipeline<Transformers...>> = 0>
-  void do_pipeline(Item && item, Pipeline<Transformers...> && pipeline_obj,
+  concept_pipeline<Pipeline<Transformers...>,void>
+  do_pipeline(Item && item, Pipeline<Transformers...> && pipeline_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename Item, typename ... Transformers, std::size_t ... I>
@@ -576,18 +576,18 @@ void sequential_execution::pipeline(
   }
 }
 
-template <typename Item, typename Consumer,
-          requires_no_pattern<Consumer> = 0>
-void sequential_execution::do_pipeline(
+template <typename Item, typename Consumer>
+concept_no_pattern<Consumer,void>
+sequential_execution::do_pipeline(
     Item && item,
     Consumer && consume_op) const
 {
   consume_op(std::forward<Item>(item));
 }
 
-template <typename Item, typename Transformer, typename ... OtherTransformers,
-            requires_no_pattern<Transformer> = 0>
-void sequential_execution::do_pipeline(
+template <typename Item, typename Transformer, typename ... OtherTransformers>
+concept_no_pattern<Transformer,void>
+sequential_execution::do_pipeline(
     Item && item,
     Transformer && transform_op,
     OtherTransformers && ... other_ops) const
@@ -600,9 +600,9 @@ void sequential_execution::do_pipeline(
 }
 
 template <typename Item, typename FarmTransformer,
-          template <typename> class Farm,
-          requires_farm<Farm<FarmTransformer>> = 0>
-void sequential_execution::do_pipeline(
+          template <typename> class Farm>
+concept_farm<Farm<FarmTransformer>,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Farm<FarmTransformer> && farm_obj) const
 {
@@ -611,9 +611,9 @@ void sequential_execution::do_pipeline(
 
 template <typename Item, typename FarmTransformer,
           template <typename> class Farm,
-          typename... OtherTransformers,
-          requires_farm<Farm<FarmTransformer>> = 0>
-void sequential_execution::do_pipeline(
+          typename... OtherTransformers>
+concept_farm<Farm<FarmTransformer>,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -626,9 +626,9 @@ void sequential_execution::do_pipeline(
 
 template <typename Item, typename Predicate,
           template <typename> class Filter,
-          typename ... OtherTransformers,
-          requires_filter<Filter<Predicate>> = 0>
-void sequential_execution::do_pipeline(
+          typename ... OtherTransformers>
+concept_filter<Filter<Predicate>,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Filter<Predicate> && filter_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -641,9 +641,9 @@ void sequential_execution::do_pipeline(
 
 template <typename Item, typename Combiner, typename Identity,
           template <typename C, typename I> class Reduce,
-          typename ... OtherTransformers,
-          requires_reduce<Reduce<Combiner,Identity>> = 0>
-void sequential_execution::do_pipeline(
+          typename ... OtherTransformers>
+concept_reducer<Reduce<Combiner,Identity>,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Reduce<Combiner,Identity> && reduce_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -658,10 +658,9 @@ void sequential_execution::do_pipeline(
 
 template <typename Item, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
-          typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> = 0,
-          requires_no_pattern<Transformer> = 0>
-void sequential_execution::do_pipeline(
+          typename ... OtherTransformers>
+concept_iteration_plain<Iteration<Transformer,Predicate>,Transformer,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Iteration<Transformer,Predicate> && iteration_obj, 
     OtherTransformers && ... other_transform_ops) const
@@ -676,10 +675,9 @@ void sequential_execution::do_pipeline(
 
 template <typename Item, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
-          typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> = 0,
-          requires_pipeline<Transformer> = 0>
-void sequential_execution::do_pipeline(
+          typename ... OtherTransformers>
+concept_iteration_pipeline<Iteration<Transformer,Predicate>,Transformer,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Iteration<Transformer,Predicate> && iteration_obj, 
     OtherTransformers && ... other_transform_ops) const
@@ -691,7 +689,8 @@ template <typename Item, typename ... Transformers,
           template <typename...> class Pipeline,
           typename ... OtherTransformers,
           requires_pipeline<Pipeline<Transformers...>> = 0>
-void sequential_execution::do_pipeline(
+concept_pipeline<Pipeline<Transformers...>,void>
+sequential_execution::do_pipeline(
     Item && item, 
     Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const

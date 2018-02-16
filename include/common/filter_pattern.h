@@ -69,6 +69,9 @@ static constexpr bool is_filter = internal::is_filter<std::decay_t<T>>();
 template <typename T>
 using requires_filter = typename std::enable_if_t<is_filter<T>, int>;
 
+template <typename T, typename U>
+using concept_filter = typename std::enable_if_t<is_filter<T>, U>;
+
 }
 
 #endif

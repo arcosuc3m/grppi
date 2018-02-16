@@ -87,6 +87,9 @@ static constexpr bool is_iteration = internal::is_iteration<std::decay_t<T>>();
 template <typename T>
 using requires_iteration = typename std::enable_if_t<is_iteration<T>, int>;
 
+template <typename T, typename U>
+using concept_iteration = typename std::enable_if_t<is_iteration<T>, U>;
+
 }
 
 #endif

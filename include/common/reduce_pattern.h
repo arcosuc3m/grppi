@@ -116,6 +116,9 @@ constexpr bool is_reduce = internal::is_reduce<std::decay_t<T>>();
 template <typename T>
 using requires_reduce = std::enable_if_t<is_reduce<T>,int>;
 
+template <typename T, typename U>
+using concept_reducer = std::enable_if_t<is_reduce<T>,U>;
+
 } // end namespace grppi
 
 #endif

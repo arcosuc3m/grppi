@@ -88,6 +88,9 @@ static constexpr bool is_farm = internal::is_farm<std::decay_t<T>>();
 template <typename T>
 using requires_farm = typename std::enable_if_t<is_farm<T>, int>;
 
+template <typename T, typename U>
+using concept_farm = typename std::enable_if_t<is_farm<T>, U>;
+
 }
 
 #endif
