@@ -577,7 +577,7 @@ void sequential_execution::pipeline(
 }
 
 template <typename Item, typename Consumer,
-          requires_no_pattern<Consumer> = 0>
+          requires_no_pattern<Consumer>>
 void sequential_execution::do_pipeline(
     Item && item,
     Consumer && consume_op) const
@@ -586,7 +586,7 @@ void sequential_execution::do_pipeline(
 }
 
 template <typename Item, typename Transformer, typename ... OtherTransformers,
-            requires_no_pattern<Transformer> = 0>
+            requires_no_pattern<Transformer>>
 void sequential_execution::do_pipeline(
     Item && item,
     Transformer && transform_op,
@@ -601,7 +601,7 @@ void sequential_execution::do_pipeline(
 
 template <typename Item, typename FarmTransformer,
           template <typename> class Farm,
-          requires_farm<Farm<FarmTransformer>> = 0>
+          requires_farm<Farm<FarmTransformer>>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Farm<FarmTransformer> && farm_obj) const
@@ -612,7 +612,7 @@ void sequential_execution::do_pipeline(
 template <typename Item, typename FarmTransformer,
           template <typename> class Farm,
           typename... OtherTransformers,
-          requires_farm<Farm<FarmTransformer>> = 0>
+          requires_farm<Farm<FarmTransformer>>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Farm<FarmTransformer> && farm_obj,
@@ -627,7 +627,7 @@ void sequential_execution::do_pipeline(
 template <typename Item, typename Predicate,
           template <typename> class Filter,
           typename ... OtherTransformers,
-          requires_filter<Filter<Predicate>> = 0>
+          requires_filter<Filter<Predicate>>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Filter<Predicate> && filter_obj,
@@ -642,7 +642,7 @@ void sequential_execution::do_pipeline(
 template <typename Item, typename Combiner, typename Identity,
           template <typename C, typename I> class Reduce,
           typename ... OtherTransformers,
-          requires_reduce<Reduce<Combiner,Identity>> = 0>
+          requires_reduce<Reduce<Combiner,Identity>>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Reduce<Combiner,Identity> && reduce_obj,
@@ -659,8 +659,8 @@ void sequential_execution::do_pipeline(
 template <typename Item, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> = 0,
-          requires_no_pattern<Transformer> = 0>
+          requires_iteration<Iteration<Transformer,Predicate>>,
+          requires_no_pattern<Transformer>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Iteration<Transformer,Predicate> && iteration_obj, 
@@ -677,8 +677,8 @@ void sequential_execution::do_pipeline(
 template <typename Item, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> = 0,
-          requires_pipeline<Transformer> = 0>
+          requires_iteration<Iteration<Transformer,Predicate>>,
+          requires_pipeline<Transformer>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Iteration<Transformer,Predicate> && iteration_obj, 
@@ -690,7 +690,7 @@ void sequential_execution::do_pipeline(
 template <typename Item, typename ... Transformers,
           template <typename...> class Pipeline,
           typename ... OtherTransformers,
-          requires_pipeline<Pipeline<Transformers...>> = 0>
+          requires_pipeline<Pipeline<Transformers...>>>
 void sequential_execution::do_pipeline(
     Item && item, 
     Pipeline<Transformers...> && pipeline_obj,
