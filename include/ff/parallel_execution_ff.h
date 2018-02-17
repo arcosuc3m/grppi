@@ -354,7 +354,10 @@ auto parallel_execution_ff::divide_conquer(Input & input,
   };
   // combine
   auto combine_fn = [&] (std::vector<output_type>& in, output_type& out) {
-      out = combine_op(in[0], in[1]);
+	  using index_t = typename std::vector<output_type>::size_type;
+	  out = in[0];
+	  for(index_t i = 1; i < in.size(); ++i)
+		  out = combine_op(out, in[i]);
   };
   // sequential solver (base-case)
   auto seq_fn = [&] (const Input & in , output_type & out) {
