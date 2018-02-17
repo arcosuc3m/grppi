@@ -39,6 +39,71 @@ namespace grppi {
 /**
 \brief Invoke \ref md_map-reduce on a data sequence.
 \tparam Execution Execution type.
+\tparam InputIterators Iterators types used for the input sequences.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Execution policy object.
+\param firsts Tuple of iterators to the first elements in the input sequences.
+\param size Size of the input sequence to be process.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename Execution, typename ...InputIterators,
+    typename Identity, typename Transformer, typename Combiner,
+    requires_iterators<InputIterators...> = 0>
+auto map_reduce(const Execution & ex,
+                std::tuple<InputIterators...> firsts, std::size_t size,
+                Identity && identity,
+                Transformer &&  transform_op, Combiner && combine_op)
+{
+  static_assert(supports_map_reduce<Execution>(),
+                "map/reduce not supported on execution type");
+  return ex.map_reduce(firsts, size,
+                       std::forward<Identity>(identity),
+                       std::forward<Transformer>(transform_op),
+                       std::forward<Combiner>(combine_op));
+}
+
+/**
+\brief Invoke \ref md_map-reduce on a data sequence.
+\tparam Execution Execution type.
+\tparam InputIterators Iterators types used for the input sequences.
+\tparam InputIt Iterator type used for the fisrt input sequence.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Execution policy object.
+\param firsts Tuple of iterators to the first elements in the input sequences.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename Execution, typename ...InputIterators, typename InputIt,
+          typename Identity, typename Transformer, typename Combiner,
+          requires_iterators<InputIterators...> = 0,
+          requires_iterator<InputIt> = 0>
+auto map_reduce(const Execution & ex,
+                std::tuple<InputIterators...> firsts, InputIt last,
+                Identity && identity,
+                Transformer &&  transform_op, Combiner && combine_op)
+{
+  static_assert(supports_map_reduce<Execution>(),
+                "map/reduce not supported on execution type");
+  return ex.map_reduce(firsts,
+                       std::distance(std::get<0>(firsts),last),
+                       std::forward<Identity>(identity),
+                       std::forward<Transformer>(transform_op),
+                       std::forward<Combiner>(combine_op));
+}
+
+/**
+\brief Invoke \ref md_map-reduce on a data sequence.
+\tparam Execution Execution type.
 \tparam InputIterator Iterator type used for the input sequence.
 \tparam Identity Type for the identity value.
 \tparam Transformer Callable type for the transformation operation.
@@ -86,7 +151,9 @@ template <typename Execution, typename InputIterator, typename Identity,
           typename Transformer, typename Combiner,
           typename ... OtherInputIterators,
           requires_iterator<InputIterator> = 0>
-auto map_reduce(const Execution & ex, 
+[[deprecated("This version of the interface is deprecated.\n"
+             "If you want tu use multiple inputs, use a tuple instead.")]]
+auto map_reduce(const Execution & ex,
                 InputIterator first, InputIterator last, 
                 Identity && identity, 
                 Transformer &&  transform_op, Combiner && combine_op,

@@ -81,7 +81,7 @@ void matrix_mult(grppi::dynamic_execution & e, int n) {
     [&]() { return gen(rdev); });
   std::vector<double> c(n*n);
 
-  grppi::stencil(e, begin(a), end(a), begin(c),
+  grppi::stencil(e, make_tuple(begin(a),begin(b)), end(a), begin(c),
     [=](auto it, auto nh) {
       double r = 0;
       for (int k=0;k<n;++k) { r+= nh.first[k] * nh.second[k]; }
@@ -92,8 +92,7 @@ void matrix_mult(grppi::dynamic_execution & e, int n) {
         row_span<double>{a, n, row_index(it1,a,n)},
         col_span<double>{b, n, col_index(it2,b,n)}
       );
-    },
-    begin(b)
+    }
   );
 
   cout << "size(a)" << a.size() << endl;

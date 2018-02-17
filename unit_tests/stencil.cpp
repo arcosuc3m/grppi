@@ -116,7 +116,7 @@ public:
       return result;
     };
 
-    grppi::stencil(ex, begin(v), end(v), begin(w),
+    grppi::stencil(ex, make_tuple(begin(v),begin(v2)), end(v), begin(w),
       // Stencil computes average of neighbours
       [this](auto it, const auto & n) {
         invocations_operation++;
@@ -129,8 +129,7 @@ public:
         auto r2 = vec_surronding(begin(v2), end(v2), it2);
         r1.insert(end(r1), begin(r2), end(r2));
         return r1;
-      }, 
-      begin(v2)
+      }
     );
   }
 

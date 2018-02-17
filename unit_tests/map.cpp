@@ -59,12 +59,12 @@ public:
   template <typename E>
   void run_nary(const E & e) {
     grppi::map(e, 
-      v.begin(), v.end(), w.begin(),
-      [this](int x, int y, int z) { 
+      make_tuple(v.begin(),v2.begin(),v3.begin()),
+      v.end(), w.begin(),
+      [this](int x, int y, int z) {
         invocations++; 
         return x+y+z; 
-      },
-      v2.begin(), v3.begin()
+      }
     );
   }
 
