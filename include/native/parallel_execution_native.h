@@ -995,7 +995,7 @@ auto parallel_execution_native::divide_conquer(
       std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
 }
 template <typename Queue, typename Consumer,
-          requires_no_pattern<Consumer> = 0>
+          requires_no_pattern<Consumer>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Consumer && consume_op) const
@@ -1050,7 +1050,7 @@ void parallel_execution_native::do_pipeline(
 
 
 template <typename Inqueue, typename Transformer, typename output_type,
-            requires_no_pattern<Transformer> = 0>
+            requires_no_pattern<Transformer>>
 void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer && transform_op,
       mpmc_queue<output_type> & output_queue) const
 {
@@ -1074,7 +1074,7 @@ void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer &
 
 template <typename Queue, typename Transformer, 
           typename ... OtherTransformers,
-          requires_no_pattern<Transformer> =0>
+          requires_no_pattern<Transformer>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Transformer && transform_op,
@@ -1113,7 +1113,7 @@ void parallel_execution_native::do_pipeline(
 
 template <typename Queue, typename FarmTransformer,
           template <typename> class Farm,
-          requires_farm<Farm<FarmTransformer>> =0>
+          requires_farm<Farm<FarmTransformer>>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Farm<FarmTransformer> && farm_obj) const
@@ -1146,7 +1146,7 @@ void parallel_execution_native::do_pipeline(
 template <typename Queue, typename Execution, typename Transformer,
           template <typename, typename> class Context,
           typename ... OtherTransformers,
-          requires_context<Context<Execution,Transformer>> = 0>
+          requires_context<Context<Execution,Transformer>>>
 void parallel_execution_native::do_pipeline(Queue & input_queue, 
     Context<Execution,Transformer> && context_op,
     OtherTransformers &&... other_ops) const 
@@ -1182,7 +1182,7 @@ void parallel_execution_native::do_pipeline(Queue & input_queue,
 template <typename Queue, typename FarmTransformer, 
           template <typename> class Farm,
           typename ... OtherTransformers,
-          requires_farm<Farm<FarmTransformer>> =0>
+          requires_farm<Farm<FarmTransformer>>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Farm<FarmTransformer> && farm_obj,
@@ -1225,7 +1225,7 @@ void parallel_execution_native::do_pipeline(
 template <typename Queue, typename Predicate, 
           template <typename> class Filter,
           typename ... OtherTransformers,
-          requires_filter<Filter<Predicate>> =0>
+          requires_filter<Filter<Predicate>>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Filter<Predicate> && filter_obj,
@@ -1323,7 +1323,7 @@ void parallel_execution_native::do_pipeline(
 template <typename Queue, typename Combiner, typename Identity,
           template <typename C, typename I> class Reduce,
           typename ... OtherTransformers,
-          requires_reduce<Reduce<Combiner,Identity>> = 0>
+          requires_reduce<Reduce<Combiner,Identity>>>
 void parallel_execution_native::do_pipeline(
     Queue && input_queue, 
     Reduce<Combiner,Identity> && reduce_obj,
@@ -1362,8 +1362,8 @@ void parallel_execution_native::do_pipeline(
 template <typename Queue, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> =0,
-          requires_no_pattern<Transformer> =0>
+          requires_iteration<Iteration<Transformer,Predicate>>,
+          requires_no_pattern<Transformer>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Iteration<Transformer,Predicate> && iteration_obj,
@@ -1413,8 +1413,8 @@ void parallel_execution_native::do_pipeline(
 template <typename Queue, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> =0,
-          requires_pipeline<Transformer> =0>
+          requires_iteration<Iteration<Transformer,Predicate>>,
+          requires_pipeline<Transformer>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue, 
     Iteration<Transformer,Predicate> && iteration_obj,
@@ -1426,7 +1426,7 @@ void parallel_execution_native::do_pipeline(
 
 template <typename Queue, typename ... Transformers,
           template <typename...> class Pipeline,
-          requires_pipeline<Pipeline<Transformers...>> = 0>
+          requires_pipeline<Pipeline<Transformers...>>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue,
     Pipeline<Transformers...> && pipeline_obj) const
@@ -1440,7 +1440,7 @@ void parallel_execution_native::do_pipeline(
 template <typename Queue, typename ... Transformers,
           template <typename...> class Pipeline,
           typename ... OtherTransformers,
-          requires_pipeline<Pipeline<Transformers...>> = 0>
+          requires_pipeline<Pipeline<Transformers...>>>
 void parallel_execution_native::do_pipeline(
     Queue & input_queue,
     Pipeline<Transformers...> && pipeline_obj,

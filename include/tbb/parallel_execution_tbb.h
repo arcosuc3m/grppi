@@ -809,7 +809,7 @@ auto parallel_execution_tbb::divide_conquer(
 }
 
 template <typename Input, typename Transformer,
-          requires_no_pattern<Transformer> = 0>
+          requires_no_pattern<Transformer>>
 auto parallel_execution_tbb::make_filter(
     Transformer && transform_op) const
 {
@@ -827,7 +827,7 @@ auto parallel_execution_tbb::make_filter(
 }
 
 template <typename Input, typename Transformer, typename ... OtherTransformers,
-          requires_no_pattern<Transformer> = 0>
+          requires_no_pattern<Transformer>>
 auto parallel_execution_tbb::make_filter(
     Transformer && transform_op,
     OtherTransformers && ... other_transform_ops) const
@@ -860,7 +860,7 @@ auto parallel_execution_tbb::make_filter(
 
 template <typename Input, typename FarmTransformer,
           template <typename> class Farm,
-          requires_farm<Farm<FarmTransformer>> = 0>
+          requires_farm<Farm<FarmTransformer>>>
 auto parallel_execution_tbb::make_filter(
     Farm<FarmTransformer> && farm_obj) const
 {
@@ -880,7 +880,7 @@ auto parallel_execution_tbb::make_filter(
 template <typename Input, typename FarmTransformer, 
           template <typename> class Farm,
           typename ... OtherTransformers,
-          requires_farm<Farm<FarmTransformer>> = 0>
+          requires_farm<Farm<FarmTransformer>>>
 auto parallel_execution_tbb::make_filter(
     Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -910,7 +910,7 @@ auto parallel_execution_tbb::make_filter(
 
 template <typename Input, typename Predicate,
           template <typename> class Filter,
-          requires_filter<Filter<Predicate>> = 0>
+          requires_filter<Filter<Predicate>>>
 auto parallel_execution_tbb::make_filter(
     Filter<Predicate> && farm_obj) const
 {
@@ -930,7 +930,7 @@ auto parallel_execution_tbb::make_filter(
 template <typename Input, typename Predicate, 
           template <typename> class Filter,
           typename ... OtherTransformers,
-          requires_filter<Filter<Predicate>> = 0>
+          requires_filter<Filter<Predicate>>>
 auto parallel_execution_tbb::make_filter(
     Filter<Predicate> && filter_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -957,7 +957,7 @@ auto parallel_execution_tbb::make_filter(
 template <typename Input, typename Combiner, typename Identity,
           template <typename C, typename I> class Reduce,
           typename ... OtherTransformers,
-          requires_reduce<Reduce<Combiner,Identity>> = 0>
+          requires_reduce<Reduce<Combiner,Identity>>>
 auto parallel_execution_tbb::make_filter(
     Reduce<Combiner,Identity> && reduce_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -988,8 +988,8 @@ auto parallel_execution_tbb::make_filter(
 template <typename Input, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> =0,
-          requires_no_pattern<Transformer> =0>
+          requires_iteration<Iteration<Transformer,Predicate>>,
+          requires_no_pattern<Transformer>>
 auto parallel_execution_tbb::make_filter(
     Iteration<Transformer,Predicate> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -1017,8 +1017,8 @@ auto parallel_execution_tbb::make_filter(
 template <typename Input, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
-          requires_iteration<Iteration<Transformer,Predicate>> =0,
-          requires_pipeline<Transformer> =0>
+          requires_iteration<Iteration<Transformer,Predicate>>,
+          requires_pipeline<Transformer>>
 auto parallel_execution_tbb::make_filter(
     Iteration<Transformer,Predicate> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -1031,7 +1031,7 @@ auto parallel_execution_tbb::make_filter(
 template <typename Input, typename ... Transformers,
           template <typename...> class Pipeline,
           typename ... OtherTransformers,
-          requires_pipeline<Pipeline<Transformers...>> = 0>
+          requires_pipeline<Pipeline<Transformers...>>>
 auto parallel_execution_tbb::make_filter(
     Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const

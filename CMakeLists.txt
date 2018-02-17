@@ -16,7 +16,7 @@ message( STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 
-    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.4.0))
+    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
         message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.4 or above.")
     else()
         message( STATUS "C++ Compiler is Clang" )
@@ -118,7 +118,7 @@ endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 
 # Unit Tests
 enable_testing()
-option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
+option( GRPPI_UNIT_TEST_ENABLE "Unit tests" ON )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
