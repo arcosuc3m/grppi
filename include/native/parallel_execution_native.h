@@ -1002,7 +1002,6 @@ void parallel_execution_native::do_pipeline(
 {
   using namespace std;
   using input_type = typename Queue::value_type;
-  using input_value_type = typename input_type::first_type;
 
   auto manager = thread_manager();
   if (!is_ordered()) {
@@ -1057,10 +1056,6 @@ void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer &
   using namespace std;
   using namespace experimental;
 
-  using input_item_type = typename Inqueue::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
-
-  using output_optional_type = typename output_type::first_type;
   using output_item_value_type = typename output_type::first_type::value_type;
   for (;;) {
     auto item{input_queue.pop()}; 
@@ -1096,7 +1091,6 @@ void parallel_execution_native::do_pipeline(
   thread task([&,this]() {
     auto manager = thread_manager();
 
-    long order = 0;
     for (;;) {
       auto item{input_queue.pop()};
       if (!item.first) break;
@@ -1119,15 +1113,8 @@ void parallel_execution_native::do_pipeline(
     Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
-  using input_item_type = typename Queue::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
-  using transform_result_type = 
-      decay_t<typename result_of<FarmTransformer(input_item_value_type)>::type>;
-  using output_item_value_type = experimental::optional<transform_result_type>;
-  using output_item_type = pair<output_item_value_type,long>;
 
   auto farm_task = [&](int nt) {
-    long order = 0;
     auto item{input_queue.pop()}; 
     while (item.first) {
       farm_obj(*item.first);
@@ -1254,7 +1241,6 @@ void parallel_execution_native::do_pipeline(
   };
   thread filter_thread{filter_task};
 
-  using queue_type = mpmc_queue<input_item_type>;
   decltype(auto) output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);
 
@@ -1332,8 +1318,6 @@ void parallel_execution_native::do_pipeline(
   using namespace std;
   using namespace experimental;
 
-  using input_item_type = typename decay_t<Queue>::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
   decltype(auto) output_queue =
@@ -1373,7 +1357,6 @@ void parallel_execution_native::do_pipeline(
   using namespace experimental;
 
   using input_item_type = typename decay_t<Queue>::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
 
   decltype(auto) output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);

@@ -74,8 +74,8 @@ public:
   }
 
 private:
-  Transformer transformer_;
   ExecutionPolicy& execution_policy_;
+  Transformer transformer_;
 };
 
 namespace internal {

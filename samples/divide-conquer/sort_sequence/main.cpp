@@ -65,7 +65,7 @@ void sort_sequence(grppi::dynamic_execution & exec, int n) {
   
   range problem{begin(v), end(v)};
 
-  auto res = grppi::divide_conquer(exec,
+  grppi::divide_conquer(exec,
     problem,
     [](auto r) -> vector<range> {
       if (1>=r.size()) { return {r}; }

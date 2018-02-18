@@ -688,7 +688,6 @@ auto parallel_execution_omp::map_reduce(
         {
           const auto delta = chunk_size * i;
           const auto chunk_firsts = iterators_next(firsts,delta);
-          const auto chunk_last = std::next(std::get<0>(chunk_firsts), chunk_size);
           process_chunk(chunk_firsts, chunk_size, i);
         }
       }
@@ -1020,10 +1019,6 @@ void parallel_execution_omp::do_pipeline(Inqueue & input_queue, Transformer && t
   using namespace std;
   using namespace experimental;
 
-  using input_item_type = typename Inqueue::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
-
-  using output_optional_type = typename output_type::first_type;
   using output_item_value_type = typename output_type::first_type::value_type;
   for (;;) {
     auto item{input_queue.pop()}; 
@@ -1107,8 +1102,6 @@ void parallel_execution_omp::do_pipeline(
 {
   using namespace std;
   using namespace experimental;
-  using input_type = typename Queue::value_type;
-  using input_value_type = typename input_type::first_type::value_type;
  
   for (int i=0; i<farm_obj.cardinality(); ++i) {
     #pragma omp task shared(farm_obj,input_queue)
@@ -1306,15 +1299,13 @@ void parallel_execution_omp::do_pipeline(
   using namespace std;
   using namespace experimental;
 
-  using input_item_type = typename decay_t<Queue>::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
   
   decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_transform_ops...);
 
-  auto reduce_task = [&,this]() {
+  auto reduce_task = [&]() {
     auto item{input_queue.pop()};
     int order = 0;
     while (item.first) {
@@ -1352,7 +1343,6 @@ void parallel_execution_omp::do_pipeline(
   using namespace experimental;
 
   using input_item_type = typename decay_t<Queue>::value_type;
-  using input_item_value_type = typename input_item_type::first_type::value_type;
   decltype(auto) output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);
 
