@@ -161,7 +161,7 @@ template <typename Execution, typename InputIt, typename OutputIt,
           requires_iterator<InputIt> = 0,
           requires_iterator<OutputIt> = 0>
 [[deprecated("This version of the interface is deprecated.\n"
-             "If you want tu use multiple inputs, use a tuple instead.")]]
+             "If you want to use multiple inputs, use a tuple instead.")]]
 void stencil(
     const Execution & ex, 
     InputIt first, InputIt last, OutputIt out, 

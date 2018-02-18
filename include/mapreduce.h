@@ -152,7 +152,7 @@ template <typename Execution, typename InputIterator, typename Identity,
           typename ... OtherInputIterators,
           requires_iterator<InputIterator> = 0>
 [[deprecated("This version of the interface is deprecated.\n"
-             "If you want tu use multiple inputs, use a tuple instead.")]]
+             "If you want to use multiple inputs, use a tuple instead.")]]
 auto map_reduce(const Execution & ex,
                 InputIterator first, InputIterator last, 
                 Identity && identity, 

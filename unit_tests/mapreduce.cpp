@@ -54,7 +54,8 @@ public:
       },
       [](int x, int y) { 
         return x + y; 
-      });
+      }
+    );
   }
 
   void setup_single() {
