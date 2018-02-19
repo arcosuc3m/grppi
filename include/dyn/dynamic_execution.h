@@ -382,7 +382,7 @@ void dynamic_execution::pipeline(
     Generator && generate_op, 
     Transformers && ... transform_ops) const
 {
-  GRPPI_TRY_PATTERN_ALL_NOFF(pipeline, std::forward<Generator>(generate_op),
+  GRPPI_TRY_PATTERN_ALL(pipeline, std::forward<Generator>(generate_op),
       std::forward<Transformers>(transform_ops)...);
 }
 

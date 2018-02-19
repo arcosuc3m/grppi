@@ -302,7 +302,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(context_test, executions_noff);
+TYPED_TEST_CASE(context_test, executions);
 
 TYPED_TEST(context_test, static_three_stages_farm_seq)
 {

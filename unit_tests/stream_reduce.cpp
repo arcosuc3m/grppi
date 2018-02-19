@@ -139,7 +139,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stream_reduce_test, executions_noff);
+TYPED_TEST_CASE(stream_reduce_test, executions);
 
 // Check functionality with empty stream and sink function
 TYPED_TEST(stream_reduce_test, static_empty)

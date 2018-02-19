@@ -23,6 +23,8 @@
 
 #ifdef GRPPI_FF
 
+#include "detail/pipeline_impl.h"
+
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 
@@ -181,6 +183,17 @@ public:
       StencilTransformer && transform_op,
       Neighbourhood && neighbour_op) const;
 
+  /**
+    \brief Invoke \ref md_pipeline.
+    \tparam Generator Callable type for the generator operation.
+    \tparam Transformers Callable types for the transformers in the pipeline.
+    \param generate_op Generator operation.
+    \param transform_ops Transformer operations.
+   */
+  template <typename Generator, typename ... Transformers>
+  void pipeline(Generator && generate_op,
+      Transformers && ... transform_op) const;
+
 private:
 
   int concurrency_degree_ = 
@@ -231,6 +244,13 @@ constexpr bool supports_map_reduce<parallel_execution_ff>() { return true; }
 */
 template <>
 constexpr bool supports_stencil<parallel_execution_ff>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_pipeline<parallel_execution_ff>() { return true; }
 
 
 template <typename ... InputIterators, typename OutputIterator, 
@@ -303,6 +323,20 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
     concurrency_degree_);
 }
 
+template <typename Generator, typename ... Transformers>
+void parallel_execution_ff::pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops) const 
+{
+  detail_ff::pipeline_impl pipe{
+      concurrency_degree_, 
+      ordering_,
+      std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...};
+
+  pipe.setFixedSize(false);
+  pipe.run_and_wait_end();
+}
 
 } // end namespace grppi
 
