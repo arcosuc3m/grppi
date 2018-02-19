@@ -57,7 +57,7 @@ public:
   }
 
   template <typename E>
-  void run_nary(const E & e) {
+  void run_nary_tuple_range(const E &e) {
     grppi::map(e, 
       make_tuple(v.begin(),v2.begin(),v3.begin()),
       v.end(), w.begin(),
@@ -65,6 +65,18 @@ public:
         invocations++; 
         return x+y+z; 
       }
+    );
+  }
+
+  template<typename E>
+  void run_nary_tuple_size(const E & e) {
+    grppi::map(e,
+      make_tuple(v.begin(),v2.begin(),v3.begin()),
+      v.size(), w.begin(),
+       [this](int x, int y, int z){
+         invocations++;
+         return x+y+z;
+       }
     );
   }
 
@@ -168,45 +180,88 @@ TYPED_TEST(map_test, dyn_multiple_unary)
   this->check_multiple_unary();
 }
 
-TYPED_TEST(map_test, static_empty_nary)
+
+TYPED_TEST(map_test, static_empty_nary_tuple_range)
 {
   this->setup_empty();
-  this->run_nary(this->execution_);
+  this->run_nary_tuple_range(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(map_test, dyn_empty_nary)
+TYPED_TEST(map_test, dyn_empty_nary_tuple_range)
 {
   this->setup_empty();
-  this->run_nary(this->dyn_execution_);
+  this->run_nary_tuple_range(this->dyn_execution_);
   this->check_empty();
 }
 
-
-TYPED_TEST(map_test, static_single_nary)
+TYPED_TEST(map_test, static_single_nary_tuple_range)
 {
   this->setup_single_nary();
-  this->run_nary(this->execution_);
+  this->run_nary_tuple_range(this->execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(map_test, dyn_single_nary)
+TYPED_TEST(map_test, dyn_single_nary_tuple_range)
 {
   this->setup_single_nary();
-  this->run_nary(this->dyn_execution_);
+  this->run_nary_tuple_range(this->dyn_execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(map_test, static_multiple_nary)
+TYPED_TEST(map_test, static_multiple_nary_tuple_range)
 {
   this->setup_multiple_nary();
-  this->run_nary(this->execution_);
+  this->run_nary_tuple_range(this->execution_);
   this->check_multiple_nary();
 }
 
-TYPED_TEST(map_test, dyn_multiple_nary)
+TYPED_TEST(map_test, dyn_multiple_nary_tuple_range)
 {
   this->setup_multiple_nary();
-  this->run_nary(this->execution_);
+  this->run_nary_tuple_range(this->execution_);
+  this->check_multiple_nary();
+}
+
+
+TYPED_TEST(map_test, static_empty_nary_tuple_size)
+{
+  this->setup_empty();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, dyn_empty_nary_tuple_size)
+{
+  this->setup_empty();
+  this->run_nary_tuple_size(this->dyn_execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, static_single_nary_tuple_size)
+{
+  this->setup_single_nary();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_single_nary();
+}
+
+TYPED_TEST(map_test, dyn_single_nary_tuple_size)
+{
+  this->setup_single_nary();
+  this->run_nary_tuple_size(this->dyn_execution_);
+  this->check_single_nary();
+}
+
+TYPED_TEST(map_test, static_multiple_nary_tuple_size)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_multiple_nary();
+}
+
+TYPED_TEST(map_test, dyn_multiple_nary_tuple_size)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_size(this->execution_);
   this->check_multiple_nary();
 }
