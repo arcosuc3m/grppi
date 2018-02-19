@@ -67,9 +67,9 @@ public:
         a lower value.
   */
   parallel_execution_ff(int concurrency_degree, bool order = true) noexcept :
-      concurrency_degree_{std::min(concurrency_degree, 
-          static_cast<int>(std::thread::hardware_concurrency()))},
-      ordering_{order}
+//      concurrency_degree_{std::min(concurrency_degree,
+//          static_cast<int>(std::thread::hardware_concurrency()))},
+      concurrency_degree_{concurrency_degree}, ordering_{order}
   {
   }
 
@@ -79,8 +79,9 @@ public:
         a lower value.
   */
   void set_concurrency_degree(int degree) noexcept { 
-    concurrency_degree_ = std::min(degree,
-        static_cast<int>(std::thread::hardware_concurrency())); 
+//    concurrency_degree_ = std::min(degree,
+//        static_cast<int>(std::thread::hardware_concurrency()));
+      concurrency_degree_ = degree;
   }
 
   /**
@@ -368,8 +369,15 @@ auto parallel_execution_ff::divide_conquer(Input & input,
     return condition_op(in);
   };
   output_type out_var{};
-  // divide, combine, seq, condition, input, res, wrks
-  ff::ff_DC<Input,output_type> dac(divide_fn, combine_fn, seq_fn, cond_fn, input, out_var, concurrency_degree_);
+
+  using dac_t = ff::ff_DC<Input,output_type>;
+  auto ncores = static_cast<int>(std::thread::hardware_concurrency());
+  int max_nworkers = std::max(concurrency_degree_, ncores);
+  dac_t dac(
+		  divide_fn, combine_fn, seq_fn, cond_fn,
+		  input, out_var,
+		  concurrency_degree_, dac_t::DEFAULT_OUTSTANDING_TASKS, max_nworkers);
+
   // run
   dac.run_and_wait_end();
 
