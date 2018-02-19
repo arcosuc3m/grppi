@@ -435,11 +435,11 @@ private:
       mpmc_queue<output_type> & output_queue) const;
 
   template <typename T, typename ... Others>
-  void do_pipeline(mpmc_queue<T> & in_q, mpmc_queue<T> & same_queue, Others &&... ops) const
+  void do_pipeline(mpmc_queue<T> &, mpmc_queue<T> &, Others &&...) const
   { }
    
   template <typename T>
-  void do_pipeline(mpmc_queue<T> & in_q) const {}
+  void do_pipeline(mpmc_queue<T> &) const {}
 
 
   template <typename Queue, typename Transformer, typename ... OtherTransformers,
@@ -757,7 +757,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_native::map_reduce(
     std::tuple<InputIterators...> firsts, 
     std::size_t sequence_size,
-    Identity && identity,
+    Identity &&,
     Transformer && transform_op, Combiner && combine_op) const
 {
   using result_type = std::decay_t<Identity>;
@@ -1114,7 +1114,7 @@ void parallel_execution_native::do_pipeline(
 {
   using namespace std;
 
-  auto farm_task = [&](int nt) {
+  auto farm_task = [&](int) {
     auto item{input_queue.pop()}; 
     while (item.first) {
       farm_obj(*item.first);
@@ -1151,7 +1151,7 @@ void parallel_execution_native::do_pipeline(Queue & input_queue,
   decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_ops...);
   
-  auto context_task = [&](int nt) {
+  auto context_task = [&](int) {
     context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);
     output_queue.push( make_pair(output_optional_type{}, -1) );
   };
@@ -1399,9 +1399,9 @@ template <typename Queue, typename Transformer, typename Predicate,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_pipeline<Transformer>>
 void parallel_execution_native::do_pipeline(
-    Queue & input_queue, 
-    Iteration<Transformer,Predicate> && iteration_obj,
-    OtherTransformers && ... other_transform_ops) const
+    Queue &,
+    Iteration<Transformer,Predicate> &&,
+    OtherTransformers && ...) const
 {
   static_assert(!is_pipeline<Transformer>, "Not implemented");
 }

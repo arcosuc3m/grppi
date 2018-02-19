@@ -559,7 +559,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_tbb::map_reduce(
     std::tuple<InputIterators...> firsts,
     std::size_t sequence_size,
-    Identity && identity,
+    Identity &&,
     Transformer && transform_op, Combiner && combine_op) const
 {
   constexpr sequential_execution seq;
@@ -911,7 +911,7 @@ template <typename Input, typename Predicate,
           template <typename> class Filter,
           requires_filter<Filter<Predicate>>>
 auto parallel_execution_tbb::make_filter(
-    Filter<Predicate> && farm_obj) const
+    Filter<Predicate> &&) const
 {
   using namespace std;
   using namespace experimental;
@@ -1019,8 +1019,8 @@ template <typename Input, typename Transformer, typename Predicate,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_pipeline<Transformer>>
 auto parallel_execution_tbb::make_filter(
-    Iteration<Transformer,Predicate> && iteration_obj,
-    OtherTransformers && ... other_transform_ops) const
+    Iteration<Transformer,Predicate> &&,
+    OtherTransformers && ...) const
 {
   static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
