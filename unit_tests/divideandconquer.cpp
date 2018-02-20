@@ -247,7 +247,6 @@ TYPED_TEST(divideconquer_test, static_multiple_five_threads)
   this->check_multiple();
 }
 
-/*
 TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
 {
   this->setup_multiple_triple_div();
@@ -264,4 +263,3 @@ TYPED_TEST(divideconquer_test, static_multiple_triple_div_4_threads)
   this->out =  this->run_vecsum_chunked(this->execution_);
   this->check_multiple_triple_div();
 }
-*/
