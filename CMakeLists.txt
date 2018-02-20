@@ -16,7 +16,7 @@ message( STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 
-    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.4.0))
+    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
         message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.4 or above.")
     else()
         message( STATUS "C++ Compiler is Clang" )
@@ -56,32 +56,47 @@ if( TBB_FOUND )
     option( GRPPI_TBB_ENABLE "Require TBB library" ON )
 else( TBB_FOUND )
     option( GRPPI_TBB_ENABLE "Require TBB library" OFF )
+    set(GRPPI_TBB_ENABLE OFF CACHE BOOL "Require TBB library" FORCE)
 endif( TBB_FOUND )
 
 message( STATUS "TBB: " ${GRPPI_TBB_ENABLE} )
 if( GRPPI_TBB_ENABLE )
     include_directories(${TBB_INCLUDE_DIRS} )
-    add_definitions( "-DGRPPI_TBB" )
+    add_definitions(-DGRPPI_TBB)
 endif( GRPPI_TBB_ENABLE )
 
 # Threads Library
 find_package(Threads REQUIRED)
 
 # OMP library
-option( GRPPI_OMP_ENABLE "Require OpenMP library" ON )
+find_package(OpenMP)
+if (OPENMP_FOUND) 
+  option( GRPPI_OMP_ENABLE "Require OpenMP library" ON )
+else(OPENMP_FOUND)
+  option( GRPPI_OMP_ENABLE "Require OpenMP library" OFF )
+  set(GRPPI_OMP_ENABLE OFF CACHE BOOL "Require OpenMP library" FORCE)
+  message(STATUS "OpenMP not found")
+endif (OPENMP_FOUND)
+
 message( STATUS "OpenMP: " ${GRPPI_OMP_ENABLE})
 if( GRPPI_OMP_ENABLE )
-    find_package(OpenMP REQUIRED)
-    add_definitions( "-DGRPPI_OMP" )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+  add_definitions(-DGRPPI_OMP)
+  add_compile_options(${OpenMP_CXX_FLAGS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif( GRPPI_OMP_ENABLE )
 
 #FastFlow library
-option( GRPPI_FF_ENABLE "Require FastFlow library" ON )
+find_package(FF)
+if (FF_FOUND)
+  option( GRPPI_FF_ENABLE "Require FastFlow library" ON )
+else()
+  option( GRPPI_FF_ENABLE "Require FastFlow library" ON )
+  set(GRPPI_FF_ENABLE OFF CACHE BOOL "Require FastFlow library" FORCE)
+endif()
+
 message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE})
 if(GRPPI_FF_ENABLE)
-  find_package(FF)
-  add_definitions("-DGRPPI_FF")
+  add_definitions(-DGRPPI_FF)
   include_directories(${FFPATH}/fastflow)
 endif(GRPPI_FF_ENABLE)
 
@@ -103,7 +118,7 @@ endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 
 # Unit Tests
 enable_testing()
-option( GRPPI_UNIT_TEST_ENABLE "Unit tests" OFF )
+option( GRPPI_UNIT_TEST_ENABLE "Unit tests" ON )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
