@@ -41,8 +41,12 @@ public:
   dynamic_execution dyn_execution_{execution_};
   sequential_execution seq_;
   parallel_execution_native thr_;
+#ifdef GRPPI_OMP
   parallel_execution_omp omp_;
+#endif
+#ifdef GRPPI_TBB
   parallel_execution_tbb tbb_;
+#endif
 
   // Variables
   int out;
@@ -115,6 +119,7 @@ public:
         if (++i<=max) return i;
         else return {}; 
       },
+#ifdef GRPPI_OMP
       grppi::run_with(this->omp_,
         grppi::farm(2,
           [this](int x) {
@@ -123,6 +128,7 @@ public:
           }
         )
       ),
+#endif
       [this](int x) {
         invocations_last++;
         out += x;
@@ -137,6 +143,7 @@ public:
         if (++i<=max) return i;
         else return {}; 
       },
+#ifdef GRPPI_TBB
       grppi::run_with(this->tbb_,
         grppi::farm(2,
           [this](int x) {
@@ -145,6 +152,7 @@ public:
           }
         )
       ),
+#endif
       [this](int x) {
         invocations_last++;
         out += x;
@@ -229,6 +237,7 @@ public:
         if (++i<=max) return i;
         else return {};
       },
+#ifdef GRPPI_OMP
       grppi::run_with(this->omp_,
         grppi::pipeline(
           [this](int x) {
@@ -244,6 +253,7 @@ public:
           }
         )
       ),
+#endif
       [this](int x) {
           invocations_last++;
           out +=x;
@@ -258,6 +268,7 @@ public:
         if (++i<=max) return i;
         else return {};
       },
+#ifdef GRPPI_TBB
       grppi::run_with(this->tbb_,
         grppi::pipeline(
           [this](int x) {
@@ -273,6 +284,7 @@ public:
           }
         )
       ),
+#endif
       [this](int x) {
           invocations_last++;
           out +=x;
@@ -306,19 +318,23 @@ TYPED_TEST(context_test, static_three_stages_farm_nat)
   this->check_three_stages();
 }
 
+#ifdef GRPPI_OMP
 TYPED_TEST(context_test, static_three_stages_farm_omp)
 {
   this->setup_three_stages();
   this->run_three_stages_farm_with_omp(this->execution_);
   this->check_three_stages();
 }
+#endif
 
+#ifdef GRPPI_TBB
 TYPED_TEST(context_test, static_three_stages_farm_tbb)
 {
   this->setup_three_stages();
   this->run_three_stages_farm_with_tbb(this->execution_);
   this->check_three_stages();
 }
+#endif
 
 TYPED_TEST(context_test, dyn_three_stages_farm_seq)
 {
@@ -334,19 +350,23 @@ TYPED_TEST(context_test, dyn_three_stages_farm_nat)
   this->check_three_stages();
 }
 
+#ifdef GRPPI_OMP
 TYPED_TEST(context_test, dyn_three_stages_farm_omp)
 {
   this->setup_three_stages();
   this->run_three_stages_farm_with_omp(this->dyn_execution_);
   this->check_three_stages();
 }
+#endif
 
+#ifdef GRPPI_TBB
 TYPED_TEST(context_test, dyn_three_stages_farm_tbb)
 {
   this->setup_three_stages();
   this->run_three_stages_farm_with_tbb(this->dyn_execution_);
   this->check_three_stages();
 }
+#endif
 
 TYPED_TEST(context_test, static_composed_pipeline_seq)
 {
@@ -362,19 +382,23 @@ TYPED_TEST(context_test, static_composed_pipeline_nat)
   this->check_composed();
 }
 
+#ifdef GRPPI_OMP
 TYPED_TEST(context_test, static_composed_pipeline_omp)
 {
   this->setup_composed();
   this->run_composed_pipeline_with_omp(this->execution_);
   this->check_composed();
 }
+#endif
 
+#ifdef GRPPI_TBB
 TYPED_TEST(context_test, static_composed_pipeline_tbb)
 {
   this->setup_composed();
   this->run_composed_pipeline_with_tbb(this->execution_);
   this->check_composed();
 }
+#endif
 
 TYPED_TEST(context_test, dyn_composed_pipeline_seq)
 {
@@ -390,16 +414,20 @@ TYPED_TEST(context_test, dyn_composed_pipeline_nat)
   this->check_composed();
 }
 
+#ifdef GRPPI_OMP
 TYPED_TEST(context_test, dyn_composed_pipeline_omp)
 {
   this->setup_composed();
   this->run_composed_pipeline_with_omp(this->dyn_execution_);
   this->check_composed();
 }
+#endif
 
+#ifdef GRPPI_TBB
 TYPED_TEST(context_test, dyn_composed_pipeline_tbb)
 {
   this->setup_composed();
   this->run_composed_pipeline_with_tbb(this->dyn_execution_);
   this->check_composed();
 }
+#endif
