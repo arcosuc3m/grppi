@@ -176,9 +176,6 @@ private:
     nodes_.push_back(std::forward<std::unique_ptr<ff_node>>(p_node));
   }
 
-  template <typename T>
-  void add_stages() {}
-
   template <typename Input, typename Transformer,
       requires_no_pattern<Transformer> = 0>
   auto add_stages(Transformer &&stage) 
