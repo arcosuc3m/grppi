@@ -102,23 +102,11 @@ public:
   pipeline_impl(int nworkers, bool ordered, Generator && gen, 
       Transformers && ... transform_ops);
 
-  ~pipeline_impl() {
-    for (auto p_stage : cleanup_stages_) {
-      delete p_stage;
-    }
-  }
-
-  operator ff_node*() { return this; }
-
 private:
 
-  void add_stage(ff_node & node) {
-    ff::ff_pipeline::add_stage(&node);
-  }
-
-  void add_stage(ff_node * p_node) {
-    cleanup_stages_.push_back(p_node);
-    ff::ff_pipeline::add_stage(p_node);
+  void add_node(std::unique_ptr<ff_node> && p_node) {
+    nodes_.push_back(std::forward<std::unique_ptr<ff_node>>(p_node));
+    ff::ff_pipeline::add_stage(p_node.get());
   }
 
   template <typename T>
@@ -129,10 +117,10 @@ private:
   auto add_stages(Transformer &&stage) 
   {
     using input_type = std::decay_t<Input>;
+    using node_type = node_impl<input_type,void,Transformer>;
 
-    auto p_stage = new node_impl<input_type,void,Transformer>(
-        std::forward<Transformer>(stage));
-    add_stage(p_stage);
+    auto p_stage = std::make_unique<node_type>(std::forward<Transformer>(stage));
+    add_node(std::move(p_stage));
   }
 
   template <typename Input, typename Transformer, typename ... OtherTransformers,
@@ -147,10 +135,11 @@ private:
     static_assert(!std::is_void<output_type>::value,
         "Transformer must return a non-void result");
 
-    auto p_stage = new node_impl<Input,output_type,Transformer>(
+    using node_type = node_impl<Input,output_type,Transformer>;
+    auto p_stage = std::make_unique<node_type>(
         std::forward<Transformer>(transform_op));
 
-    add_stage(p_stage);
+    add_node(std::move(p_stage));
     add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
@@ -205,23 +194,23 @@ private:
     using output_type = std::decay_t<typename std::result_of<
         FarmTransformer(Input)>::type>;
 
-    using node_type = node_impl<Input,output_type,Farm<FarmTransformer>>;
+    using worker_type = node_impl<Input,output_type,Farm<FarmTransformer>>;
     std::vector<std::unique_ptr<ff::ff_node>> workers;
     for(int i=0; i<nworkers_; ++i) {
-      workers.push_back(std::make_unique<node_type>(
+      workers.push_back(std::make_unique<worker_type>(
           std::forward<Farm<FarmTransformer>>(farm_obj))
       );
     }
 
     if(ordered_) {
-      ff::ff_OFarm<Input,output_type> * p_farm =
-          new ff::ff_OFarm<Input,output_type>(std::move(workers));
-      add_stage(p_farm);
-    } else 
-    {
-      ff::ff_Farm<Input,output_type> * p_farm =
-          new ff::ff_Farm<Input,output_type>(std::move(workers));
-      add_stage(p_farm);
+      using node_type = ff::ff_OFarm<Input,output_type>;
+      auto p_farm = std::make_unique<node_type>(std::move(workers));
+      add_node(std::move(p_farm));
+    } 
+    else {
+      using node_type = ff::ff_Farm<Input,output_type>;
+      auto p_farm = std::make_unique<node_type>(std::move(workers));
+      add_node(std::move(p_farm));
     }
   }
 
@@ -252,25 +241,25 @@ private:
     static_assert(!std::is_void<output_type>::value,
         "Farm must return a non-void result");
 
-    using node_type = node_impl<Input,output_type,Farm<FarmTransformer>>;
+    using worker_type = node_impl<Input,output_type,Farm<FarmTransformer>>;
     std::vector<std::unique_ptr<ff::ff_node>> workers;
 
     for(int i=0; i<nworkers_; ++i) {
-      workers.push_back( std::make_unique<node_type>(
+      workers.push_back(std::make_unique<worker_type>(
           std::forward<Farm<FarmTransformer>>(farm_obj))
       );
     }
 
     if(ordered_) {
-      ff::ff_OFarm<Input,output_type> * p_farm =
-          new ff::ff_OFarm<Input,output_type>(std::move(workers));
-      add_stage(p_farm);
+      using node_type = ff::ff_OFarm<Input,output_type>;
+      auto p_farm = std::make_unique<node_type>(std::move(workers));
+      add_node(std::move(p_farm));
       add_stages<output_type>(std::forward<OtherTransformers>(other_transform_ops)...);
     } 
     else {
-      ff::ff_Farm<Input,output_type> * p_farm =
-          new ff::ff_Farm<Input,output_type>(std::move(workers));
-      add_stage(p_farm);
+      using node_type = ff::ff_Farm<Input,output_type>;
+      auto p_farm = std::make_unique<node_type>(std::move(workers));
+      add_node(std::move(p_farm));
       add_stages<output_type>(std::forward<OtherTransformers>(other_transform_ops)...);
     }
   }
@@ -294,17 +283,16 @@ private:
         "Filter must take non-void argument");
 
     if(ordered_) {
-      ordered_stream_filter<Input,Filter<Predicate>> *theFarm =
-          new ordered_stream_filter<Input,Filter<Predicate>>(
-              std::forward<Filter<Predicate>>(filter_obj), nworkers_
-          );
-      add_stage(theFarm);
-    } else {
-      unordered_stream_filter<Input,Filter<Predicate>> *theFarm =
-          new unordered_stream_filter<Input,Filter<Predicate>>(
-              std::forward<Filter<Predicate>>(filter_obj), nworkers_
-          );
-      add_stage(theFarm);
+      using node_type = ordered_stream_filter<Input,Filter<Predicate>>;
+      auto p_farm = std::make_unique<node_type>(
+          std::forward<Filter<Predicate>>(filter_obj), nworkers_);
+      add_node(std::move(p_farm));
+    } 
+    else {
+      using node_type = unordered_stream_filter<Input,Filter<Predicate>>;
+      auto p_farm = std::make_unique<node_type>(
+          std::forward<Filter<Predicate>>(filter_obj), nworkers_);
+      add_node(std::move(p_farm));
     }
   }
 
@@ -326,22 +314,23 @@ private:
       typename ... OtherTransformers,
       requires_filter<Filter<Predicate>> = 0>
   auto add_stages(Filter<Predicate> && filter_obj,
-      OtherTransformers && ... other_transform_ops) {
+      OtherTransformers && ... other_transform_ops) 
+  {
     static_assert(!std::is_void<Input>::value,
         "Filter must take non-void argument");
 
     if(ordered_) {
-      ordered_stream_filter<Input,Filter<Predicate>> * p_farm =
-          new ordered_stream_filter<Input,Filter<Predicate>>{
-              std::forward<Filter<Predicate>>(filter_obj), nworkers_};
-      add_stage(p_farm);
+      using node_type = ordered_stream_filter<Input,Filter<Predicate>>;
+      auto p_farm = std::make_unique<node_type>(
+              std::forward<Filter<Predicate>>(filter_obj), nworkers_);
+      add_node(std::move(p_farm));
       add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
     } 
     else {
-      unordered_stream_filter<Input,Filter<Predicate>> * p_farm =
-          new unordered_stream_filter<Input,Filter<Predicate>>{
-              std::forward<Filter<Predicate>>(filter_obj), nworkers_};
-      add_stage(p_farm);
+      using node_type = unordered_stream_filter<Input,Filter<Predicate>>;
+      auto p_farm = std::make_unique<node_type>(
+          std::forward<Filter<Predicate>>(filter_obj), nworkers_);
+      add_node(std::move(p_farm));
       add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
     }
   }
@@ -368,17 +357,21 @@ private:
         "Reduce must take non-void argument");
 
     if(ordered_) {
-      ordered_stream_reduce<Input,Reduce<Combiner,Identity>,Combiner> * p_farm =
-          new ordered_stream_reduce<Input,Reduce<Combiner,Identity>, Combiner>{
-              std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers_};
-      add_stage(p_farm);
+      using reducer_type = Reduce<Combiner,Identity>;
+      using node_type = ordered_stream_reduce<Input,reducer_type,Combiner>;
+      auto p_farm = std::make_unique<node_type>(
+          std::forward<reducer_type>(reduce_obj), 
+          nworkers_);
+      add_node(std::move(p_farm));
       add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
     } 
     else {
-      unordered_stream_reduce<Input,Reduce<Combiner,Identity>,Combiner> * p_farm =
-          new unordered_stream_reduce<Input,Reduce<Combiner,Identity>, Combiner>{
-              std::forward<Reduce<Combiner,Identity>>(reduce_obj), nworkers_};
-      add_stage(p_farm);
+      using reducer_type = Reduce<Combiner,Identity>;
+      using node_type = unordered_stream_reduce<Input,reducer_type,Combiner>;
+      auto p_farm = std::make_unique<node_type>(
+          std::forward<Reduce<Combiner,Identity>>(reduce_obj), 
+          nworkers_);
+      add_node(std::move(p_farm));
       add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
     }
   }
@@ -414,20 +407,23 @@ private:
   {
     std::vector<std::unique_ptr<ff::ff_node>> workers;
 
+    using iteration_type = Iteration<Transformer,Predicate>;
+    using worker_type = iteration_worker<Input,iteration_type>;
     for (int i=0; i<nworkers_; ++i)
       workers.push_back(
-        std::make_unique<iteration_worker<Input,Iteration<Transformer,Predicate>>>(
-          std::forward<Iteration<Transformer,Predicate>>(iteration_obj))
-      );
+        std::make_unique<worker_type>(
+          std::forward<iteration_type>(iteration_obj)));
 
     if (ordered_) {
-      ff::ff_OFarm<Input> * p_farm = new ff::ff_OFarm<Input>(std::move(workers));
-      add_stage(p_farm);
+      using node_type = ff::ff_OFarm<Input>;
+      auto p_farm = std::make_unique<node_type>(std::move(workers));
+      add_node(std::move(p_farm));
       add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
     } 
     else {
-      ff::ff_Farm<Input> * p_farm= new ff::ff_Farm<Input>(std::move(workers));
-      add_stage(p_farm);
+      using node_type = ff::ff_Farm<Input>;
+      auto p_farm = std::make_unique<node_type>(std::move(workers));
+      add_node(std::move(p_farm));
       add_stages<Input>(std::forward<OtherTransformers>(other_transform_ops)...);
     }
   }
@@ -473,7 +469,7 @@ private:
 
   int nworkers_;
   bool ordered_;
-  std::vector<ff_node*> cleanup_stages_;
+  std::vector<std::unique_ptr<ff_node>> nodes_;
 
 };
 
@@ -484,14 +480,17 @@ pipeline_impl::pipeline_impl(
     Generator && gen_op, 
     Transformers && ... transform_ops)
   :
-    nworkers_{nworkers}, ordered_{ordered}
+    nworkers_{nworkers}, 
+    ordered_{ordered},
+    nodes_{}
 {
   using result_type = std::decay_t<typename std::result_of<Generator()>::type>;
   using generator_value_type = typename result_type::value_type;
+  using node_type = node_impl<void,generator_value_type,Generator>;
 
-  auto first_stage = new node_impl<void,generator_value_type,Generator>(
+  auto first_stage = std::make_unique<node_type>(
       std::forward<Generator>(gen_op));
-  add_stage(first_stage);
+  add_node(std::move(first_stage));
 
   add_stages<generator_value_type>(std::forward<Transformers>(transform_ops)...);
 }
