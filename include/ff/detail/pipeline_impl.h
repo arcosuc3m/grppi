@@ -28,10 +28,14 @@
 #include "ordered_stream_filter.h"
 #include "unordered_stream_filter.h"
 #include "iteration_worker.h"
+#include "../../common/mpmc_queue.h"
+
 
 #include <ff/allocator.hpp>
 #include <ff/pipeline.hpp>
 #include <ff/farm.hpp>
+
+#include <atomic>
 
 namespace grppi {
 
@@ -111,6 +115,25 @@ public:
   operator ff_node*() { return this; }
 
 private:
+
+   /**
+  \brief Sets the attributes for the queues built through make_queue<T>()
+  */
+  void set_queue_attributes(int size, queue_mode mode) noexcept {
+    queue_size_ = size;
+    queue_mode_ = mode;
+  }
+
+  /**
+  \brief Makes a communication queue for elements of type T.
+  Constructs a queue using the attributes that can be set via 
+  set_queue_attributes(). The value is returned via move semantics.
+  \tparam T Element type for the queue.
+  */
+  template <typename T>
+  mpmc_queue<T> make_queue() const {
+    return {queue_size_, queue_mode_};
+  }
 
   void add_stage(ff_node & node) {
     ff::ff_pipeline::add_stage(&node);
@@ -453,7 +476,7 @@ private:
             typename ... OtherTransformers,
             requires_context<Context<Execution,Transformer>> = 0>
   auto add_stages(Context<Execution,Transformer> & context_op, 
-       OtherTransformers &&... other_ops) const
+       OtherTransformers &&... other_ops)
   {
     return this->template add_stages<Input>(std::move(context_op),
       std::forward<OtherTransformers>(other_ops)...);
@@ -464,16 +487,49 @@ private:
             typename ... OtherTransformers,
             requires_context<Context<Execution,Transformer>> = 0>
   auto add_stages(Context<Execution,Transformer> && context_op, 
-       OtherTransformers &&... other_ops) const
+       OtherTransformers &&... other_ops)
   {
-    static_assert(true, "Not implemented");
+
+   return this->template add_stages<Input>(context_op.transformer(),
+      std::forward<OtherTransformers>(other_ops)...);
+/*    ::std::atomic<long> order{0};
+    
+    using optional_input_type = std::experimental::optional<Input>;
+    using input_type = std::pair<optional_input_type, long>;
+    auto input_queue = make_queue<input_type>();  
+ 
+    using result_type =  typename std::result_of<Transformer(Input)>::type;
+    using optional_output_type = std::experimental::optional<result_type>;
+    using output_type  = std::pair<optional_output_type, long>;
+    auto output_queue = make_queue<output_type>();
+
+    auto f = [&](Input & item) {
+      input_queue.push(make_pair(typename std::experimental::optional<Input>{item}, order.load()));
+    };
+
+    this->template add_stages<Input>(f);
+    std::thread ctx([&](){context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);});
+    auto first_stage = new node_impl<void,generator_value_type,Generator>(
+      std::forward<Generator>(gen_op));
+    
+    this->template add_stages<void>([&](){
+        return output_queue.pop().first;
+      },
+      std::forward<OtherTransformers>(other_ops)...);*/
+   // ctx.join();
   }
+
 
 private:
 
   int nworkers_;
   bool ordered_;
   std::vector<ff_node*> cleanup_stages_;
+  
+  queue_mode queue_mode_ = queue_mode::blocking;
+
+  constexpr static int default_queue_size = 100;
+  int queue_size_ = default_queue_size;
 
 };
 

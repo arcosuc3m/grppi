@@ -194,6 +194,38 @@ public:
   void pipeline(Generator && generate_op,
       Transformers && ... transform_op) const;
 
+
+  /**
+  \brief Invoke \ref md_pipeline comming from another context
+  that uses mpmc_queues as communication channels.
+  \tparam InputType Type of the input stream.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \tparam InputType Type of the output stream.
+  \param input_queue Input stream communicator.
+  \param transform_ops Transformer operations.
+  \param output_queue Input stream communicator.
+  */
+  template <typename InputType, typename Transformer, typename OutputType>
+  void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
+                mpmc_queue<OutputType> & output_queue) const
+  {
+    ::std::atomic<long> order {0};
+    pipeline(
+      [&](){
+        auto item = input_queue.pop();
+        if(!item.first) input_queue.push(item);
+        return item.first;
+      },
+      std::forward<Transformer>(transform_op),
+      [&](auto & item ){
+        output_queue.push(make_pair(typename OutputType::first_type{item}, order.load()));
+        order++;
+      }
+    );
+    output_queue.push(make_pair(typename OutputType::first_type{}, order.load()));
+  }
+
+
 private:
 
   int concurrency_degree_ = 
