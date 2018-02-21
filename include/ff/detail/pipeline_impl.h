@@ -547,8 +547,6 @@ pipeline_impl::pipeline_impl(
   auto first_stage = std::make_unique<node_type>(
       std::forward<Generator>(gen_op));
 
-  std::cerr << "first_stage: " << first_stage.get() << "\n";
-
   add_node(std::move(first_stage));
 
   add_stages<generator_value_type>(std::forward<Transformers>(transform_ops)...);
