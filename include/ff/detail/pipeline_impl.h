@@ -41,61 +41,105 @@ namespace grppi {
 
 namespace detail_ff {
 
+/**
+ \brief Fastflow allocator wrapper.
+ A fastflow_allocator offers simplified interface for allocating and deallocating
+ objects using ff::ff_malloc and ff::ff_free for objects of type T.
+ \tparam T type of objects to allocate and deallocate.
+ */
+template <typename T>
+struct fastflow_allocator {
+
+  /**
+  \brief Allocate an object and intialize it.
+  \param value Value used to initialize the object.
+  */
+  static T * allocate(const T & value) {
+    void * p_buf = ::ff::ff_malloc(sizeof(T));
+    T * p_val = new (p_buf) T{value};
+  }
+
+  /**
+  \brief Deallocate an object that was allocated with allocate.
+  \param p_val Pointer that was obtained with a call to allocate()
+  */
+  static void deallocate(T * p_val) {
+    p_val->~T();
+    ::ff::ff_free(p_val);
+  }
+  
+};
+
+/**
+\brief Fastflow node for a pipeline transformation stage.
+\tparam Input Data type for the input value.
+\tparam Output Data type for the output value.
+\tparam Transformer Callable type for a transformation.
+*/
 template <typename Input, typename Output, typename Transformer>
-struct node_impl : ff::ff_node_t<Input,Output> {
-  Transformer transform_op_;
+class node_impl : public ff::ff_node_t<Input,Output> {
+public:
 
   node_impl(Transformer && transform_op) : 
       transform_op_{transform_op}
   {}
 
   Output * svc(Input * p_item) {
-    Output * p_out = static_cast<Output*>(ff::ff_malloc(sizeof(Output)));
-    *p_out = transform_op_(*p_item);
-    return p_out;
+    return fastflow_allocator<Output>::allocate(transform_op_(*p_item));
   } 
+
+private:
+  Transformer transform_op_;
 };
 
-template <typename Output, typename Transformer>
-struct node_impl<void,Output,Transformer> : ff::ff_node {
-  Transformer transform_op_;
+/**
+\brief Fastflow node for a pipeline generation stage.
+\tparam Output Data type for the output value.
+\tparam Generator Callable type for a generator.
+*/
+template <typename Output, typename Generator>
+class node_impl<void,Output,Generator> : public ff::ff_node {
+public:
 
-  node_impl(Transformer && transform_op) :
-      transform_op_{transform_op}
+  node_impl(Generator && generate_op) :
+      generate_op_{generate_op}
   {}
 
   void * svc(void *) {
-    std::experimental::optional<Output> result;
-    void * p_out_buf = ff::ff_malloc(sizeof(Output));
-    Output * p_out = new (p_out_buf) Output;
-    result = transform_op_();
+    std::experimental::optional<Output> result{generate_op_()};
     if (result) {
-      *p_out = result.value();
-      return p_out_buf;
+      return fastflow_allocator<Output>::allocate(*result);
     }
     else {
-      p_out->~Output();
-      ff::ff_free(p_out_buf);
       return EOS;
     }
   }
+
+private:
+  Generator generate_op_;
 };
 
-template <typename Input, typename Transformer>
-struct node_impl<Input,void,Transformer> : ff::ff_node_t<Input,void> {
-  Transformer transform_op_;
+/**
+\brief Fastflow node for a pipeline consumer stage.
+\tparam Input Data type for the input value.
+\tparam Consumer Callable type for a consumer.
+*/
+template <typename Input, typename Consumer>
+class node_impl<Input,void,Consumer> : public ff::ff_node_t<Input,void> {
+public:
 
-  node_impl(Transformer && transform_op) :
-      transform_op_{transform_op}
+  node_impl(Consumer && consume_op) :
+      consume_op_{consume_op}
   {}
 
   void * svc(Input * p_item) {
-    transform_op_(*p_item);
-    p_item->~Input();
-    ff::ff_free(p_item);
+    consume_op_(*p_item);
+    fastflow_allocator<Input>::deallocate(p_item);
     return GO_ON;
   }
 
+private:
+  Consumer consume_op_;
 };
 
 
