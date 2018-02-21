@@ -37,6 +37,18 @@ struct is_iterator<T, typename std::enable_if<!std::is_same<typename std::iterat
   static constexpr bool value = true;
 };
 
+template<typename T, typename ...other_T>
+struct are_iterators
+{
+  static constexpr bool value = is_iterator<T>::value && are_iterators<other_T...>::value;
+};
+
+template<typename T>
+struct are_iterators<T>
+{
+  static constexpr bool value = is_iterator<T>::value;
+};
+
 }
 
 template <typename T>
@@ -44,6 +56,12 @@ constexpr bool is_iterator = internal::is_iterator<T>::value;
 
 template <typename T>
 using requires_iterator = std::enable_if_t<is_iterator<T>, int>;
+
+template<typename ...T>
+constexpr bool are_iterators = internal::are_iterators<T...>::value;
+
+template<typename ...T>
+using requires_iterators = std::enable_if_t<are_iterators<T...>, int>;
 
 }
 
