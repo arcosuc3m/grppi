@@ -57,7 +57,7 @@ public:
         return std::vector<std::vector<int> >{}; 
       },
       // Predicate
-      [this](auto & v) {
+      [this](auto &) {
         invocations_predicate++;
         return true;
       },
