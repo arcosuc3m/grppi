@@ -370,7 +370,7 @@ auto dynamic_execution::divide_conquer(
     Solver && solve_op,
     Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL_NOFF(divide_conquer, std::forward<Input>(input),
+  GRPPI_TRY_PATTERN_ALL(divide_conquer, std::forward<Input>(input),
       std::forward<Divider>(divide_op),
       std::forward<Predicate>(predicate_op),
       std::forward<Solver>(solve_op),
