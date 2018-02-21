@@ -22,6 +22,7 @@ if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
         message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.9 or above.")
     else()
         message( STATUS "C++ Compiler is Clang" )
+        add_compile_options(-Wall -Wextra -Wno-deprecated -Werror -pedantic -pedantic-errors)
     endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
@@ -33,8 +34,8 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
     endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
- 
-  message(FATAL_ERROR "Intel compiler is not currently supported")   
+
+  message(FATAL_ERROR "Intel compiler is not currently supported")
 #    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
 #        message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 16.0 or above.")
     else()

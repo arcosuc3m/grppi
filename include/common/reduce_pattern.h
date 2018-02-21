@@ -41,7 +41,7 @@ public:
   \param Id Identity value.
   \param combine_op Combiner used for the reduction.
   */
-  reduce_t(int wsize, int offset, Identity id, Combiner && combine_op) :
+  reduce_t(size_t wsize, size_t offset, Identity id, Combiner && combine_op) :
     window_size_{wsize}, offset_{offset}, 
     identity_{id}, combiner_{combine_op}
   {}
@@ -86,13 +86,13 @@ public:
   }
   
   template<typename T>
-  auto operator()(T &&item){
+  auto operator()(T &&){
     return Identity{};
   }
 
 private:
-  int window_size_;
-  int offset_;
+  size_t window_size_;
+  size_t offset_;
   Identity identity_;
   Combiner combiner_;
 

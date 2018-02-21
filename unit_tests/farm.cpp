@@ -50,8 +50,8 @@ public:
   vector<int> w{};
 
   // entry counter
-  int idx_in = 0;
-  int idx_out = 0;
+  size_t idx_in = 0;
+  size_t idx_out = 0;
 
   // Invocation counter
   std::atomic<int> invocations_in{0};
@@ -73,7 +73,7 @@ public:
           return x;
         }
       ),
-      [](int x) {}
+      [](int) {}
     );
   }
 
@@ -96,7 +96,7 @@ public:
           invocations_op++;
           return x;
         }),
-      [this](int x) {
+      [this](int) {
         this->invocations_sk++;
       }
     );
@@ -118,7 +118,7 @@ public:
         return {};
       },
       grppi::farm(4,
-        [this](tuple<int,int,int> x) {
+        [this](tuple<int,int,int>) {
           invocations_op++;
         })
     );
@@ -143,7 +143,7 @@ public:
           invocations_op++;
           return x;
         }),
-      [this](int x) {
+      [this](int) {
         this->invocations_sk++;
       }
     );

@@ -46,8 +46,8 @@ public:
   vector<int> expected_odd{};
 
   // Entry counter
-  int idx_in = 0;
-  int idx_out = 0;
+  size_t idx_in = 0;
+  size_t idx_out = 0;
  
   // Invocation counter
   std::atomic<int> invocations_in{0};
@@ -65,11 +65,11 @@ public:
         return {}; 
     },
     grppi::keep(
-      [this](int x) { 
+      [this](int) {
         invocations_op++; 
         return true; 
       }),
-    [this](int x) { 
+    [this](int) {
       this->invocations_out++; 
     });
   }
@@ -82,11 +82,11 @@ public:
         return {}; 
     },
     grppi::discard(
-      [this](int x) { 
+      [this](int) {
         invocations_op++; 
         return true; 
       }),
-    [this](int x) { 
+    [this](int) {
       invocations_out++; 
     });
   }

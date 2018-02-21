@@ -50,8 +50,8 @@ public:
   vector<int> w{};
 
   // entry counter
-  int idx_in = 0;
-  int idx_out = 0;
+  size_t idx_in = 0;
+  size_t idx_out = 0;
 
   // Invocation counter
   std::atomic<int> invocations_in{0};
@@ -80,7 +80,7 @@ public:
           }
         )
       ),
-      [](int x) {}
+      [](int) {}
     );
   }
 
@@ -111,7 +111,7 @@ public:
           }
         )
       ),
-      [this](int x) {
+      [this](int) {
         this->invocations_sk++;
       }
     );
@@ -144,7 +144,7 @@ public:
             return x;
           })
       ),
-      [&](tuple<int,int,int> x){
+      [&](tuple<int,int,int>){
         invocations_sk++;
       }
     );

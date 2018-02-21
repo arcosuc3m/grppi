@@ -49,7 +49,7 @@ public:
   \brief Set number of grppi threads.
   \note Setting concurrency degree is ignored for sequential execution.
   */
-  constexpr void set_concurrency_degree(int n) const noexcept {}
+  constexpr void set_concurrency_degree(int) const noexcept {}
 
   /**
   \brief Get number of grppi trheads.
@@ -680,9 +680,9 @@ template <typename Item, typename Transformer, typename Predicate,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_pipeline<Transformer>>
 void sequential_execution::do_pipeline(
-    Item && item, 
-    Iteration<Transformer,Predicate> && iteration_obj, 
-    OtherTransformers && ... other_transform_ops) const
+    Item &&,
+    Iteration<Transformer,Predicate> &&,
+    OtherTransformers && ...) const
 {
   static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
