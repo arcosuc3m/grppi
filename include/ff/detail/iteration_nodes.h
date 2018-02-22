@@ -18,10 +18,8 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FF_DETAIL_ITERATION_WORKER_H
-#define GRPPI_FF_DETAIL_ITERATION_WORKER_H
-
-#ifdef GRPPI_FF
+#ifndef GRPPI_FF_DETAIL_ITERATION_NODES_H
+#define GRPPI_FF_DETAIL_ITERATION_NODES_H
 
 #include <vector>
 
@@ -53,9 +51,5 @@ private:
 } // namespace detail_ff
 
 } // namespace grppi
-
-#else
-
-#endif // GRPPI_FF
 
 #endif
