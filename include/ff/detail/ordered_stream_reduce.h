@@ -49,7 +49,7 @@ private:
   int concurrency_degree_;
   std::vector<ff_node*> workers_;
 
-  ordered_reduce_emitter<TSin,Reducer> * p_emitter_;
+  reduce_emitter<TSin,Reducer> * p_emitter_;
 };
 
 template <typename Item, typename Reducer, typename Combiner>
@@ -63,12 +63,12 @@ ordered_stream_reduce<Item,Reducer,Combiner>::ordered_stream_reduce(
     p_emitter_{nullptr} 
 {
   for(int i=0; i<num_workers; ++i) {
-    ordered_reduce_worker<Item,Combiner> * p_worker =
-        new ordered_reduce_worker<Item,Combiner>{red_obj.combiner()};
+    reduce_worker<Item,Combiner> * p_worker =
+        new reduce_worker<Item,Combiner>{red_obj.combiner()};
     workers_.push_back(p_worker);
   }
 
-  p_emitter_ = new ordered_reduce_emitter<Item,Reducer>{
+  p_emitter_ = new reduce_emitter<Item,Reducer>{
       red_obj.window_size(), red_obj.offset()};
   add_workers(workers_);
   setEmitterF(p_emitter_);

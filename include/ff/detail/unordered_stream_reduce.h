@@ -45,13 +45,13 @@ public:
       p_collector_{nullptr}
   {
     for (int i=0; i<num_workers; ++i) {
-      workers.push_back(new unordered_reduce_worker<TSin,Combiner>{
+      workers.push_back(new reduce_worker<TSin,Combiner>{
           std::forward<Combiner>(reducer.combiner())});
     }
-    p_emitter_ = new unordered_reduce_emitter<TSin,Reducer>{
+    p_emitter_ = new reduce_emitter<TSin,Reducer>{
         reducer.window_size(),
         reducer.offset()};
-    p_collector_ = new unordered_reduce_collector{};
+    p_collector_ = new reduce_collector{};
     this->add_workers(workers_);
     this->add_emitter(p_emitter_);
     this->add_collector(p_collector_);
@@ -65,8 +65,8 @@ public:
 private:
   int concurrency_degree_;
   std::vector<ff::ff_node*> workers_;
-  unordered_reduce_emitter<TSin,Reducer> * p_emitter_;
-  unordered_reduce_collector * p_collector_;
+  reduce_emitter<TSin,Reducer> * p_emitter_;
+  reduce_collector * p_collector_;
 };
 
 

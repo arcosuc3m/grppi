@@ -22,9 +22,6 @@
 #define GRPPI_FF_DETAIL_SIMPLE_NODE_H
 
 #include "fastflow_allocator.h"
-#include "reduce_task.h"
-
-#include "../../reduce.h"
 
 #include <ff/allocator.hpp>
 #include <ff/node.hpp>
