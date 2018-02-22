@@ -18,12 +18,11 @@
 * See COPYRIGHT.txt for copyright notices and details.
 */
 
-#ifndef GRPPI_FF_DETAIL_SIMPLE_NODE_H
-#define GRPPI_FF_DETAIL_SIMPLE_NODE_H
+#ifndef GRPPI_FF_DETAIL_REDUCE_NODES_H
+#define GRPPI_FF_DETAIL_REDUCE_NODES_H
 
 #include "fastflow_allocator.h"
 #include "reduce_task.h"
-
 #include "../../reduce.h"
 
 #include <ff/allocator.hpp>
@@ -32,78 +31,6 @@
 namespace grppi {
 
 namespace detail_ff {
-
-/**
-\brief Fastflow node for a pipeline transformation stage.
-\tparam Input Data type for the input value.
-\tparam Output Data type for the output value.
-\tparam Transformer Callable type for a transformation.
-*/
-template <typename Input, typename Output, typename Transformer>
-class node_impl : public ff::ff_node_t<Input,Output> {
-public:
-
-  node_impl(Transformer && transform_op) : 
-      transform_op_{transform_op}
-  {}
-
-  Output * svc(Input * p_item) {
-    return fastflow_allocator<Output>::allocate(transform_op_(*p_item));
-  } 
-
-private:
-  Transformer transform_op_;
-};
-
-/**
-\brief Fastflow node for a pipeline generation stage.
-\tparam Output Data type for the output value.
-\tparam Generator Callable type for a generator.
-*/
-template <typename Output, typename Generator>
-class node_impl<void,Output,Generator> : public ff::ff_node {
-public:
-
-  node_impl(Generator && generate_op) :
-      generate_op_{generate_op}
-  {}
-
-  void * svc(void *) {
-    std::experimental::optional<Output> result{generate_op_()};
-    if (result) {
-      return fastflow_allocator<Output>::allocate(*result);
-    }
-    else {
-      return EOS;
-    }
-  }
-
-private:
-  Generator generate_op_;
-};
-
-/**
-\brief Fastflow node for a pipeline consumer stage.
-\tparam Input Data type for the input value.
-\tparam Consumer Callable type for a consumer.
-*/
-template <typename Input, typename Consumer>
-class node_impl<Input,void,Consumer> : public ff::ff_node_t<Input,void> {
-public:
-
-  node_impl(Consumer && consume_op) :
-      consume_op_{consume_op}
-  {}
-
-  void * svc(Input * p_item) {
-    consume_op_(*p_item);
-    fastflow_allocator<Input>::deallocate(p_item);
-    return GO_ON;
-  }
-
-private:
-  Consumer consume_op_;
-};
 
 /**
  * Reduce emitter.
@@ -309,97 +236,6 @@ public:
 
   void * svc(void * p_value) { return p_value; }
 };
-
-/**
- \brief Constant to be returned by a node if current value is filtered out.
- */
-constexpr size_t filtered_value = ff::FF_EOS - 0x11;
-
-template <typename Item, typename Predicate>
-class ordered_filter_worker : public ff::ff_node_t<Item> {
-public:
-  ordered_filter_worker(Predicate && predicate) :
-      predicate_{predicate}
-  {}
-
-  Item * svc(Item * p_item) {
-    if (predicate_(*p_item)) {
-      return p_item;
-    }
-    else {
-      p_item->~Item();
-      ff::ff_free(p_item);
-      return reinterpret_cast<Item*>(filtered_value);
-    }
-  }
-
-private:
-  Predicate predicate_;
-};
-
-template <typename Item>
-class ordered_filter_collector : public ff::ff_node_t<Item> {
-public:
-  ordered_filter_collector() = default;
-
-  Item * svc(Item * p_item) {
-    if (p_item == reinterpret_cast<Item*>(filtered_value)) {
-      return this->GO_ON;
-    }
-    else {
-      return p_item;
-    }
-  }
-};
-
-template <typename Item, typename Predicate>
-class unordered_filter_worker : public ff::ff_node_t<Item> {
-public:
-  unordered_filter_worker(Predicate && predicate) :
-      predicate_{predicate}
-  {}
-
-  Item * svc(Item * p_item) {
-    if (predicate_(*p_item)) {
-      return p_item;
-    }
-    else {
-      p_item->~Item();
-      ff::ff_free(p_item);
-      return reinterpret_cast<Item*>(filtered_value);
-    }
-  }
-
-private:
-  Predicate predicate_;
-};
-
-
-template <typename Item>
-class unordered_filter_collector : public ff::ff_node_t<Item> {
-public:
-  unordered_filter_collector() = default;
-
-  Item * svc(Item * p_item) {
-    static_assert(sizeof(std::size_t) == sizeof(std::uintptr_t));
-    if (p_item == reinterpret_cast<Item*>(filtered_value)) {
-      return this->GO_ON;
-    }
-    else {
-      return p_item;
-    }
-  }
-};
-template <typename Item>
-class unordered_filter_emitter : public ff::ff_node_t<Item> {
-public:
-  unordered_filter_emitter() = default;
-
-  Item * svc(Item * p_item) {
-    return p_item;
-  }
-};
-
 
 
 } // namespace detail_ff

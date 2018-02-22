@@ -23,12 +23,12 @@
 
 #ifdef GRPPI_FF
 
-#include "nodes.h"
+#include "simple_node.h"
 #include "ordered_stream_reduce.h"
 #include "unordered_stream_reduce.h"
 #include "ordered_stream_filter.h"
 #include "unordered_stream_filter.h"
-#include "iteration_worker.h"
+#include "iteration_nodes.h"
 #include "../../common/mpmc_queue.h"
 
 

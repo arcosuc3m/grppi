@@ -23,7 +23,7 @@
 
 #ifdef GRPPI_FF
 
-#include "nodes.h"
+#include "filter_nodes.h"
 
 #include <ff/farm.hpp>
 #include <ff/allocator.hpp>

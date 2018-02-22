@@ -23,7 +23,7 @@
 
 #ifdef GRPPI_FF
 
-#include "nodes.h"
+#include "reduce_nodes.h"
 #include "../../reduce.h"
 
 #include <ff/farm.hpp>
