@@ -28,37 +28,45 @@ namespace grppi {
 namespace detail_ff {
 
 /**
- \brief Fastflow allocator wrapper.
- A fastflow_allocator offers simplified interface for allocating and deallocating
- objects using ff::ff_malloc and ff::ff_free for objects of type T.
- \tparam T type of objects to allocate and deallocate.
+ \brief Tag type for fastflow allocation.
+ This empty type is used to select the overloaded placement new and delete
+ operators that invoke the fastflow allocation routines.
  */
-template <typename T>
-struct fastflow_allocator {
+struct ff_arena_t {};
 
-  /**
-  \brief Allocate an object and intialize it.
-  \param value Value used to initialize the object.
-  */
-  static T * allocate(const T & value) {
-    void * p_buf = ::ff::ff_malloc(sizeof(T));
-    T * p_val = new (p_buf) T{value};
-  }
-
-  /**
-  \brief Deallocate an object that was allocated with allocate.
-  \param p_val Pointer that was obtained with a call to allocate()
-  */
-  static void deallocate(T * p_val) {
-    p_val->~T();
-    ::ff::ff_free(p_val);
-  }
-  
-};
+/**
+ \brief Fastflow arena object.
+ This object will be passed to placement new/delete to use FastFlow allocation strategy.
+ */
+constexpr ff_arena_t ff_arena;
 
 
 } // namespace detail_ff
 
 } // namespace grppi
+
+/**
+ \brief Placement new for the FastFlow arena.
+ Invokes ff_malloc().
+ Use by calling new (ff_arena) your_type;
+ */
+inline void * operator new(
+        std::size_t sz, 
+        const grppi::detail_ff::ff_arena_t &) noexcept
+{
+  return ::ff::ff_malloc(sz);
+}
+
+/**
+ \brief Placement delete for the FastFlow arena.
+ Invokes ff_free().
+ Use by calling operator delete(ptr,ff_arena);
+ */
+inline void operator delete(
+        void * ptr,
+        const grppi::detail_ff::ff_arena_t &) noexcept
+{
+  ::ff::ff_free(ptr);
+}        
 
 #endif

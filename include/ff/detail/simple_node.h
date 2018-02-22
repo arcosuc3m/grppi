@@ -45,7 +45,7 @@ public:
   {}
 
   Output * svc(Input * p_item) {
-    return fastflow_allocator<Output>::allocate(transform_op_(*p_item));
+    return new (ff_arena) Output{transform_op_(*p_item)};
   } 
 
 private:
@@ -68,7 +68,7 @@ public:
   void * svc(void *) {
     std::experimental::optional<Output> result{generate_op_()};
     if (result) {
-      return fastflow_allocator<Output>::allocate(*result);
+      return new (ff_arena) Output{*result};
     }
     else {
       return EOS;
@@ -94,7 +94,7 @@ public:
 
   void * svc(Input * p_item) {
     consume_op_(*p_item);
-    fastflow_allocator<Input>::deallocate(p_item);
+    operator delete(p_item, ff_arena);
     return GO_ON;
   }
 

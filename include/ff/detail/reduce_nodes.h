@@ -78,7 +78,7 @@ void * reduce_emitter<Item,Reducer>::svc(void * p_value)
     }
   } 
 
-  fastflow_allocator<Item>::deallocate(p_item);
+  operator delete(p_item, ff_arena);
   return GO_ON;
 }
 
@@ -133,9 +133,10 @@ void * reduce_worker<Item,Combiner>::svc(void * p_value) {
 
   Item identity{};
   constexpr ::grppi::sequential_execution seq{};
-  Item * p_result = fastflow_allocator<Item>::allocate(
+  Item * p_result = new (ff_arena) Item{
       ::grppi::reduce(seq, p_items->begin(), p_items->end(),
-          identity, combine_op_));
+          identity, combine_op_)
+  };
 
   delete p_items;
   return p_result;
