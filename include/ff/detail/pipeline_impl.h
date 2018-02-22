@@ -429,31 +429,6 @@ private:
 
    return this->template add_stages<Input>(context_op.transformer(),
       std::forward<OtherTransformers>(other_ops)...);
-/*    ::std::atomic<long> order{0};
-    
-    using optional_input_type = std::experimental::optional<Input>;
-    using input_type = std::pair<optional_input_type, long>;
-    auto input_queue = make_queue<input_type>();  
- 
-    using result_type =  typename std::result_of<Transformer(Input)>::type;
-    using optional_output_type = std::experimental::optional<result_type>;
-    using output_type  = std::pair<optional_output_type, long>;
-    auto output_queue = make_queue<output_type>();
-
-    auto f = [&](Input & item) {
-      input_queue.push(make_pair(typename std::experimental::optional<Input>{item}, order.load()));
-    };
-
-    this->template add_stages<Input>(f);
-    std::thread ctx([&](){context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);});
-    auto first_stage = new node_impl<void,generator_value_type,Generator>(
-      std::forward<Generator>(gen_op));
-    
-    this->template add_stages<void>([&](){
-        return output_queue.pop().first;
-      },
-      std::forward<OtherTransformers>(other_ops)...);*/
-   // ctx.join();
   }
 
 
