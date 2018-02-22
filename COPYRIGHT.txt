@@ -1,4 +1,4 @@
-GrPPI v0.2 is free software: you can redistribute it and/or modify
+GrPPI v0.3 is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -10,4 +10,4 @@ GNU General Public License for more details.  Please
 see the CREDITS.txt for a non-exhaustive list of contributors and
 copyright holders.  A full text version of the GNU GPL version 3 can be
 found in the LICENSE.txt file.  A full text version of the other licenses
-that ARCA is derivative of or includes can be found in LICENSES.txt.
+that GrPPI is derivative of or includes can be found in LICENSES.txt.

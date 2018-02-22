@@ -1,4 +1,4 @@
-GrPPI v0.2 includes or is derivative of works distributed under the licenses listed below.
+GrPPI v0.3 includes or is derivative of works distributed under the licenses listed below.
 
 This file includes the full text of the following licenses:
 ------------------------------------------------------------------
