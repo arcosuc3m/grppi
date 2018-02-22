@@ -23,6 +23,7 @@
 
 #ifdef GRPPI_FF
 
+#include "nodes.h"
 #include "../../reduce.h"
 
 #include <ff/farm.hpp>
@@ -31,110 +32,6 @@
 namespace grppi {
 
 namespace detail_ff {
-
-template<typename Item, typename Combiner>
-class unordered_reduce_emitter : public ff::ff_node {
-public:
-  unordered_reduce_emitter(int window_size, int offset) :
-      window_size_{window_size},
-      offset_{offset},
-      skip_{-1},
-      items_{}
-  {
-    items_.reserve(window_size_);
-  }
-
-  void *svc(void *t); 
-
-private:
-  int window_size_;
-  int offset_;
-  int skip_;
-  std::vector<Item> items_;
-};
-
-template<typename Item, typename Combiner>
-void * unordered_reduce_emitter<Item,Combiner>::svc(void * p_value) {
-  Item * p_item = static_cast<Item*>(p_value);
-
-  if(items_.size() != window_size_) {
-    items_.push_back(*p_item);
-  }
-
-  if(items_.size() == window_size_) {
-    if(offset_ < window_size_) {
-      this->ff_send_out(new reduce_task<Item>{items_});
-      items_.erase(items_.begin(), std::next(items_.begin(), offset_));
-      p_item->~Item();
-      ::ff::ff_free(p_item);
-      return GO_ON;
-    }
-    if (offset_ == window_size_) {
-      this->ff_send_out(new reduce_task<Item>{items_});
-      items_.erase(items_.begin(), items_.end());
-      p_item->~Item();
-      ::ff::ff_free(p_item);
-      return GO_ON;
-    } 
-    else {
-      if(skip_ == -1) {
-        this->ff_send_out( new reduce_task<Item>(items_) );
-        skip_++;
-      } 
-      else if(skip_ == (offset_ - window_size_)) {
-        skip_ = -1;
-        items_.clear();
-        items_.push_back(*p_item);
-      } 
-      else {
-        skip_++;
-      }
-      p_item->~Item();
-      ::ff::ff_free(p_item);
-      return GO_ON;
-    }
-  } 
-  else {
-    p_item->~Item();
-    ::ff::ff_free(p_item);
-    return GO_ON;
-  }
-}
-
-// -- stream-reduce workers
-template<typename Item, typename Combiner>
-class unordered_reduce_worker : public ff::ff_node {
-public:
-  unordered_reduce_worker(Combiner && combiner) : 
-      combiner_{std::move(combiner)}
-  {}
-
-  void *svc(void * p_value) {
-    reduce_task<Item> * p_task = static_cast<reduce_task<Item>*>(p_value);
-
-    void * p_out_item = ::ff::ff_malloc(sizeof(Item));
-    Item * p_result = new (p_out_item) Item{};
-    Item identity{};
-
-    constexpr ::grppi::sequential_execution seq{};
-    *p_result = ::grppi::reduce(seq, p_task->values_.begin(), p_task->values_.end(),
-		identity, combiner_);
-
-    delete p_task;
-    return p_out_item;
-  }
-
-private:
-  Combiner combiner_;
-};
-
-
-class unordered_reduce_collector : public ff::ff_node {
-public:
-  unordered_reduce_collector() = default;
-
-  void * svc(void * p_value) { return p_value; }
-};
 
 template <typename TSin, typename Reducer, typename Combiner>
 class unordered_stream_reduce : public ff::ff_farm<> {

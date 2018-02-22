@@ -23,123 +23,15 @@
 
 #ifdef GRPPI_FF
 
+#include "nodes.h"
 #include "../../reduce.h"
 
 #include <ff/farm.hpp>
 #include <ff/allocator.hpp>
 
-#include "reduce_task.h"
-
 namespace grppi {
 
 namespace detail_ff {
-
-/**
- * Reduce task.
- * This is the reduce actual task for FastFlow.
- */
-
-/**
- * Reduce emitter.
- */
-template <typename Item, typename Reducer>
-class ordered_reduce_emitter : public ff::ff_node {
-public:
-  ordered_reduce_emitter(int window_size, int offset);
-  void * svc(void * p_value);
-
-private:
-  int window_size_;
-  int offset_;
-  int skip_;
-  std::vector<Item> items_;
-};
-
-template <typename Item, typename Reducer>
-ordered_reduce_emitter<Item,Reducer>::ordered_reduce_emitter(int window_size, int offset) :
-    window_size_{window_size},
-    offset_{offset},
-    skip_{-1},
-    items_{}
-{
-    items_.reserve(window_size);
-}
-
-template <typename Item, typename Reducer>
-void * ordered_reduce_emitter<Item,Reducer>::svc(void * p_value) {
-  Item * p_item = static_cast<Item*>(p_value);
-
-  if(items_.size() != window_size_)
-    items_.push_back(*p_item);
-
-  if(items_.size() == window_size_) {
-    if(offset_ < window_size_) {
-      ff_send_out(new reduce_task<Item>(items_));
-      items_.erase(items_.begin(), std::next(items_.begin(), offset_));
-      p_item->~Item();
-      ::ff::ff_free(p_item);
-      return GO_ON;
-    }
-    if (offset_ == window_size_) {
-      ff_send_out(new reduce_task<Item>(items_));
-      items_.erase(items_.begin(), items_.end());
-      ::ff::ff_free(p_item);
-      return GO_ON;
-    } 
-    else {
-      if (skip_==-1) {
-        ff_send_out(new reduce_task<Item>(items_));
-        skip_++;
-      } 
-      else if (skip_ == (offset_-window_size_)) {
-        skip_ = -1;
-        items_.clear();
-        items_.push_back( std::forward<Item>(*p_item) );
-      } 
-      else {
-        skip_++;
-      }
-      p_item->~Item();
-      ::ff::ff_free(p_item);
-      return GO_ON;
-    }
-  } 
-  else {
-    p_item->~Item();
-    ::ff::ff_free(p_item);
-    return GO_ON;
-  }
-}
-
-/**
- * Reduce worker.
- */
-template <typename Item, typename Combiner>
-class ordered_reduce_worker : public ff::ff_node {
-public:
-
-  ordered_reduce_worker(Combiner && combine_op) : combine_op_{combine_op} {}
-  void * svc(void * p_value);
-
-private:
-  Combiner combine_op_;
-};
-
-template <typename Item, typename Combiner>
-void * ordered_reduce_worker<Item,Combiner>::svc(void * p_value) {
-  reduce_task<Item> * p_task = static_cast<reduce_task<Item>*>(p_value);
-  void * p_result_buf = ::ff::ff_malloc(sizeof(Item));
-  Item * p_result = new (p_result_buf) Item;
-  Item identity{};
-
-  constexpr ::grppi::sequential_execution seq{};
-  *p_result = ::grppi::reduce(seq, p_task->values_.begin(), p_task->values_.end(),
-      identity, combine_op_);
-
-  delete p_task;
-  return p_result_buf;
-}
-
 
 /**
  * Ordered stream reduce for FastFlow.
