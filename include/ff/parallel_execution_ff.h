@@ -34,6 +34,7 @@
 #include <experimental/optional>
 
 #include <ff/parallel_for.hpp>
+#include <ff/dc.hpp>
 
 namespace grppi {
 
@@ -66,8 +67,8 @@ public:
   \param order Whether ordered executions is enabled or disabled.
   */
   parallel_execution_ff(int concurrency_degree, bool order = true) noexcept :
-      concurrency_degree_{concurrency_degree},
-      ordering_{order}
+    concurrency_degree_{concurrency_degree}, 
+    ordering_{order}
   {
   }
 
@@ -75,7 +76,7 @@ public:
   \brief Set number of grppi threads.
   */
   void set_concurrency_degree(int degree) noexcept { 
-    concurrency_degree_ = degree; 
+    concurrency_degree_ = degree;
   }
 
   /**
@@ -225,6 +226,24 @@ public:
     output_queue.push(make_pair(typename OutputType::first_type{}, order.load()));
   }
 
+  /**
+    \brief Invoke \ref md_divide-conquer.
+    \tparam Input Type used for the input problem.
+    \tparam Divider Callable type for the divider operation.
+    \tparam Solver Callable type for the solver operation.
+    \tparam Combiner Callable type for the combiner operation.
+    \param input Input problem to be solved.
+    \param divider_op Divider operation.
+    \param solver_op Solver operation.
+    \param combine_op Combiner operation.
+   */
+  template <typename Input, typename Divider,typename Predicate, 
+            typename Solver, typename Combiner>
+  auto divide_conquer(Input & input,
+      Divider && divide_op,
+      Predicate && condition_op,
+      Solver && solve_op,
+      Combiner && combine_op) const;
 
 private:
 
@@ -276,6 +295,13 @@ constexpr bool supports_map_reduce<parallel_execution_ff>() { return true; }
 */
 template <>
 constexpr bool supports_stencil<parallel_execution_ff>() { return true; }
+
+/*
+\brief Determines if an execution policy supports the divide_conquer pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_divide_conquer<parallel_execution_ff>() { return true; }
 
 /**
 \brief Determines if an execution policy supports the pipeline pattern.
@@ -368,6 +394,52 @@ void parallel_execution_ff::pipeline(
 
   pipe.setFixedSize(false);
   pipe.run_and_wait_end();
+}
+
+template <typename Input, typename Divider,typename Predicate, 
+          typename Solver, typename Combiner>
+auto parallel_execution_ff::divide_conquer(Input & input,
+    Divider && divide_op,
+    Predicate && condition_op,
+    Solver && solve_op,
+    Combiner && combine_op) const 
+{
+  using output_type = typename std::result_of<Solver(Input)>::type;
+  
+  // divide
+  auto divide_fn = [&](const Input &in, std::vector<Input> &subin) {
+    subin = divide_op(in);
+  };
+  // combine
+  auto combine_fn = [&] (std::vector<output_type>& in, output_type& out) {
+	  using index_t = typename std::vector<output_type>::size_type;
+	  out = in[0];
+	  for(index_t i = 1; i < in.size(); ++i)
+		  out = combine_op(out, in[i]);
+  };
+  // sequential solver (base-case)
+  auto seq_fn = [&] (const Input & in , output_type & out) {
+    out = solve_op(in);
+  };
+  // condition
+  auto cond_fn = [&] (const Input &in) {
+    return condition_op(in);
+  };
+  output_type out_var{};
+
+  using dac_t = ff::ff_DC<Input,output_type>;
+  auto ncores = static_cast<int>(std::thread::hardware_concurrency());
+  int max_nworkers = std::max(concurrency_degree_, ncores);
+  dac_t dac(divide_fn, combine_fn, seq_fn, cond_fn, //kernel functions
+			input, out_var, //input/output variables
+			concurrency_degree_, //parallelism degree
+			dac_t::DEFAULT_OUTSTANDING_TASKS, max_nworkers //ff-specific params
+			);
+
+  // run
+  dac.run_and_wait_end();
+
+  return out_var;
 }
 
 } // end namespace grppi

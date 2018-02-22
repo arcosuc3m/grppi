@@ -31,7 +31,7 @@ using namespace std;
 using namespace grppi;
 
 template <typename T>
-class divideconquer_test : public ::testing::Test {
+class divideconquer_legacy_test : public ::testing::Test {
 public:
   T execution_;
   grppi::dynamic_execution dyn_execution_{execution_};
@@ -44,7 +44,6 @@ public:
 
   // Invocation counter
   std::atomic<int> invocations_divide{0};
-  std::atomic<int> invocations_predicate{0};
   std::atomic<int> invocations_merge{0};
   std::atomic<int> invocations_base{0};
 
@@ -55,11 +54,6 @@ public:
       [this](auto & v) { 
         invocations_divide++; 
         return std::vector<std::vector<int> >{}; 
-      },
-      // Predicate
-      [this](auto & v) {
-        invocations_predicate++;
-        return true;
       },
       // Solve base case
       [this](auto problem) { 
@@ -80,16 +74,12 @@ public:
       [this](auto & v) { 
         invocations_divide++; 
         std::vector<std::vector<int>> subproblem;
-        auto mid = std::next(v.begin(), v.size()/2);
-        subproblem.push_back({v.begin(), mid});
-        subproblem.push_back({mid, v.end()});
+        if (v.size()>2) {
+          auto mid = std::next(v.begin(), v.size()/2);
+          subproblem.push_back({v.begin(), mid});
+          subproblem.push_back({mid, v.end()});
+        }
         return subproblem; 
-      },
-      // Predicate
-      [this](auto & v) {
-        invocations_predicate++;
-        if (v.size()<=2) return true;
-        else return false;
       },
       // Solve base case
       [this](auto problem) { 
@@ -110,18 +100,14 @@ public:
       [this](auto & v) { 
         invocations_divide++; 
         std::vector<std::vector<int>> subproblem;
-        auto mid1 = std::next(v.begin(), v.size()/3);
-        auto mid2 = std::next(v.begin(), 2*v.size()/3);
-        subproblem.push_back({v.begin(), mid1});
-        subproblem.push_back({mid1,mid2});
-        subproblem.push_back({mid2, v.end()});
+        if (v.size()>3) {
+          auto mid1 = std::next(v.begin(), v.size()/3);
+          auto mid2 = std::next(v.begin(), 2*v.size()/3);
+          subproblem.push_back({v.begin(), mid1});
+          subproblem.push_back({mid1,mid2});
+          subproblem.push_back({mid2, v.end()});
+        }
         return subproblem; 
-      },
-      // Predicate
-      [this](auto & v) {
-        invocations_predicate++;
-        if (v.size()<=3) return true;
-        else return false;
       },
       // Solve base case
       [this](auto problem) { 
@@ -134,15 +120,13 @@ public:
         return p1 + p2;
       });
   }
-
   void setup_empty() {
   }
 
   void check_empty() {
-    EXPECT_EQ(0, invocations_divide);
-    EXPECT_EQ(1, invocations_predicate); 
-    EXPECT_EQ(1, invocations_base); 
-    EXPECT_EQ(0, invocations_merge);
+    ASSERT_EQ(1, invocations_divide); 
+    ASSERT_EQ(1, invocations_base); 
+    ASSERT_EQ(0, invocations_merge);
   }
 
   void setup_single() {
@@ -151,11 +135,10 @@ public:
   }
 
   void check_single() {
-    EXPECT_EQ(0, invocations_divide);
-    EXPECT_EQ(1, invocations_predicate); 
-    EXPECT_EQ(1, invocations_base); 
-    EXPECT_EQ(0, invocations_merge);
-    EXPECT_EQ(0, out);
+    EXPECT_EQ(1, this->invocations_divide);
+    EXPECT_EQ(1, this->invocations_base); 
+    EXPECT_EQ(0, this->invocations_merge);
+    EXPECT_EQ(0, this->out);
   }
 
   void setup_multiple() {
@@ -164,8 +147,7 @@ public:
   }
 
   void check_multiple() {
-    EXPECT_EQ(5, this->invocations_divide);
-    EXPECT_EQ(11, invocations_predicate); 
+    EXPECT_EQ(11, this->invocations_divide);
     EXPECT_EQ(6, this->invocations_base); 
     EXPECT_EQ(5, this->invocations_merge); 
     EXPECT_EQ(55, this->out);
@@ -177,39 +159,41 @@ public:
   }
 
   void check_multiple_triple_div() {
-    EXPECT_EQ(2, this->invocations_divide);
-    EXPECT_EQ(7, this->invocations_predicate);
+    EXPECT_EQ(7, this->invocations_divide);
     EXPECT_EQ(5, this->invocations_base); 
     EXPECT_EQ(4, this->invocations_merge); 
     EXPECT_EQ(55, this->out);
   }
+
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(divideconquer_test, executions);
+TYPED_TEST_CASE(divideconquer_legacy_test, executions_noff);
 
-TYPED_TEST(divideconquer_test, static_empty)
+TYPED_TEST(divideconquer_legacy_test, static_empty)
 {
   this->setup_empty();
   this->out = this->run_simple(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(divideconquer_test, dyn_empty)
+TYPED_TEST(divideconquer_legacy_test, dyn_empty)
 {
   this->setup_empty();
   this->out = this->run_simple(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(divideconquer_test, static_single)
+
+
+TYPED_TEST(divideconquer_legacy_test, static_single)
 {
   this->setup_single();
   this->out = this->run_simple(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(divideconquer_test, dyn_single)
+TYPED_TEST(divideconquer_legacy_test, dyn_single)
 {
   this->setup_single();
   this->out = this->run_simple(this->dyn_execution_);
@@ -217,21 +201,22 @@ TYPED_TEST(divideconquer_test, dyn_single)
 }
 
 
-TYPED_TEST(divideconquer_test, static_multiple)
+
+TYPED_TEST(divideconquer_legacy_test, static_multiple)
 {
   this->setup_multiple();
   this->out =  this->run_vecsum(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, dyn_multiple)
+TYPED_TEST(divideconquer_legacy_test, dyn_multiple)
 {
   this->setup_multiple();
   this->out =  this->run_vecsum(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, static_multiple_single_thread)
+TYPED_TEST(divideconquer_legacy_test, static_multiple_single_thread)
 {
   this->setup_multiple();
   this->execution_.set_concurrency_degree(1);
@@ -239,7 +224,7 @@ TYPED_TEST(divideconquer_test, static_multiple_single_thread)
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, static_multiple_five_threads)
+TYPED_TEST(divideconquer_legacy_test, static_multiple_five_threads)
 {
   this->setup_multiple();
   this->execution_.set_concurrency_degree(5);
@@ -247,7 +232,7 @@ TYPED_TEST(divideconquer_test, static_multiple_five_threads)
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
+TYPED_TEST(divideconquer_legacy_test, static_multiple_triple_div_2_threads)
 {
   this->setup_multiple_triple_div();
   this->execution_.set_concurrency_degree(2);
@@ -256,7 +241,7 @@ TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
 }
 
 
-TYPED_TEST(divideconquer_test, static_multiple_triple_div_4_threads)
+TYPED_TEST(divideconquer_legacy_test, static_multiple_triple_div_4_threads)
 {
   this->setup_multiple_triple_div();
   this->execution_.set_concurrency_degree(4);

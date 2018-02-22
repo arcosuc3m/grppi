@@ -13,14 +13,15 @@ message( STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER} )
 message( STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER} )
 message( STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
+set(CMAKE_CXX_STANDARD 14)
+
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 
     if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
-        message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.4 or above.")
+        message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.9 or above.")
     else()
         message( STATUS "C++ Compiler is Clang" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 " )
     endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
@@ -29,17 +30,17 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
         message( FATAL_ERROR "g++ version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 6.0 or above.")
     else()
         message( STATUS "C++ Compiler is GNU")
-        add_definitions( -std=c++14 )
     endif()
 
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
-    
-    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
-        message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 16.0 or above.")
+ 
+  message(FATAL_ERROR "Intel compiler is not currently supported")   
+#    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
+#        message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 16.0 or above.")
     else()
-        message( STATUS "C++ Compiler is Intel" )
-        message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
-    endif()
+#        message( STATUS "C++ Compiler is Intel" )
+#        message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
+#    endif()
 
 else()
 
@@ -96,8 +97,13 @@ endif()
 
 message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE})
 if(GRPPI_FF_ENABLE)
-  add_definitions(-DGRPPI_FF)
-  include_directories(${FFPATH}/fastflow)
+  if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+    set(GRPPI_FF_ENABLE OFF CACHE BOOL "Require Fastflow library" FORCE)
+    message(WARNING "Fastflow is not currently supported in Clang")
+  else()
+    add_definitions(-DGRPPI_FF)
+    include_directories(${FFPATH}/fastflow)
+  endif()
 endif(GRPPI_FF_ENABLE)
 
 # Doxygen Documentation
