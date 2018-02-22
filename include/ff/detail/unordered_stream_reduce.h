@@ -21,61 +21,51 @@
 #ifndef GRPPI_FF_DETAIL_UNORDERED_STREAM_REDUCE_H
 #define GRPPI_FF_DETAIL_UNORDERED_STREAM_REDUCE_H
 
-#ifdef GRPPI_FF
-
 #include "reduce_nodes.h"
 
 #include <ff/farm.hpp>
-#include <ff/allocator.hpp>
 
 namespace grppi {
 
 namespace detail_ff {
 
-template <typename TSin, typename Reducer, typename Combiner>
+template <typename Item, typename Reducer, typename Combiner>
 class unordered_stream_reduce : public ff::ff_farm<> {
 public:
 
-  unordered_stream_reduce(Reducer && reducer, int num_workers=1) :
-      ff_farm<>{false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, 
-          static_cast<std::size_t>(num_workers)},
-      concurrency_degree_{num_workers},
-      workers_{},
-      p_emitter_{nullptr},
-      p_collector_{nullptr}
-  {
-    for (int i=0; i<num_workers; ++i) {
-      workers.push_back(new reduce_worker<TSin,Combiner>{
-          std::forward<Combiner>(reducer.combiner())});
-    }
-    p_emitter_ = new reduce_emitter<TSin,Reducer>{
-        reducer.window_size(),
-        reducer.offset()};
-    p_collector_ = new reduce_collector{};
-    this->add_workers(workers_);
-    this->add_emitter(p_emitter_);
-    this->add_collector(p_collector_);
-  }
-
-  ~unordered_stream_reduce() {
-    delete p_emitter_;
-    delete p_collector_;
-  }
+  unordered_stream_reduce(Reducer && reducer, int num_workers);
 
 private:
-  int concurrency_degree_;
   std::vector<ff::ff_node*> workers_;
-  reduce_emitter<TSin,Reducer> * p_emitter_;
-  reduce_collector * p_collector_;
+
+  using emitter_type = reduce_emitter<Item,Reducer>;
+  std::unique_ptr<emitter_type> p_emitter_;
+
+  std::unique_ptr<reduce_collector> p_collector_;
 };
 
+template <typename Item, typename Reducer, typename Combiner>
+unordered_stream_reduce<Item,Reducer,Combiner>::unordered_stream_reduce(
+        Reducer && reducer, 
+        int num_workers) 
+:
+ ff_farm<>{false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, 
+      static_cast<std::size_t>(num_workers)},
+  workers_{},
+  p_emitter_{std::make_unique<emitter_type>(reducer.window_size(), reducer.offset())},
+  p_collector_{std::make_unique<reduce_collector>()}
+{
+    for (int i=0; i<num_workers; ++i) {
+      workers.push_back(new reduce_worker<Item,Combiner>{
+          std::forward<Combiner>(reducer.combiner())});
+    }
+    this->add_workers(workers_);
+    this->add_emitter(p_emitter_.get());
+    this->add_collector(p_collector_.get());
+  }
 
 } // namespace detail_ff
 
 } // namespace grppi
-
-#else
-
-#endif // GRPPI_FF
 
 #endif

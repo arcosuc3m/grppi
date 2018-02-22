@@ -24,32 +24,27 @@
 #ifdef GRPPI_FF
 
 #include "reduce_nodes.h"
-#include "../../reduce.h"
 
 #include <ff/farm.hpp>
-#include <ff/allocator.hpp>
+
 
 namespace grppi {
 
 namespace detail_ff {
 
 /**
- * Ordered stream reduce for FastFlow.
+ \brief Ordered stream reduce for FastFlow.
  */
-template <typename TSin, typename Reducer, typename CombineOp>
+template <typename Item, typename Reducer, typename CombineOp>
 class ordered_stream_reduce : public ff::ff_ofarm {
 public:
-  ordered_stream_reduce(Reducer && red_obj, int num_workers = 1);
-
-  ~ordered_stream_reduce() {
-    delete p_emitter_;
-  }
+  ordered_stream_reduce(Reducer && red_obj, int num_workers);
 
 private:
-  int concurrency_degree_;
   std::vector<ff_node*> workers_;
 
-  reduce_emitter<TSin,Reducer> * p_emitter_;
+  using emitter_type = reduce_emitter<Item,Reducer>;
+  std::unique_ptr<emitter_type> p_emitter_;
 };
 
 template <typename Item, typename Reducer, typename Combiner>
@@ -58,9 +53,8 @@ ordered_stream_reduce<Item,Reducer,Combiner>::ordered_stream_reduce(
     int num_workers) 
 :
     ff::ff_ofarm{false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, num_workers},
-    concurrency_degree_{num_workers},
     workers_{},
-    p_emitter_{nullptr} 
+    p_emitter_{std::make_unique<emitter_type>(red_obj.window_size(), red_obj.offset())} 
 {
   for(int i=0; i<num_workers; ++i) {
     reduce_worker<Item,Combiner> * p_worker =
@@ -68,10 +62,8 @@ ordered_stream_reduce<Item,Reducer,Combiner>::ordered_stream_reduce(
     workers_.push_back(p_worker);
   }
 
-  p_emitter_ = new reduce_emitter<Item,Reducer>{
-      red_obj.window_size(), red_obj.offset()};
   add_workers(workers_);
-  setEmitterF(p_emitter_);
+  setEmitterF(p_emitter_.get());
 }
 
 
