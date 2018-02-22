@@ -21,8 +21,6 @@
 #ifndef GRPPI_FF_DETAIL_ORDERED_STREAM_REDUCE_H
 #define GRPPI_FF_DETAIL_ORDERED_STREAM_REDUCE_H
 
-#ifdef GRPPI_FF
-
 #include "reduce_nodes.h"
 
 #include <ff/farm.hpp>
@@ -70,9 +68,5 @@ ordered_stream_reduce<Item,Reducer,Combiner>::ordered_stream_reduce(
 } // namespace detail_ff
 
 } // namespace grppi
-
-#else
-
-#endif // GRPPI_FF
 
 #endif

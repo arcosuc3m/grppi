@@ -21,12 +21,9 @@
 #ifndef GRPPI_FF_DETAIL_ORDERED_STREAM_FILTER_H
 #define GRPPI_FF_DETAIL_ORDERED_STREAM_FILTER_H
 
-#ifdef GRPPI_FF
-
 #include "filter_nodes.h"
 
 #include <ff/farm.hpp>
-#include <ff/allocator.hpp>
 
 namespace grppi {
 
@@ -35,38 +32,35 @@ namespace detail_ff {
 template <typename Item, typename Filter>
 class ordered_stream_filter : public ff::ff_ofarm {
 public:
-  ordered_stream_filter(Filter && filter, int num_workers) :
-      ff::ff_ofarm{false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, num_workers},
-      filter_{filter},
-      concurrency_degree_{num_workers},
-      workers_{},
-      p_collector_{nullptr}
-  {
-    for(int i=0;i<num_workers;i++)
-    workers_.push_back(new ordered_filter_worker<Item,Filter>{
-        std::forward<Filter>(filter)});
-    add_workers(workers_);
-    p_collector_ = new ordered_filter_collector<Item>{};
-    setCollectorF(p_collector_);
-  }
-
-  ~ordered_stream_filter() { delete p_collector_; }
+  ordered_stream_filter(Filter && filter, int num_workers);
 
 private:
-
   Filter filter_;
-  int concurrency_degree_;
   std::vector<ff::ff_node *> workers_;
-  ordered_filter_collector<Item> * p_collector_;
+  std::unique_ptr<filter_collector<Item>> p_collector_;
 };
+
+template <typename Item, typename Filter>
+ordered_stream_filter<Item,Filter>::ordered_stream_filter(
+        Filter && filter, 
+        int num_workers) 
+:
+    ff::ff_ofarm{false, DEF_IN_BUFF_ENTRIES, DEF_OUT_BUFF_ENTRIES, true, num_workers},
+    filter_{std::move(filter)},
+    workers_{},
+    p_collector_{std::make_unique<filter_collector<Item>>()}
+{
+  for(int i=0;i<num_workers;i++) {
+    workers_.push_back(new filter_worker<Item,Filter>{
+        std::forward<Filter>(filter)});
+  }
+  add_workers(workers_);
+  setCollectorF(p_collector_.get());
+}
 
 
 } // namespace detail_ff
 
 } // namespace grppi
-
-#else
-
-#endif // GRPPI_FF
 
 #endif
