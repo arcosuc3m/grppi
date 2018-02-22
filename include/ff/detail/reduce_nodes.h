@@ -22,7 +22,6 @@
 #define GRPPI_FF_DETAIL_REDUCE_NODES_H
 
 #include "fastflow_allocator.h"
-#include "reduce_task.h"
 #include "../../reduce.h"
 
 #include <ff/allocator.hpp>
@@ -31,6 +30,18 @@
 namespace grppi {
 
 namespace detail_ff {
+
+/**
+ * Reduce task.
+ * This is the reduce actual task for FastFlow.
+ */
+template<typename T>
+struct reduce_task {
+  std::vector<T> values_;
+
+  reduce_task(const std::vector<T> & v) : values_{v} {}
+};
+
 
 /**
  * Reduce emitter.
