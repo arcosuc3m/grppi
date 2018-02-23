@@ -559,7 +559,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_tbb::map_reduce(
     std::tuple<InputIterators...> firsts,
     std::size_t sequence_size,
-    Identity &&,
+    Identity && identity_,
     Transformer && transform_op, Combiner && combine_op) const
 {
   constexpr sequential_execution seq;
@@ -570,7 +570,7 @@ auto parallel_execution_tbb::map_reduce(
 
   auto process_chunk = [&](auto fins, std::size_t sz, std::size_t i) {
     partial_results[i] = seq.map_reduce(fins, sz,
-        std::forward<result_type>(partial_results[i]),
+        std::forward<Identity>(identity_),
         std::forward<Transformer>(transform_op), 
         std::forward<Combiner>(combine_op));
   };
@@ -967,7 +967,6 @@ auto parallel_execution_tbb::make_filter(
   using input_value_type = Input;
   using input_type = optional<input_value_type>;
 
-  std::atomic<long int> order{0};
   return tbb::make_filter<input_type, input_type>(
       tbb::filter::serial,
       [&, it=std::vector<input_value_type>()](input_type item) -> input_type {

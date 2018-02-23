@@ -435,8 +435,7 @@ private:
       mpmc_queue<output_type> & output_queue) const;
 
   template <typename T, typename ... Others>
-  void do_pipeline(mpmc_queue<T> &, mpmc_queue<T> &, Others &&...) const
-  { }
+  void do_pipeline(mpmc_queue<T> & in_q, mpmc_queue<T> & same_queue, Others &&... ops) const;
    
   template <typename T>
   void do_pipeline(mpmc_queue<T> &) const {}
@@ -757,7 +756,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_native::map_reduce(
     std::tuple<InputIterators...> firsts, 
     std::size_t sequence_size,
-    Identity &&,
+    Identity && identity_,
     Transformer && transform_op, Combiner && combine_op) const
 {
   using result_type = std::decay_t<Identity>;
@@ -766,7 +765,7 @@ auto parallel_execution_native::map_reduce(
   constexpr sequential_execution seq;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t id) {
     partial_results[id] = seq.map_reduce(f, sz,
-        std::forward<Identity>(partial_results[id]), 
+        std::forward<Identity>(identity_),
         std::forward<Transformer>(transform_op), 
         std::forward<Combiner>(combine_op));
   };
@@ -1445,6 +1444,11 @@ void parallel_execution_native::do_pipeline_nested(
 {
   do_pipeline(input_queue,
       std::forward<Transformers>(std::get<I>(transform_ops))...);
+}
+
+template<typename T, typename... Others>
+void parallel_execution_native::do_pipeline(mpmc_queue<T> &, mpmc_queue<T> &, Others &&...) const
+{
 }
 
 } // end namespace grppi

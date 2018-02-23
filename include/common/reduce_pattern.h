@@ -37,11 +37,11 @@ public:
   /**
   \brief Construct a reduction pattern object.
   \param wsize Window size.
-  \param offset Offset betwee window starts.
+  \param offset Offset between window starts.
   \param Id Identity value.
   \param combine_op Combiner used for the reduction.
   */
-  reduce_t(size_t wsize, size_t offset, Identity id, Combiner && combine_op) :
+  reduce_t(int wsize, int offset, Identity id, Combiner && combine_op) :
     window_size_{wsize}, offset_{offset}, 
     identity_{id}, combiner_{combine_op}
   {}
@@ -65,7 +65,7 @@ public:
   \brief Check if a reduction can be performed.
   */
   bool reduction_needed() const {
-    return !items.empty() && (items.size() >= window_size_);
+    return !items.empty() && (static_cast<int>(items.size()) >= window_size_);
   }
 
   /**
@@ -91,8 +91,8 @@ public:
   }
 
 private:
-  size_t window_size_;
-  size_t offset_;
+  int window_size_;
+  int offset_;
   Identity identity_;
   Combiner combiner_;
 
