@@ -49,6 +49,7 @@ namespace grppi {
 */
 template <typename Execution, typename Input, 
           typename Divider, typename Solver, typename Combiner>
+[[deprecated("Use newer divide_conquer with predicate arguemnt")]]
 auto divide_conquer(
     const Execution & ex, 
     Input && input, 
