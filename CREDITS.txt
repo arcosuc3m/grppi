@@ -18,7 +18,6 @@ Manuel F. DOLZ
 External contributors:
 ----------------------
 Marco ALDINUCCI
-Marco DANELUTTO
 Maurizio DROCCO
 Miguel SACRISTAN-IZCUE
 Massimo TORQUATI
