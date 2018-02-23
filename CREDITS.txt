@@ -11,12 +11,16 @@ Javier GARCIA-BLAS
 
 Documentation contributors:
 ---------------------------
+J. Daniel GARCIA
 David DEL RIO
 Manuel F. DOLZ
 
 External contributors:
 ----------------------
+Marco ALDINUCCI
+Maurizio DROCCO
 Miguel SACRISTAN-IZCUE
+Massimo TORQUATI
 
 Past contributors:
 ------------------
@@ -35,3 +39,8 @@ Intel (R) Threading Building Blocks
 Author:		Intel Corporation
 Copyright:	Copyright (C) 2005-2017 Intel Corporation. All rights reserved
 License:	Apache License, Version 2.0
+
+FastFlow
+Author:		Massimo Torquati and Marco Aldinucci
+Copyright:	Massimo Torquati and Marco Aldinucci
+License:	GNU Lesser General Public License, Version 3
