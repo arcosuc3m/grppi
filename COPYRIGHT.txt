@@ -10,4 +10,4 @@ GNU General Public License for more details.  Please
 see the CREDITS.txt for a non-exhaustive list of contributors and
 copyright holders.  A full text version of the GNU GPL version 3 can be
 found in the LICENSE.txt file.  A full text version of the other licenses
-that ARCA is derivative of or includes can be found in LICENSES.txt.
+that GrPPI is derivative of or includes can be found in LICENSES.txt.
