@@ -38,7 +38,7 @@ Currently, **GrPPI** supports the following patterns:
     * [Stream reduction](doc/stream-reduce.md)
     * [Stream iteration](doc/stream-iteration.md)
 
-Additionally, streaming patterns allow the use of multi-context execution,
+Additionally, streaming patterns allow the use of [multi-context](doc/context.md) execution,
 aiming to allow the combination of multiple back-ends for the execution of
 a single pipeline.
 
