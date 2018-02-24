@@ -23,7 +23,13 @@ if(GRPPI_UNIT_TEST_ENABLE)
 
   set(PROJECT_TEST_NAME utest_${PROJECT_NAME_STR})
   file(GLOB TEST_SRC_FILES
-      ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
+      ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
+  # Do not emit deprecated warnings for _legacy unit tests
+  file(GLOB TEST_SRC_FILES_LEGACY
+      ${CMAKE_CURRENT_SOURCE_DIR}/*_legacy.cpp)
+  set_source_files_properties(${TEST_SRC_FILES_LEGACY} 
+      PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
 
   add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
   target_link_libraries(${PROJECT_TEST_NAME} 
