@@ -69,13 +69,13 @@ grppi::pipeline(seq,
   stage3);
 ~~~
 
-|Outer|Inner|Resulting|
------------------------
-|seq|seq|seq|
-|seq|native|seq|
-|seq|omp|seq|
-|seq|tbb|seq|
-|seq|ff|seq|
+|Outer|Inner  |Resulting|
+|-----|-------|---------|
+|seq  |seq    |seq      |
+|seq  |native |seq      |
+|seq  |omp    |seq      |
+|seq  |tbb    |seq      |
+|seq  |ff     |seq      |
 
 ### Outer native policy
 
