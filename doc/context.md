@@ -46,60 +46,6 @@ U res{transformer(x)};
 When two execution policies are composed some simplifications are applied.
 Besides, that some cases are not fully optimized in the current version.
 
-### Outer sequential policy
-
-Given any execution policy `ex`:
-
-~~~{.cpp}
-grppi::pipeline(seq,
-  stage1,
-  grppi::run_with(ex, farm(4, stage2)),
-  stage3);
-~~~
-
-It does not matter which is the inner execution policy as items are generated
-one bye one and no actual concurrency is possible.
-
-Consequently, the example is equivalente to:
-
-~~~{.cpp}
-grppi::pipeline(seq,
-  stage1,
-  grppi::run_with(seq, farm(4, stage2)),
-  stage3);
-~~~
-
-|Outer|Inner  |Resulting|
-|-----|-------|---------|
-|seq  |seq    |seq      |
-|seq  |native |seq      |
-|seq  |omp    |seq      |
-|seq  |tbb    |seq      |
-|seq  |ff     |seq      |
-
-### Outer native policy
-
-|Outer|Inner|Resulting|
------------------------
-|native|seq|native->seq->native|
-|native|native|native|
-|native|omp|native->omp->native|
-|native|tbb|native->tbb->native|
-|native|ff|native->ff->native|
-
-
-### Outer OpenMP policy
-
-TBD
-
-### Outer TBB policy
-
-TBD
-
-### Outer FastFlow policy
-
-TBD
-
 ## Details on context variants
 
 ### Composable context
