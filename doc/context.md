@@ -69,9 +69,24 @@ grppi::pipeline(seq,
   stage3);
 ~~~
 
+|Outer|Inner|Resulting|
+-----------------------
+|seq|seq|seq|
+|seq|native|seq|
+|seq|omp|seq|
+|seq|tbb|seq|
+|seq|ff|seq|
+
 ### Outer native policy
 
-TBD
+|Outer|Inner|Resulting|
+-----------------------
+|native|seq|native->seq->native|
+|native|native|native|
+|native|omp|native->omp->native|
+|native|tbb|native->tbb->native|
+|native|ff|native->ff->native|
+
 
 ### Outer OpenMP policy
 
