@@ -36,6 +36,14 @@ if(GRPPI_UNIT_TEST_ENABLE)
     add_compile_options(--coverage)
   endif()
 
+  # Do not emit deprecated warnings for _legacy unit tests
+  file(GLOB TEST_SRC_FILES_LEGACY
+      ${CMAKE_CURRENT_SOURCE_DIR}/*_legacy.cpp)
+  set_source_files_properties(${TEST_SRC_FILES_LEGACY} 
+      PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
+
+  add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
+
   target_link_libraries(${PROJECT_TEST_NAME} 
       ${GTEST_BOTH_LIBRARIES}
       gcov
