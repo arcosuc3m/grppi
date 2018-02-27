@@ -1,22 +1,16 @@
+# Modifying the following variables directs where search is performed
+#
+#   - FF_INCLUDE_DIR Directory for FF includes
+
 set(FF_FOUND FALSE)
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/fastflow)
-  message("--FastFlow not found. Installing...")
 
-  ExternalProject_Add(fastflow
-   GIT_REPOSITORY https://github.com/fastflow/fastflow.git
-    GIT_TAG "479817cf2dac93f732427693fb654f9f51b316f5"
-    PREFIX fastflow
-    BUILD_IN_SOURCE 0
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND     ""
-    INSTALL_COMMAND   ""
-    TEST_COMMAND      ""
-  )
+set(FF_SEARCH_DIR $ENV{FF_ROOT})
+
+find_path(FF_INCLUDE_DIRS ff/config.hpp
+  HINTS ${FF_SEARCH_DIR}
+  PATH_SUFFIXES include
+)
+
+if(FF_INCLUDE_DIRS)
   set(FF_FOUND TRUE)
 endif()
-
-if(EXISTS ${CMAKE_BINARY_DIR}/fastflow)
-  set(FF_FOUND TRUE)
-  set(FFPATH ${CMAKE_BINARY_DIR}/fastflow/src)
-endif()
-
