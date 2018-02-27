@@ -42,8 +42,6 @@ if(GRPPI_UNIT_TEST_ENABLE)
   set_source_files_properties(${TEST_SRC_FILES_LEGACY} 
       PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
 
-  add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
-
   target_link_libraries(${PROJECT_TEST_NAME} 
       ${GTEST_BOTH_LIBRARIES}
       gcov
