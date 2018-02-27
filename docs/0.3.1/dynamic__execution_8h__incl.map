@@ -1,0 +1,20 @@
+<map id="dynamic_execution.h" name="dynamic_execution.h">
+<area shape="rect" id="node2" href="$sequential__execution_8h.html" title="../seq/sequential_execution.h" alt="" coords="1458,177,1650,203"/>
+<area shape="rect" id="node24" href="$parallel__execution__native_8h.html" title="../native/parallel\l_execution_native.h" alt="" coords="345,169,483,211"/>
+<area shape="rect" id="node29" href="$parallel__execution__tbb_8h.html" title="../tbb/parallel_execution\l_tbb.h" alt="" coords="1274,169,1434,211"/>
+<area shape="rect" id="node31" href="$parallel__execution__omp_8h.html" title="../omp/parallel_execution\l_omp.h" alt="" coords="1001,80,1168,121"/>
+<area shape="rect" id="node33" href="$parallel__execution__ff_8h.html" title="../ff/parallel_execution_ff.h" alt="" coords="1394,87,1570,114"/>
+<area shape="rect" id="node3" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="656,266,833,293"/>
+<area shape="rect" id="node9" href="$iterator_8h.html" title="../common/iterator.h" alt="" coords="1077,266,1215,293"/>
+<area shape="rect" id="node12" href="$callable__traits_8h.html" title="../common/callable\l_traits.h" alt="" coords="2181,348,2313,389"/>
+<area shape="rect" id="node14" href="$execution__traits_8h.html" title="../common/execution\l_traits.h" alt="" coords="909,259,1053,300"/>
+<area shape="rect" id="node15" href="$patterns_8h.html" title="../common/patterns.h" alt="" coords="1591,266,1738,293"/>
+<area shape="rect" id="node22" href="$pack__traits_8h.html" title="../common/pack_traits.h" alt="" coords="1762,266,1925,293"/>
+<area shape="rect" id="node16" href="$farm__pattern_8h.html" title="farm_pattern.h" alt="" coords="1327,355,1434,382"/>
+<area shape="rect" id="node17" href="$filter__pattern_8h.html" title="filter_pattern.h" alt="" coords="1904,355,2009,382"/>
+<area shape="rect" id="node18" href="$pipeline__pattern_8h.html" title="pipeline_pattern.h" alt="" coords="2033,355,2157,382"/>
+<area shape="rect" id="node19" href="$reduce__pattern_8h.html" title="reduce_pattern.h" alt="" coords="1459,355,1577,382"/>
+<area shape="rect" id="node20" href="$iteration__pattern_8h.html" title="iteration_pattern.h" alt="" coords="1601,355,1728,382"/>
+<area shape="rect" id="node21" href="$common_2context_8h.html" title="context.h" alt="" coords="1752,355,1828,382"/>
+<area shape="rect" id="node25" href="$worker__pool_8h.html" title="worker_pool.h" alt="" coords="5,266,108,293"/>
+</map>

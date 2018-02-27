@@ -1,0 +1,5 @@
+var searchData=
+[
+  ['get_5foutput_5fqueue',['get_output_queue',['../classgrppi_1_1parallel__execution__native.html#afa5eccc3d3f19fbe88991d23596ec37c',1,'grppi::parallel_execution_native::get_output_queue(mpmc_queue&lt; T &gt; &amp;queue, Transformers &amp;&amp;...) const '],['../classgrppi_1_1parallel__execution__native.html#a37f5a1d6fc3a6ea2b2785f7a937be34b',1,'grppi::parallel_execution_native::get_output_queue(Transformers &amp;&amp;...) const '],['../classgrppi_1_1parallel__execution__omp.html#ab2c33a5524390b20114c46c2801bfa06',1,'grppi::parallel_execution_omp::get_output_queue(mpmc_queue&lt; T &gt; &amp;queue, Transformers &amp;&amp;...) const '],['../classgrppi_1_1parallel__execution__omp.html#abb9bc2c1ea905ca19f6b025e17fc8943',1,'grppi::parallel_execution_omp::get_output_queue(Transformers &amp;&amp;...) const ']]],
+  ['get_5fthread_5fid',['get_thread_id',['../classgrppi_1_1parallel__execution__native.html#a969c78379311aa8678df7eaac0ae33b6',1,'grppi::parallel_execution_native::get_thread_id()'],['../classgrppi_1_1parallel__execution__omp.html#a7213bf74afdb228323b3c368d50bb4fd',1,'grppi::parallel_execution_omp::get_thread_id()']]]
+];

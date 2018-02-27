@@ -1,0 +1,6 @@
+<map id="parallel_execution_native.h" name="parallel_execution_native.h">
+<area shape="rect" id="node2" href="$worker__pool_8h.html" title="worker_pool.h" alt="" coords="5,102,108,129"/>
+<area shape="rect" id="node4" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="285,102,463,129"/>
+<area shape="rect" id="node10" href="$iterator_8h.html" title="../common/iterator.h" alt="" coords="487,102,626,129"/>
+<area shape="rect" id="node13" href="$execution__traits_8h.html" title="../common/execution\l_traits.h" alt="" coords="701,95,845,136"/>
+</map>

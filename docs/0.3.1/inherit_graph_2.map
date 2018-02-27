@@ -1,0 +1,8 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node2" href="$classgrppi_1_1detail__ff_1_1filter__collector.html" title="Colletor node for a filter. " alt="" coords="164,5,301,47"/>
+<area shape="rect" id="node3" href="$classgrppi_1_1detail__ff_1_1filter__emitter.html" title="Emitter for a filter stage. " alt="" coords="164,71,301,112"/>
+<area shape="rect" id="node4" href="$classgrppi_1_1detail__ff_1_1filter__worker.html" title="Worker that passes a value to next stage if the predicate is satisfied or the filtered_value constant..." alt="" coords="142,136,323,177"/>
+<area shape="rect" id="node5" href="$classgrppi_1_1detail__ff_1_1iteration__worker.html" title="grppi::detail_ff::iteration\l_worker\&lt; Item, Iteration \&gt;" alt="" coords="146,201,319,243"/>
+<area shape="rect" id="node6" href="$classgrppi_1_1detail__ff_1_1node__impl.html" title="Fastflow node for a pipeline transformation stage. " alt="" coords="160,266,305,322"/>
+<area shape="rect" id="node7" href="$classgrppi_1_1detail__ff_1_1node__impl_3_01_input_00_01void_00_01_consumer_01_4.html" title="Fastflow node for a pipeline consumer stage. " alt="" coords="129,345,336,387"/>
+</map>
