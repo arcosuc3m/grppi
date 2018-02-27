@@ -215,6 +215,9 @@ a recent version from:
 
   * [FastFlow](https://github.com/fastflow/fastflow)
 
+**IMPORTANT NOTE**: Current version of fastflow has two minor issues. Until this
+is fixed you can get this [fork](https://github.com/jdgarciauc3m/fastflow)
+
 ## Unit tests and coverage analysis
 
 For unit testing GrPPI uses the GoogleTest framework. 
