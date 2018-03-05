@@ -62,6 +62,7 @@ public:
   }
 
   /**
+  \pre items.size() < static_cast<int>(std::numeric_limits<int>::max())
   \brief Check if a reduction can be performed.
   */
   bool reduction_needed() const {

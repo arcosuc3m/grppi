@@ -17,36 +17,32 @@ set(CMAKE_CXX_STANDARD 14)
 
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
-
     if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
-        message( FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 3.9 or above.")
+        message(FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION}
+                " not supported. Upgrade to 3.9 or above.")
     else()
         message( STATUS "C++ Compiler is Clang" )
-        add_compile_options(-Wall -Wextra -Wno-deprecated -Werror -pedantic -pedantic-errors)
     endif()
-
-elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
-
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 6.0))
-        message( FATAL_ERROR "g++ version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 6.0 or above.")
+        message(FATAL_ERROR "g++ version " ${CMAKE_CXX_COMPILER_VERSION}
+                " not supported. Upgrade to 6.0 or above.")
     else()
         message( STATUS "C++ Compiler is GNU")
     endif()
-
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
-
-  message(FATAL_ERROR "Intel compiler is not currently supported")
-#    if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
-#        message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} " not supported. Upgrade to 16.0 or above.")
-#    else()
-#        message( STATUS "C++ Compiler is Intel" )
-#        message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
-#    endif()
-
+    message(FATAL_ERROR "Intel compiler is not currently supported")
+    # if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
+    #   message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION}
+    #       " not supported. Upgrade to 16.0 or above.")
+    # else()
+    #   message( STATUS "C++ Compiler is Intel" )
+    #   message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
+    # endif()
 else()
-
-    message( FATAL_ERROR "Unsupported compiler: " ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION})
-
+    message( FATAL_ERROR "Unsupported compiler: "
+            ${CMAKE_CXX_COMPILER_ID}
+            ${CMAKE_CXX_COMPILER_VERSION})
 endif()
 
 # GrPPI library
@@ -129,4 +125,3 @@ option( GRPPI_UNIT_TEST_ENABLE "Unit tests" ON )
 if( GRPPI_UNIT_TEST_ENABLE )
     add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
-

@@ -756,7 +756,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_native::map_reduce(
     std::tuple<InputIterators...> firsts, 
     std::size_t sequence_size,
-    Identity && identity_,
+    Identity &&,
     Transformer && transform_op, Combiner && combine_op) const
 {
   using result_type = std::decay_t<Identity>;
@@ -765,8 +765,8 @@ auto parallel_execution_native::map_reduce(
   constexpr sequential_execution seq;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t id) {
     partial_results[id] = seq.map_reduce(f, sz,
-        std::forward<Identity>(identity_),
-        std::forward<Transformer>(transform_op), 
+        std::forward<Identity>(partial_results[id]),
+        std::forward<Transformer>(transform_op),
         std::forward<Combiner>(combine_op));
   };
 
@@ -786,7 +786,7 @@ auto parallel_execution_native::map_reduce(
   } // Pool synch
 
   return seq.reduce(std::next(partial_results.begin()), 
-     partial_results.size()-1, std::forward<result_type>(partial_results[0]), 
+     partial_results.size()-1, std::forward<result_type>(partial_results[0]),
      std::forward<Combiner>(combine_op));
 }
 
@@ -1150,13 +1150,13 @@ void parallel_execution_native::do_pipeline(Queue & input_queue,
   decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_ops...);
   
-  auto context_task = [&](int) {
+  auto context_task = [&]() {
     context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);
     output_queue.push( make_pair(output_optional_type{}, -1) );
   };
 
   worker_pool workers{1};
-  workers.launch_tasks(*this, context_task, 1);
+  workers.launch_tasks(*this, context_task);
 
   do_pipeline(output_queue,
       forward<OtherTransformers>(other_ops)... );

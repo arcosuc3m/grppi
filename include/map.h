@@ -40,7 +40,7 @@ namespace grppi {
 \brief Invoke \ref md_map on a data sequence.
 \tparam InputIterators Iterator types used for input sequences.
 \tparam InputIt Iterator type used for any input sequence.
-\tparam OtuputIt Iterator type used for the output sequence.
+\tparam OutputIt Iterator type used for the output sequence.
 \tparam Transformer Callable type for the transformation operation.
 \param ex Execution policy object.
 \param firsts Tuple of Iterators to the first element in the inputs sequences.
@@ -68,7 +68,7 @@ void map(const Execution & ex, std::tuple<InputIterators...> firsts,
 /**
 \brief Invoke \ref md_map on a data sequence.
 \tparam InputIterators Iterator types used for input sequences.
-\tparam OtuputIt Iterator type used for the output sequence.
+\tparam OutputIt Iterator type used for the output sequence.
 \tparam Transformer Callable type for the transformation operation.
 \param ex Execution policy object.
 \param firsts Tuple of Iterators to the first element in the inputs sequences.
@@ -92,12 +92,12 @@ void map(const Execution & ex, std::tuple<InputIterators...> firsts,
 /**
 \brief Invoke \ref md_map on a data sequence.
 \tparam InputIt Iterator type used for input sequence.
-\tparam OtuputIt Iterator type used for the output sequence.
+\tparam OutputIt Iterator type used for the output sequence.
 \tparam Transformer Callable type for the transformation operation.
 \param ex Execution policy object.
 \param first Iterator to the first element in the input sequence.
 \param last Iterator to one past the end of the input sequence.
-\param first_out Iterator to first elemento of the output sequence.
+\param first_out Iterator to first element of the output sequence.
 \param transform_op Transformation operation.
 */
 template <typename Execution, typename InputIt, typename OutputIt, 
@@ -117,7 +117,7 @@ void map(const Execution & ex,
 /**
 \brief Invoke \ref md_map on a data sequence.
 \tparam InputIt Iterator type used for input sequence.
-\tparam OtuputIt Iterator type used for the output sequence.
+\tparam OutputIt Iterator type used for the output sequence.
 \tparam Transformer Callable type for the transformation operation.
 \tparam OtherInputIts Iterator types used for additional input sequences.
 \param ex Execution policy object.
