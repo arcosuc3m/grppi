@@ -1026,25 +1026,21 @@ void parallel_execution_native::do_pipeline(
     else {
       elements.push_back(item);
     }
-    // TODO: Probably find_if() + erase 
-    for (auto it=elements.begin(); it!=elements.end(); it++) {
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
-      }
+    auto it = find_if(elements.begin(), elements.end(), 
+       [&](auto x) { return x.second== current; });
+    if(it != elements.end()){
+      consume_op(*it->first);
+      elements.erase(it);
+      current++;
     }
   }
   while (elements.size()>0) {
-    // TODO: Probably find_if() + erase
-    for (auto it = elements.begin(); it != elements.end(); it++) {
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
-      }
+    auto it = find_if(elements.begin(), elements.end(), 
+       [&](auto x) { return x.second== current; });
+    if(it != elements.end()){
+      consume_op(*it->first);
+      elements.erase(it);
+      current++;
     }
   }
 }
@@ -1279,32 +1275,28 @@ void parallel_execution_native::do_pipeline(
         else {
           elements.push_back(item);
         }
-        // TODO: Probably find_if() + erase 
-        for (auto it=elements.begin(); it<elements.end(); it++) {
-          if (it->second == current) {
-            if (it->first) {
-              output_queue.push(make_pair(it->first,order));
-              order++;
-            }
-            elements.erase(it);
-            current++;
-            break;
-          }
+        auto it = find_if(elements.begin(), elements.end(), 
+           [&](auto x) { return x.second== current; });
+        if(it != elements.end()){
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
+            order++;
+          }       
+          elements.erase(it);
+          current++;
         }
         item = filter_queue.pop();
       }
       while (elements.size()>0) {
-        // TODO: Probably find_if() + erase 
-        for (auto it=elements.begin(); it<elements.end(); it++) {
-          if (it->second == current) {
-            if(it->first) { 
-              output_queue.push(make_pair(it->first,order));
-              order++;
-            }
-            elements.erase(it);
-            current++;
-            break;
-          }
+        auto it = find_if(elements.begin(), elements.end(), 
+           [&](auto x) { return x.second== current; });
+        if(it != elements.end()){
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
+            order++;
+          }       
+          elements.erase(it);
+          current++;
         }
       }
       output_queue.push(item);
