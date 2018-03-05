@@ -1,0 +1,11 @@
+<map id="farm_pattern.h" name="farm_pattern.h">
+<area shape="rect" id="node2" href="$patterns_8h.html" title="patterns.h" alt="" coords="223,80,303,107"/>
+<area shape="rect" id="node7" href="$parallel__execution__tbb_8h.html" title="parallel_execution\l_tbb.h" alt="" coords="365,155,492,196"/>
+<area shape="rect" id="node10" href="$farm_8h.html" title="farm.h" alt="" coords="483,80,542,107"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title="sequential_execution.h" alt="" coords="186,162,341,189"/>
+<area shape="rect" id="node8" href="$stream__filter_8h.html" title="stream_filter.h" alt="" coords="5,251,111,278"/>
+<area shape="rect" id="node9" href="$stream__reduce_8h.html" title="stream_reduce.h" alt="" coords="99,333,217,360"/>
+<area shape="rect" id="node4" href="$dynamic__execution_8h.html" title="dynamic_execution.h" alt="" coords="241,333,387,360"/>
+<area shape="rect" id="node6" href="$parallel__execution__omp_8h.html" title="parallel_execution\l_omp.h" alt="" coords="255,244,381,285"/>
+<area shape="rect" id="node5" href="$grppi_8h.html" title="grppi.h" alt="" coords="205,408,266,435"/>
+</map>

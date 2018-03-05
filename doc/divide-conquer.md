@@ -23,7 +23,8 @@ There is a single variant:
 ## Key elements in divide/conquer
 
 The key elements of the **divide/conquer** pattern are: a **Divider** operation that
-divides a problem into subproblems, a **Solver** operation that is used to solve
+divides a problem into subproblems, a **Predicate** that signals if a problem is already
+an elemental problem, a **Solver** operation that is used to solve
 a subproblem, and a **Combiner** operation that is used to merge results of
 subproblems.
 
@@ -32,6 +33,11 @@ collection of subproblems. The returned collection of subproblems must be
 iterable. This allows returning any standard C++ sequence container, or even a
 plain array. When a problem cannot be divided into subproblems, the divider
 returns a collection with a single subproblem.
+
+A **Predicate** is any C++ callable entity that takes a problem and returns a
+boolean value. Returning *true* means that the problem is already elemental and
+should be solved using the **Solver**. Returning *false* means that the problem 
+needs to be divided into subproblems by the **Divider**.
 
 The **Solver** is any C++ callable entity that takes a problem and turns it into
 a solution. The signature of the solver takes as argument a problem and returns
@@ -65,10 +71,8 @@ range problem{begin(v), end(v)};
 
 auto res = grppi::divide_conquer(exec,
   problem,
-  [](auto r) -> vector<range> {
-    if (1>=r.size()) { return {r}; }
-    else { return divide(r); }
-  },
+  [](auto r) -> vector<range> { return divide(r); },
+  [](auto r) { return r.size()<=1; },
   [](auto x) { return x; },
   [](auto r1, auto r2) {
     std::inplace_merge(r1.first, r1.last, r2.last);

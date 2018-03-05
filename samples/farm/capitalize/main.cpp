@@ -1,5 +1,5 @@
 /**
-* @version    GrPPI v0.1
+* @version    GrPPI v0.3
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ void capitalize(grppi::dynamic_execution & e,
     grppi::farm(4,
       [](auto word) { 
         grppi::sequential_execution seq{};
-        grppi::map(seq, begin(word), end(word), begin(word), [](char c) { 
+        grppi::map(seq, begin(word), end(word), begin(word), [](char c) {
           return std::toupper(c);
         }); 
         return word;

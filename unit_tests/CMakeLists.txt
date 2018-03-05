@@ -2,17 +2,32 @@
 option(GRPPI_UNIT_TEST_ENABLE "Activate unit tests" OFF)
 
 if(GRPPI_UNIT_TEST_ENABLE)
-  
   # Set policy to support newer version of CMake and GTest
   # We will remove this when minimum version of CMake for GrPPI is move to 3.3 or
   # higher
   if(POLICY CMP0057)
     cmake_policy(SET CMP0057 NEW)
   endif()
+  find_package(GTest)
+  if(GTEST_FOUND)
+    message(STATUS "GTest found")
+  else()
+    set(GRPPI_UNIT_TEST_ENABLE OFF CACHE BOOL "Activate unit tests" FORCE)
+    message(STATUS "GTest not found")
+    message(STATUS "  GRPPI_UNIT_TEST_ENABLE has been set to OFF")
+    message(STATUS "  To enable unit tests, please, download and instal Google Test")
+    message(STATUS "  https://github.com/google/googletest")
+  endif()
+endif()
 
-  find_package(GTest REQUIRED) 
+if(GRPPI_UNIT_TEST_ENABLE)
   include_directories(${GTEST_INCLUDE_DIRS})
 
+  set(PROJECT_TEST_NAME utest_${PROJECT_NAME_STR})
+  file(GLOB TEST_SRC_FILES
+      ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
+  add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
+  
   # Unit testing should be made in debug mode
   set(CMAKE_BUILD_TYPE "Debug")
 
@@ -21,17 +36,17 @@ if(GRPPI_UNIT_TEST_ENABLE)
     add_compile_options(--coverage)
   endif()
 
-  set(PROJECT_TEST_NAME utest_${PROJECT_NAME_STR})
-  file(GLOB TEST_SRC_FILES
-      ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
+  # Do not emit deprecated warnings for _legacy unit tests
+  file(GLOB TEST_SRC_FILES_LEGACY
+      ${CMAKE_CURRENT_SOURCE_DIR}/*_legacy.cpp)
+  set_source_files_properties(${TEST_SRC_FILES_LEGACY} 
+      PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
 
-  add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
   target_link_libraries(${PROJECT_TEST_NAME} 
-      ${GTEST_BOTH_LIBRARIES} 
+      ${GTEST_BOTH_LIBRARIES}
       gcov
       ${TBB_LIBRARIES}
       ${CMAKE_THREAD_LIBS_INIT}
-      ${Boost_LIBRARIES}
   )
   
   GTEST_ADD_TESTS(${PROJECT_TEST_NAME} "" ${TEST_SRC_FILES})

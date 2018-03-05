@@ -1,5 +1,5 @@
 /**
-* @version    GrPPI v0.1
+* @version    GrPPI v0.3
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -67,10 +67,8 @@ void sort_sequence(grppi::dynamic_execution & exec, int n) {
 
   auto res = grppi::divide_conquer(exec,
     problem,
-    [](auto r) -> vector<range> {
-      if (1>=r.size()) { return {r}; }
-      else { return divide(r); }
-    },
+    [](auto r) -> vector<range> { return divide(r); },
+    [](auto r) { return 1>=r.size(); },
     [](auto x) { return x; },
     [](auto r1, auto r2) {
       std::inplace_merge(r1.first, r1.last, r2.last);

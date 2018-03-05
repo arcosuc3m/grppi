@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -49,6 +49,7 @@ namespace grppi {
 */
 template <typename Execution, typename Input, 
           typename Divider, typename Solver, typename Combiner>
+[[deprecated("Use newer divide_conquer with predicate arguemnt")]]
 auto divide_conquer(
     const Execution & ex, 
     Input && input, 

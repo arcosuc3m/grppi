@@ -1,5 +1,5 @@
 /**
-* @version    GrPPI v0.2
+* @version    GrPPI v0.3
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -106,7 +106,7 @@ public:
   //     v[i-2] + v[i-1] + v[i+1] + v[i+2] +
   //     w[i-2] + w[i-1] + w[i+1] + w[i+2] +
   template <typename E>
-  void run_nary(E & ex) {
+  void run_nary_tuple_range(E &ex) {
     auto vec_surronding = [](auto first, auto last, auto it) {
       vector<int> result;
       if (distance(first,it)>=2) result.push_back(*prev(it,2));
@@ -116,7 +116,7 @@ public:
       return result;
     };
 
-    grppi::stencil(ex, begin(v), end(v), begin(w),
+    grppi::stencil(ex, make_tuple(begin(v),begin(v2)), end(v), begin(w),
       // Stencil computes average of neighbours
       [this](auto it, const auto & n) {
         invocations_operation++;
@@ -129,33 +129,60 @@ public:
         auto r2 = vec_surronding(begin(v2), end(v2), it2);
         r1.insert(end(r1), begin(r2), end(r2));
         return r1;
-      }, 
-      begin(v2)
+      }
+    );
+  }
+
+  template <typename E>
+  void run_nary_tuple_size(E & ex) {
+    auto vec_surronding = [](auto first, auto last, auto it) {
+      vector<int> result;
+      if (distance(first,it)>=2) result.push_back(*prev(it,2));
+      if (distance(first,it)>=1) result.push_back(*prev(it,1));
+      if (distance(it,last)>1) result.push_back(*next(it,1));
+      if (distance(it,last)>2) result.push_back(*next(it,2));
+      return result;
+    };
+
+    grppi::stencil(ex, make_tuple(begin(v),begin(v2)), v.size(), begin(w),
+      // Stencil computes average of neighbours
+      [this](auto it, const auto & n) {
+        invocations_operation++;
+        return std::accumulate(begin(n), end(n), 0);
+      },
+      // Neighbours are i-2, i-1, i+1, i+2 of currrent position
+      [&,this](auto it, auto it2) {
+        invocations_neighbour++;
+        auto r1 = vec_surronding(begin(v), end(v), it);
+        auto r2 = vec_surronding(begin(v2), end(v2), it2);
+        r1.insert(end(r1), begin(r2), end(r2));
+        return r1;
+      }
     );
   }
 
   // Test an n-ary stencil on an empty sequence 
-  void setup_empty_ary() {
+  void setup_empty_nary() {
   }
 
-  void check_empty_ary() {
+  void check_empty_nary() {
     ASSERT_EQ(0, invocations_operation);
     ASSERT_EQ(0, invocations_neighbour);
   }
 
-  void setup_single_ary() {
+  void setup_single_nary() {
     v = { 1 };
     v2 = { 1 };
     w = { 1 };
   }
 
-  void check_single_ary() {
+  void check_single_nary() {
     EXPECT_EQ(1, invocations_operation); 
     EXPECT_EQ(1, invocations_neighbour); 
     EXPECT_EQ(0, w[0]);
   }
 
-  void setup_multiple_ary() {
+  void setup_multiple_nary() {
     generate_n(back_inserter(v), 10,
       [i=0]() mutable { return i++; });
     generate_n(back_inserter(v2), 10,
@@ -164,7 +191,7 @@ public:
 
   }
 
-  void check_multiple_ary() {
+  void check_multiple_nary() {
     EXPECT_EQ(10, invocations_operation);
     EXPECT_EQ(10, invocations_neighbour);
 
@@ -204,18 +231,32 @@ TYPED_TEST(stencil_test, dyn_empty)
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, static_empty_ary)
+TYPED_TEST(stencil_test, static_empty_nary_tuple_range)
 {
-  this->setup_empty_ary();
-  this->run_nary(this->execution_);
-  this->check_empty_ary();
+  this->setup_empty_nary();
+  this->run_nary_tuple_range(this->execution_);
+  this->check_empty_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_empty_ary)
+TYPED_TEST(stencil_test, dyn_empty_nary_tuple_range)
 {
-  this->setup_empty_ary();
-  this->run_nary(this->dyn_execution_);
-  this->check_empty_ary();
+  this->setup_empty_nary();
+  this->run_nary_tuple_range(this->dyn_execution_);
+  this->check_empty_nary();
+}
+
+TYPED_TEST(stencil_test, static_empty_nary_tuple_size)
+{
+  this->setup_empty_nary();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_empty_nary();
+}
+
+TYPED_TEST(stencil_test, dyn_empty_nary_tuple_size)
+{
+  this->setup_empty_nary();
+  this->run_nary_tuple_size(this->dyn_execution_);
+  this->check_empty_nary();
 }
 
 TYPED_TEST(stencil_test, static_single)
@@ -232,34 +273,33 @@ TYPED_TEST(stencil_test, dyn_single)
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, static_single_ary)
+TYPED_TEST(stencil_test, static_single_nary_tuple_range)
 {
-  this->setup_single_ary();
-  this->run_nary(this->execution_);
-  this->check_single_ary();
+  this->setup_single_nary();
+  this->run_nary_tuple_range(this->execution_);
+  this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_single_ary)
+TYPED_TEST(stencil_test, dyn_single_nary_tuple_range)
 {
-  this->setup_single_ary();
-  this->run_nary(this->dyn_execution_);
-  this->check_single_ary();
+  this->setup_single_nary();
+  this->run_nary_tuple_range(this->dyn_execution_);
+  this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, static_multiple_ary)
+TYPED_TEST(stencil_test, static_single_nary_tuple_size)
 {
-  this->setup_multiple_ary();
-  this->run_nary(this->execution_);
-  this->check_multiple_ary();
+  this->setup_single_nary();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple_ary)
+TYPED_TEST(stencil_test, dyn_single_nary_tuple_size)
 {
-  this->setup_multiple_ary();
-  this->run_nary(this->dyn_execution_);
-  this->check_multiple_ary();
+  this->setup_single_nary();
+  this->run_nary_tuple_size(this->dyn_execution_);
+  this->check_single_nary();
 }
-
 
 TYPED_TEST(stencil_test, static_multiple)
 {
@@ -273,4 +313,32 @@ TYPED_TEST(stencil_test, dyn_multiple)
   this->setup_multiple();
   this->run_unary(this->dyn_execution_);
   this->check_multiple();
+}
+
+TYPED_TEST(stencil_test, static_multiple_nary_tuple_range)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_range(this->execution_);
+  this->check_multiple_nary();
+}
+
+TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_range)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_range(this->dyn_execution_);
+  this->check_multiple_nary();
+}
+
+TYPED_TEST(stencil_test, static_multiple_nary_tuple_size)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_multiple_nary();
+}
+
+TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_size)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_size(this->dyn_execution_);
+  this->check_multiple_nary();
 }

@@ -23,6 +23,8 @@
 
 #ifdef GRPPI_FF
 
+#include "detail/pipeline_impl.h"
+
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 
@@ -32,6 +34,7 @@
 #include <experimental/optional>
 
 #include <ff/parallel_for.hpp>
+#include <ff/dc.hpp>
 
 namespace grppi {
 
@@ -64,8 +67,8 @@ public:
   \param order Whether ordered executions is enabled or disabled.
   */
   parallel_execution_ff(int concurrency_degree, bool order = true) noexcept :
-      concurrency_degree_{concurrency_degree},
-      ordering_{order}
+    concurrency_degree_{concurrency_degree}, 
+    ordering_{order}
   {
   }
 
@@ -73,7 +76,7 @@ public:
   \brief Set number of grppi threads.
   */
   void set_concurrency_degree(int degree) noexcept { 
-    concurrency_degree_ = degree; 
+    concurrency_degree_ = degree;
   }
 
   /**
@@ -181,6 +184,67 @@ public:
       StencilTransformer && transform_op,
       Neighbourhood && neighbour_op) const;
 
+  /**
+    \brief Invoke \ref md_pipeline.
+    \tparam Generator Callable type for the generator operation.
+    \tparam Transformers Callable types for the transformers in the pipeline.
+    \param generate_op Generator operation.
+    \param transform_ops Transformer operations.
+   */
+  template <typename Generator, typename ... Transformers>
+  void pipeline(Generator && generate_op,
+      Transformers && ... transform_op) const;
+
+
+  /**
+  \brief Invoke \ref md_pipeline comming from another context
+  that uses mpmc_queues as communication channels.
+  \tparam InputType Type of the input stream.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \tparam InputType Type of the output stream.
+  \param input_queue Input stream communicator.
+  \param transform_ops Transformer operations.
+  \param output_queue Input stream communicator.
+  */
+  template <typename InputType, typename Transformer, typename OutputType>
+  void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
+                mpmc_queue<OutputType> & output_queue) const
+  {
+    ::std::atomic<long> order {0};
+    pipeline(
+      [&](){
+        auto item = input_queue.pop();
+        if(!item.first) input_queue.push(item);
+        return item.first;
+      },
+      std::forward<Transformer>(transform_op),
+      [&](auto & item ){
+        output_queue.push(make_pair(typename OutputType::first_type{item}, order.load()));
+        order++;
+      }
+    );
+    output_queue.push(make_pair(typename OutputType::first_type{}, order.load()));
+  }
+
+  /**
+    \brief Invoke \ref md_divide-conquer.
+    \tparam Input Type used for the input problem.
+    \tparam Divider Callable type for the divider operation.
+    \tparam Solver Callable type for the solver operation.
+    \tparam Combiner Callable type for the combiner operation.
+    \param input Input problem to be solved.
+    \param divider_op Divider operation.
+    \param solver_op Solver operation.
+    \param combine_op Combiner operation.
+   */
+  template <typename Input, typename Divider,typename Predicate, 
+            typename Solver, typename Combiner>
+  auto divide_conquer(Input & input,
+      Divider && divide_op,
+      Predicate && condition_op,
+      Solver && solve_op,
+      Combiner && combine_op) const;
+
 private:
 
   int concurrency_degree_ = 
@@ -231,6 +295,20 @@ constexpr bool supports_map_reduce<parallel_execution_ff>() { return true; }
 */
 template <>
 constexpr bool supports_stencil<parallel_execution_ff>() { return true; }
+
+/*
+\brief Determines if an execution policy supports the divide_conquer pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_divide_conquer<parallel_execution_ff>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_pipeline<parallel_execution_ff>() { return true; }
 
 
 template <typename ... InputIterators, typename OutputIterator, 
@@ -303,6 +381,66 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
     concurrency_degree_);
 }
 
+template <typename Generator, typename ... Transformers>
+void parallel_execution_ff::pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops) const 
+{
+  detail_ff::pipeline_impl pipe{
+      concurrency_degree_, 
+      ordering_,
+      std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...};
+
+  pipe.setFixedSize(false);
+  pipe.run_and_wait_end();
+}
+
+template <typename Input, typename Divider,typename Predicate, 
+          typename Solver, typename Combiner>
+auto parallel_execution_ff::divide_conquer(Input & input,
+    Divider && divide_op,
+    Predicate && condition_op,
+    Solver && solve_op,
+    Combiner && combine_op) const 
+{
+  using output_type = typename std::result_of<Solver(Input)>::type;
+  
+  // divide
+  auto divide_fn = [&](const Input &in, std::vector<Input> &subin) {
+    subin = divide_op(in);
+  };
+  // combine
+  auto combine_fn = [&] (std::vector<output_type>& in, output_type& out) {
+	  using index_t = typename std::vector<output_type>::size_type;
+	  out = in[0];
+	  for(index_t i = 1; i < in.size(); ++i)
+		  out = combine_op(out, in[i]);
+  };
+  // sequential solver (base-case)
+  auto seq_fn = [&] (const Input & in , output_type & out) {
+    out = solve_op(in);
+  };
+  // condition
+  auto cond_fn = [&] (const Input &in) {
+    return condition_op(in);
+  };
+  output_type out_var{};
+
+  using dac_t = ff::ff_DC<Input,output_type>;
+  auto ncores = static_cast<int>(std::thread::hardware_concurrency());
+  int max_nworkers = std::max(concurrency_degree_, ncores);
+  dac_t dac(divide_fn, combine_fn, seq_fn, cond_fn, //kernel functions
+			input, out_var, //input/output variables
+			concurrency_degree_, //parallelism degree
+			dac_t::DEFAULT_OUTSTANDING_TASKS, max_nworkers //ff-specific params
+			);
+
+  // run
+  dac.run_and_wait_end();
+
+  return out_var;
+}
 
 } // end namespace grppi
 

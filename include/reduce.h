@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,33 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_reduce.
 @{
 */
+
+/**
+\brief Invoke \ref md_reduce with identity value
+on a data sequence with sequential execution.
+\tparam Execution Execution type.
+\tparam InputIt Iterator type used for input sequence.
+\tparam Result Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param size Size of the input sequence to be process.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+\return The result of the reduction.
+*/
+template <typename Execution, typename InputIt, typename Result, typename Combiner,
+    requires_iterator<InputIt> = 0>
+auto reduce(const Execution & ex,
+            InputIt first, std::size_t size,
+            Result && identity,
+            Combiner && combine_op)
+{
+  static_assert(supports_reduce<Execution>(),
+                "reduce not supported on execution type");
+  return ex.reduce(first, size,
+                   std::forward<Result>(identity), std::forward<Combiner>(combine_op));
+}
 
 /**
 \brief Invoke \ref md_reduce with identity value

@@ -1,5 +1,5 @@
 /**
-* @version    GrPPI v0.1
+* @version    GrPPI v0.3
 * @copyright    Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license    GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -49,9 +49,8 @@ void test_map(grppi::dynamic_execution & e, int n) {
     [&]() { return value_gen(rengine); });
   double a = coef_gen(rengine);
 
-  grppi::map(e, begin(x), end(x), begin(y),
-    [a](int vx, int vy) { return a * vx + vy; },
-    begin(y));
+  grppi::map(e, make_tuple(begin(x),begin(y)), end(x), begin(y),
+    [a](int vx, int vy) { return a * vx + vy; });
 
   copy(begin(y), end(y), ostream_iterator<int>(cout, " "));
   cout << endl;

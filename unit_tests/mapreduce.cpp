@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -41,6 +41,7 @@ public:
 
   // Vectors
   vector<int> v{};
+  vector<int> v2{};
 
   // Invocation counter
   std::atomic<int> invocations_transformer{0};
@@ -50,13 +51,42 @@ public:
     return grppi::map_reduce(e, v.begin(), v.end(), 0,
       [this](int x) { 
         invocations_transformer++; 
-        return x*2; 
+        return x*x;
       },
       [](int x, int y) { 
         return x + y; 
-      });
+      }
+    );
   }
 
+  template <typename E>
+  auto run_scalar_product_tuple_range(const E & e){
+    return  grppi::map_reduce(e,
+      make_tuple(v.begin(),v2.begin()), v.end(), 0,
+      [this](int x1, int x2) {
+        invocations_transformer++;
+        return x1 * x2;
+      },
+      [](int x, int y){
+        return x + y;
+      }
+    );
+  }
+
+  template <typename E>
+  auto run_scalar_product_tuple_size(const E & e){
+    return  grppi::map_reduce(e,
+      make_tuple(v.begin(),v2.begin()), v.size(), 0,
+      [this](int x1, int x2){
+        invocations_transformer++;
+        return x1 * x2;
+      },
+      [](int x, int y){
+        return x + y;
+      }
+    );
+  }
+  
   void setup_single() {
     v = vector<int>{1};
     output = 0;
@@ -64,7 +94,7 @@ public:
 
   void check_single() {
     EXPECT_EQ(1, invocations_transformer); 
-    EXPECT_EQ(2, this->output);
+    EXPECT_EQ(1, this->output);
   }
 
   void setup_multiple() {
@@ -74,7 +104,29 @@ public:
 
   void check_multiple() {
     EXPECT_EQ(5, this->invocations_transformer);
+    EXPECT_EQ(55, this->output);
+  }
+
+  void setup_single_scalar_product() {
+    v = vector<int>{5};
+    v2 = vector<int>{6};
+    output = 0;
+  }
+
+  void check_single_scalar_product(){
+    EXPECT_EQ(1, this->invocations_transformer);
     EXPECT_EQ(30, this->output);
+  }
+
+  void setup_multiple_scalar_product() {
+    v = vector<int>{1,2,3,4,5};
+    v2 = vector<int>{2,4,6,8,10};
+    output = 0;
+  }
+
+  void check_multiple_scalar_product() {
+    EXPECT_EQ(5, this->invocations_transformer);
+    EXPECT_EQ(110, this->output);
   }
 
 };
@@ -82,14 +134,14 @@ public:
 // Test for execution policies defined in supported_executions.h
 TYPED_TEST_CASE(map_reduce_test, executions);
 
-TYPED_TEST(map_reduce_test, static_single)
+TYPED_TEST(map_reduce_test, static_single_square_sum)
 {
   this->setup_single();
   this->output = this->run_square_sum(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single)
+TYPED_TEST(map_reduce_test, dyn_single_square_sum)
 {
   this->setup_single();
   this->output = this->run_square_sum(this->dyn_execution_);
@@ -98,16 +150,80 @@ TYPED_TEST(map_reduce_test, dyn_single)
 
 
 
-TYPED_TEST(map_reduce_test, static_multiple)
+TYPED_TEST(map_reduce_test, static_multiple_square_sum)
 {
   this->setup_multiple();
   this->output = this->run_square_sum(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple)
+TYPED_TEST(map_reduce_test, dyn_multiple_square_sum)
 {
   this->setup_multiple();
   this->output = this->run_square_sum(this->dyn_execution_);
   this->check_multiple();
+}
+
+
+
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_range)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->execution_);
+  this->check_single_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_range)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
+  this->check_single_scalar_product();
+}
+
+
+
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_range)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->execution_);
+  this->check_multiple_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_range)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
+  this->check_multiple_scalar_product();
+}
+
+
+
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_size)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_size(this->execution_);
+  this->check_single_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_size)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_size(this->dyn_execution_);
+  this->check_single_scalar_product();
+}
+
+
+
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_size)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_size(this->execution_);
+  this->check_multiple_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_size(this->dyn_execution_);
+  this->check_multiple_scalar_product();
 }
