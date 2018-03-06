@@ -402,7 +402,7 @@ private:
   {
     return this->template make_filter<Input>(std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
 
   template <typename Input, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,

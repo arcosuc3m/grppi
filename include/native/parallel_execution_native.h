@@ -104,7 +104,7 @@ inline int thread_registry::current_index() const noexcept
   auto index = distance(begin(ids_), current);
   lock_.clear(memory_order_release);
   return index;
-};
+}
 
 /**
 \brief RAII class to manage registration/deregistration pairs.
@@ -529,7 +529,7 @@ private:
   {
     do_pipeline(input_queue, std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
 
   template <typename Queue, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
