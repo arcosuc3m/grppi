@@ -1,0 +1,10 @@
+<map id="iterator_traits.h" name="iterator_traits.h">
+<area shape="rect" id="node2" href="$reduce_8h.html" title="reduce.h" alt="" coords="154,80,226,107"/>
+<area shape="rect" id="node7" href="$map_8h.html" title="map.h" alt="" coords="250,80,309,107"/>
+<area shape="rect" id="node8" href="$mapreduce_8h.html" title="mapreduce.h" alt="" coords="333,80,431,107"/>
+<area shape="rect" id="node9" href="$stencil_8h.html" title="stencil.h" alt="" coords="455,80,525,107"/>
+<area shape="rect" id="node3" href="$reduce__nodes_8h.html" title="reduce_nodes.h" alt="" coords="133,155,247,181"/>
+<area shape="rect" id="node6" href="$grppi_8h.html" title="grppi.h" alt="" coords="311,155,373,181"/>
+<area shape="rect" id="node4" href="$ordered__stream__reduce_8h.html" title="ordered_stream_reduce.h" alt="" coords="5,229,175,256"/>
+<area shape="rect" id="node5" href="$unordered__stream__reduce_8h.html" title="unordered_stream_reduce.h" alt="" coords="199,229,381,256"/>
+</map>

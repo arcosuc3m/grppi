@@ -138,6 +138,7 @@ public:
   \param combine_op Combiner operation.
   */
   template <typename Input, typename Divider, typename Solver, typename Combiner>
+  [[deprecated("Use new interface with predicate argument")]]
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
@@ -382,7 +383,7 @@ void dynamic_execution::pipeline(
     Generator && generate_op, 
     Transformers && ... transform_ops) const
 {
-  GRPPI_TRY_PATTERN_ALL_NOFF(pipeline, std::forward<Generator>(generate_op),
+  GRPPI_TRY_PATTERN_ALL(pipeline, std::forward<Generator>(generate_op),
       std::forward<Transformers>(transform_ops)...);
 }
 

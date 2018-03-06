@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node2" href="$structgrppi_1_1internal_1_1is__context_3_01context__t_3_01_e_00_01_t_01_4_01_4.html" title="grppi::internal::is\l_context\&lt; context_t\l\&lt; E, T \&gt; \&gt;" alt="" coords="159,5,298,61"/>
+<area shape="rect" id="node3" href="$structgrppi_1_1internal_1_1is__farm_3_01farm__t_3_01_t_01_4_01_4.html" title="grppi::internal::is\l_farm\&lt; farm_t\&lt; T \&gt; \&gt;" alt="" coords="155,85,303,126"/>
+<area shape="rect" id="node4" href="$structgrppi_1_1internal_1_1is__filter_3_01filter__t_3_01_t_01_4_01_4.html" title="grppi::internal::is\l_filter\&lt; filter_t\&lt; T \&gt; \&gt;" alt="" coords="155,150,302,191"/>
+<area shape="rect" id="node5" href="$structgrppi_1_1internal_1_1is__iteration_3_01iteration__t_3_01_t_00_01_p_01_4_01_4.html" title="grppi::internal::is\l_iteration\&lt; iteration\l_t\&lt; T, P \&gt; \&gt;" alt="" coords="162,215,295,271"/>
+<area shape="rect" id="node6" href="$structgrppi_1_1internal_1_1is__pipeline_3_01pipeline__t_3_01_t_8_8_8_01_4_01_4.html" title="grppi::internal::is\l_pipeline\&lt; pipeline\l_t\&lt; T... \&gt; \&gt;" alt="" coords="164,295,293,351"/>
+<area shape="rect" id="node7" href="$structgrppi_1_1internal_1_1is__queue_3_01mpmc__queue_3_01_t_01_4_01_4.html" title="grppi::internal::is\l_queue\&lt; mpmc_queue\&lt; T \&gt; \&gt;" alt="" coords="129,374,328,415"/>
+<area shape="rect" id="node8" href="$structgrppi_1_1internal_1_1is__reduce_3_01reduce__t_3_01_c_00_01_i_01_4_01_4.html" title="grppi::internal::is\l_reduce\&lt; reduce_t\&lt; C,\l I \&gt; \&gt;" alt="" coords="151,439,307,495"/>
+</map>

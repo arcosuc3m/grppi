@@ -23,6 +23,8 @@
 
 #ifdef GRPPI_FF
 
+#include "detail/pipeline_impl.h"
+
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 
@@ -183,6 +185,48 @@ public:
       Neighbourhood && neighbour_op) const;
 
   /**
+    \brief Invoke \ref md_pipeline.
+    \tparam Generator Callable type for the generator operation.
+    \tparam Transformers Callable types for the transformers in the pipeline.
+    \param generate_op Generator operation.
+    \param transform_ops Transformer operations.
+   */
+  template <typename Generator, typename ... Transformers>
+  void pipeline(Generator && generate_op,
+      Transformers && ... transform_op) const;
+
+
+  /**
+  \brief Invoke \ref md_pipeline comming from another context
+  that uses mpmc_queues as communication channels.
+  \tparam InputType Type of the input stream.
+  \tparam Transformers Callable types for the transformers in the pipeline.
+  \tparam InputType Type of the output stream.
+  \param input_queue Input stream communicator.
+  \param transform_ops Transformer operations.
+  \param output_queue Input stream communicator.
+  */
+  template <typename InputType, typename Transformer, typename OutputType>
+  void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
+                mpmc_queue<OutputType> & output_queue) const
+  {
+    ::std::atomic<long> order {0};
+    pipeline(
+      [&](){
+        auto item = input_queue.pop();
+        if(!item.first) input_queue.push(item);
+        return item.first;
+      },
+      std::forward<Transformer>(transform_op),
+      [&](auto & item ){
+        output_queue.push(make_pair(typename OutputType::first_type{item}, order.load()));
+        order++;
+      }
+    );
+    output_queue.push(make_pair(typename OutputType::first_type{}, order.load()));
+  }
+
+  /**
     \brief Invoke \ref md_divide-conquer.
     \tparam Input Type used for the input problem.
     \tparam Divider Callable type for the divider operation.
@@ -200,8 +244,6 @@ public:
       Predicate && condition_op,
       Solver && solve_op,
       Combiner && combine_op) const;
-
-
 
 private:
 
@@ -254,12 +296,19 @@ constexpr bool supports_map_reduce<parallel_execution_ff>() { return true; }
 template <>
 constexpr bool supports_stencil<parallel_execution_ff>() { return true; }
 
-/**
+/*
 \brief Determines if an execution policy supports the divide_conquer pattern.
 \note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
 */
 template <>
 constexpr bool supports_divide_conquer<parallel_execution_ff>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the pipeline pattern.
+\note Specialization for parallel_execution_ff when GRPPI_FF is enabled.
+*/
+template <>
+constexpr bool supports_pipeline<parallel_execution_ff>() { return true; }
 
 
 template <typename ... InputIterators, typename OutputIterator, 
@@ -332,6 +381,21 @@ void parallel_execution_ff::stencil(std::tuple<InputIterators...> firsts,
     concurrency_degree_);
 }
 
+template <typename Generator, typename ... Transformers>
+void parallel_execution_ff::pipeline(
+    Generator && generate_op,
+    Transformers && ... transform_ops) const 
+{
+  detail_ff::pipeline_impl pipe{
+      concurrency_degree_, 
+      ordering_,
+      std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...};
+
+  pipe.setFixedSize(false);
+  pipe.run_and_wait_end();
+}
+
 template <typename Input, typename Divider,typename Predicate, 
           typename Solver, typename Combiner>
 auto parallel_execution_ff::divide_conquer(Input & input,
@@ -377,7 +441,6 @@ auto parallel_execution_ff::divide_conquer(Input & input,
 
   return out_var;
 }
-
 
 } // end namespace grppi
 

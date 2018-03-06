@@ -1,16 +1,22 @@
 REQUIREMENTS
 ------------
 
-Boost		-> http://www.boost.org
+Google Test	-> https://github.com/google/googletest
 Intel TBB	-> https://www.threadingbuildingblocks.org/
+FastFlow	-> https://github.com/fastflow/fastflow
 
 
 INSTALLATION
 ------------
 
-1. DOWNLOAD GrPPI v0.2
+1. DOWNLOAD Requiremnts libraries
+
+	Please follow instructions in doc/install-notes.md
+
+2. DOWNLOAD GrPPI v0.3
 
 	You can obtain the latest GrPPI release from:
 		https://github.com/arcosuc3m/grppi
 
-
+	You can obtain previous versions of GrPPI releases from:
+		https://github.com/arcosuc3m/grppi/releases

@@ -1,5 +1,5 @@
 /**
-* @version		GrPPI v0.2
+* @version		GrPPI v0.3
 * @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
 * @license		GNU/GPL, see LICENSE.txt
 * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,9 @@ public:
 #ifdef GRPPI_TBB
   parallel_execution_tbb tbb_;
 #endif
-
+#ifdef GRPPI_FF
+  parallel_execution_ff ff_;
+#endif
   // Variables
   int out;
   int counter;
@@ -158,6 +160,33 @@ public:
         out += x;
       });
   }
+
+  template <typename E>
+  void run_three_stages_farm_with_ff(const E & e) {
+    grppi::pipeline(e,
+      [this,i=0,max=counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (++i<=max) return i;
+        else return {};
+      },
+#ifdef GRPPI_FF
+      grppi::run_with(this->ff_,
+        grppi::farm(2,
+          [this](int x) {
+            invocations_intermediate++;
+            return x*2;
+          }
+        )
+      ),
+#endif
+      [this](int x) {
+        invocations_last++;
+        out += x;
+      });
+  }
+
+
+
   void check_three_stages() {
     EXPECT_EQ(6, invocations_init); 
     EXPECT_EQ(5, invocations_last); 
@@ -291,6 +320,38 @@ public:
       });
   }
 
+  template <typename E>
+  void run_composed_pipeline_with_ff(const E & e) {
+    grppi::pipeline(e,
+      [this,i=0,max=counter]() mutable -> optional<int> {
+        invocations_init++;
+        if (++i<=max) return i;
+        else return {};
+      },
+#ifdef GRPPI_FF
+      grppi::run_with(this->ff_,
+        grppi::pipeline(
+          [this](int x) {
+            std::cerr << "squaring " << x << std::endl;
+            invocations_intermediate++;
+            std::cerr << "Incrementing\n";
+            return x*x;
+          },
+          [this](int x) {
+            invocations_intermediate2++;
+            x *= 2;
+            return x;
+          }
+        )
+      ),
+#endif
+      [this](int x) {
+          invocations_last++;
+          out +=x;
+      });
+  }
+
+
   void check_composed() {
     EXPECT_EQ(6, invocations_init); 
     EXPECT_EQ(5, invocations_last); 
@@ -302,7 +363,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(context_test, executions_noff);
+TYPED_TEST_CASE(context_test, executions);
 
 TYPED_TEST(context_test, static_three_stages_farm_seq)
 {
@@ -336,6 +397,16 @@ TYPED_TEST(context_test, static_three_stages_farm_tbb)
 }
 #endif
 
+#ifdef GRPPI_FF
+TYPED_TEST(context_test, static_three_stages_farm_ff)
+{
+  this->setup_three_stages();
+  this->run_three_stages_farm_with_tbb(this->execution_);
+  this->check_three_stages();
+}
+#endif
+
+
 TYPED_TEST(context_test, dyn_three_stages_farm_seq)
 {
   this->setup_three_stages();
@@ -361,6 +432,15 @@ TYPED_TEST(context_test, dyn_three_stages_farm_omp)
 
 #ifdef GRPPI_TBB
 TYPED_TEST(context_test, dyn_three_stages_farm_tbb)
+{
+  this->setup_three_stages();
+  this->run_three_stages_farm_with_tbb(this->dyn_execution_);
+  this->check_three_stages();
+}
+#endif
+
+#ifdef GRPPI_FF
+TYPED_TEST(context_test, dyn_three_stages_farm_ff)
 {
   this->setup_three_stages();
   this->run_three_stages_farm_with_tbb(this->dyn_execution_);
@@ -400,6 +480,15 @@ TYPED_TEST(context_test, static_composed_pipeline_tbb)
 }
 #endif
 
+#ifdef GRPPI_FF
+TYPED_TEST(context_test, static_composed_pipeline_ff)
+{
+  this->setup_composed();
+  this->run_composed_pipeline_with_tbb(this->execution_);
+  this->check_composed();
+}
+#endif
+
 TYPED_TEST(context_test, dyn_composed_pipeline_seq)
 {
   this->setup_composed();
@@ -431,3 +520,13 @@ TYPED_TEST(context_test, dyn_composed_pipeline_tbb)
   this->check_composed();
 }
 #endif
+
+#ifdef GRPPI_FF
+TYPED_TEST(context_test, dyn_composed_pipeline_ff)
+{
+  this->setup_composed();
+  this->run_composed_pipeline_with_tbb(this->dyn_execution_);
+  this->check_composed();
+}
+#endif
+

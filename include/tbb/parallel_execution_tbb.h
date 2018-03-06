@@ -210,6 +210,7 @@ public:
   \param combine_op Combiner operation.
   */
   template <typename Input, typename Divider, typename Solver, typename Combiner>
+  [[deprecated("Use new interface with predicate argument")]]
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
@@ -262,8 +263,22 @@ public:
   void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
                 mpmc_queue<OutputType> & output_queue) const
   {
-    sequential_execution seq{};
-    seq.pipeline(input_queue, std::forward<Transformer>(transform_op), output_queue);
+    ::std::atomic<long> order {0};
+    pipeline(
+      [&](){
+        auto item = input_queue.pop();
+        if(!item.first) input_queue.push(item);
+        return item.first;
+      },
+      std::forward<Transformer>(transform_op),
+      [&](auto & item ){
+        output_queue.push(make_pair(typename OutputType::first_type{item}, order.load())); 
+        order++;
+      }
+    );
+    output_queue.push(make_pair(typename OutputType::first_type{}, order.load())); 
+    //sequential_execution seq{};
+    //seq.pipeline(input_queue, std::forward<Transformer>(transform_op), output_queue);
   }
 
 

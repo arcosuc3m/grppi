@@ -351,6 +351,7 @@ public:
   \param combine_op Combiner operation.
   */
   template <typename Input, typename Divider, typename Solver, typename Combiner>
+  [[deprecated("Use new interface with predicate argument")]]
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 

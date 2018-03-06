@@ -70,6 +70,24 @@ public:
   }
 
   /**
+  \brief Get the combiner.
+  \return The combiner held by the reduction object.
+  */
+  Combiner combiner() const { return combiner_; }
+
+  /**
+  \brief Get the window size.
+  \return The window size of the reduction object.
+  */
+  int window_size() const { return window_size_; }
+
+  /**
+  \brief Get the offset.
+  \return The offset the reduction object.
+  */
+  int offset() const { return offset_; }
+
+  /**
   \brief Reduce values from a window.
   \return The result of the reduction.
   */

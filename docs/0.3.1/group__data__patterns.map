@@ -1,0 +1,6 @@
+<map id="Data parallel patterns" name="Data parallel patterns">
+<area shape="rect" id="node1" href="$group__map__pattern.html" title="Interface for applyinng the Map pattern. " alt="" coords="222,5,313,32"/>
+<area shape="rect" id="node3" href="$group__mapreduce__pattern.html" title="Interface for applyinng the Map/reduce pattern. " alt="" coords="200,56,335,83"/>
+<area shape="rect" id="node4" href="$group__stencil__pattern.html" title="Interface for applyinng the Stencil pattern. " alt="" coords="214,107,321,133"/>
+<area shape="rect" id="node5" href="$group__reduce__pattern.html" title="Interface for applyinng the Reduce pattern. " alt="" coords="212,157,323,184"/>
+</map>

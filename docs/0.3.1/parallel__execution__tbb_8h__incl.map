@@ -1,0 +1,13 @@
+<map id="parallel_execution_tbb.h" name="parallel_execution_tbb.h">
+<area shape="rect" id="node2" href="$mpmc__queue_8h.html" title="../common/mpmc_queue.h" alt="" coords="166,102,343,129"/>
+<area shape="rect" id="node8" href="$iterator_8h.html" title="../common/iterator.h" alt="" coords="537,102,676,129"/>
+<area shape="rect" id="node11" href="$patterns_8h.html" title="../common/patterns.h" alt="" coords="1035,102,1181,129"/>
+<area shape="rect" id="node14" href="$farm__pattern_8h.html" title="farm_pattern.h" alt="" coords="1516,184,1623,211"/>
+<area shape="rect" id="node20" href="$execution__traits_8h.html" title="../common/execution\l_traits.h" alt="" coords="1683,95,1827,136"/>
+<area shape="rect" id="node13" href="$callable__traits_8h.html" title="callable_traits.h" alt="" coords="707,184,821,211"/>
+<area shape="rect" id="node15" href="$filter__pattern_8h.html" title="filter_pattern.h" alt="" coords="845,184,950,211"/>
+<area shape="rect" id="node16" href="$pipeline__pattern_8h.html" title="pipeline_pattern.h" alt="" coords="974,184,1098,211"/>
+<area shape="rect" id="node17" href="$reduce__pattern_8h.html" title="reduce_pattern.h" alt="" coords="1122,184,1241,211"/>
+<area shape="rect" id="node18" href="$iteration__pattern_8h.html" title="iteration_pattern.h" alt="" coords="1265,184,1391,211"/>
+<area shape="rect" id="node19" href="$common_2context_8h.html" title="context.h" alt="" coords="1415,184,1491,211"/>
+</map>
