@@ -33,11 +33,11 @@ using namespace grppi;
 template <typename T>
 class map_reduce_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int output;
+  int output{};
 
   // Vectors
   vector<int> v{};

@@ -36,13 +36,13 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class stream_reduce_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int out;
-  int window;
-  int offset;
+  int out{};
+  int window{};
+  int offset{};
 
   // Vectors
   vector<int> v{};

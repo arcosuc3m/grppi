@@ -52,7 +52,7 @@ number of the calling thread in the registry.
 */
 class thread_registry {
 public:
-  thread_registry() noexcept = default;
+  thread_registry() = default;
 
   /**
   \brief Adds the current thread id in the registry.
@@ -73,7 +73,7 @@ public:
 
 private:
   mutable std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
-  std::vector<std::thread::id> ids_;
+  std::vector<std::thread::id> ids_{};
 };
 
 inline void thread_registry::register_thread() noexcept 
@@ -610,7 +610,7 @@ private:
       std::index_sequence<I...>) const;
 
 private: 
-  mutable thread_registry thread_registry_;
+  mutable thread_registry thread_registry_{};
 
   int concurrency_degree_;
   bool ordering_;

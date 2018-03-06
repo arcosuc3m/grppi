@@ -37,11 +37,11 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class farm_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_}; 
 
   // Variables
-  std::atomic<int> output;
+  std::atomic<int> output{};
 
   // Vectors
   vector<int> v{};
