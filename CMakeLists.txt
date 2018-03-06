@@ -131,4 +131,3 @@ option( GRPPI_UNIT_TEST_ENABLE "Unit tests" ON )
 if( GRPPI_UNIT_TEST_ENABLE )
   add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
-

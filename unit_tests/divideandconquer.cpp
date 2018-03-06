@@ -52,22 +52,22 @@ public:
   auto run_simple(const E & e) {
     return grppi::divide_conquer(e, v,
       // Divide
-      [this](auto & v) { 
+      [this](auto &) {
         invocations_divide++; 
         return std::vector<std::vector<int> >{}; 
       },
       // Predicate
-      [this](auto & v) {
+      [this](auto &) {
         invocations_predicate++;
         return true;
       },
       // Solve base case
-      [this](auto problem) { 
+      [this](auto) {
         invocations_base++;
         return 0; 
       }, 
       // Combine
-      [this](auto out, auto partial) { 
+      [this](auto, auto) {
         invocations_merge++;
         return 0; 
       });

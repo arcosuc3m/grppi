@@ -574,7 +574,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_tbb::map_reduce(
     std::tuple<InputIterators...> firsts,
     std::size_t sequence_size,
-    Identity && identity,
+    Identity &&,
     Transformer && transform_op, Combiner && combine_op) const
 {
   constexpr sequential_execution seq;
@@ -595,9 +595,8 @@ auto parallel_execution_tbb::map_reduce(
   for(int i=0; i<concurrency_degree_-1;++i) {    
     const auto delta = chunk_size * i;
     const auto chunk_firsts = iterators_next(firsts,delta);
-    const auto chunk_last = std::next(std::get<0>(chunk_firsts), chunk_size);
 
-    g.run([&, chunk_firsts, chunk_last, i]() {
+    g.run([&, chunk_firsts, i]() {
       process_chunk(chunk_firsts, chunk_size, i);
     });
   }
@@ -927,7 +926,7 @@ template <typename Input, typename Predicate,
           template <typename> class Filter,
           requires_filter<Filter<Predicate>>>
 auto parallel_execution_tbb::make_filter(
-    Filter<Predicate> && farm_obj) const
+    Filter<Predicate> &&) const
 {
   using namespace std;
   using namespace experimental;
@@ -983,10 +982,9 @@ auto parallel_execution_tbb::make_filter(
   using input_value_type = Input;
   using input_type = optional<input_value_type>;
 
-  std::atomic<long int> order{0};
   return tbb::make_filter<input_type, input_type>(
       tbb::filter::serial,
-      [&, it=std::vector<input_value_type>(), rem=0](input_type item) -> input_type {
+      [&, it=std::vector<input_value_type>()](input_type item) -> input_type {
         if (!item) return {};
         reduce_obj.add_item(std::forward<Identity>(*item));
         if (reduce_obj.reduction_needed()) {
@@ -1035,8 +1033,8 @@ template <typename Input, typename Transformer, typename Predicate,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_pipeline<Transformer>>
 auto parallel_execution_tbb::make_filter(
-    Iteration<Transformer,Predicate> && iteration_obj,
-    OtherTransformers && ... other_transform_ops) const
+    Iteration<Transformer,Predicate> &&,
+    OtherTransformers && ...) const
 {
   static_assert(!is_pipeline<Transformer>, "Not implemented");
 }

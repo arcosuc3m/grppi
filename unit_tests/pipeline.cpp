@@ -191,7 +191,7 @@ public:
           invocations_intermediate++;
           return x*x;
         },
-        [this](int x) {
+        [](int x) {
           return x+1;
         }
       ),
@@ -208,7 +208,7 @@ public:
         invocations_intermediate++;
         return x*x;
       },
-      [this](int x) {
+      [](int x) {
         return x+1;
       });
 

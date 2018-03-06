@@ -118,7 +118,7 @@ public:
 
     grppi::stencil(ex, make_tuple(begin(v),begin(v2)), end(v), begin(w),
       // Stencil computes average of neighbours
-      [this](auto it, const auto & n) {
+      [this](auto, const auto & n) {
         invocations_operation++;
         return std::accumulate(begin(n),end(n),0);
       },
@@ -146,7 +146,7 @@ public:
 
     grppi::stencil(ex, make_tuple(begin(v),begin(v2)), v.size(), begin(w),
       // Stencil computes average of neighbours
-      [this](auto it, const auto & n) {
+      [this](auto, const auto & n) {
         invocations_operation++;
         return std::accumulate(begin(n), end(n), 0);
       },

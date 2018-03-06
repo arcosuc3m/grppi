@@ -42,7 +42,7 @@ void fibonacci(grppi::dynamic_execution & exec, int n) {
       return { x-1, x-2 };
     },
     [](int x) { return x<2; },
-    [](int x) { return 1; },
+    [](int) { return 1; },
     [](int s1, int s2) {
       return s1+s2;
     }

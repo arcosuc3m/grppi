@@ -37,7 +37,7 @@ public:
   /**
   \brief Construct a reduction pattern object.
   \param wsize Window size.
-  \param offset Offset betwee window starts.
+  \param offset Offset between window starts.
   \param Id Identity value.
   \param combine_op Combiner used for the reduction.
   */
@@ -62,10 +62,11 @@ public:
   }
 
   /**
+  \pre items.size() < static_cast<int>(std::numeric_limits<int>::max())
   \brief Check if a reduction can be performed.
   */
   bool reduction_needed() const {
-    return !items.empty() && (items.size() >= window_size_);
+    return !items.empty() && (static_cast<int>(items.size()) >= window_size_);
   }
 
   /**
@@ -104,7 +105,7 @@ public:
   }
   
   template<typename T>
-  auto operator()(T &&item){
+  auto operator()(T &&){
     return Identity{};
   }
 
