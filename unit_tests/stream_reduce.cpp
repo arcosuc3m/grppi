@@ -67,7 +67,6 @@ public:
     grppi::reduce(window, offset, 0,
       [](int x, int y) { return x+y; }),
     [this](int x) { 
-      std::cerr << "consuming " << x << "\n";
       invocations_reduce++;
       out += x;
     });
