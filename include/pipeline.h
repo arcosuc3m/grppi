@@ -47,13 +47,13 @@ namespace grppi {
 \param trasnform_ops Transformation operations for each stage.
 */
 template <typename Execution, typename Generator, typename ... Transformers,
-          requires_execution_supported<Execution> = 0>
+      requires_execution_supported<std::decay_t<Execution>> = 0>
 void pipeline(
     const Execution & ex, 
     Generator && generate_op, 
     Transformers && ... transform_ops) 
 {
-  static_assert(supports_pipeline<Execution>(),
+  static_assert(supports_pipeline<std::decay_t<Execution>>(),
       "pipeline pattern is not supported by execution type");
   ex.pipeline(std::forward<Generator>(generate_op),
       std::forward<Transformers>(transform_ops)...);
@@ -69,16 +69,15 @@ that can be composed in other streaming patterns.
 \param tranform_op First stage transformation operation
 \param more_trasnform_ops Transformation operations for each additional stage.
 */
-template <typename Generator, typename ... Transformers, typename Consumer>
+template <typename Transformer, typename ... Transformers,
+      requires_execution_not_supported<std::decay_t<Transformer>> = 0>
 auto pipeline(
-    Generator && generate_op,
-    Transformers && ... transform_ops,
-    Consumer && consume_op)
+    Transformer && transform_op,
+    Transformers && ... transform_ops)
 {
-    return pipeline_t<Generator,Transformers...,Consumer> (
-        std::forward<Generator>(generate_op),
-        std::forward<Transformers>(transform_ops)...,
-        std::forward<Consumer>(consume_op));
+    return pipeline_t<Transformer, Transformers...>(
+        std::forward<Transformer>(transform_op),
+        std::forward<Transformers>(transform_ops)...);
 }
 /**
 @}
