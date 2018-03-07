@@ -132,9 +132,7 @@ public:
       },
       grppi::pipeline(
         [this](int x) {
-          std::cerr << "squaring " << x << std::endl;
           invocations_intermediate++;
-          std::cerr << "Incrementing\n";
           return x*x;
         },
         [this](int x) {
