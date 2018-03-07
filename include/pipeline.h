@@ -47,7 +47,7 @@ namespace grppi {
 \param trasnform_ops Transformation operations for each stage.
 */
 template <typename Execution, typename Generator, typename ... Transformers,
-      requires_execution_supported<std::decay_t<Execution>> = 0>
+          requires_execution_supported<std::decay_t<Execution>> = 0>
 void pipeline(
     const Execution & ex, 
     Generator && generate_op, 
@@ -70,7 +70,7 @@ that can be composed in other streaming patterns.
 \param more_trasnform_ops Transformation operations for each additional stage.
 */
 template <typename Transformer, typename ... Transformers,
-      requires_execution_not_supported<std::decay_t<Transformer>> = 0>
+          requires_execution_not_supported<std::decay_t<Transformer>> = 0>
 auto pipeline(
     Transformer && transform_op,
     Transformers && ... transform_ops)
