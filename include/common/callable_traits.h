@@ -51,19 +51,19 @@ template <typename R, typename ... Args>
 struct callable_helper<R(*)(Args...)> : callable_helper<R(Args...)>
 {};
 
-// Callalble helper for pointer to const member function defers to callable helper
+// Callable helper for pointer to const member function defers to callable helper
 // for function type
 template <typename C, typename R, typename ... Args>
 struct callable_helper<R(C::*)(Args...) const> : callable_helper<R(Args...)>
 {};
 
-// Callalble helper for pointer to non-const member function defers to callable helper
+// Callable helper for pointer to non-const member function defers to callable helper
 // for function type
 template <typename C, typename R, typename ... Args>
 struct callable_helper<R(C::*)(Args...)> : callable_helper<R(Args...)>
 {};
 
-// Callable single interface defers to correspondign callable helper
+// Callable single interface defers to corresponding callable helper
 template <typename T>
 struct callable : callable_helper<T>
 {};

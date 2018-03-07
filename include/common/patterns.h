@@ -95,7 +95,7 @@ template <typename T>
 using requires_pattern = std::enable_if_t<is_pattern<T>, int>;
 
 /**
-\brief Determines the return type after appliying a list of 
+\brief Determines the return type after applying a list of
 transformers (stages) on a input type
 */
 template <typename return_type, typename ... Ts>
@@ -104,13 +104,13 @@ struct stage_return_type{
 };
 
 /**
-\brief Determines the return type of appliying a function on a input type.
+\brief Determines the return type of applying a function on a input type.
 */
 template <typename Input, typename Transformer>
 using result_type = typename std::result_of<Transformer(Input)>::type; 
 
 /**
-\brief Determines the return type of appliying a function on a input type.
+\brief Determines the return type of applying a function on a input type.
 */
 template <typename Input, typename Transformer>
 struct stage_return_type<Input, Transformer> {
@@ -118,7 +118,7 @@ struct stage_return_type<Input, Transformer> {
 };
 
 /**
-\brief Determines the return type of consecutively appliying a set of 
+\brief Determines the return type of consecutively applying a set of
 transformer functions on a input type.
 */
 template <typename Input, typename Transformer, typename ... Other>
