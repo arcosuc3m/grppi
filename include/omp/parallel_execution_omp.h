@@ -85,7 +85,7 @@ public:
   }
 
   /**
-  \brief Get number of grppi trheads.
+  \brief Get number of grppi threads.
   */
   int concurrency_degree() const noexcept { 
     return concurrency_degree_; 
@@ -163,7 +163,7 @@ public:
   }
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence using available OpenMP parallelism
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -295,7 +295,7 @@ public:
                 Transformers && ... transform_op) const;
   
   /**
-  \brief Invoke \ref md_pipeline comming from another context
+  \brief Invoke \ref md_pipeline coming from another context
   that uses mpmc_queues as communication channels.
   \tparam InputType Type of the input stream.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -515,7 +515,7 @@ private:
   /**
   \brief Obtain OpenMP platform number of threads.
   Queries the current OpenMP number of threads so that it can be used in
-  intialization of data members.
+  initialization of data members.
   \return The current OpenMP number of threads.
   \note The determination is performed inside a parallel region.
   */

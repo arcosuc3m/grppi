@@ -75,7 +75,7 @@ public:
   void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
 
   /**
-  \brief Get number of grppi trheads.
+  \brief Get number of grppi threads.
   */
   int concurrency_degree() const noexcept { return concurrency_degree_; }
 
@@ -119,7 +119,7 @@ public:
   int tokens() const noexcept { return num_tokens_; }
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence using available TBB parallelism.
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -177,7 +177,7 @@ public:
                   Transformer && transform_op, Combiner && combine_op) const;
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence.
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -250,7 +250,7 @@ public:
                 Transformers && ... transform_op) const;
 
   /**
-  \brief Invoke \ref md_pipeline comming from another context
+  \brief Invoke \ref md_pipeline coming from another context
   that uses mpmc_queues as communication channels.
   \tparam InputType Type of the input stream.
   \tparam Transformers Callable types for the transformers in the pipeline.

@@ -139,7 +139,7 @@ f(it1[i], it2[i], it3[i]);
 \tparam T Tuple type containing a tuple of iterators
 \param f Callable object to be invoked.
 \param t Tuple of iterators.
-\param i Integral index to apply to each interator.
+\param i Integral index to apply to each iterator.
 \post All iterators in t have been incremented
 \post `f` has been invoked with the contents of the iterator in the tuple.
 */
@@ -165,7 +165,7 @@ auto iterators_next_impl(T && t, int n, std::index_sequence<I...>) {
 
 /**
 \brief Computes next n steps from a tuple of iterators.
-\tparam T Tuple type cotaining a tuple of iterators.
+\tparam T Tuple type containing a tuple of iterators.
 \param t Tuple of iterators.
 \param n Number of steps to advance.
 \note This function is the equivalent to std::next for a tuple of iterators.

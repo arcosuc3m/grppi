@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
   int size = stoi(argv[1]);
   if (size<=0) {
-    print_message(argv[0], "Invalid squence size. Use a positive number.");
+    print_message(argv[0], "Invalid sequence size. Use a positive number.");
     return -1;
   }
 
