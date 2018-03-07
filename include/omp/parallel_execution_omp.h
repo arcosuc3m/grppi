@@ -1362,23 +1362,17 @@ void parallel_execution_omp::do_pipeline(
     for (;;) {
       auto item = input_queue.pop();
       if (!item.first) break;
-      //std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {
-        //std::cerr << "Sending to output"
-        //    << *new_item.first << " , " << new_item.second << ">\n";
         output_queue.push(new_item);
       }
       else {
-        //std::cerr << "Sending to input"
-        //    << *new_item.first << " , " << new_item.second << ">\n";
         input_queue.push(new_item);
       }
     }
     while (!input_queue.is_empty()) {
       auto item = input_queue.pop();
-      //std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {
