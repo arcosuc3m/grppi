@@ -211,9 +211,7 @@ public:
       grppi::run_with(this->seq_,
         grppi::pipeline(
           [this](int x) {
-            std::cerr << "squaring " << x << std::endl;
             invocations_intermediate++;
-            std::cerr << "Incrementing\n";
             return x*x;
           },
           [this](int x) {
@@ -240,9 +238,7 @@ public:
       grppi::run_with(this->thr_,
         grppi::pipeline(
           [this](int x) {
-            std::cerr << "squaring " << x << std::endl;
             invocations_intermediate++;
-            std::cerr << "Incrementing\n";
             return x*x;
           },
           [this](int x) {
@@ -270,9 +266,7 @@ public:
       grppi::run_with(this->omp_,
         grppi::pipeline(
           [this](int x) {
-            std::cerr << "squaring " << x << std::endl;
             invocations_intermediate++;
-            std::cerr << "Incrementing\n";
             return x*x;
           },
           [this](int x) {
@@ -301,9 +295,7 @@ public:
       grppi::run_with(this->tbb_,
         grppi::pipeline(
           [this](int x) {
-            std::cerr << "squaring " << x << std::endl;
             invocations_intermediate++;
-            std::cerr << "Incrementing\n";
             return x*x;
           },
           [this](int x) {
@@ -332,9 +324,7 @@ public:
       grppi::run_with(this->ff_,
         grppi::pipeline(
           [this](int x) {
-            std::cerr << "squaring " << x << std::endl;
             invocations_intermediate++;
-            std::cerr << "Incrementing\n";
             return x*x;
           },
           [this](int x) {

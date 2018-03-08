@@ -179,7 +179,7 @@ public:
   void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
 
   /**
-  \brief Get number of grppi trheads.
+  \brief Get number of grppi threads.
   */
   int concurrency_degree() const noexcept { return concurrency_degree_; }
 
@@ -259,7 +259,7 @@ public:
   }
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence by chunks according to concurrency degree.
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -392,7 +392,7 @@ public:
                 Transformers && ... transform_ops) const;
 
   /**
-  \brief Invoke \ref md_pipeline comming from another context
+  \brief Invoke \ref md_pipeline coming from another context
   that uses mpmc_queues as communication channels.
   \tparam InputType Type of the input stream.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -1024,25 +1024,21 @@ void parallel_execution_native::do_pipeline(
     else {
       elements.push_back(item);
     }
-    // TODO: Probably find_if() + erase 
-    for (auto it=elements.begin(); it!=elements.end(); it++) {
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
-      }
+    auto it = find_if(elements.begin(), elements.end(), 
+       [&](auto x) { return x.second== current; });
+    if(it != elements.end()){
+      consume_op(*it->first);
+      elements.erase(it);
+      current++;
     }
   }
   while (elements.size()>0) {
-    // TODO: Probably find_if() + erase
-    for (auto it = elements.begin(); it != elements.end(); it++) {
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
-      }
+    auto it = find_if(elements.begin(), elements.end(), 
+       [&](auto x) { return x.second== current; });
+    if(it != elements.end()){
+      consume_op(*it->first);
+      elements.erase(it);
+      current++;
     }
   }
 }
@@ -1264,32 +1260,28 @@ void parallel_execution_native::do_pipeline(
         else {
           elements.push_back(item);
         }
-        // TODO: Probably find_if() + erase 
-        for (auto it=elements.begin(); it<elements.end(); it++) {
-          if (it->second == current) {
-            if (it->first) {
-              output_queue.push(make_pair(it->first,order));
-              order++;
-            }
-            elements.erase(it);
-            current++;
-            break;
-          }
+        auto it = find_if(elements.begin(), elements.end(), 
+           [&](auto x) { return x.second== current; });
+        if(it != elements.end()){
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
+            order++;
+          }       
+          elements.erase(it);
+          current++;
         }
         item = filter_queue.pop();
       }
       while (elements.size()>0) {
-        // TODO: Probably find_if() + erase 
-        for (auto it=elements.begin(); it<elements.end(); it++) {
-          if (it->second == current) {
-            if(it->first) { 
-              output_queue.push(make_pair(it->first,order));
-              order++;
-            }
-            elements.erase(it);
-            current++;
-            break;
-          }
+        auto it = find_if(elements.begin(), elements.end(), 
+           [&](auto x) { return x.second== current; });
+        if(it != elements.end()){
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
+            order++;
+          }       
+          elements.erase(it);
+          current++;
         }
       }
       output_queue.push(item);

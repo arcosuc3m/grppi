@@ -85,7 +85,7 @@ public:
   }
 
   /**
-  \brief Get number of grppi trheads.
+  \brief Get number of grppi threads.
   */
   int concurrency_degree() const noexcept { 
     return concurrency_degree_; 
@@ -163,7 +163,7 @@ public:
   }
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence using available OpenMP parallelism
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -295,7 +295,7 @@ public:
                 Transformers && ... transform_op) const;
   
   /**
-  \brief Invoke \ref md_pipeline comming from another context
+  \brief Invoke \ref md_pipeline coming from another context
   that uses mpmc_queues as communication channels.
   \tparam InputType Type of the input stream.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -515,7 +515,7 @@ private:
   /**
   \brief Obtain OpenMP platform number of threads.
   Queries the current OpenMP number of threads so that it can be used in
-  intialization of data members.
+  initialization of data members.
   \return The current OpenMP number of threads.
   \note The determination is performed inside a parallel region.
   */
@@ -988,24 +988,22 @@ void parallel_execution_omp::do_pipeline(Queue & input_queue, Consumer && consum
     else {
       elements.push_back(item);
     }
-    for (auto it=elements.begin(); it!=elements.end(); it++) {
-      if (it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
-      }
+    auto it = find_if(elements.begin(), elements.end(),
+       [&](auto x) { return x.second== current; });
+    if(it != elements.end()){
+      consume_op(*it->first);
+      elements.erase(it);
+      current++;
     }
     item = input_queue.pop( );
   }
   while(elements.size()>0){
-    for(auto it = elements.begin(); it != elements.end(); it++){
-      if(it->second == current) {
-        consume_op(*it->first);
-        elements.erase(it);
-        current++;
-        break;
-      }
+    auto it = find_if(elements.begin(), elements.end(),
+       [&](auto x) { return x.second== current; });
+    if(it != elements.end()){
+      consume_op(*it->first);
+      elements.erase(it);
+      current++;
     }
   }
 }
@@ -1219,30 +1217,31 @@ void parallel_execution_omp::do_pipeline(
         else {
           elements.push_back(item);
         }
-        for (auto it=elements.begin(); it<elements.end(); it++) {
-          if ((*it).second==current) {
-            if((*it).first){
-              output_queue.push(make_pair((*it).first,order++));
-            }
-            elements.erase(it);
-            current++;
-            break;
+        auto it = find_if(elements.begin(), elements.end(),
+           [&](auto x) { return x.second== current; });
+        if(it != elements.end()){
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
+            order++;
           }
+          elements.erase(it);
+          current++;
         }
         item = filter_queue.pop();
       }
 
       while (elements.size()>0) {
-        for (auto it=elements.begin(); it<elements.end(); it++) {
-          if ((*it).second == current) {
-            if((*it).first) {
-              output_queue.push(make_pair((*it).first,order++));
-            }
-            elements.erase(it);
-            current++;
-            break;
+        auto it = find_if(elements.begin(), elements.end(),
+           [&](auto x) { return x.second== current; });
+        if(it != elements.end()){
+          if (it->first) {
+            output_queue.push(make_pair(it->first,order));
+            order++;
           }
+          elements.erase(it);
+          current++;
         }
+        item = filter_queue.pop();
       }
 
       output_queue.push(item);
@@ -1351,23 +1350,17 @@ void parallel_execution_omp::do_pipeline(
     for (;;) {
       auto item = input_queue.pop();
       if (!item.first) break;
-      std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {
-        std::cerr << "Sending to output"
-            << *new_item.first << " , " << new_item.second << ">\n";
         output_queue.push(new_item);
       }
       else {
-        std::cerr << "Sending to input"
-            << *new_item.first << " , " << new_item.second << ">\n";
         input_queue.push(new_item);
       }
     }
     while (!input_queue.is_empty()) {
       auto item = input_queue.pop();
-      std::cerr << "Processing: <" << *item.first << " , " << item.second << ">\n";
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {

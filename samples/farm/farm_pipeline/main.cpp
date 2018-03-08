@@ -25,7 +25,6 @@
 #include <string>
 #include <numeric>
 #include <stdexcept>
-#include <experimental/optional>
 
 // grppi
 #include "grppi.h"
@@ -33,21 +32,22 @@
 // Samples shared utilities
 #include "../../util/util.h"
 
-void test_map(grppi::dynamic_execution & e, int n, int window_size, int offset) {
+void test_pipeline(grppi::dynamic_execution & e, int n) {
   using namespace std;
   using namespace experimental;
 
-  int i = 0;
-  auto generator = [&i,n]() -> optional<int> {
-    if (i<n) return i++;
-    else     return {};
-  };
-
-  grppi::pipeline(e,
-    generator,
-    grppi::reduce(window_size, offset, 0,
-      [](int x, int y) { return x+y; }),
-    [](int x) { cout << x << endl; }
+  grppi::pipeline(e, 
+    [x=1,n]() mutable -> optional<double> { 
+      if (x<=n) return x++;
+      else return {}; 
+    },
+    grppi::farm(4,
+      grppi::pipeline(
+        [](double x) { return x*x; },
+        [](double x) { return 1/x; }
+      )
+    ),
+    [](double x) { cout << x << endl; }
   );
 }
 
@@ -55,10 +55,8 @@ void print_message(const std::string & prog, const std::string & msg) {
   using namespace std;
 
   cerr << msg << endl;
-  cerr << "Usage: " << prog << " size window_size offset mode" << endl;
-  cerr << "  size: Size of the initially generated sequence" << endl;
-  cerr << "  window_size: Integer value with window size" << endl;
-  cerr << "  offset: Integer value with offset" << endl;
+  cerr << "Usage: " << prog << " size mode" << endl;
+  cerr << "  size: Integer value with problem size" << endl;
   cerr << "  mode:" << endl;
   print_available_modes(cerr);
 }
@@ -68,30 +66,20 @@ int main(int argc, char **argv) {
     
   using namespace std;
 
-  if (argc < 5) {
+  print_message(argv[0], "Not implemented waiting for fix of issue #231");
+
+  if(argc < 3){
     print_message(argv[0], "Invalid number of arguments.");
     return -1;
   }
 
-  int size = stoi(argv[1]);
-  if (size<=0) {
-    print_message(argv[0], "Invalid sequence size. Use a positive number.");
+  int n = stoi(argv[1]);
+  if(n <= 0){
+    print_message(argv[0], "Invalid problem size. Use a positive number.");
     return -1;
   }
 
-  int window_size = stoi(argv[2]);
-  if (window_size<=0) {
-    print_message(argv[0], "Invalid window size. Use a positive number.");
-    return -1;
-  }
-
-  int offset = stoi(argv[3]);
-  if (offset<=0) {
-    print_message(argv[0], "Invalid offset. Use a positive number.");
-    return -1;
-  }
-
-  if (!run_test(argv[4], test_map, size, window_size, offset)) {
+  if (!run_test(argv[2], test_pipeline, n)) {
     print_message(argv[0], "Invalid policy.");
     return -1;
   }

@@ -66,7 +66,7 @@ private:
 };
 
 /**
- \brief Colletor node for a filter.
+ \brief Collector node for a filter.
  */
 template <typename Item>
 class filter_collector : public ff::ff_node_t<Item> {
