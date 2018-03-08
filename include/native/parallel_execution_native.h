@@ -25,6 +25,7 @@
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
+#include "../common/environment_variables.h"
 
 #include <thread>
 #include <atomic>
@@ -33,6 +34,9 @@
 #include <type_traits>
 #include <tuple>
 #include <experimental/optional>
+#include <sstream>
+#include <cstdlib>
+#include <cstring>
 
 namespace grppi {
 
@@ -151,9 +155,13 @@ public:
    degree.
   */
   parallel_execution_native() noexcept :
-      parallel_execution_native{
-          static_cast<int>(2 * std::thread::hardware_concurrency()), 
-          true}
+      parallel_execution_native{default_concurrency_degree,
+        default_ordering}
+  {}
+
+  parallel_execution_native(int concurrency_degree) noexcept :
+    concurrency_degree_{default_concurrency_degree},
+    ordering_{default_ordering}
   {}
 
   /** 
@@ -164,7 +172,7 @@ public:
   \param concurrency_degree Number of threads used for parallel algorithms.
   \param order Whether ordered executions is enabled or disabled.
   */
-  parallel_execution_native(int concurrency_degree, bool ordering=true) noexcept :
+  parallel_execution_native(int concurrency_degree, bool ordering) noexcept :
     concurrency_degree_{concurrency_degree},
     ordering_{ordering}
   {}
@@ -614,11 +622,10 @@ private:
 
   int concurrency_degree_;
   bool ordering_;
-
-  constexpr static int default_queue_size = 100;
+  
   int queue_size_ = default_queue_size;
 
-  queue_mode queue_mode_ = queue_mode::blocking;
+  queue_mode queue_mode_ = default_queue_mode;
 };
 
 /**

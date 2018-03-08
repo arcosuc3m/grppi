@@ -26,6 +26,7 @@
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
+#include "../common/environment_variables.h"
 #include "../seq/sequential_execution.h"
 
 #include <type_traits>
@@ -33,7 +34,6 @@
 #include <experimental/optional>
 
 #include <omp.h>
-
 
 namespace grppi {
 
@@ -54,8 +54,16 @@ public:
   rules.
   */
   parallel_execution_omp() noexcept :
-      parallel_execution_omp{impl_concurrency_degree()}
+      parallel_execution_omp{default_concurrency_degree, default_ordering}
   {}
+
+  parallel_execution_omp(int concurrency_degree) noexcept :
+      concurrency_degree_{concurrency_degree},
+      ordering_{default_ordering}
+  {
+    omp_set_num_threads(concurrency_degree_);
+  }
+
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
@@ -69,7 +77,7 @@ public:
   \param concurrency_degree Number of threads used for parallel algorithms.
   \param order Whether ordered executions is enabled or disabled.
   */
-  parallel_execution_omp(int concurrency_degree, bool order = true) noexcept :
+  parallel_execution_omp(int concurrency_degree, bool order) noexcept :
       concurrency_degree_{concurrency_degree},
       ordering_{order}
   {
@@ -534,10 +542,9 @@ private:
 
   bool ordering_;
 
-  constexpr static int default_queue_size = 100;
   int queue_size_ = default_queue_size;
 
-  queue_mode queue_mode_ = queue_mode::blocking;
+  queue_mode queue_mode_ = default_queue_mode;
 };
 
 /**
