@@ -52,7 +52,7 @@ See the [install and compile notes](doc/install-notes.md).
 
 Please cite this publication in any work using our library:
 
-* **A Generic Parallel Pattern Interface for Stream and Data Processing**. David del Rio, Manuel F. Dolz, Javier Fernández, J. Daniel García. *Concurrency and Computation: Practice and Experience*. ISSN: 1532-0634. DOI: [10.1002/cpe.4175](http://dx.doi.org/10.1002/cpe.4175).
+* **A Generic Parallel Pattern Interface for Stream and Data Processing**. David del Río, Manuel F. Dolz, Javier Fernández, J. Daniel García. *Concurrency and Computation: Practice and Experience*. ISSN: 1532-0634. DOI: [10.1002/cpe.4175](http://dx.doi.org/10.1002/cpe.4175).
 
 
 ### Other references
@@ -60,7 +60,7 @@ Please cite this publication in any work using our library:
 
 * **Parallelizing and optimizing LHCb-Kalman for Intel Xeon Phi KNL processors**. Plácido Fernández, David del Río, Manuel .F. Dolz, Javier Fernández, Omar Awile, J. Daniel Garcia *PDP 2018*
 
-* **Supporting Advanced Patterns in GrPPI: a Generic Parallel Pattern Interface**. David del Rio, Manuel F. Dolz, Javier Fernandez, and J. Daniel Garcia. *Auto-DaSP 2017 (Euro-Par 2017)*. Santiago de Compostela, Spain. 28/8-1/9/2017. pp. 55-67. DOI: [10.1007/978-3-319-75178-8_5](https://doi.org/10.1007/978-3-319-75178-8_5)
+* **Supporting Advanced Patterns in GrPPI: a Generic Parallel Pattern Interface**. David del Río, Manuel F. Dolz, Javier Fernández, and J. Daniel Garcia. *Auto-DaSP 2017 (Euro-Par 2017)*. Santiago de Compostela, Spain. 28/8-1/9/2017. pp. 55-67. DOI: [10.1007/978-3-319-75178-8_5](https://doi.org/10.1007/978-3-319-75178-8_5)
 
 * **Finding parallel patterns through static analysis in C++ applications**. David del Río, Manuel F. Dolz, Luís M. Sanchez, J. Daniel Garcia, Marco Danelutto, and Massimo Torquati. *International Journal of High Performance Computing Applications*. 2017. DOI: [10.1177/1094342017695639](https://doi.org/10.1177/1094342017695639)
 
