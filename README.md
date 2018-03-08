@@ -52,16 +52,23 @@ See the [install and compile notes](doc/install-notes.md).
 
 Please cite this publication in any work using our library:
 
-* **A Generic Parallel Pattern Interface for Stream and Data Processing**. David del Rio, Manuel F. Dolz, Javier Fernández, J. Daniel García. *Concurrency and Computation: Practice and Experience*. ISSN: 1532-0634. DOI: [10.1002/cpe.4175](http://dx.doi.org/10.1002/cpe.4175).
+* **A Generic Parallel Pattern Interface for Stream and Data Processing**. David del Río, Manuel F. Dolz, Javier Fernández, J. Daniel García. *Concurrency and Computation: Practice and Experience*. ISSN: 1532-0634. DOI: [10.1002/cpe.4175](http://dx.doi.org/10.1002/cpe.4175).
 
 
 ### Other references
 
-* **A C++ Generic Parallel Pattern Interface for Stream Processing**. David Del Río Astorga, Manuel F. Dolz, Luis Miguel Sanchez, Javier Garcia Blas and J. Daniel Garcia. *16th International Conference on Algorithms and Architectures for Parallel Processing (ICA3PP)*. Granada, Spain. 14-16/12/2016. pp. 74-84. DOI: [10.1007/978-3-319-49583-5_5](http://dx.doi.org/10.1007/978-3-319-49583-5_5)
 
+* **Parallelizing and optimizing LHCb-Kalman for Intel Xeon Phi KNL processors**. Plácido Fernández, David del Río, Manuel .F. Dolz, Javier Fernández, Omar Awile, J. Daniel Garcia *PDP 2018*
+
+* **Supporting Advanced Patterns in GrPPI: a Generic Parallel Pattern Interface**. David del Río, Manuel F. Dolz, Javier Fernández, and J. Daniel Garcia. *Auto-DaSP 2017 (Euro-Par 2017)*. Santiago de Compostela, Spain. 28/8-1/9/2017. pp. 55-67. DOI: [10.1007/978-3-319-75178-8_5](https://doi.org/10.1007/978-3-319-75178-8_5)
+
+* **Finding parallel patterns through static analysis in C++ applications**. David del Río, Manuel F. Dolz, Luís M. Sanchez, J. Daniel Garcia, Marco Danelutto, and Massimo Torquati. *International Journal of High Performance Computing Applications*. 2017. DOI: [10.1177/1094342017695639](https://doi.org/10.1177/1094342017695639)
+
+* **A C++ Generic Parallel Pattern Interface for Stream Processing**. David Del Río, Manuel F. Dolz, Luis Miguel Sanchez, Javier Garcia Blas and J. Daniel Garcia. *16th International Conference on Algorithms and Architectures for Parallel Processing (ICA3PP)*. Granada, Spain. 14-16/12/2016. pp. 74-84. DOI: [10.1007/978-3-319-49583-5_5](http://dx.doi.org/10.1007/978-3-319-49583-5_5)
 ### Acknowledgments
 
 The **GrPPI** library has been partially supported by:
 
-* Project ICT 644235 *"REPHRASE: REfactoring Parallel Heterogeneous Resource-aware Applications"* funded by the European Commission through H2020 program (2015-2018).
-* Project TIN2016-79673-P *“Towards Unification of HPC and Big Data Paradigms”* funded by the Spanish Ministry of Economy and Competitiveness (2016-2019).
+* Project ICT 644235 **"REPHRASE: REfactoring Parallel Heterogeneous Resource-aware Applications"** funded by the European Commission through H2020 program (2015-2018).
+
+* Project TIN2016-79673-P **“Towards Unification of HPC and Big Data Paradigms”** funded by the Spanish Ministry of Economy and Competitiveness (2016-2019).
