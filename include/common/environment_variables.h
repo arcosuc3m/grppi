@@ -1,10 +1,13 @@
 #ifndef COMMON_ENVIRONMENT_VARIABLES
 #define COMMON_ENVIRONMENT_VARIABLES
 
+#include "mpmc_queue.h"
+
 #include <sstream>
 #include <thread>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 namespace grppi
 {
@@ -50,6 +53,16 @@ namespace grppi
        }
        return queue_mode::blocking;
      }();
+
+  std::string default_dynamic_execution =
+    []() -> std::string{
+      if(const char* env_value = std::getenv("GRPPI_DYN_EXECUTION"))
+       {
+         return {env_value};
+       }
+       return {"seq"};
+    }();
+
 
 }
 

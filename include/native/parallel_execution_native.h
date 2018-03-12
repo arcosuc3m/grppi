@@ -157,7 +157,7 @@ public:
   parallel_execution_native() noexcept :
       parallel_execution_native{default_concurrency_degree,
         default_ordering}
-  {}
+  { }
 
   parallel_execution_native(int concurrency_degree) noexcept :
     concurrency_degree_{default_concurrency_degree},
