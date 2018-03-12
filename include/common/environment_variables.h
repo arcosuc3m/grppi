@@ -12,6 +12,8 @@
 namespace grppi
 {
 
+namespace{
+
   int default_concurrency_degree =
       [](){
         if(const char* env_value = std::getenv("GRPPI_NUM_THREADS"))
@@ -63,7 +65,7 @@ namespace grppi
        return {"seq"};
     }();
 
-
+}
 }
 
 #endif
