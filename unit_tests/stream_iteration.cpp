@@ -36,13 +36,13 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class stream_iteration_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int out;
-  int count;
-  int n;
+  int out{};
+  int count{};
+  int n{};
 
   // Invocation counter
   std::atomic<int> invocations_gen{0};

@@ -38,7 +38,10 @@ class worker_pool {
     \brief Creates a worker pool with a number of threads.
     \param num_threads Number of threads for the pool.
     */
-    worker_pool(int num_threads) noexcept : num_threads_{num_threads} {}
+    worker_pool(int num_threads) noexcept : 
+        num_threads_{num_threads},
+        workers_{}
+    {}
 
     /**
     \brief Destructs the worker pool after joining with all threads in the 

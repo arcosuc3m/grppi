@@ -33,11 +33,11 @@ using namespace grppi;
 template <typename T>
 class divideconquer_legacy_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   grppi::dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int out;
+  int out{};
 
   // Vectors
   vector<int> v{};

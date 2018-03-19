@@ -36,7 +36,7 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class stream_filter_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Vectors

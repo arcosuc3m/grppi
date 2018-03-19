@@ -330,7 +330,7 @@ private:
   {
     do_pipeline(std::forward<Item>(item), std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
     
 
   template <typename Item, typename Combiner, typename Identity,

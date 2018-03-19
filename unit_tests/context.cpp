@@ -37,22 +37,22 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class context_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
-  sequential_execution seq_;
-  parallel_execution_native thr_;
+  sequential_execution seq_{};
+  parallel_execution_native thr_{};
 #ifdef GRPPI_OMP
-  parallel_execution_omp omp_;
+  parallel_execution_omp omp_{};
 #endif
 #ifdef GRPPI_TBB
-  parallel_execution_tbb tbb_;
+  parallel_execution_tbb tbb_{};
 #endif
 #ifdef GRPPI_FF
-  parallel_execution_ff ff_;
+  parallel_execution_ff ff_{};
 #endif
   // Variables
-  int out;
-  int counter;
+  int out{};
+  int counter{};
 
   // Vectors
   vector<int> v{};

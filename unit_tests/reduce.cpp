@@ -32,11 +32,11 @@ using namespace grppi;
 template <typename T>
 class reduce_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int out;
+  int out{};
 
   // Vectors
   vector<int> v{};

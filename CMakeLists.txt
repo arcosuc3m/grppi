@@ -13,6 +13,8 @@ message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
 set(CMAKE_CXX_STANDARD 14)
 
+add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra -Weffc++)
+
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
   if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
@@ -27,6 +29,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         " not supported. Upgrade to 6.0 or above.")
   else()
     message( STATUS "C++ Compiler is GNU")
+    if (${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 7.0)
+      #g++ 7 warns in non C++17 for over-aligned new otherwise
+      add_compile_options(-faligned-new)
+    endif()
   endif()
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
   message(FATAL_ERROR "Intel compiler is not currently supported")   

@@ -34,7 +34,7 @@ using namespace grppi;
 template <typename T>
 class stencil_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Vectors

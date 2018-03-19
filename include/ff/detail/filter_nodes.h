@@ -35,7 +35,8 @@ namespace detail_ff {
  */
 template <typename T>
 constexpr T * filtered_value() { 
-  static_assert(sizeof(std::size_t) == sizeof(std::uintptr_t));
+  static_assert(sizeof(std::size_t) == sizeof(std::uintptr_t),
+     "std::size_t and pointers have different sizes");
   return reinterpret_cast<T*>(std::size_t(ff::FF_EOS - 0x11));
 }
 

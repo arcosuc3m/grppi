@@ -402,7 +402,7 @@ private:
   {
     return this->template make_filter<Input>(std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
 
   template <typename Input, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
@@ -620,9 +620,9 @@ void parallel_execution_tbb::stencil(
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
-  constexpr sequential_execution seq{};
   const auto chunk_size = sequence_size / concurrency_degree_;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t delta) {
+    constexpr sequential_execution seq{};
     seq.stencil(f, std::next(first_out,delta), sz,
       std::forward<StencilTransformer>(transform_op),
       std::forward<Neighbourhood>(neighbour_op));
