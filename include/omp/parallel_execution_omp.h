@@ -53,13 +53,10 @@ public:
   The concurrency degree is determined by the platform according to OpenMP 
   rules.
   */
-  parallel_execution_omp() noexcept :
-      parallel_execution_omp{default_concurrency_degree, default_ordering}
-  {}
+  parallel_execution_omp() noexcept{};
 
   parallel_execution_omp(int concurrency_degree) noexcept :
-      concurrency_degree_{concurrency_degree},
-      ordering_{default_ordering}
+      concurrency_degree_{concurrency_degree}
   {
     omp_set_num_threads(concurrency_degree_);
   }
@@ -538,13 +535,15 @@ private:
 
 private:
 
-  int concurrency_degree_;
+  environment_variables env; 
 
-  bool ordering_;
+  int concurrency_degree_= env.default_concurrency_degree;
 
-  int queue_size_ = default_queue_size;
+  bool ordering_ = env.default_ordering;
 
-  queue_mode queue_mode_ = default_queue_mode;
+  int queue_size_ = env.default_queue_size;
+
+  queue_mode queue_mode_ = env.default_queue_mode;
 };
 
 /**

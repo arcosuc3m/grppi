@@ -5,22 +5,19 @@
 
 #include <sstream>
 #include <thread>
-#include <cstdlib>
 #include <cstring>
 #include <string>
 
 namespace grppi
 {
 
-namespace{
-
+class environment_variables{
+ public:
   int default_concurrency_degree =
       [](){
         if(const char* env_value = std::getenv("GRPPI_NUM_THREADS"))
         {
-           std::istringstream env_string(env_value);
-           int value;
-           env_string >> value;
+           int value = std::stoi(env_value);
            return value;
         }
          return static_cast<int>(std::thread::hardware_concurrency());
@@ -39,9 +36,7 @@ namespace{
     [](){
       if(const char* env_value = std::getenv("GRPPI_QUEUE_SIZE"))
         {
-           std::istringstream env_string(env_value);
-           int value;
-           env_string >> value;
+           int value = std::stoi(env_value);
            return value;
         }
         return 100;
@@ -65,7 +60,7 @@ namespace{
        return {"seq"};
     }();
 
-}
+};
 }
 
 #endif

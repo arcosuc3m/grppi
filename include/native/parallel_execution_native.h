@@ -154,14 +154,11 @@ public:
   \note The concurrency degree is fixed to 2 times the hardware concurrency
    degree.
   */
-  parallel_execution_native() noexcept :
-      parallel_execution_native{default_concurrency_degree,
-        default_ordering}
-  { }
+  parallel_execution_native() noexcept 
+  {}
 
   parallel_execution_native(int concurrency_degree) noexcept :
-    concurrency_degree_{default_concurrency_degree},
-    ordering_{default_ordering}
+    concurrency_degree_{concurrency_degree}
   {}
 
   /** 
@@ -619,13 +616,15 @@ private:
 
 private: 
   mutable thread_registry thread_registry_;
-
-  int concurrency_degree_;
-  bool ordering_;
   
-  int queue_size_ = default_queue_size;
+  environment_variables env;
 
-  queue_mode queue_mode_ = default_queue_mode;
+  int concurrency_degree_ = env.default_concurrency_degree;
+  bool ordering_ = env.default_ordering;
+  
+  int queue_size_ = env.default_queue_size;
+
+  queue_mode queue_mode_ = env.default_queue_mode;
 };
 
 /**

@@ -37,10 +37,10 @@ public:
 
   dynamic_execution() noexcept 
   {
-    if(default_dynamic_execution == "thr") execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
-    else if(default_dynamic_execution == "omp") execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
-    else if(default_dynamic_execution == "tbb") execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
-    else if(default_dynamic_execution == "ff") execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
+    if(env.default_dynamic_execution == "native") execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
+    else if(env.default_dynamic_execution == "omp") execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
+    else if(env.default_dynamic_execution == "tbb") execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
+    else if(env.default_dynamic_execution == "ff") execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
     else execution_ = std::make_unique<execution<sequential_execution>>(sequential_execution{});
   }
 
@@ -185,7 +185,9 @@ public:
           Transformers && ... transform_ops) const;
 
 private:
-
+ 
+  environment_variables env;
+  
   class execution_base {
   public:
     virtual ~execution_base() {};
