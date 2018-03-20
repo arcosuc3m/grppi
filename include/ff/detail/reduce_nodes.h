@@ -66,10 +66,10 @@ void * reduce_emitter<Item,Reducer>::svc(void * p_value)
 {
   Item * p_item = static_cast<Item*>(p_value);
 
-  if(items_.size() != window_size_)
+  if(static_cast<int>(items_.size()) != window_size_)
     items_.push_back(*p_item);
 
-  if(items_.size() == window_size_) {
+  if(static_cast<int>(items_.size()) == window_size_) {
     if(offset_ > window_size_) {
       advance_large_offset(p_item);
     }

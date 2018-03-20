@@ -52,7 +52,7 @@ public:
   constexpr void set_concurrency_degree(int) const noexcept {}
 
   /**
-  \brief Get number of grppi trheads.
+  \brief Get number of grppi threads.
   \note Getting concurrency degree is always 1 for sequential execution.
   */
   constexpr int concurrency_degree() const noexcept { return 1; }
@@ -76,7 +76,7 @@ public:
   constexpr bool is_ordered() const noexcept { return true; }
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence.
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -210,7 +210,7 @@ public:
                 Transformers && ... transform_op) const;
 
     /**
-  \brief Invoke \ref md_pipeline comming from another context
+  \brief Invoke \ref md_pipeline coming from another context
   that uses mpmc_queues as communication channels.
   \tparam InputType Type of the input stream.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -330,7 +330,7 @@ private:
   {
     do_pipeline(std::forward<Item>(item), std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
     
 
   template <typename Item, typename Combiner, typename Identity,
@@ -594,7 +594,7 @@ void sequential_execution::do_pipeline(
     OtherTransformers && ... other_ops) const
 {
   static_assert(!is_consumer<Transformer,Item>,
-    "Itermediate pipeline stage cannot be a consumer");
+    "Intermediate pipeline stage cannot be a consumer");
 
   do_pipeline(transform_op(std::forward<Item>(item)), 
       std::forward<OtherTransformers>(other_ops)...);
@@ -620,7 +620,7 @@ void sequential_execution::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   static_assert(!is_consumer<Farm<FarmTransformer>,Item>,
-    "Itermediate pipeline stage cannot be a consumer");
+    "Intermediate pipeline stage cannot be a consumer");
   do_pipeline(farm_obj(std::forward<Item>(item)), 
       std::forward<OtherTransformers>(other_transform_ops)...);
 }

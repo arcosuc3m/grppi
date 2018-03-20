@@ -35,8 +35,12 @@
 #include "../../util/util.h"
 
 struct range {
-  std::vector<int>::iterator first, last;
+  using iterator = std::vector<int>::iterator;
+  iterator first, last;
   
+  range() : first{}, last{} {}
+  range(iterator f, iterator l) : first{f}, last{l} {}
+
   auto size() const { return distance(first,last); }
   friend std::ostream & operator<<(std::ostream & os, const range & r);
 };

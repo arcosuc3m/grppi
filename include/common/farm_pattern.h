@@ -60,7 +60,7 @@ public:
     return transformer_;
   }
   /**
-  \brief Invokes the trasnformer of the farm over a data item.
+  \brief Invokes the transformer of the farm over a data item.
   */
   template <typename I>
   auto operator()(I && item) const {

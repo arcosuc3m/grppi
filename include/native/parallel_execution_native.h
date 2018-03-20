@@ -56,7 +56,7 @@ number of the calling thread in the registry.
 */
 class thread_registry {
 public:
-  thread_registry() noexcept = default;
+  thread_registry() = default;
 
   /**
   \brief Adds the current thread id in the registry.
@@ -77,7 +77,7 @@ public:
 
 private:
   mutable std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
-  std::vector<std::thread::id> ids_;
+  std::vector<std::thread::id> ids_{};
 };
 
 inline void thread_registry::register_thread() noexcept 
@@ -108,7 +108,7 @@ inline int thread_registry::current_index() const noexcept
   auto index = distance(begin(ids_), current);
   lock_.clear(memory_order_release);
   return index;
-};
+}
 
 /**
 \brief RAII class to manage registration/deregistration pairs.
@@ -184,7 +184,7 @@ public:
   void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
 
   /**
-  \brief Get number of grppi trheads.
+  \brief Get number of grppi threads.
   */
   int concurrency_degree() const noexcept { return concurrency_degree_; }
 
@@ -264,7 +264,7 @@ public:
   }
 
   /**
-  \brief Applies a trasnformation to multiple sequences leaving the result in
+  \brief Applies a transformation to multiple sequences leaving the result in
   another sequence by chunks according to concurrency degree.
   \tparam InputIterators Iterator types for input sequences.
   \tparam OutputIterator Iterator type for the output sequence.
@@ -397,7 +397,7 @@ public:
                 Transformers && ... transform_ops) const;
 
   /**
-  \brief Invoke \ref md_pipeline comming from another context
+  \brief Invoke \ref md_pipeline coming from another context
   that uses mpmc_queues as communication channels.
   \tparam InputType Type of the input stream.
   \tparam Transformers Callable types for the transformers in the pipeline.
@@ -534,7 +534,7 @@ private:
   {
     do_pipeline(input_queue, std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
-  };
+  }
 
   template <typename Queue, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
@@ -615,7 +615,8 @@ private:
       std::index_sequence<I...>) const;
 
 private: 
-  mutable thread_registry thread_registry_;
+
+  mutable thread_registry thread_registry_{};
   
   environment_variables env;
 

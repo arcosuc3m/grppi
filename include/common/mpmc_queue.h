@@ -40,8 +40,15 @@ class mpmc_queue{
    public:
       using value_type = T;
 
-      mpmc_queue<T>(int q_size, queue_mode q_mode ):
-           size{q_size}, buffer{std::vector<T>(q_size)}, mode{q_mode}, pread{0}, pwrite{0}, internal_pread{0}, internal_pwrite{0} { }
+      mpmc_queue<T>(int q_size, queue_mode q_mode ) :
+          size{q_size}, 
+          buffer{std::vector<T>(q_size)}, 
+          mode{q_mode}, 
+          pread{0}, 
+          pwrite{0}, 
+          internal_pread{0}, 
+          internal_pwrite{0} 
+      {}
       
       mpmc_queue(mpmc_queue && q) :
         size{q.size},
@@ -77,9 +84,9 @@ class mpmc_queue{
       std::atomic<unsigned long long> internal_pwrite;
 
 
-      std::mutex m;
-      std::condition_variable empty;
-      std::condition_variable full;
+      std::mutex m {};
+      std::condition_variable empty{};
+      std::condition_variable full{};
 
 };
 

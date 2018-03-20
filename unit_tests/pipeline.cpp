@@ -37,12 +37,12 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class pipeline_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int out;
-  int counter;
+  int out{};
+  int counter{};
 
   // Vectors
   vector<int> v{};
@@ -132,9 +132,7 @@ public:
       },
       grppi::pipeline(
         [this](int x) {
-          std::cerr << "squaring " << x << std::endl;
           invocations_intermediate++;
-          std::cerr << "Incrementing\n";
           return x*x;
         },
         [this](int x) {

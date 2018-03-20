@@ -34,7 +34,7 @@ using namespace grppi;
 template <typename T>
 class stencil_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Vectors
@@ -122,7 +122,7 @@ public:
         invocations_operation++;
         return std::accumulate(begin(n),end(n),0);
       },
-      // Neighbours are i-2, i-1, i+1, i+2 of currrent position
+      // Neighbours are i-2, i-1, i+1, i+2 of current position
       [&,this](auto it, auto it2) {
         invocations_neighbour++;
         auto r1 = vec_surronding(begin(v), end(v), it);
@@ -150,7 +150,7 @@ public:
         invocations_operation++;
         return std::accumulate(begin(n), end(n), 0);
       },
-      // Neighbours are i-2, i-1, i+1, i+2 of currrent position
+      // Neighbours are i-2, i-1, i+1, i+2 of current position
       [&,this](auto it, auto it2) {
         invocations_neighbour++;
         auto r1 = vec_surronding(begin(v), end(v), it);

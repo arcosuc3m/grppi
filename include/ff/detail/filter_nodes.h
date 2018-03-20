@@ -35,7 +35,8 @@ namespace detail_ff {
  */
 template <typename T>
 constexpr T * filtered_value() { 
-  static_assert(sizeof(std::size_t) == sizeof(std::uintptr_t));
+  static_assert(sizeof(std::size_t) == sizeof(std::uintptr_t),
+     "std::size_t and pointers have different sizes");
   return reinterpret_cast<T*>(std::size_t(ff::FF_EOS - 0x11));
 }
 
@@ -65,7 +66,7 @@ private:
 };
 
 /**
- \brief Colletor node for a filter.
+ \brief Collector node for a filter.
  */
 template <typename Item>
 class filter_collector : public ff::ff_node_t<Item> {

@@ -36,13 +36,13 @@ using optional = std::experimental::optional<T>;
 template <typename T>
 class stream_reduce_test : public ::testing::Test {
 public:
-  T execution_;
+  T execution_{};
   dynamic_execution dyn_execution_{execution_};
 
   // Variables
-  int out;
-  int window;
-  int offset;
+  int out{};
+  int window{};
+  int offset{};
 
   // Vectors
   vector<int> v{};
@@ -67,7 +67,6 @@ public:
     grppi::reduce(window, offset, 0,
       [](int x, int y) { return x+y; }),
     [this](int x) { 
-      std::cerr << "consuming " << x << "\n";
       invocations_reduce++;
       out += x;
     });
