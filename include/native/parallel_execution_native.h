@@ -154,7 +154,7 @@ public:
   \note The concurrency degree is fixed to 2 times the hardware concurrency
    degree.
   */
-  parallel_execution_native() noexcept 
+  parallel_execution_native() noexcept  
   {}
 
   parallel_execution_native(int concurrency_degree) noexcept :
@@ -618,7 +618,7 @@ private:
 
   mutable thread_registry thread_registry_{};
   
-  environment_variables env;
+  environment_variables env{};
 
   int concurrency_degree_ = env.default_concurrency_degree;
   bool ordering_ = env.default_ordering;

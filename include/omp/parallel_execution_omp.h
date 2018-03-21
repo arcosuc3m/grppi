@@ -535,7 +535,7 @@ private:
 
 private:
 
-  environment_variables env; 
+  environment_variables env{}; 
 
   int concurrency_degree_= env.default_concurrency_degree;
 

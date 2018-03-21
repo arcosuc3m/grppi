@@ -35,8 +35,9 @@ namespace grppi{
 class dynamic_execution {
 public:
 
-  dynamic_execution() noexcept 
+  dynamic_execution() noexcept : execution_{} 
   {
+    environment_variables env;
     if(env.default_dynamic_execution == "native") execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
     else if(env.default_dynamic_execution == "omp") execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
     else if(env.default_dynamic_execution == "tbb") execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
@@ -185,8 +186,6 @@ public:
           Transformers && ... transform_ops) const;
 
 private:
- 
-  environment_variables env;
   
   class execution_base {
   public:
