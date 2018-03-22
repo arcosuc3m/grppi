@@ -66,13 +66,17 @@ public:
   */
   parallel_execution_tbb(int concurrency_degree, bool order = true) noexcept :
       concurrency_degree_{concurrency_degree},
-      ordering_{order}
+      ordering_{order},
+      num_tokens_{4 * concurrency_degree_}
   {}
 
   /**
   \brief Set number of grppi threads.
   */
-  void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
+  void set_concurrency_degree(int degree) noexcept { 
+    concurrency_degree_ = degree; 
+    num_tokens_ = 4 * concurrency_degree_;
+  }
 
   /**
   \brief Get number of grppi threads.
@@ -472,10 +476,9 @@ private:
   constexpr static int default_queue_size = 100;
   int queue_size_ = default_queue_size;
 
-  constexpr static int default_num_tokens_ = 100;
-  int num_tokens_ = default_num_tokens_;
-
   queue_mode queue_mode_ = queue_mode::blocking;
+
+  int num_tokens_;
 };
 
 /**
