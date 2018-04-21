@@ -59,8 +59,8 @@ auto reduce(const Execution & ex,
 {
   static_assert(supports_reduce<Execution>(),
                 "reduce not supported on execution type");
-  static_assert(std::is_same<Result,typename std::result_of<Combiner(Result,Result)>::type>::value,
-                "reduce combiner should be homogeneous:T = op(T,T)");
+//  static_assert(std::is_same<Result,typename std::result_of<Combiner(Result,Result)>::type>::value,
+//                "reduce combiner should be homogeneous:T = op(T,T)");
   return ex.reduce(first, size,
                    std::forward<Result>(identity), std::forward<Combiner>(combine_op));
 }
@@ -88,8 +88,8 @@ auto reduce(const Execution & ex,
 {
   static_assert(supports_reduce<Execution>(),
       "reduce not supported on execution type");
-  static_assert(std::is_same<Result,typename std::result_of<Combiner(Result,Result)>::type>::value,
-                "reduce combiner should be homogeneous:T = op(T,T)");
+//  static_assert(std::is_same<Result,typename std::result_of<Combiner(Result,Result)>::type>::value,
+//                "reduce combiner should be homogeneous:T = op(T,T)");
   return ex.reduce(first, std::distance(first,last), 
       std::forward<Result>(identity), std::forward<Combiner>(combine_op));
 }

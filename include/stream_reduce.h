@@ -50,8 +50,8 @@ auto reduce(int window_size, int offset,
                    Identity identity, 
                    Combiner && combine_op)
 {
-  static_assert(std::is_same<Identity,typename std::result_of<Combiner(Identity,Identity)>::type>::value,
-                "reduce combiner should be homogeneous:T = op(T,T)");
+//  static_assert(std::is_same<Identity,typename std::result_of<Combiner(Identity,Identity)>::type>::value,
+//                "reduce combiner should be homogeneous:T = op(T,T)");
   return reduce_t<Combiner,Identity>(
        window_size, offset, identity, 
        std::forward<Combiner>(combine_op));
