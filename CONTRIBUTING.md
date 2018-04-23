@@ -6,6 +6,12 @@ Thank you for considering contributing to **GrPPI**. Our aim is to make
 **GrPPI** useful for the software community at large.  Any kind of contribution
 is highly appreciated.
 
+## Lincesing your contribution
+
+By submitting a pull request, you represent that you have the right to license your contribution 
+to University Carlos III of Madrid and the community, and agree by submitting the patch that 
+your contributions are licensed under the [GrPPI License](LICENSE.TXT).
+
 ## Why should you read this guideline?
 
 Following this guideline will help you to keep contact with **GrPPI** team.
