@@ -1,4 +1,4 @@
-GrPPI v1.0
+GrPPI v0.4
 Copyright 2018 and onwards Universidad Carlos III de Madrid. All rights reserved.
 
 This product includes software developed at
@@ -29,21 +29,3 @@ Past contributors:
 ------------------
 Adrian GALLEGO
 Andres SANCHEZ
-
-
-GrPPI v1.0 includes or is derivative of works distributed under the licenses listed below.
-The full text for most of the licenses listed below can be found in the LICENSES.txt file.
-The original copyright notices have been preserved within the respective files and or
-packages. Please refer to the specific files and/or packages for more detailed information
-about the authors, copyright notices, and licenses.
----------------------------------------------------------------------------------------------
-
-Intel (R) Threading Building Blocks
-Author:		Intel Corporation
-Copyright:	Copyright (C) 2005-2017 Intel Corporation. All rights reserved
-License:	Apache License, Version 2.0
-
-FastFlow
-Author:		Massimo Torquati and Marco Aldinucci
-Copyright:	Massimo Torquati and Marco Aldinucci
-License:	GNU Lesser General Public License, Version 3
