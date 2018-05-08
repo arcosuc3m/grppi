@@ -26,7 +26,7 @@
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
 #include "../ff/parallel_execution_ff.h"
-#include "../common/environment_variables.h"
+#include "../common/configuration.h"
 
 #include <memory>
 
@@ -37,11 +37,11 @@ public:
 
   dynamic_execution() noexcept : execution_{} 
   {
-    environment_variables env;
-    if(env.default_dynamic_execution == "native") execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
-    else if(env.default_dynamic_execution == "omp") execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
-    else if(env.default_dynamic_execution == "tbb") execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
-    else if(env.default_dynamic_execution == "ff") execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
+    configuration config;
+    if(config.default_dynamic_execution == "native") execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
+    else if(config.default_dynamic_execution == "omp") execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
+    else if(config.default_dynamic_execution == "tbb") execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
+    else if(config.default_dynamic_execution == "ff") execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
     else execution_ = std::make_unique<execution<sequential_execution>>(sequential_execution{});
   }
 

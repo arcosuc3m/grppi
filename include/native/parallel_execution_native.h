@@ -25,7 +25,7 @@
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
-#include "../common/environment_variables.h"
+#include "../common/configuration.h"
 
 #include <thread>
 #include <atomic>
@@ -618,14 +618,15 @@ private:
 
   mutable thread_registry thread_registry_{};
   
-  environment_variables env{};
+  configuration config_{};
 
-  int concurrency_degree_ = env.default_concurrency_degree;
-  bool ordering_ = env.default_ordering;
+  int concurrency_degree_ = config_.default_concurrency_degree;
   
-  int queue_size_ = env.default_queue_size;
+  bool ordering_ = config_.default_ordering;
+  
+  int queue_size_ = config_.default_queue_size;
 
-  queue_mode queue_mode_ = env.default_queue_mode;
+  queue_mode queue_mode_ = config_.default_queue_mode;
 };
 
 /**

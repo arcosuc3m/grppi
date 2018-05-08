@@ -1,5 +1,20 @@
-#ifndef COMMON_ENVIRONMENT_VARIABLES
-#define COMMON_ENVIRONMENT_VARIABLES
+/*
+ * Copyright 2018 Universidad Carlos III de Madrid
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef GRPPI_COMMON_CONFIGURATION
+#define GRPPI_COMMON_CONFIGURATION
 
 #include "mpmc_queue.h"
 
@@ -9,10 +24,9 @@
 #include <cstring>
 #include <string>
 
-namespace grppi
-{
+namespace grppi {
 
-class environment_variables{
+class configuration {
  private:
    void get_concurrency_degree (){
      if(const char* env_value = std::getenv("GRPPI_NUM_THREADS"))
@@ -62,7 +76,7 @@ class environment_variables{
    }
 
  public:
-   environment_variables() :
+   configuration() :
     default_concurrency_degree(static_cast<int>(std::thread::hardware_concurrency())),
     default_ordering(true),
     default_queue_size(100),

@@ -462,18 +462,19 @@ private:
       std::index_sequence<I...>) const;
 
 private:
-  environment_variables env={};
+  configuration config_{};
 
-  int concurrency_degree_ = env.default_concurrency_degree;
+  int concurrency_degree_ = config_.default_concurrency_degree;
 
   bool ordering_ = true;
 
-  int queue_size_ = env.default_queue_size;
+  int queue_size_ = config_.default_queue_size;
 
   constexpr static int default_num_tokens = 100;
+
   int num_tokens_ = default_num_tokens;
 
-  queue_mode queue_mode_ = env.default_queue_mode;
+  queue_mode queue_mode_ = config_.default_queue_mode;
 };
 
 /**
