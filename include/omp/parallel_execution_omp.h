@@ -537,13 +537,13 @@ private:
 
   configuration config_{}; 
 
-  int concurrency_degree_= config_.default_concurrency_degree;
+  int concurrency_degree_= config_.concurrency_degree();
 
-  bool ordering_ = config_.default_ordering;
+  bool ordering_ = config_.ordering();
 
-  int queue_size_ = config_.default_queue_size;
+  int queue_size_ = config_.queue_size();
 
-  queue_mode queue_mode_ = config_.default_queue_mode;
+  queue_mode queue_mode_ = config_.mode();
 };
 
 /**

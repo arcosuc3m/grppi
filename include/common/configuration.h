@@ -27,13 +27,35 @@
 namespace grppi {
 
 class configuration {
+public:
+
+  int concurrency_degree() const noexcept {
+    return concurrency_degree_;
+  }
+
+  bool ordering() const noexcept {
+    return ordering_;
+  }
+
+  int queue_size() const noexcept {
+    return queue_size_;
+  }
+
+  queue_mode mode() const noexcept {
+    return queue_mode_;
+  }
+
+  std::string dynamic_execution() const noexcept {
+    return dynamic_execution_;
+  }
+
  private:
    void get_concurrency_degree (){
      if(const char* env_value = std::getenv("GRPPI_NUM_THREADS"))
      {
        try{
          int value = std::stoi(env_value);
-         default_concurrency_degree = value;
+         concurrency_degree_ = value;
        } catch(int e){
          std::cerr << "Non valid argument for number of threads" << std::endl;
        }
@@ -44,7 +66,7 @@ class configuration {
      if(const char* env_value = std::getenv("GRPPI_ORDERING"))
      {
        if(strcmp(env_value,"TRUE") != 0) 
-         default_ordering = false;
+         ordering_ = false;
      }
    }
 
@@ -53,7 +75,7 @@ class configuration {
      {
        try{
          int value = std::stoi(env_value);
-         default_queue_size = value;
+         queue_size_ = value;
        } catch (int e){
          std::cerr << "Non valid argument for queue size" << std::endl;
        }
@@ -64,24 +86,24 @@ class configuration {
      if(const char* env_value = std::getenv("GRPPI_QUEUE_MODE"))
      {
        if(strcmp(env_value,"lockfree") != 0) 
-         default_queue_mode = queue_mode::lockfree;   
+         queue_mode_ = queue_mode::lockfree;   
      }
    }
   
    void get_dynamic_execution(){
      if(const char* env_value = std::getenv("GRPPI_DYN_EXECUTION"))
      {
-       default_dynamic_execution = env_value;
+       dynamic_execution_ = env_value;
      }
    }
 
  public:
    configuration() :
-    default_concurrency_degree(static_cast<int>(std::thread::hardware_concurrency())),
-    default_ordering(true),
-    default_queue_size(100),
-    default_queue_mode(queue_mode::blocking),
-    default_dynamic_execution("seq")
+    concurrency_degree_(static_cast<int>(std::thread::hardware_concurrency())),
+    ordering_(true),
+    queue_size_(100),
+    queue_mode_(queue_mode::blocking),
+    dynamic_execution_("seq")
   { 
     get_concurrency_degree();
     get_ordering();
@@ -90,13 +112,15 @@ class configuration {
     get_dynamic_execution();
   }
 
-  int default_concurrency_degree;
-  bool default_ordering;
-  int default_queue_size;
-  queue_mode default_queue_mode;
-  std::string default_dynamic_execution;
+private:
+  int concurrency_degree_;
+  bool ordering_;
+  int queue_size_;
+  queue_mode queue_mode_;
+  std::string dynamic_execution_;
 
 };
+
 }
 
 #endif
