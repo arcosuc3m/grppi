@@ -38,13 +38,13 @@ public:
   dynamic_execution() noexcept : execution_{} 
   {
     configuration config;
-    if(config.dynamic_execution() == "native") 
+    if(config.dynamic_backend() == "native") 
       execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
-    else if(config.dynamic_execution() == "omp") 
+    else if(config.dynamic_backend() == "omp") 
       execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
-    else if(config.dynamic_execution() == "tbb") 
+    else if(config.dynamic_backend() == "tbb") 
       execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
-    else if(config.dynamic_execution() == "ff") 
+    else if(config.dynamic_backend() == "ff") 
       execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
     else 
       execution_ = std::make_unique<execution<sequential_execution>>(sequential_execution{});

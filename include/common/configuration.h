@@ -29,6 +29,14 @@ namespace grppi {
 class configuration {
 public:
 
+  configuration() {
+    set_concurrency_degree(std::getenv("GRPPI_NUM_THREADS"));
+    set_ordering(std::getenv("GRPPI_ORDERING"));
+    set_queue_size(std::getenv("GRPPI_QUEUE_SIZE"));
+    set_queue_mode(std::getenv("GRPPI_QUEUE_MODE"));
+    set_dynamic_backend(std::getenv("GRPPI_DYN_BACKEND"));
+  }
+
   int concurrency_degree() const noexcept {
     return concurrency_degree_;
   }
@@ -45,79 +53,80 @@ public:
     return queue_mode_;
   }
 
-  std::string dynamic_execution() const noexcept {
-    return dynamic_execution_;
+  std::string dynamic_backend() const noexcept {
+    return dynamic_backend_;
   }
 
  private:
-   void get_concurrency_degree (){
-     if(const char* env_value = std::getenv("GRPPI_NUM_THREADS"))
-     {
-       try{
-         int value = std::stoi(env_value);
-         concurrency_degree_ = value;
-       } catch(int e){
-         std::cerr << "Non valid argument for number of threads" << std::endl;
-       }
-     }    
-   }
 
-   void get_ordering(){
-     if(const char* env_value = std::getenv("GRPPI_ORDERING"))
-     {
-       if(strcmp(env_value,"TRUE") != 0) 
-         ordering_ = false;
+   void set_concurrency_degree(char const * str) {
+     if (!str) return;
+     try {
+       int d = std::stoi(str);
+       if (d<=0) {
+         std::cerr << "GrPPI: Invalid concurrency degree \"" << d << "\"\n";
+         return;
+       }
+       concurrency_degree_ = d;
+     }
+     catch (...) {
+       std::cerr << "GrPPI: Invalid concurrency degree \"" << str << "\"\n";
      }
    }
 
-   void get_queue_size(){
-     if(const char* env_value = std::getenv("GRPPI_QUEUE_SIZE"))
-     {
-       try{
-         int value = std::stoi(env_value);
-         queue_size_ = value;
-       } catch (int e){
-         std::cerr << "Non valid argument for queue size" << std::endl;
-       }
+   void set_ordering(char const * str) {
+     if (!str) return;
+     if (std::strcmp(str, "ordered") == 0) {
+       ordering_ = true;
+     }
+     else if (std::strcmp(str, "unordered") == 0)  {
+       ordering_ = false;
+     }
+     else {
+       std::cerr << "GrPPI: Invalid ordering \"" << str << "\"\n";
      }
    }
 
-   void get_queue_mode(){
-     if(const char* env_value = std::getenv("GRPPI_QUEUE_MODE"))
-     {
-       if(strcmp(env_value,"lockfree") != 0) 
-         queue_mode_ = queue_mode::lockfree;   
+  void set_queue_size(char const * str) {
+    if (!str) return;
+    try {
+      int sz = std::stoi(str);
+      if (sz < 0) {
+        std::cerr << "GrPPI: Invalid queue size  \"" << sz << "\"\n";
+        return;
+      }
+      queue_size_ = sz;
+    }
+    catch (...) {
+      std::cerr << "GrPPI: Invalid queue size  \"" << str << "\"\n";
+    }  
+  }
+
+   void set_queue_mode(char const * str) {
+     if (!str) return;
+     if (strcmp(str, "blocking") == 0) {
+       queue_mode_ = queue_mode::blocking;
+     }
+     else if (strcmp(str, "lockfree") == 0) {
+       queue_mode_ = queue_mode::lockfree;
+     }
+     else {
+      std::cerr << "GrPPI: Invalid queue mode \"" << str << "\"\n";
      }
    }
   
-   void get_dynamic_execution(){
-     if(const char* env_value = std::getenv("GRPPI_DYN_EXECUTION"))
-     {
-       dynamic_execution_ = env_value;
-     }
+   void set_dynamic_backend(char const * str) {
+     if (!str) return;
+     dynamic_backend_ = str;
    }
 
- public:
-   configuration() :
-    concurrency_degree_(static_cast<int>(std::thread::hardware_concurrency())),
-    ordering_(true),
-    queue_size_(100),
-    queue_mode_(queue_mode::blocking),
-    dynamic_execution_("seq")
-  { 
-    get_concurrency_degree();
-    get_ordering();
-    get_queue_size();
-    get_queue_mode();
-    get_dynamic_execution();
-  }
 
 private:
-  int concurrency_degree_;
-  bool ordering_;
-  int queue_size_;
-  queue_mode queue_mode_;
-  std::string dynamic_execution_;
+  int concurrency_degree_ = static_cast<int>(std::thread::hardware_concurrency());
+  bool ordering_ = true;
+  int queue_size_ = 100;
+  queue_mode queue_mode_ = queue_mode::blocking;
+  std::string dynamic_backend_ = "seq";
 
 };
 
