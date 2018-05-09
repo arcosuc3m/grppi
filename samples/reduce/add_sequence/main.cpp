@@ -38,7 +38,7 @@ void test_map(grppi::dynamic_execution & e, int n) {
       [i=1]() mutable { return i++; });
 
   auto t1 = system_clock::now();
-
+  
   auto r = grppi::reduce(e, begin(v), end(v), 0L,
     [](auto x, auto y) { return x+y; });
 

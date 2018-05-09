@@ -21,6 +21,7 @@
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
+#include "../common/configuration.h"
 #include "../seq/sequential_execution.h"
 
 #include <type_traits>
@@ -28,7 +29,6 @@
 #include <experimental/optional>
 
 #include <omp.h>
-
 
 namespace grppi {
 
@@ -48,9 +48,14 @@ public:
   The concurrency degree is determined by the platform according to OpenMP 
   rules.
   */
-  parallel_execution_omp() noexcept :
-      parallel_execution_omp{impl_concurrency_degree()}
-  {}
+  parallel_execution_omp() noexcept{};
+
+  parallel_execution_omp(int concurrency_degree) noexcept :
+      concurrency_degree_{concurrency_degree}
+  {
+    omp_set_num_threads(concurrency_degree_);
+  }
+
 
   /** @brief Set num_threads to _threads in order to run in parallel
    *
@@ -64,7 +69,7 @@ public:
   \param concurrency_degree Number of threads used for parallel algorithms.
   \param order Whether ordered executions is enabled or disabled.
   */
-  parallel_execution_omp(int concurrency_degree, bool order = true) noexcept :
+  parallel_execution_omp(int concurrency_degree, bool order) noexcept :
       concurrency_degree_{concurrency_degree},
       ordering_{order}
   {
@@ -525,14 +530,15 @@ private:
 
 private:
 
-  int concurrency_degree_;
+  configuration<> config_{}; 
 
-  bool ordering_;
+  int concurrency_degree_= config_.concurrency_degree();
 
-  constexpr static int default_queue_size = 100;
-  int queue_size_ = default_queue_size;
+  bool ordering_ = config_.ordering();
 
-  queue_mode queue_mode_ = queue_mode::blocking;
+  int queue_size_ = config_.queue_size();
+
+  queue_mode queue_mode_ = config_.mode();
 };
 
 /**

@@ -47,8 +47,7 @@ public:
   The concurrency degree is determined by the platform.
 
   */
-  parallel_execution_tbb() noexcept :
-      parallel_execution_tbb{default_concurrency_degree}
+  parallel_execution_tbb() noexcept 
   {}
 
   /** 
@@ -458,19 +457,19 @@ private:
       std::index_sequence<I...>) const;
 
 private:
+  configuration<> config_{};
 
-  constexpr static int default_concurrency_degree = 4;
-  int concurrency_degree_ = default_concurrency_degree;
+  int concurrency_degree_ = config_.concurrency_degree();
 
   bool ordering_ = true;
 
-  constexpr static int default_queue_size = 100;
-  int queue_size_ = default_queue_size;
+  int queue_size_ = config_.queue_size();
 
-  constexpr static int default_num_tokens_ = 100;
-  int num_tokens_ = default_num_tokens_;
+  constexpr static int default_num_tokens = 100;
 
-  queue_mode queue_mode_ = queue_mode::blocking;
+  int num_tokens_ = default_num_tokens;
+
+  queue_mode queue_mode_ = config_.mode();
 };
 
 /**

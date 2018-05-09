@@ -21,6 +21,7 @@
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
 #include "../ff/parallel_execution_ff.h"
+#include "../common/configuration.h"
 
 #include <memory>
 
@@ -29,9 +30,27 @@ namespace grppi{
 class dynamic_execution {
 public:
 
-  dynamic_execution() noexcept :
-    execution_{}
-  {}
+  dynamic_execution() noexcept : execution_{} 
+  {
+    configuration<> config;
+    switch (config.dynamic_backend()) {
+      case execution_backend::seq:
+        execution_ = make_execution<sequential_execution>();
+        break;
+      case execution_backend::native:
+        execution_ = make_execution<parallel_execution_native>();
+        break;
+      case execution_backend::omp:
+        execution_ = make_execution<parallel_execution_omp>();
+        break;
+      case execution_backend::tbb:
+        execution_ = make_execution<parallel_execution_tbb>();
+        break;
+      case execution_backend::ff:
+        execution_ = make_execution<parallel_execution_ff>();
+        break;
+    }
+  }
 
   template <typename E>
   dynamic_execution(const E & e) : execution_{std::make_unique<execution<E>>(e)} {}
@@ -174,7 +193,7 @@ public:
           Transformers && ... transform_ops) const;
 
 private:
-
+  
   class execution_base {
   public:
     virtual ~execution_base() {};
@@ -187,6 +206,11 @@ private:
     virtual ~execution() = default;
     E ex_;
   };
+
+  template <typename E>
+  std::unique_ptr<execution<E>> make_execution() {
+    return std::make_unique<execution<E>>(E{});
+  }
 
 private:
   /// Pointer to dynamically allocated execution policy.
