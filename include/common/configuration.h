@@ -26,15 +26,22 @@
 
 namespace grppi {
 
+class environment_option_getter {
+public:
+  char const * operator()(char const * var_name) { return std::getenv(var_name); }
+};
+
+template <typename OptionGetter = environment_option_getter>
 class configuration {
 public:
 
   configuration() {
-    set_concurrency_degree(std::getenv("GRPPI_NUM_THREADS"));
-    set_ordering(std::getenv("GRPPI_ORDERING"));
-    set_queue_size(std::getenv("GRPPI_QUEUE_SIZE"));
-    set_queue_mode(std::getenv("GRPPI_QUEUE_MODE"));
-    set_dynamic_backend(std::getenv("GRPPI_DYN_BACKEND"));
+    OptionGetter option_getter;
+    set_concurrency_degree(option_getter("GRPPI_NUM_THREADS"));
+    set_ordering(option_getter("GRPPI_ORDERING"));
+    set_queue_size(option_getter("GRPPI_QUEUE_SIZE"));
+    set_queue_mode(option_getter("GRPPI_QUEUE_MODE"));
+    set_dynamic_backend(option_getter("GRPPI_DYN_BACKEND"));
   }
 
   int concurrency_degree() const noexcept {
@@ -59,7 +66,7 @@ public:
 
  private:
 
-   void set_concurrency_degree(char const * str) {
+   void set_concurrency_degree(char const * str) noexcept {
      if (!str) return;
      try {
        int d = std::stoi(str);
@@ -74,7 +81,7 @@ public:
      }
    }
 
-   void set_ordering(char const * str) {
+   void set_ordering(char const * str) noexcept {
      if (!str) return;
      if (std::strcmp(str, "ordered") == 0) {
        ordering_ = true;
@@ -87,11 +94,11 @@ public:
      }
    }
 
-  void set_queue_size(char const * str) {
+  void set_queue_size(char const * str) noexcept {
     if (!str) return;
     try {
       int sz = std::stoi(str);
-      if (sz < 0) {
+      if (sz <= 0) {
         std::cerr << "GrPPI: Invalid queue size  \"" << sz << "\"\n";
         return;
       }
@@ -102,7 +109,7 @@ public:
     }  
   }
 
-   void set_queue_mode(char const * str) {
+   void set_queue_mode(char const * str) noexcept {
      if (!str) return;
      if (strcmp(str, "blocking") == 0) {
        queue_mode_ = queue_mode::blocking;
@@ -115,20 +122,27 @@ public:
      }
    }
   
-   void set_dynamic_backend(char const * str) {
+   void set_dynamic_backend(char const * str) noexcept {
      if (!str) return;
      dynamic_backend_ = str;
    }
 
 
+public:
+
+  constexpr static int default_queue_size = 100;
+
 private:
   int concurrency_degree_ = static_cast<int>(std::thread::hardware_concurrency());
   bool ordering_ = true;
-  int queue_size_ = 100;
+  int queue_size_ = default_queue_size;
   queue_mode queue_mode_ = queue_mode::blocking;
   std::string dynamic_backend_ = "seq";
 
 };
+
+template <typename OptionGetter>
+constexpr int configuration<OptionGetter>::default_queue_size;
 
 }
 

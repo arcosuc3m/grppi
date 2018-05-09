@@ -37,7 +37,7 @@ public:
 
   dynamic_execution() noexcept : execution_{} 
   {
-    configuration config;
+    configuration<> config;
     if(config.dynamic_backend() == "native") 
       execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
     else if(config.dynamic_backend() == "omp") 

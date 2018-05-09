@@ -618,7 +618,7 @@ private:
 
   mutable thread_registry thread_registry_{};
   
-  configuration config_{};
+  configuration<> config_{};
 
   int concurrency_degree_ = config_.concurrency_degree();
   

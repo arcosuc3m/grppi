@@ -462,7 +462,7 @@ private:
       std::index_sequence<I...>) const;
 
 private:
-  configuration config_{};
+  configuration<> config_{};
 
   int concurrency_degree_ = config_.concurrency_degree();
 
