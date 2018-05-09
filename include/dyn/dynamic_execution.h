@@ -40,19 +40,19 @@ public:
     configuration<> config;
     switch (config.dynamic_backend()) {
       case execution_backend::seq:
-        execution_ = std::make_unique<execution<sequential_execution>>(sequential_execution{});
+        execution_ = make_execution<sequential_execution>();
         break;
       case execution_backend::native:
-        execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
+        execution_ = make_execution<parallel_execution_native>();
         break;
       case execution_backend::omp:
-        execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
+        execution_ = make_execution<parallel_execution_omp>();
         break;
       case execution_backend::tbb:
-        execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
+        execution_ = make_execution<parallel_execution_tbb>();
         break;
       case execution_backend::ff:
-        execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
+        execution_ = make_execution<parallel_execution_ff>();
         break;
     }
   }
@@ -211,6 +211,11 @@ private:
     virtual ~execution() = default;
     E ex_;
   };
+
+  template <typename E>
+  std::unique_ptr<execution<E>> make_execution() {
+    return std::make_unique<execution<E>>(E{});
+  }
 
 private:
   /// Pointer to dynamically allocated execution policy.
