@@ -26,6 +26,14 @@
 
 namespace grppi {
 
+enum class execution_backend {
+  seq,
+  native,
+  omp,
+  tbb,
+  ff
+};
+
 class environment_option_getter {
 public:
   char const * operator()(char const * var_name) { return std::getenv(var_name); }
@@ -60,7 +68,7 @@ public:
     return queue_mode_;
   }
 
-  std::string dynamic_backend() const noexcept {
+  execution_backend dynamic_backend() const noexcept {
     return dynamic_backend_;
   }
 
@@ -118,13 +126,30 @@ public:
        queue_mode_ = queue_mode::lockfree;
      }
      else {
-      std::cerr << "GrPPI: Invalid queue mode \"" << str << "\"\n";
+       std::cerr << "GrPPI: Invalid queue mode \"" << str << "\"\n";
      }
    }
   
    void set_dynamic_backend(char const * str) noexcept {
      if (!str) return;
-     dynamic_backend_ = str;
+     if (std::strcmp("seq", str) == 0) {
+       dynamic_backend_ = execution_backend::seq;
+     }
+     else if (std::strcmp("native", str) == 0) {
+       dynamic_backend_ = execution_backend::native;
+     }
+     else if (std::strcmp ("omp", str) == 0) {
+       dynamic_backend_ = execution_backend::omp;
+     }
+     else if (std::strcmp("tbb", str) == 0) {
+       dynamic_backend_ = execution_backend::tbb;
+     }
+     else if (std::strcmp("ff", str) == 0) {
+       dynamic_backend_ = execution_backend::ff;
+     }
+     else {
+       std::cerr << "GrPPI: Invalid backend \"" << str << "\"\n";
+     }
    }
 
 
@@ -137,7 +162,7 @@ private:
   bool ordering_ = true;
   int queue_size_ = default_queue_size;
   queue_mode queue_mode_ = queue_mode::blocking;
-  std::string dynamic_backend_ = "seq";
+  execution_backend dynamic_backend_ = execution_backend::seq;
 
 };
 

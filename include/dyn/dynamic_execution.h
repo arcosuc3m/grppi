@@ -38,16 +38,23 @@ public:
   dynamic_execution() noexcept : execution_{} 
   {
     configuration<> config;
-    if(config.dynamic_backend() == "native") 
-      execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
-    else if(config.dynamic_backend() == "omp") 
-      execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
-    else if(config.dynamic_backend() == "tbb") 
-      execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
-    else if(config.dynamic_backend() == "ff") 
-      execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
-    else 
-      execution_ = std::make_unique<execution<sequential_execution>>(sequential_execution{});
+    switch (config.dynamic_backend()) {
+      case execution_backend::seq:
+        execution_ = std::make_unique<execution<sequential_execution>>(sequential_execution{});
+        break;
+      case execution_backend::native:
+        execution_ = std::make_unique<execution<parallel_execution_native>>(parallel_execution_native{});
+        break;
+      case execution_backend::omp:
+        execution_ = std::make_unique<execution<parallel_execution_omp>>(parallel_execution_omp{});
+        break;
+      case execution_backend::tbb:
+        execution_ = std::make_unique<execution<parallel_execution_tbb>>(parallel_execution_tbb{});
+        break;
+      case execution_backend::ff:
+        execution_ = std::make_unique<execution<parallel_execution_ff>>(parallel_execution_ff{});
+        break;
+    }
   }
 
   template <typename E>

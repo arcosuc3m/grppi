@@ -25,7 +25,7 @@ TEST(configuration_environment, get_config){
   EXPECT_TRUE(config.ordering());
   EXPECT_EQ(config.default_queue_size, config.queue_size());
   EXPECT_EQ(queue_mode::blocking, config.mode());
-  EXPECT_STREQ("seq", config.dynamic_backend().c_str());
+  EXPECT_EQ(execution_backend::seq, config.dynamic_backend());
 }
 
 TEST(configuration_synthetic, get_correct_nthreads){
@@ -172,6 +172,41 @@ TEST(configuration_synthetic, get_unknown_mode) {
   EXPECT_EQ(queue_mode::blocking, config.mode());
 }
 
+TEST(configuration_synthetic, get_null_backend) {
+  struct getter {
+    const char * operator()(char const *) {
+      return nullptr;
+    }
+  };
+
+  configuration<getter> config;
+  EXPECT_EQ(execution_backend::seq, config.dynamic_backend());
+}
+
+TEST(configuration_synthetic, get_empty_backend) {
+  struct getter {
+    const char * operator()(char const * var_name) {
+      if (strcmp(var_name,"GRPPI_DYN_BACKEND") == 0) return "";
+      return nullptr;
+    }
+  };
+
+  configuration<getter> config;
+  EXPECT_EQ(execution_backend::seq, config.dynamic_backend());
+}
+
+TEST(configuration_synthetic, get_unknown_backend) {
+  struct getter {
+    const char * operator()(char const * var_name) {
+      if (strcmp(var_name,"GRPPI_DYN_BACKEND") == 0) return "unknown";
+      return nullptr;
+    }
+  };
+
+  configuration<getter> config;
+  EXPECT_EQ(execution_backend::seq, config.dynamic_backend());
+}
+
 TEST(configuration_synthetic, get_seq_backend) {
   struct getter {
     const char * operator()(char const * var_name) {
@@ -181,7 +216,19 @@ TEST(configuration_synthetic, get_seq_backend) {
   };
 
   configuration<getter> config;
-  EXPECT_STREQ("seq", config.dynamic_backend().c_str());
+  EXPECT_EQ(execution_backend::seq, config.dynamic_backend());
+}
+
+TEST(configuration_synthetic, get_native_backend) {
+  struct getter {
+    const char * operator()(char const * var_name) {
+      if (strcmp(var_name,"GRPPI_DYN_BACKEND") == 0) return "native";
+      return nullptr;
+    }
+  };
+
+  configuration<getter> config;
+  EXPECT_EQ(execution_backend::native, config.dynamic_backend());
 }
 
 TEST(configuration_synthetic, get_omp_backend) {
@@ -193,6 +240,30 @@ TEST(configuration_synthetic, get_omp_backend) {
   };
 
   configuration<getter> config;
-  EXPECT_STREQ("omp", config.dynamic_backend().c_str());
+  EXPECT_EQ(execution_backend::omp, config.dynamic_backend());
+}
+
+TEST(configuration_synthetic, get_tbb_backend) {
+  struct getter {
+    const char * operator()(char const * var_name) {
+      if (strcmp(var_name,"GRPPI_DYN_BACKEND") == 0) return "tbb";
+      return nullptr;
+    }
+  };
+
+  configuration<getter> config;
+  EXPECT_EQ(execution_backend::tbb, config.dynamic_backend());
+}
+
+TEST(configuration_synthetic, get_ff_backend) {
+  struct getter {
+    const char * operator()(char const * var_name) {
+      if (strcmp(var_name,"GRPPI_DYN_BACKEND") == 0) return "ff";
+      return nullptr;
+    }
+  };
+
+  configuration<getter> config;
+  EXPECT_EQ(execution_backend::ff, config.dynamic_backend());
 }
 
