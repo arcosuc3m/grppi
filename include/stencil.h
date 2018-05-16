@@ -19,6 +19,7 @@
 #include <tuple>
 #include <utility>
 
+#include "range_mapping.h"
 #include "common/execution_traits.h"
 #include "common/iterator_traits.h"
 
@@ -31,6 +32,71 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_stencil.
 @{
 */
+
+/**
+\brief Invoke \ref md_stencil on a data sequence with 
+sequential execution.
+\tparam Execution Execution type.
+\tparam InputIt Iterator type used for the input sequence.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\param ex Execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+*/
+template <typename Execution, typename InputRange, typename OutputRange, 
+          typename StencilTransformer, typename Neighbourhood,
+          requires_range<InputRange> = 0,
+          requires_range<OutputRange> = 0>
+void stencil(
+    const Execution & ex, 
+    InputRange rin, OutputRange rout,
+    StencilTransformer && transform_op, 
+    Neighbourhood && neighbour_op) 
+{
+  static_assert(supports_stencil<Execution>(),
+      "stencil not supported for execution type");
+  ex.stencil(std::make_tuple(rin.begin()), rout.begin(),
+      rin.size(),
+      std::forward<StencilTransformer>(transform_op),
+      std::forward<Neighbourhood>(neighbour_op));
+}
+
+/**
+\brief Invoke \ref md_stencil on a data sequence with
+sequential execution.
+\tparam Execution Execution type.
+\tparam InputIterators Iterators types used for the input sequences.
+\tparam OutputIt Iterator type used for the output sequence
+\tparam StencilTransformer Callable type for performing the stencil transformation.
+\tparam Neighbourhood Callable type for obtaining the neighbourhood.
+\param ex Execution policy object.
+\param firsts Tuple of iterator to the first elements of the input sequences.
+\param size Size of the input sequence to be proccess.
+\param out Iterator to the first element in the output sequence.
+\param transform_op Stencil transformation operation.
+\param neighbour_op Neighbourhood operation.
+*/
+template <typename Execution, typename ... InputRanges, typename OutputRange,
+          typename StencilTransformer, typename Neighbourhood,
+          requires_ranges<InputRanges...> = 0,
+          requires_range<OutputRange> = 0>
+void stencil(
+    const Execution & ex,
+    std::tuple<InputRanges...> rins, OutputRange rout,
+    StencilTransformer && transform_op,
+    Neighbourhood && neighbour_op)
+{
+  static_assert(supports_stencil<Execution>(),
+                "stencil not supported for execution type");
+  ex.stencil(range_begin(rins), rout.begin(), range_size(rins),
+             std::forward<StencilTransformer>(transform_op),
+             std::forward<Neighbourhood>(neighbour_op));
+}
 
 /**
 \brief Invoke \ref md_stencil on a data sequence with
