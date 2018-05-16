@@ -18,6 +18,7 @@
 
 #include <utility>
 
+#include "range_mapping.h"
 #include "common/iterator_traits.h"
 #include "common/execution_traits.h"
 
@@ -30,6 +31,35 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_reduce.
 @{
 */
+
+/**
+\brief Invoke \ref md_reduce with identity value
+on a data sequence with sequential execution.
+\tparam Execution Execution type.
+\tparam InRange Range type for the input range.
+\tparam Result Type for the identity value.
+\tparam Combiner Callable type for the combiner operation.
+\param ex Execution policy object.
+\param rin Input range.
+\param identity Identity value for the combiner operation.
+\param combiner_op Combiner operation for the reduction.
+\return The result of the reduction.
+*/
+template <typename Execution, typename InRange, typename Result, typename Combiner,
+    requires_range<InRange> = 0>
+auto reduce(const Execution & ex,
+            InRange rin,
+            Result && identity,
+            Combiner && combine_op)
+{
+  static_assert(supports_reduce<Execution>(),
+                "reduce not supported on execution type");
+//  static_assert(std::is_same<Result,typename std::result_of<Combiner(Result,Result)>::type>::value,
+//                "reduce combiner should be homogeneous:T = op(T,T)");
+  return ex.reduce(rin.begin(), rin.size(),
+                   std::forward<Result>(identity), std::forward<Combiner>(combine_op));
+}
+
 
 /**
 \brief Invoke \ref md_reduce with identity value

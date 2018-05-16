@@ -51,6 +51,13 @@ public:
     );
   }
   
+  template <typename E>
+  void run_unary_range(const E & e) {
+    out = grppi::reduce(e, grppi::make_range(v), 0,
+     [](int x, int y){ return x + y; }
+    );
+  }
+
   void setup_single() {
     out = 0;
     v = vector<int>{1};
@@ -81,35 +88,24 @@ TYPED_TEST(reduce_test, static_single)
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, dyn_single)
-{
-  this->setup_single();
-  this->run_unary(this->dyn_execution_);
-  this->check_single();
-}
-
-
-
-TYPED_TEST(reduce_test, static_multiple)
-{
-  this->setup_multiple();
-  this->run_unary_size(this->execution_);
-  this->check_multiple();
-}
-
-TYPED_TEST(reduce_test, dyn_multiple)
-{
-  this->setup_multiple();
-  this->run_unary_size(this->dyn_execution_);
-  this->check_multiple();
-}
-
-
-
 TYPED_TEST(reduce_test, static_single_size)
 {
   this->setup_single();
   this->run_unary_size(this->execution_);
+  this->check_single();
+}
+
+TYPED_TEST(reduce_test, static_single_range)
+{
+  this->setup_single();
+  this->run_unary_range(this->execution_);
+  this->check_single();
+}
+
+TYPED_TEST(reduce_test, dyn_single)
+{
+  this->setup_single();
+  this->run_unary(this->dyn_execution_);
   this->check_single();
 }
 
@@ -120,7 +116,19 @@ TYPED_TEST(reduce_test, dyn_single_size)
   this->check_single();
 }
 
+TYPED_TEST(reduce_test, dyn_single_range)
+{
+  this->setup_single();
+  this->run_unary_range(this->dyn_execution_);
+  this->check_single();
+}
 
+TYPED_TEST(reduce_test, static_multiple)
+{
+  this->setup_multiple();
+  this->run_unary_size(this->execution_);
+  this->check_multiple();
+}
 
 TYPED_TEST(reduce_test, static_multiple_size)
 {
@@ -129,9 +137,30 @@ TYPED_TEST(reduce_test, static_multiple_size)
   this->check_multiple();
 }
 
+TYPED_TEST(reduce_test, static_multiple_range)
+{
+  this->setup_multiple();
+  this->run_unary_range(this->execution_);
+  this->check_multiple();
+}
+
+TYPED_TEST(reduce_test, dyn_multiple)
+{
+  this->setup_multiple();
+  this->run_unary_size(this->dyn_execution_);
+  this->check_multiple();
+}
+
 TYPED_TEST(reduce_test, dyn_multiple_size)
 {
   this->setup_multiple();
   this->run_unary_size(this->dyn_execution_);
+  this->check_multiple();
+}
+
+TYPED_TEST(reduce_test, dyn_multiple_range)
+{
+  this->setup_multiple();
+  this->run_unary_range(this->dyn_execution_);
   this->check_multiple();
 }
