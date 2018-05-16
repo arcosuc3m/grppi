@@ -18,6 +18,8 @@
 
 #include <utility>
 
+#include "range_mapping.h"
+
 #include "common/execution_traits.h"
 #include "common/iterator_traits.h"
 
@@ -30,6 +32,57 @@ namespace grppi {
 \brief Interface for applyinng the \ref md_map.
 @{
 */
+
+/**
+\brief Invoke \ref md_map on a data sequence.
+\tparam Execution Execution policy type.
+\tparam InRanges Range types for the input ranges.
+\tparam OutRange Range type for the output range.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param rins Input ranges packaged in a std::tuple.
+\param rout Output range.
+\param transform_op Transformation operation.
+\pre for all r in rins: r.size() == rout.size()
+*/
+template<typename Execution, typename ... InRanges, typename OutRange,
+        typename Transformer,
+        requires_ranges<InRanges...> = 0,
+        requires_range<OutRange> = 0>
+void map(const Execution & ex, std::tuple<InRanges...> rins, OutRange rout,
+         Transformer transform_op
+        )
+{
+  static_assert(supports_map<Execution>(),
+      "map not supported on execution type");
+  ex.map(range_begin(rins), rout.begin(),
+         rout.size(), transform_op);
+}
+
+/**
+\brief Invoke \ref md_map on a data sequence.
+\tparam Execution Execution policy type.
+\tparam InRange Range type for the input range.
+\tparam OutRange Range type for the output range.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param rin Input range.
+\param rout Output range.
+\param transform_op Transformation operation.
+\pre rin.size() == rout.size()
+*/
+template<typename Execution, typename InRange, typename OutRange,
+        typename Transformer,
+        requires_range<InRange> = 0,
+        requires_range<OutRange> = 0>
+void map(const Execution & ex, InRange rin, OutRange rout,
+         Transformer transform_op)
+{
+  static_assert(supports_map<Execution>(),
+      "map not supported on execution type");
+  ex.map(make_tuple(rin.begin()), rout.begin(),
+      rin.size(), transform_op);
+}
 
 /**
 \brief Invoke \ref md_map on a data sequence.
