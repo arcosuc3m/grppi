@@ -92,6 +92,12 @@ std::tuple<typename Rs::iterator...> range_begin(std::tuple<Rs...> rt)
   return range_begin_impl(rt, std::make_index_sequence<sizeof...(Rs)>{});
 }
 
+template <typename ... Rs>
+auto range_size(std::tuple<Rs...> rt)
+{
+  return std::get<0>(rt).size();
+}
+
 
 }
 

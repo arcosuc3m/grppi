@@ -56,7 +56,20 @@ public:
   }
 
   template <typename E>
-  auto run_scalar_product_tuple_range(const E & e){
+  auto run_square_sum_range(const E & e) {
+    return grppi::map_reduce(e, grppi::make_range(v), 0,
+      [this](int x) { 
+        invocations_transformer++; 
+        return x*x;
+      },
+      [](int x, int y) { 
+        return x + y; 
+      }
+    );
+  }
+
+  template <typename E>
+  auto run_scalar_product_tuple_iter(const E & e){
     return  grppi::map_reduce(e,
       make_tuple(v.begin(),v2.begin()), v.end(), 0,
       [this](int x1, int x2) {
@@ -82,6 +95,21 @@ public:
       }
     );
   }
+
+  template <typename E>
+  auto run_scalar_product_tuple_range(const E & e){
+    return  grppi::map_reduce(e,
+      make_ranges(v,v2), 0,
+      [this](int x1, int x2) {
+        invocations_transformer++;
+        return x1 * x2;
+      },
+      [](int x, int y){
+        return x + y;
+      }
+    );
+  }
+
   
   void setup_single() {
     v = vector<int>{1};
@@ -137,6 +165,13 @@ TYPED_TEST(map_reduce_test, static_single_square_sum)
   this->check_single();
 }
 
+TYPED_TEST(map_reduce_test, static_single_square_sum_range)
+{
+  this->setup_single();
+  this->output = this->run_square_sum_range(this->execution_);
+  this->check_single();
+}
+
 TYPED_TEST(map_reduce_test, dyn_single_square_sum)
 {
   this->setup_single();
@@ -144,12 +179,24 @@ TYPED_TEST(map_reduce_test, dyn_single_square_sum)
   this->check_single();
 }
 
-
+TYPED_TEST(map_reduce_test, dyn_single_square_sum_range)
+{
+  this->setup_single();
+  this->output = this->run_square_sum_range(this->dyn_execution_);
+  this->check_single();
+}
 
 TYPED_TEST(map_reduce_test, static_multiple_square_sum)
 {
   this->setup_multiple();
   this->output = this->run_square_sum(this->execution_);
+  this->check_multiple();
+}
+
+TYPED_TEST(map_reduce_test, static_multiple_square_sum_range)
+{
+  this->setup_multiple();
+  this->output = this->run_square_sum_range(this->execution_);
   this->check_multiple();
 }
 
@@ -160,7 +207,26 @@ TYPED_TEST(map_reduce_test, dyn_multiple_square_sum)
   this->check_multiple();
 }
 
+TYPED_TEST(map_reduce_test, dyn_multiple_square_sum_range)
+{
+  this->setup_multiple();
+  this->output = this->run_square_sum_range(this->dyn_execution_);
+  this->check_multiple();
+}
 
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_iter)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_iter(this->execution_);
+  this->check_single_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_size)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_size(this->execution_);
+  this->check_single_scalar_product();
+}
 
 TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_range)
 {
@@ -169,35 +235,10 @@ TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_range)
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_range)
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_iter)
 {
   this->setup_single_scalar_product();
-  this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
-  this->check_single_scalar_product();
-}
-
-
-
-TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_range)
-{
-  this->setup_multiple_scalar_product();
-  this->output = this->run_scalar_product_tuple_range(this->execution_);
-  this->check_multiple_scalar_product();
-}
-
-TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_range)
-{
-  this->setup_multiple_scalar_product();
-  this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
-  this->check_multiple_scalar_product();
-}
-
-
-
-TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_size)
-{
-  this->setup_single_scalar_product();
-  this->output = this->run_scalar_product_tuple_size(this->execution_);
+  this->output = this->run_scalar_product_tuple_iter(this->dyn_execution_);
   this->check_single_scalar_product();
 }
 
@@ -208,7 +249,19 @@ TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_size)
   this->check_single_scalar_product();
 }
 
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_range)
+{
+  this->setup_single_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
+  this->check_single_scalar_product();
+}
 
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_iter)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_iter(this->execution_);
+  this->check_multiple_scalar_product();
+}
 
 TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_size)
 {
@@ -217,9 +270,30 @@ TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_size)
   this->check_multiple_scalar_product();
 }
 
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_range)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->execution_);
+  this->check_multiple_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_iter)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_iter(this->dyn_execution_);
+  this->check_multiple_scalar_product();
+}
+
 TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size)
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_size(this->dyn_execution_);
+  this->check_multiple_scalar_product();
+}
+
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size_range)
+{
+  this->setup_multiple_scalar_product();
+  this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
   this->check_multiple_scalar_product();
 }
