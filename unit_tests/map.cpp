@@ -112,8 +112,8 @@ public:
   }
 
   void check_single_unary() {
-    EXPECT_EQ(1, this->invocations); // one invocation
-    EXPECT_EQ(84, this->w[0]);
+    EXPECT_EQ(1, invocations); // one invocation
+    EXPECT_EQ(84, w[0]);
   }
 
   void setup_multiple_unary() {
@@ -123,8 +123,8 @@ public:
   }
 
   void check_multiple_unary() {
-    EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(5, invocations); // five invocations
+    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w)));
   }
 
   void setup_single_nary() {
@@ -135,8 +135,8 @@ public:
   }
 
   void check_single_nary() {
-    EXPECT_EQ(1, this->invocations); // one invocation
-    EXPECT_EQ(66, this->w[0]);
+    EXPECT_EQ(1, invocations); // one invocation
+    EXPECT_EQ(66, w[0]);
   }
 
   void setup_multiple_nary() {
@@ -148,8 +148,8 @@ public:
   }
 
   void check_multiple_nary() {
-    EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(5, invocations); // five invocations
+    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w)));
   }
 
 };
