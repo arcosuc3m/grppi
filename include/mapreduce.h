@@ -35,13 +35,12 @@ namespace grppi {
 /**
 \brief Invoke \ref md_map-reduce on a data sequence.
 \tparam Execution Execution type.
-\tparam InputIterator Iterator type used for the input sequence.
+\tparam InputRange Range type used for the input sequence.
 \tparam Identity Type for the identity value.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex Execution policy object.
-\param first Iterator to the first element in the input sequence.
-\param last Iterator to one past the end of the input sequence.
+\param rin Range for the input sequence.
 \param identity Identity value for the combination operation.
 \param transf_op Transformation operation.
 \param combine_op Combination operation.
@@ -66,13 +65,12 @@ auto map_reduce(const Execution & ex,
 /**
 \brief Invoke \ref md_map-reduce on a data sequence.
 \tparam Execution Execution type.
-\tparam InputIterators Iterators types used for the input sequences.
+\tparam InputRanges Range types used for the input sequences.
 \tparam Identity Type for the identity value.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex Execution policy object.
-\param firsts Tuple of iterators to the first elements in the input sequences.
-\param size Size of the input sequence to be process.
+\param rins Zip view for the input sequences.
 \param identity Identity value for the combination operation.
 \param transf_op Transformation operation.
 \param combine_op Combination operation.

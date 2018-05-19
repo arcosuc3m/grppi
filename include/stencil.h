@@ -37,14 +37,13 @@ namespace grppi {
 \brief Invoke \ref md_stencil on a data sequence with 
 sequential execution.
 \tparam Execution Execution type.
-\tparam InputIt Iterator type used for the input sequence.
-\tparam OutputIt Iterator type used for the output sequence
+\tparam InputRange Range type used for the input sequence.
+\tparam OutputRange Range type used for the output sequence
 \tparam Neighbourhood Callable type for obtaining the neighbourhood.
 \tparam StencilTransformer Callable type for performing the stencil transformation.
 \param ex Execution policy object.
-\param first Iterator to the first element in the input sequence.
-\param last Iterator to one past the end of the input sequence.
-\param out Iterator to the first element in the output sequence.
+\param rin Range for the input sequence.
+\param rout Range for the output sequence.
 \param transform_op Stencil transformation operation.
 \param neighbour_op Neighbourhood operation.
 */
@@ -70,14 +69,13 @@ void stencil(
 \brief Invoke \ref md_stencil on a data sequence with
 sequential execution.
 \tparam Execution Execution type.
-\tparam InputIterators Iterators types used for the input sequences.
-\tparam OutputIt Iterator type used for the output sequence
+\tparam InputRanges Range types used for the input sequences.
+\tparam OutputRange Range type used for the output sequence
 \tparam StencilTransformer Callable type for performing the stencil transformation.
 \tparam Neighbourhood Callable type for obtaining the neighbourhood.
 \param ex Execution policy object.
-\param firsts Tuple of iterator to the first elements of the input sequences.
-\param size Size of the input sequence to be proccess.
-\param out Iterator to the first element in the output sequence.
+\param rins Zip view for the input sequences.
+\param rout Range for the output sequence.
 \param transform_op Stencil transformation operation.
 \param neighbour_op Neighbourhood operation.
 */
