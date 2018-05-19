@@ -16,58 +16,9 @@
 #ifndef GRPPI_RANGE_MAPPING_H
 #define GRPPI_RANGE_MAPPING_H
 
-#include "common/meta.h"
+#include "common/range_concept.h"
 
 namespace grppi {
-
-template <typename T>
-struct range_concept
-{
-  template <typename U>
-  using begin = decltype(std::declval<U>().begin());
-
-  template <typename U>
-  using has_begin = meta::is_detected<begin,U>;
-
-  template <typename U>
-  using end = decltype(std::declval<U>().end());
-
-  template <typename U>
-  using has_end = meta::is_detected<end,U>;
-
-  template <typename U>
-  using size = decltype(std::declval<const U>().size());
-
-  template <typename U>
-  using has_size = meta::is_detected_convertible<std::size_t,size,U>;
-
-  using requires = meta::conjunction<
-      has_begin<T>, 
-      has_end<T>,
-      has_size<T>>;
-
-  static constexpr bool value = requires::value;
-};
-
-template <typename ... Rs, std::size_t ... I>
-std::tuple<typename Rs::iterator...> range_begin_impl(std::tuple<Rs...> rt, std::index_sequence<I...>)
-{
-  return std::make_tuple(std::get<I>(rt).begin()...);
-}
-
-template <typename ... Rs,
-        meta::requires<range_concept,Rs...> = 0>
-std::tuple<typename Rs::iterator...> range_begin(std::tuple<Rs...> rt) 
-{
-  return range_begin_impl(rt, std::make_index_sequence<sizeof...(Rs)>{});
-}
-
-template <typename ... Rs,
-        meta::requires<range_concept,Rs...> = 0>
-auto range_size(std::tuple<Rs...> rt)
-{
-  return std::get<0>(rt).size();
-}
 
 template <typename C>
 class range_mapping {
