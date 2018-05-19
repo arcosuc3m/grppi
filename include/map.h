@@ -47,11 +47,10 @@ namespace grppi {
 */
 template<typename Execution, typename ... InRanges, typename OutRange,
         typename Transformer,
-        requires_ranges<InRanges...> = 0,
-        requires_range<OutRange> = 0>
+        meta::requires<range_concept, InRanges...> = 0,
+        meta::requires<range_concept,OutRange> = 0>
 void map(const Execution & ex, std::tuple<InRanges...> rins, OutRange rout,
-         Transformer transform_op
-        )
+         Transformer transform_op)
 {
   static_assert(supports_map<Execution>(),
       "map not supported on execution type");
@@ -73,8 +72,8 @@ void map(const Execution & ex, std::tuple<InRanges...> rins, OutRange rout,
 */
 template<typename Execution, typename InRange, typename OutRange,
         typename Transformer,
-        requires_range<InRange> = 0,
-        requires_range<OutRange> = 0>
+        meta::requires<range_concept,InRange> = 0,
+        meta::requires<range_concept,OutRange> = 0>
 void map(const Execution & ex, InRange rin, OutRange rout,
          Transformer transform_op)
 {

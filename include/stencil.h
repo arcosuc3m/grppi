@@ -50,8 +50,8 @@ sequential execution.
 */
 template <typename Execution, typename InputRange, typename OutputRange, 
           typename StencilTransformer, typename Neighbourhood,
-          requires_range<InputRange> = 0,
-          requires_range<OutputRange> = 0>
+          meta::requires<range_concept,InputRange> = 0,
+          meta::requires<range_concept,OutputRange> = 0>
 void stencil(
     const Execution & ex, 
     InputRange rin, OutputRange rout,
@@ -83,8 +83,8 @@ sequential execution.
 */
 template <typename Execution, typename ... InputRanges, typename OutputRange,
           typename StencilTransformer, typename Neighbourhood,
-          requires_ranges<InputRanges...> = 0,
-          requires_range<OutputRange> = 0>
+          meta::requires<range_concept,InputRanges...> = 0,
+          meta::requires<range_concept,OutputRange> = 0>
 void stencil(
     const Execution & ex,
     std::tuple<InputRanges...> rins, OutputRange rout,

@@ -49,7 +49,7 @@ namespace grppi {
 */
 template <typename Execution, typename InputRange, typename Identity, 
           typename Transformer, typename Combiner,
-          requires_range<InputRange> = 0>
+          meta::requires<range_concept,InputRange> = 0>
 auto map_reduce(const Execution & ex, 
                 InputRange rin,
                 Identity && identity, 
@@ -81,7 +81,7 @@ auto map_reduce(const Execution & ex,
 template <typename Execution, 
     typename ... InputRanges,
     typename Identity, typename Transformer, typename Combiner,
-    requires_ranges<InputRanges ...> = 0>
+    meta::requires<range_concept,InputRanges ...> = 0>
 auto map_reduce(const Execution & ex,
                 std::tuple<InputRanges...> rins,
                 Identity && identity,
