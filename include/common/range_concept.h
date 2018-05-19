@@ -20,61 +20,58 @@
 
 namespace grppi {
 
+/** 
+\addtogroup concepts
+@{
+*/
+
+/**
+\brief Concept for ranges.
+A range is any type that:
+  - Has a begin() member.
+  - Has an end() member.
+  - Has a size() member returning a value convertible to std::size_t.
+*/
 template <typename T>
 struct range_concept
 {
+  /// Return type of U::begin().
   template <typename U>
   using begin = decltype(std::declval<U>().begin());
 
+  /// Detects if a type has begin() member function.
   template <typename U>
   using has_begin = meta::is_detected<begin,U>;
 
+  /// Return type of U::end().
   template <typename U>
   using end = decltype(std::declval<U>().end());
 
+  /// Detects if a type has end() member function.
   template <typename U>
   using has_end = meta::is_detected<end,U>;
 
+  /// Return type of U::size().
   template <typename U>
   using size = decltype(std::declval<const U>().size());
 
+  /// Detects if a type has a size() member function returning std::size_t.
   template <typename U>
   using has_size = meta::is_detected_convertible<std::size_t,size,U>;
 
+  /// Requirements for range_concept.
   using requires = meta::conjunction<
       has_begin<T>, 
       has_end<T>,
       has_size<T>>;
 
+  /// Boolean value for the range_concept requirements.
   static constexpr bool value = requires::value;
 };
 
-template <typename ... Rs, std::size_t ... I>
-std::tuple<typename Rs::iterator...> range_begin_impl(std::tuple<Rs&...> rt, std::index_sequence<I...>)
-{
-  return std::make_tuple(std::get<I>(rt).begin()...);
-}
-
-template <typename ... Rs,
-        meta::requires<range_concept,Rs...> = 0>
-std::tuple<typename Rs::iterator...> range_begin(std::tuple<Rs&...> rt) 
-{
-  return range_begin_impl(rt, std::make_index_sequence<sizeof...(Rs)>{});
-}
-
-template <typename ... Rs,
-        meta::requires<range_concept,Rs...> = 0>
-std::tuple<typename Rs::iterator...> range_begin(Rs &&... rs) 
-{
-  return range_begin_impl(std::forward_as_tuple(rs...), std::make_index_sequence<sizeof...(Rs)>{});
-}
-
-template <typename ... Rs,
-        meta::requires<range_concept,Rs...> = 0>
-auto range_size(std::tuple<Rs&...> rt)
-{
-  return std::get<0>(rt).size();
-}
+/**
+@}
+*/
 
 }
 

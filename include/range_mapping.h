@@ -20,57 +20,60 @@
 
 namespace grppi {
 
-template <typename C>
-class range_mapping {
-public:
-  using iterator = typename C::iterator;
-
-  range_mapping(C & c) : first_{c.begin()}, last_{c.end()} {}
-  range_mapping(iterator f, iterator l) : first_{f}, last_{l} {}
-
-  auto begin() { return first_; }
-  auto end() { return last_; }
-  auto size() const { return std::distance(first_,last_); }
-
-private:
-  iterator first_, last_;
-};
-
-template <typename C,
-        meta::requires<range_concept,C> = 0>
-range_mapping<C> make_range(C & c) { return {c}; }
-
-template <typename ... Cs,
-        meta::requires<range_concept,Cs...> = 0>
-std::tuple<range_mapping<Cs>...> make_ranges(Cs & ... c) 
-{
-  return std::make_tuple(range_mapping<Cs>{c}...); 
-}
-
+/**
+\brief A view over multiple ranges.
+\tparam Rs Ranges types.
+A view over multiple ranges that keeps references to them.
+*/
 template <typename ... Rs>
 class zip_view {
 public:
+
+  /**
+  \brief Construct from references to ranges.
+  */
   zip_view(Rs& ... rs) : rngs_{rs...} {}
 
-  auto begin() { return begin_impl(std::make_index_sequence<sizeof...(Rs)>{}); }
+  /**
+  \brief Get a tuple with the begin() of each range.
+  */
+  auto begin() noexcept { 
+    return begin_impl(std::make_index_sequence<sizeof...(Rs)>{}); 
+  }
 
-  auto size() {
+  /**
+  \brief Get a tuple with the size() of each range.
+  */
+  auto size() const noexcept {
     return std::get<0>(rngs_).size();
   }
 
 private:
+  /// Tuple of references to ranges.
   std::tuple<Rs&...> rngs_;
 
 private:
 
+  /**
+  \brief Implementation details of begin()
+  */
   template <std::size_t ... I>
   auto begin_impl(std::index_sequence<I...>) {
     return std::make_tuple(std::get<I>(rngs_).begin()...);
   }
+
 };
 
-template <typename ... Rs>
-auto zip(Rs & ... rs) { return zip_view<Rs...>(rs...); }
+/**
+\brief Factory function for easy creation of a zip_view.
+\tparam Rs Ranges types.
+\param rs References to ranges values.
+*/
+template <typename ... Rs,
+          meta::requires<range_concept, Rs...> = 0>
+auto zip(Rs & ... rs) { 
+  return zip_view<Rs...>(rs...); 
+}
 
 }
 
