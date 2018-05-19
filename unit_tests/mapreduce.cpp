@@ -57,7 +57,7 @@ public:
 
   template <typename E>
   auto run_square_sum_range(const E & e) {
-    return grppi::map_reduce(e, grppi::make_range(v), 0,
+    return grppi::map_reduce(e, v, 0,
       [this](int x) { 
         invocations_transformer++; 
         return x*x;
@@ -99,7 +99,7 @@ public:
   template <typename E>
   auto run_scalar_product_tuple_range(const E & e){
     return  grppi::map_reduce(e,
-      make_ranges(v,v2), 0,
+      grppi::zip(v,v2), 0,
       [this](int x1, int x2) {
         invocations_transformer++;
         return x1 * x2;

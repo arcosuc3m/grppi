@@ -54,7 +54,7 @@ template <typename Execution, typename InputRange, typename OutputRange,
           meta::requires<range_concept,OutputRange> = 0>
 void stencil(
     const Execution & ex, 
-    InputRange rin, OutputRange rout,
+    InputRange && rin, OutputRange && rout,
     StencilTransformer && transform_op, 
     Neighbourhood && neighbour_op) 
 {
@@ -87,13 +87,13 @@ template <typename Execution, typename ... InputRanges, typename OutputRange,
           meta::requires<range_concept,OutputRange> = 0>
 void stencil(
     const Execution & ex,
-    std::tuple<InputRanges...> rins, OutputRange rout,
+    zip_view<InputRanges...> rins, OutputRange && rout,
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op)
 {
   static_assert(supports_stencil<Execution>(),
                 "stencil not supported for execution type");
-  ex.stencil(range_begin(rins), rout.begin(), range_size(rins),
+  ex.stencil(rins.begin(), rout.begin(), rins.size(),
              std::forward<StencilTransformer>(transform_op),
              std::forward<Neighbourhood>(neighbour_op));
 }

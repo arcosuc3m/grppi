@@ -50,21 +50,28 @@ struct range_concept
 };
 
 template <typename ... Rs, std::size_t ... I>
-std::tuple<typename Rs::iterator...> range_begin_impl(std::tuple<Rs...> rt, std::index_sequence<I...>)
+std::tuple<typename Rs::iterator...> range_begin_impl(std::tuple<Rs&...> rt, std::index_sequence<I...>)
 {
   return std::make_tuple(std::get<I>(rt).begin()...);
 }
 
 template <typename ... Rs,
         meta::requires<range_concept,Rs...> = 0>
-std::tuple<typename Rs::iterator...> range_begin(std::tuple<Rs...> rt) 
+std::tuple<typename Rs::iterator...> range_begin(std::tuple<Rs&...> rt) 
 {
   return range_begin_impl(rt, std::make_index_sequence<sizeof...(Rs)>{});
 }
 
 template <typename ... Rs,
         meta::requires<range_concept,Rs...> = 0>
-auto range_size(std::tuple<Rs...> rt)
+std::tuple<typename Rs::iterator...> range_begin(Rs &&... rs) 
+{
+  return range_begin_impl(std::forward_as_tuple(rs...), std::make_index_sequence<sizeof...(Rs)>{});
+}
+
+template <typename ... Rs,
+        meta::requires<range_concept,Rs...> = 0>
+auto range_size(std::tuple<Rs&...> rt)
 {
   return std::get<0>(rt).size();
 }

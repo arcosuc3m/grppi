@@ -51,7 +51,7 @@ template <typename Execution, typename InputRange, typename Identity,
           typename Transformer, typename Combiner,
           meta::requires<range_concept,InputRange> = 0>
 auto map_reduce(const Execution & ex, 
-                InputRange rin,
+                InputRange && rin,
                 Identity && identity, 
                 Transformer &&  transform_op, Combiner && combine_op)
 {
@@ -83,13 +83,13 @@ template <typename Execution,
     typename Identity, typename Transformer, typename Combiner,
     meta::requires<range_concept,InputRanges ...> = 0>
 auto map_reduce(const Execution & ex,
-                std::tuple<InputRanges...> rins,
+                zip_view<InputRanges...> rins,
                 Identity && identity,
                 Transformer &&  transform_op, Combiner && combine_op)
 {
   static_assert(supports_map_reduce<Execution>(),
                 "map/reduce not supported on execution type");
-  return ex.map_reduce(range_begin(rins), range_size(rins),
+  return ex.map_reduce(rins.begin(), rins.size(),
                        std::forward<Identity>(identity),
                        std::forward<Transformer>(transform_op),
                        std::forward<Combiner>(combine_op));

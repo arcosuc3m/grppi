@@ -65,7 +65,7 @@ public:
 
   template <typename E>
   void run_unary_range(E & ex) {
-    grppi::stencil(ex, make_range(v), make_range(w),
+    grppi::stencil(ex, v, w,
       [this](auto it, auto n) { 
         invocations_operation++; 
         return *it + n;
@@ -187,7 +187,7 @@ public:
       return result;
     };
 
-    grppi::stencil(ex, make_ranges(v,v2), make_range(w),
+    grppi::stencil(ex, grppi::zip(v,v2), w,
       // Stencil computes average of neighbours
       [this](auto, const auto & n) {
         invocations_operation++;

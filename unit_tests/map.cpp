@@ -55,7 +55,7 @@ public:
   template <typename E>
   void run_unary_range(const E & e) {
     grppi::map(e,
-      grppi::make_range(v), grppi::make_range(w),
+      v, w,
       [this](int i) {
         invocations++;
         return i*2;
@@ -90,8 +90,8 @@ public:
   template<typename E>
   void run_nary_tuple_range(const E & e) {
     grppi::map(e,
-      grppi::make_ranges(v,v2,v3),
-      grppi::make_range(w),
+      grppi::zip(v,v2,v3),
+      w,
        [this](int x, int y, int z){
          invocations++;
          return x+y+z;

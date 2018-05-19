@@ -53,7 +53,7 @@ public:
   
   template <typename E>
   void run_unary_range(const E & e) {
-    out = grppi::reduce(e, grppi::make_range(v), 0,
+    out = grppi::reduce(e, v, 0,
      [](int x, int y){ return x + y; }
     );
   }

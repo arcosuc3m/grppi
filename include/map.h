@@ -49,12 +49,12 @@ template<typename Execution, typename ... InRanges, typename OutRange,
         typename Transformer,
         meta::requires<range_concept, InRanges...> = 0,
         meta::requires<range_concept,OutRange> = 0>
-void map(const Execution & ex, std::tuple<InRanges...> rins, OutRange rout,
+void map(const Execution & ex, zip_view<InRanges...> rins, OutRange && rout,
          Transformer transform_op)
 {
   static_assert(supports_map<Execution>(),
       "map not supported on execution type");
-  ex.map(range_begin(rins), rout.begin(),
+  ex.map(rins.begin(), rout.begin(),
          rout.size(), transform_op);
 }
 
@@ -74,7 +74,7 @@ template<typename Execution, typename InRange, typename OutRange,
         typename Transformer,
         meta::requires<range_concept,InRange> = 0,
         meta::requires<range_concept,OutRange> = 0>
-void map(const Execution & ex, InRange rin, OutRange rout,
+void map(const Execution & ex, InRange && rin, OutRange && rout,
          Transformer transform_op)
 {
   static_assert(supports_map<Execution>(),

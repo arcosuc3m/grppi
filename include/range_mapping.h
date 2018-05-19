@@ -47,6 +47,31 @@ std::tuple<range_mapping<Cs>...> make_ranges(Cs & ... c)
   return std::make_tuple(range_mapping<Cs>{c}...); 
 }
 
+template <typename ... Rs>
+class zip_view {
+public:
+  zip_view(Rs& ... rs) : rngs_{rs...} {}
+
+  auto begin() { return begin_impl(std::make_index_sequence<sizeof...(Rs)>{}); }
+
+  auto size() {
+    return std::get<0>(rngs_).size();
+  }
+
+private:
+  std::tuple<Rs&...> rngs_;
+
+private:
+
+  template <std::size_t ... I>
+  auto begin_impl(std::index_sequence<I...>) {
+    return std::make_tuple(std::get<I>(rngs_).begin()...);
+  }
+};
+
+template <typename ... Rs>
+auto zip(Rs & ... rs) { return zip_view<Rs...>(rs...); }
+
 }
 
 #endif
