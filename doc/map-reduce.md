@@ -64,15 +64,45 @@ T res = cmb(x,y);
 
 ## Details on map/reduce variants
 
-### Unary map_reduce
+### Unary map/reduce
 
 An unary **map/reduce** takes a single data set and performs consecutively the
 **map** and the **reduce** stages, returning the reduced value.
 
-The only interface currently offered for this pattern is based on iterators
+There are two interfaces for the unary map/reduce:
+  * A *range* based interface.
+  * An *iterator* based interface.
+
+#### Range based unary map/reduce
+
+The range based interface specifies sequences as ranges.
+A **range** is any type satisfying the `grppi::range_concept`.
+In particular, any STL sequence is a **range**.
+Thus, the only sequence provided to `grppi::map_reduce` is:
+
+  * The input data set is specified by a range.
+
+---
+**Example**: Transforms a sequence of strings to its corresponding double values
+and computes the addition of those values.
+~~~{.cpp}
+vector<string> v { "1.0", "2.0", "3.5", "0.25" };
+auto res = grppi::map_reduce(exec,
+  v,
+  0.0,
+  [](string s) { return stod(s); },
+  [](double x, double y) { return x+y; }
+);
+// res == 6.75
+~~~
+---
+
+#### Iterator based unary map/reduce
+
+The iterator based interface specifies sequences in terms of iterators
 (following the C++ standard library conventions):
 
-  * The input data set is specified by two iterators.
+  * The input data set is specified by two iterators (or by an iterator and a size).
 
 A unary **map/reduce** also requires an identity value for the **Combiner**.
 
@@ -88,6 +118,14 @@ auto res = grppi::map_reduce(exec,
   [](double x, double y) { return x+y; }
 );
 // res == 6.75
+
+auto res = grppi::map_reduce(exec,
+  begin(v), v.size(),
+  0.0,
+  [](string s) { return stod(s); },
+  [](double x, double y) { return x+y; }
+);
+// res == 6.75
 ~~~
 ---
 
@@ -97,27 +135,55 @@ auto res = grppi::map_reduce(exec,
 A n-ary **map/reduce** takes multiple data sets and performs consecutively the
 **map** and **reduce** stages, returning the reduced value.
 
-The only interface currently offered for this pattern is based on iterators
-(following the C++ standard library conventions):
+There are two interfaces for the unary map/reduce:
+  * A *range* based interface.
+  * An *iterator* based interface.
 
-  * The first data set is specified by two iterators.
-  * All the other input data sets are specified by iterators to the start of the
-    input data sequences, assuming that the size of all sequences are, at least,
-    as large as the first sequence.
+#### N-ary range based map/reduce
 
-A n-ary **map/reduce** also requires an identity value for the **Combiner**.
+The range based interface specifies sequences as ranges.
+A **range** is any type satisfying the `grppi::range_concept`.
+In particular, any STL sequence is a **range**.
+Thus, the sequences provided to `grppi::map_reduce` are:
+
+  * Each input data set is specified by a range.
 
 ---
-**Example**: Compute scalar vector between two vectors of doubles.
+**Example**: Compute scalar product between two vectors of doubles.
 ~~~{.cpp}
 v = get_first_vector();
 w = get_second_vector();
+std::vector<double> r(v.size());
 auto res = grppi::map_reduce(exec,
-  begin(v), end(v),
+  v, w, r,
   0.0,
   [](double x, double y) { return x*y; },
   [](double x, double y) { return x+y; },
-  begin(w)
+);
+~~~
+---
+#### N-ary iterator based map/reduce
+
+
+The iterator based interface specifies sequences in terms of iterators
+(following the C++ standard library conventions):
+
+  * The input data sets are specified by a tuple of iterators to the start of each sequence
+  * Additionally, the size of those sequences is specified by either an iterator to the end of the first sequence or by an integral value.
+  * The output data set is specified by an iterator to the start of the output sequence.
+
+---
+**Example**: Compute scalar product between two vectors of doubles.
+~~~{.cpp}
+v = get_first_vector();
+w = get_second_vector();
+std::vector<double> r(v.size());
+auto res = grppi::map_reduce(exec,
+  std::make_tuple(begin(v), begin(w)), end(v),
+  begin(w),
+  0.0,
+  [](double x, double y) { return x*y; },
+  [](double x, double y) { return x+y; },
 );
 ~~~
 ---
@@ -130,7 +196,7 @@ auto res = grppi::map_reduce(exec,
 ~~~{.cpp}
 vector<string> words = get_words();
 auto result = grppi::map_reduce(ex,
-  words.begin(), words.end(), map<string,int>{},
+  words, map<string,int>{},
   [](string word) -> map<string,int> { return {{word, 1}}; },
   [](map<string,int> & lhs, const map<string,int> & rhs) -> map<string,int> & {
     for (auto & w : rhs) {
