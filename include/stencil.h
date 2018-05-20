@@ -19,7 +19,7 @@
 #include <tuple>
 #include <utility>
 
-#include "range_mapping.h"
+#include "common/zip_view.h"
 #include "common/execution_traits.h"
 #include "common/iterator_traits.h"
 
