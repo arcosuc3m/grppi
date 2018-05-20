@@ -64,6 +64,24 @@ public:
   }
 
   template <typename E>
+  void run_unary_size(E & ex) {
+    grppi::stencil(ex, begin(v), v.size(), begin(w),
+      [this](auto it, auto n) { 
+        invocations_operation++; 
+        return *it + n;
+      },
+      [&](auto it) { 
+        invocations_neighbour++;
+        if (it+1 != v.end()) {
+          return *(it+1);
+        }
+        else {
+          return 0; 
+        }
+      }
+    );
+  }
+  template <typename E>
   void run_unary_range(E & ex) {
     grppi::stencil(ex, v, w,
       [this](auto it, auto n) { 
@@ -270,6 +288,13 @@ TYPED_TEST(stencil_test, static_empty)
   this->check_empty();
 }
 
+TYPED_TEST(stencil_test, static_empty_size)
+{
+  this->setup_empty();
+  this->run_unary_size(this->execution_);
+  this->check_empty();
+}
+
 TYPED_TEST(stencil_test, static_empty_range)
 {
   this->setup_empty();
@@ -281,6 +306,13 @@ TYPED_TEST(stencil_test, dyn_empty)
 {
   this->setup_empty();
   this->run_unary(this->dyn_execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(stencil_test, dyn_empty_size)
+{
+  this->setup_empty();
+  this->run_unary_size(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -342,6 +374,13 @@ TYPED_TEST(stencil_test, static_single)
   this->check_single();
 }
 
+TYPED_TEST(stencil_test, static_single_size)
+{
+  this->setup_single();
+  this->run_unary_size(this->execution_);
+  this->check_single();
+}
+
 TYPED_TEST(stencil_test, static_single_range)
 {
   this->setup_single();
@@ -353,6 +392,13 @@ TYPED_TEST(stencil_test, dyn_single)
 {
   this->setup_single();
   this->run_unary(this->dyn_execution_);
+  this->check_single();
+}
+
+TYPED_TEST(stencil_test, dyn_single_size)
+{
+  this->setup_single();
+  this->run_unary_size(this->dyn_execution_);
   this->check_single();
 }
 
@@ -414,6 +460,13 @@ TYPED_TEST(stencil_test, static_multiple)
   this->check_multiple();
 }
 
+TYPED_TEST(stencil_test, static_multiple_size)
+{
+  this->setup_multiple();
+  this->run_unary_size(this->execution_);
+  this->check_multiple();
+}
+
 TYPED_TEST(stencil_test, static_multiple_range)
 {
   this->setup_multiple();
@@ -425,6 +478,13 @@ TYPED_TEST(stencil_test, dyn_multiple)
 {
   this->setup_multiple();
   this->run_unary(this->dyn_execution_);
+  this->check_multiple();
+}
+
+TYPED_TEST(stencil_test, dyn_multiple_size)
+{
+  this->setup_multiple();
+  this->run_unary_size(this->dyn_execution_);
   this->check_multiple();
 }
 
