@@ -56,6 +56,19 @@ public:
   }
 
   template <typename E>
+  auto run_square_sum_size(const E & e) {
+    return grppi::map_reduce(e, begin(v), v.size(), 0,
+      [this](int x) { 
+        invocations_transformer++; 
+        return x*x;
+      },
+      [](int x, int y) { 
+        return x + y; 
+      }
+    );
+  }
+
+  template <typename E>
   auto run_square_sum_range(const E & e) {
     return grppi::map_reduce(e, v, 0,
       [this](int x) { 
@@ -165,6 +178,13 @@ TYPED_TEST(map_reduce_test, static_single_square_sum)
   this->check_single();
 }
 
+TYPED_TEST(map_reduce_test, static_single_square_sum_size)
+{
+  this->setup_single();
+  this->output = this->run_square_sum_size(this->execution_);
+  this->check_single();
+}
+
 TYPED_TEST(map_reduce_test, static_single_square_sum_range)
 {
   this->setup_single();
@@ -176,6 +196,13 @@ TYPED_TEST(map_reduce_test, dyn_single_square_sum)
 {
   this->setup_single();
   this->output = this->run_square_sum(this->dyn_execution_);
+  this->check_single();
+}
+
+TYPED_TEST(map_reduce_test, dyn_single_square_sum_size)
+{
+  this->setup_single();
+  this->output = this->run_square_sum_size(this->dyn_execution_);
   this->check_single();
 }
 
@@ -193,6 +220,13 @@ TYPED_TEST(map_reduce_test, static_multiple_square_sum)
   this->check_multiple();
 }
 
+TYPED_TEST(map_reduce_test, static_multiple_square_sum_size)
+{
+  this->setup_multiple();
+  this->output = this->run_square_sum_size(this->execution_);
+  this->check_multiple();
+}
+
 TYPED_TEST(map_reduce_test, static_multiple_square_sum_range)
 {
   this->setup_multiple();
@@ -204,6 +238,13 @@ TYPED_TEST(map_reduce_test, dyn_multiple_square_sum)
 {
   this->setup_multiple();
   this->output = this->run_square_sum(this->dyn_execution_);
+  this->check_multiple();
+}
+
+TYPED_TEST(map_reduce_test, dyn_multiple_square_sum_size)
+{
+  this->setup_multiple();
+  this->output = this->run_square_sum_size(this->dyn_execution_);
   this->check_multiple();
 }
 
