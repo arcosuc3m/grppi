@@ -53,6 +53,17 @@ public:
   }
 
   template <typename E>
+  void run_unary_size(const E & e) {
+    grppi::map(e, 
+      v.begin(), v.size(), w.begin(),
+      [this](int i) {
+        invocations++; 
+        return i*2; 
+      }
+    );
+  }
+
+  template <typename E>
   void run_unary_range(const E & e) {
     grppi::map(e,
       v, w,
@@ -164,6 +175,13 @@ TYPED_TEST(map_test, static_empty_unary)
   this->check_empty();
 }
 
+TYPED_TEST(map_test, static_empty_unary_size)
+{
+  this->setup_empty();
+  this->run_unary_size(this->execution_);
+  this->check_empty();
+}
+
 TYPED_TEST(map_test, static_empty_unary_range)
 {
   this->setup_empty();
@@ -175,6 +193,13 @@ TYPED_TEST(map_test, dyn_empty_unary)
 {
   this->setup_empty();
   this->run_unary(this->dyn_execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, dyn_empty_unary_size)
+{
+  this->setup_empty();
+  this->run_unary_size(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -192,6 +217,13 @@ TYPED_TEST(map_test, static_single_unary)
   this->check_single_unary();
 }
 
+TYPED_TEST(map_test, static_single_unary_size)
+{
+  this->setup_single_unary();
+  this->run_unary_size(this->execution_);
+  this->check_single_unary();
+}
+
 TYPED_TEST(map_test, static_single_unary_range)
 {
   this->setup_single_unary();
@@ -203,6 +235,13 @@ TYPED_TEST(map_test, dyn_single_unary)
 {
   this->setup_single_unary();
   this->run_unary(this->dyn_execution_);
+  this->check_single_unary();
+}
+
+TYPED_TEST(map_test, dyn_single_unary_size)
+{
+  this->setup_single_unary();
+  this->run_unary_size(this->dyn_execution_);
   this->check_single_unary();
 }
 
@@ -220,6 +259,13 @@ TYPED_TEST(map_test, static_multiple_unary)
   this->check_multiple_unary();
 }
 
+TYPED_TEST(map_test, static_multiple_unary_size)
+{
+  this->setup_multiple_unary();
+  this->run_unary_size(this->execution_);
+  this->check_multiple_unary();
+}
+
 TYPED_TEST(map_test, static_multiple_unary_range)
 {
   this->setup_multiple_unary();
@@ -231,6 +277,13 @@ TYPED_TEST(map_test, dyn_multiple_unary)
 {
   this->setup_multiple_unary();
   this->run_unary(this->dyn_execution_);
+  this->check_multiple_unary();
+}
+
+TYPED_TEST(map_test, dyn_multiple_unary_size)
+{
+  this->setup_multiple_unary();
+  this->run_unary_size(this->dyn_execution_);
   this->check_multiple_unary();
 }
 
