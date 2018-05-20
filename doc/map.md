@@ -50,14 +50,41 @@ U res = op(x1,x2,...,xN)
 An unary **map** takes a data set and transforms each element in the data set by
 applying an unary function and generating a new data set.
 
-The only interface currently offered for this pattern is based in iterators
+There are two interfaces for the unary map:
+
+  * A *range* based interface.
+  * An *iterator* based interface.
+
+#### Range based interface
+
+The *range based* iterface specifies sequences as ranges. A **range** is any type
+satisfying the `grppi::range_concept`. In particular, any STL container is
+a **range**. Thus, sequences provided to `grppi::map` are:
+
+  * The input data set is specified by a range.
+  * The output data set is specified by a range.
+
+---
+**Example**: Doubling values in a vector with ranges.
+~~~{.cpp}
+vector<double> v = get_the_vector();
+vector<double> w(v.size());
+map(exec, v, w,
+    [](double x) { return 2 *x; }
+);
+~~~
+---
+
+#### Iterator based interface
+
+The iterator based interface specifies sequences in terms of iterators
 (following the C++ standard library conventions):
 
   * The input data set is specified by two iterators.
   * The output data set is specified by an iterator to the start of the output sequence.
 
 ---
-**Example**: Doubling values in a vector.
+**Example**: Doubling values in a vector with iterators.
 ~~~{.cpp}
 vector<double> v = get_the_vector();
 vector<double> w(v.size());
@@ -73,15 +100,43 @@ map(exec, begin(v), end(v), begin(w),
 A n-ary **map** takes multiple data sets and transforms a tuple of elements from
 those data sets by applying a n-ary function and generating a new data set.
 
-The only interface currently offered for this pattern is based in iterators:
+There are two interfaces for the n-ary map:
 
-  * The first data set is specified by two iterators.
+  * A *range* based interface.
+  * An *iterator* based interface.
 
+#### Range based n-ary map
+
+The *range based* iterface specifies sequences as ranges. A **range** is any type
+satisfying the `grppi::range_concept`. In particular, any STL container is
+a **range**. Thus, sequences provided to `grppi::map` are:
+
+  * The input data sets are specified by ranges packaged into a `grppi::zip_view` by `grppi::zip`.
+  * The output data set is specified by a range.
+
+---
+**Example**: Computing the addition of three vectors with ranges.
+~~~{.cpp}
+vector<double> v1 = get_first_vector();
+vector<double> v2 = get_second_vector();
+vector<double> v3 = get_third_vector();
+vector<double> w(v1.size());
+map(exec, grppi::zip(v1,v2,v3), w,
+  [](double x, double y, double z) { return x+y+z; },
+);
+~~~
+---
+#### Iterator based n-ary map
+
+The iterator based interface specifies sequences in terms of iterators
+(following the C++ standard library conventions):
+
+  * The input data sets are specified by a tuple of iterators to the start
+    of each sequence
+  * Additionally, the size of those sequences is specified by either an
+    iterator to the end of the first sequence or by an integral value.
   * The output data set is specified by an iterator to the start of the output
     sequence.
-
-  * All the other input data sets are specified by iterators to the start of the
-    input data sequences.
 
 ---
 **Example**: Computing the addition of three vectors.
@@ -90,9 +145,13 @@ vector<double> v1 = get_first_vector();
 vector<double> v2 = get_second_vector();
 vector<double> v3 = get_third_vector();
 vector<double> w(v1.size());
-map(exec, begin(v1), end(v1), begin(w),
+map(exec, std::make_tuple(begin(v1), begin(v2), begin(v3)), end(v1),
+  begin(w),
   [](double x, double y, double z) { return x+y+z; },
-  begin(v2), begin(v3)
+);
+map(exec, std::make_tuple(begin(v1), begin(v2), begin(v3)), v1.size(),
+  begin(w),
+  [](double x, double y, double z) { return x+y+z; },
 );
 ~~~
 ---
