@@ -37,6 +37,11 @@ endif()
 if(GRPPI_UNIT_TEST_ENABLE)
   include_directories(${GTEST_INCLUDE_DIRS})
 
+  if ( NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") )
+    # Add coverage options. Needs to be done before add_executable
+    add_compile_options(--coverage)
+  endif()
+
   set(PROJECT_TEST_NAME utest_${PROJECT_NAME_STR})
   file(GLOB TEST_SRC_FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
@@ -44,11 +49,6 @@ if(GRPPI_UNIT_TEST_ENABLE)
   
   # Unit testing should be made in debug mode
   set(CMAKE_BUILD_TYPE "Debug")
-
-  if ( NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") )
-    # Add coverage options
-    add_compile_options(--coverage)
-  endif()
 
   # Do not emit deprecated warnings for _legacy unit tests
   file(GLOB TEST_SRC_FILES_LEGACY
