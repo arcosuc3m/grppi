@@ -18,6 +18,7 @@
 
 #include <utility>
 
+#include "common/zip_view.h"
 #include "common/execution_traits.h"
 #include "common/iterator_traits.h"
 
@@ -34,32 +35,93 @@ namespace grppi {
 /**
 \brief Invoke \ref md_map-reduce on a data sequence.
 \tparam Execution Execution type.
-\tparam InputIterators Iterators types used for the input sequences.
+\tparam InputRange Range type used for the input sequence.
 \tparam Identity Type for the identity value.
 \tparam Transformer Callable type for the transformation operation.
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex Execution policy object.
-\param firsts Tuple of iterators to the first elements in the input sequences.
-\param size Size of the input sequence to be process.
+\param rin Range for the input sequence.
 \param identity Identity value for the combination operation.
 \param transf_op Transformation operation.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
 */
-template <typename Execution, typename ...InputIterators,
+template <typename Execution, typename InputRange, typename Identity, 
+          typename Transformer, typename Combiner,
+          meta::requires<range_concept,InputRange> = 0>
+auto map_reduce(const Execution & ex, 
+                InputRange && rin,
+                Identity && identity, 
+                Transformer &&  transform_op, Combiner && combine_op)
+{
+  static_assert(supports_map_reduce<Execution>(),
+    "map/reduce not supported on execution type");
+  return ex.map_reduce(std::make_tuple(rin.begin()), rin.size(),
+      std::forward<Identity>(identity),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Combiner>(combine_op));
+}
+
+/**
+\brief Invoke \ref md_map-reduce on a data sequence.
+\tparam Execution Execution type.
+\tparam InputRanges Range types used for the input sequences.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Execution policy object.
+\param rins Zip view for the input sequences.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename Execution, 
+    typename ... InputRanges,
     typename Identity, typename Transformer, typename Combiner,
-    requires_iterators<InputIterators...> = 0>
+    meta::requires<range_concept,InputRanges ...> = 0>
 auto map_reduce(const Execution & ex,
-                std::tuple<InputIterators...> firsts, std::size_t size,
+                zip_view<InputRanges...> rins,
                 Identity && identity,
                 Transformer &&  transform_op, Combiner && combine_op)
 {
   static_assert(supports_map_reduce<Execution>(),
                 "map/reduce not supported on execution type");
-  return ex.map_reduce(firsts, size,
+  return ex.map_reduce(rins.begin(), rins.size(),
                        std::forward<Identity>(identity),
                        std::forward<Transformer>(transform_op),
                        std::forward<Combiner>(combine_op));
+}
+
+/**
+\brief Invoke \ref md_map-reduce on a data sequence.
+\tparam Execution Execution type.
+\tparam InputIterator Iterator type used for the input sequence.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Execution policy object.
+\param first Iterator to the first element in the input sequence.
+\param last Iterator to one past the end of the input sequence.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename Execution, typename InputIterator, typename Identity, 
+          typename Transformer, typename Combiner,
+          requires_iterator<InputIterator> = 0>
+auto map_reduce(const Execution & ex, 
+                InputIterator first, InputIterator last, 
+                Identity && identity, 
+                Transformer &&  transform_op, Combiner && combine_op)
+{
+  static_assert(supports_map_reduce<Execution>(),
+    "map/reduce not supported on execution type");
+  return ex.map_reduce(std::make_tuple(first), std::distance(first,last), 
+      std::forward<Identity>(identity),
+      std::forward<Transformer>(transform_op), 
+      std::forward<Combiner>(combine_op));
 }
 
 /**
@@ -105,7 +167,7 @@ auto map_reduce(const Execution & ex,
 \tparam Combiner Callable type for the combination operation of the reduction.
 \param ex Execution policy object.
 \param first Iterator to the first element in the input sequence.
-\param last Iterator to one past the end of the input sequence.
+\param size Size of the input sequence to be processed.
 \param identity Identity value for the combination operation.
 \param transf_op Transformation operation.
 \param combine_op Combination operation.
@@ -115,16 +177,47 @@ template <typename Execution, typename InputIterator, typename Identity,
           typename Transformer, typename Combiner,
           requires_iterator<InputIterator> = 0>
 auto map_reduce(const Execution & ex, 
-                InputIterator first, InputIterator last, 
+                InputIterator first, std::size_t size,
                 Identity && identity, 
                 Transformer &&  transform_op, Combiner && combine_op)
 {
   static_assert(supports_map_reduce<Execution>(),
     "map/reduce not supported on execution type");
-  return ex.map_reduce(make_tuple(first), std::distance(first,last), 
+  return ex.map_reduce(std::make_tuple(first), size,
       std::forward<Identity>(identity),
       std::forward<Transformer>(transform_op), 
       std::forward<Combiner>(combine_op));
+}
+
+/**
+\brief Invoke \ref md_map-reduce on a data sequence.
+\tparam Execution Execution type.
+\tparam InputIterators Iterators types used for the input sequences.
+\tparam Identity Type for the identity value.
+\tparam Transformer Callable type for the transformation operation.
+\tparam Combiner Callable type for the combination operation of the reduction.
+\param ex Execution policy object.
+\param firsts Tuple of iterators to the first elements in the input sequences.
+\param size Size of the input sequence to be processed.
+\param identity Identity value for the combination operation.
+\param transf_op Transformation operation.
+\param combine_op Combination operation.
+\return Result of the map/reduce operation.
+*/
+template <typename Execution, typename ...InputIterators,
+    typename Identity, typename Transformer, typename Combiner,
+    requires_iterators<InputIterators...> = 0>
+auto map_reduce(const Execution & ex,
+                std::tuple<InputIterators...> firsts, std::size_t size,
+                Identity && identity,
+                Transformer &&  transform_op, Combiner && combine_op)
+{
+  static_assert(supports_map_reduce<Execution>(),
+                "map/reduce not supported on execution type");
+  return ex.map_reduce(firsts, size,
+                       std::forward<Identity>(identity),
+                       std::forward<Transformer>(transform_op),
+                       std::forward<Combiner>(combine_op));
 }
 
 /**
@@ -141,13 +234,14 @@ auto map_reduce(const Execution & ex,
 \param transf_op Transformation operation.
 \param combine_op Combination operation.
 \return Result of the map/reduce operation.
+\deprecated For multiple inputs, use tuple or zip versions.
 */
 template <typename Execution, typename InputIterator, typename Identity, 
           typename Transformer, typename Combiner,
           typename ... OtherInputIterators,
           requires_iterator<InputIterator> = 0>
 [[deprecated("This version of the interface is deprecated.\n"
-             "If you want to use multiple inputs, use a tuple instead.")]]
+             "For multiple inputs, use a tuple or zip versions.")]]
 auto map_reduce(const Execution & ex,
                 InputIterator first, InputIterator last, 
                 Identity && identity, 
@@ -156,7 +250,7 @@ auto map_reduce(const Execution & ex,
 {
   static_assert(supports_map_reduce<Execution>(),
     "map/reduce not supported on execution type");
-  return ex.map_reduce(make_tuple(first, other_firsts...), 
+  return ex.map_reduce(std::make_tuple(first, other_firsts...), 
       std::distance(first,last), 
       std::forward<Identity>(identity),
       std::forward<Transformer>(transform_op), 
