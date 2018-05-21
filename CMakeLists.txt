@@ -13,7 +13,7 @@ message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra -Weffc++)
+add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra)
 
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
