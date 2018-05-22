@@ -21,6 +21,7 @@
 #include "common/range_concept.h"
 #include "common/iterator_traits.h"
 #include "common/execution_traits.h"
+#include "common/callable_traits.h"
 
 namespace grppi {
 
@@ -46,7 +47,8 @@ on a data sequence with sequential execution.
 \return The result of the reduction.
 */
 template <typename Execution, typename InRange, typename Result, typename Combiner,
-    meta::requires<range_concept,InRange> = 0>
+    meta::requires<range_concept,InRange> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto reduce(const Execution & ex,
             InRange && rin,
             Result && identity,
@@ -76,7 +78,8 @@ on a data sequence with sequential execution.
 \return The result of the reduction.
 */
 template <typename Execution, typename InputIt, typename Result, typename Combiner,
-          requires_iterator<InputIt> = 0>
+          requires_iterator<InputIt> = 0,
+          meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto reduce(const Execution & ex, 
             InputIt first, InputIt last, 
             Result && identity,
@@ -105,7 +108,8 @@ on a data sequence with sequential execution.
 \return The result of the reduction.
 */
 template <typename Execution, typename InputIt, typename Result, typename Combiner,
-    requires_iterator<InputIt> = 0>
+    requires_iterator<InputIt> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto reduce(const Execution & ex,
             InputIt first, std::size_t size,
             Result && identity,

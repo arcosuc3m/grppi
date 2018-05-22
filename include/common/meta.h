@@ -79,6 +79,8 @@ there is no type defined.
 template <template <typename> class C, typename ... Ts>
 using requires = std::enable_if_t<conjunction<C<Ts>...>::value,int>;
 
+template <template <typename, std::size_t> class C, typename T, std::size_t V>
+using requires_integral_value = std::enable_if_t<C<T,V>::value,int>;
 }
 
 }

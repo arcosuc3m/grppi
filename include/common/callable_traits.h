@@ -118,6 +118,12 @@ template <typename F, typename I>
 using requires_consumer =
   typename std::enable_if_t<internal::has_void_return<F(I)>(), int>;
 
+template <typename F, std::size_t N>
+struct callable_arity : std::conditional_t<
+    internal::callable_arity<std::decay_t<F>>() == N,
+    std::true_type,
+    std::false_type>
+{};
 
 
 } // end namespace grppi

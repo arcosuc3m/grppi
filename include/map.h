@@ -22,6 +22,8 @@
 #include "common/execution_traits.h"
 #include "common/iterator_traits.h"
 
+#include "common/callable_traits.h"
+
 namespace grppi {
 
 /** 
@@ -47,7 +49,8 @@ namespace grppi {
 template<typename Execution, typename InRange, typename OutRange,
         typename Transformer,
         meta::requires<range_concept,InRange> = 0,
-        meta::requires<range_concept,OutRange> = 0>
+        meta::requires<range_concept,OutRange> = 0,
+        meta::requires_integral_value<callable_arity,Transformer,1> = 0>
 void map(const Execution & ex, InRange && rin, OutRange && rout,
          Transformer transform_op)
 {
@@ -72,7 +75,8 @@ void map(const Execution & ex, InRange && rin, OutRange && rout,
 template<typename Execution, typename ... InRanges, typename OutRange,
         typename Transformer,
         meta::requires<range_concept, InRanges...> = 0,
-        meta::requires<range_concept,OutRange> = 0>
+        meta::requires<range_concept,OutRange> = 0,
+        meta::requires_integral_value<callable_arity,Transformer,sizeof...(InRanges)> = 0>
 void map(const Execution & ex, zip_view<InRanges...> rins, OutRange && rout,
          Transformer transform_op)
 {
@@ -96,7 +100,8 @@ void map(const Execution & ex, zip_view<InRanges...> rins, OutRange && rout,
 template <typename Execution, typename InputIt, typename OutputIt, 
           typename Transformer,
           requires_iterator<InputIt> = 0,
-          requires_iterator<OutputIt> = 0>
+          requires_iterator<OutputIt> = 0,
+          meta::requires_integral_value<callable_arity,Transformer,1> = 0>
 void map(const Execution & ex,
          InputIt first, InputIt last, OutputIt first_out, 
          Transformer transform_op) 
@@ -123,7 +128,8 @@ template<typename Execution, typename ...InputIterators, typename InputIt,
         typename OutputIt, typename Transformer,
         requires_iterators<InputIterators...> = 0,
         requires_iterator<InputIt> = 0,
-        requires_iterator<OutputIt> = 0>
+        requires_iterator<OutputIt> = 0,
+        meta::requires_integral_value<callable_arity,Transformer,sizeof...(InputIterators)> = 0>
 void map(const Execution & ex, std::tuple<InputIterators...> firsts,
          InputIt last, OutputIt first_out,
          Transformer transform_op)
@@ -148,7 +154,8 @@ void map(const Execution & ex, std::tuple<InputIterators...> firsts,
 template <typename Execution, typename InputIt, typename OutputIt, 
           typename Transformer,
           requires_iterator<InputIt> = 0,
-          requires_iterator<OutputIt> = 0>
+          requires_iterator<OutputIt> = 0,
+          meta::requires_integral_value<callable_arity,Transformer,1> = 0>
 void map(const Execution & ex,
          InputIt first, std::size_t size, OutputIt first_out, 
          Transformer transform_op) 
@@ -174,7 +181,8 @@ void map(const Execution & ex,
 template<typename Execution, typename ...InputIterators,
         typename OutputIt, typename Transformer,
         requires_iterators<InputIterators...> = 0,
-        requires_iterator<OutputIt> = 0>
+        requires_iterator<OutputIt> = 0,
+        meta::requires_integral_value<callable_arity, Transformer, sizeof...(InputIterators)> = 0>
 void map(const Execution & ex, std::tuple<InputIterators...> firsts,
          std::size_t size, OutputIt first_out,
          Transformer transformer_op)
@@ -201,7 +209,8 @@ void map(const Execution & ex, std::tuple<InputIterators...> firsts,
 template <typename Execution, typename InputIt, typename OutputIt, typename Transformer,
           typename ... OtherInputIts,
           requires_iterator<InputIt> = 0,
-          requires_iterator<OutputIt> = 0>
+          requires_iterator<OutputIt> = 0,
+          meta::requires_integral_value<callable_arity,Transformer,sizeof...(OtherInputIts)+1> = 0>
 [[deprecated("This version of the interface is deprecated.\n"
              "For multiple inputs, use a tuple or zip versions.")]]
 void map(const Execution & ex,

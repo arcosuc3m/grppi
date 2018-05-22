@@ -18,6 +18,7 @@
 
 #include <utility>
 
+#include "common/callable_traits.h"
 #include "common/zip_view.h"
 #include "common/execution_traits.h"
 #include "common/iterator_traits.h"
@@ -47,8 +48,10 @@ namespace grppi {
 \return Result of the map/reduce operation.
 */
 template <typename Execution, typename InputRange, typename Identity, 
-          typename Transformer, typename Combiner,
-          meta::requires<range_concept,InputRange> = 0>
+    typename Transformer, typename Combiner,
+    meta::requires<range_concept,InputRange> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,1> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto map_reduce(const Execution & ex, 
                 InputRange && rin,
                 Identity && identity, 
@@ -79,7 +82,9 @@ auto map_reduce(const Execution & ex,
 template <typename Execution, 
     typename ... InputRanges,
     typename Identity, typename Transformer, typename Combiner,
-    meta::requires<range_concept,InputRanges ...> = 0>
+    meta::requires<range_concept,InputRanges ...> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,sizeof...(InputRanges)> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto map_reduce(const Execution & ex,
                 zip_view<InputRanges...> rins,
                 Identity && identity,
@@ -109,8 +114,10 @@ auto map_reduce(const Execution & ex,
 \return Result of the map/reduce operation.
 */
 template <typename Execution, typename InputIterator, typename Identity, 
-          typename Transformer, typename Combiner,
-          requires_iterator<InputIterator> = 0>
+    typename Transformer, typename Combiner,
+    requires_iterator<InputIterator> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,1> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto map_reduce(const Execution & ex, 
                 InputIterator first, InputIterator last, 
                 Identity && identity, 
@@ -141,9 +148,11 @@ auto map_reduce(const Execution & ex,
 \return Result of the map/reduce operation.
 */
 template <typename Execution, typename ...InputIterators, typename InputIt,
-          typename Identity, typename Transformer, typename Combiner,
-          requires_iterators<InputIterators...> = 0,
-          requires_iterator<InputIt> = 0>
+    typename Identity, typename Transformer, typename Combiner,
+    requires_iterators<InputIterators...> = 0,
+    requires_iterator<InputIt> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,sizeof...(InputIterators)> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto map_reduce(const Execution & ex,
                 std::tuple<InputIterators...> firsts, InputIt last,
                 Identity && identity,
@@ -174,8 +183,10 @@ auto map_reduce(const Execution & ex,
 \return Result of the map/reduce operation.
 */
 template <typename Execution, typename InputIterator, typename Identity, 
-          typename Transformer, typename Combiner,
-          requires_iterator<InputIterator> = 0>
+    typename Transformer, typename Combiner,
+    requires_iterator<InputIterator> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,1> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto map_reduce(const Execution & ex, 
                 InputIterator first, std::size_t size,
                 Identity && identity, 
@@ -206,7 +217,9 @@ auto map_reduce(const Execution & ex,
 */
 template <typename Execution, typename ...InputIterators,
     typename Identity, typename Transformer, typename Combiner,
-    requires_iterators<InputIterators...> = 0>
+    requires_iterators<InputIterators...> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,sizeof...(InputIterators)> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 auto map_reduce(const Execution & ex,
                 std::tuple<InputIterators...> firsts, std::size_t size,
                 Identity && identity,
@@ -237,9 +250,11 @@ auto map_reduce(const Execution & ex,
 \deprecated For multiple inputs, use tuple or zip versions.
 */
 template <typename Execution, typename InputIterator, typename Identity, 
-          typename Transformer, typename Combiner,
-          typename ... OtherInputIterators,
-          requires_iterator<InputIterator> = 0>
+    typename Transformer, typename Combiner,
+    typename ... OtherInputIterators,
+    requires_iterator<InputIterator> = 0,
+    meta::requires_integral_value<callable_arity,Transformer,sizeof...(OtherInputIterators)+1> = 0,
+    meta::requires_integral_value<callable_arity,Combiner,2> = 0>
 [[deprecated("This version of the interface is deprecated.\n"
              "For multiple inputs, use a tuple or zip versions.")]]
 auto map_reduce(const Execution & ex,
