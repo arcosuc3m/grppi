@@ -82,8 +82,7 @@ T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
     current = aux;
   } while(!pread_.compare_exchange_weak(current, current+1));
      
-  // TODO: Is this move needed
-  return std::move(item);
+  return item;
 }
 
 template <typename T>
@@ -163,8 +162,7 @@ T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
   lk.unlock();
   full_.notify_one();
      
-  // TODO: Is this move needed
-  return std::move(item);
+  return item;
 }
 
 template <typename T>
