@@ -207,14 +207,12 @@ public:
         return self_->pop();
       }
 
-      bool push(T &&item) {
+      void push(T &&item) {
         self_->push(std::forward<T>(item));
-        return true;
       }
 
-      bool push(T const & x) {
+      void push(T const & x) {
         self_->push(x);
-        return true;
       }
 
 private:

@@ -115,8 +115,7 @@ TEST(mpmc_queue_lockfree, constructor){
 
 TEST(mpmc_queue_blocking, push_pop){
   mpmc_queue<int> queue(10, queue_mode::blocking);
-  bool inserted = queue.push(1);
-  EXPECT_TRUE(inserted);
+  queue.push(1);
   EXPECT_FALSE(queue.is_empty());
 
   int value = queue.pop();
@@ -126,8 +125,7 @@ TEST(mpmc_queue_blocking, push_pop){
 
 TEST(mpmc_queue_lockfree, push_pop){
   mpmc_queue<int> queue(10, queue_mode::lockfree);
-  bool inserted = queue.push(1);
-  EXPECT_TRUE( inserted);
+  queue.push(1);
   EXPECT_FALSE(queue.is_empty());
 
   int value = queue.pop();
