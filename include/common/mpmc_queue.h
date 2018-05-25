@@ -25,7 +25,161 @@
 
 namespace grppi{
 
+template <typename T>
+class atomic_mpmc_queue {
+public:
 
+  using value_type = T;
+
+  atomic_mpmc_queue(int size) :
+    size_{size},
+    buffer_{std::vector<T>(size)}
+  {}
+
+  atomic_mpmc_queue(atomic_mpmc_queue && q) noexcept :
+    size_{q.size_},
+    buffer_{std::move(q.buffer_)},
+    pread_{q.pread_.load()},
+    pwrite_{q.pwrite_.load()},
+    internal_pread_{q.internal_pread_.load()},
+    internal_pwrite_{q.internal_pwrite_.load()}
+  {}
+
+  atomic_mpmc_queue & operator=(atomic_mpmc_queue && q) noexcept = delete;
+
+  atomic_mpmc_queue(atomic_mpmc_queue const & q) noexcept = delete;
+  atomic_mpmc_queue & operator=(atomic_mpmc_queue const & q) noexcept = delete;
+  
+  bool empty () const noexcept { 
+    return pread_.load() == pwrite_.load();
+  }
+
+  T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
+  void push (T item) noexcept(std::is_nothrow_move_constructible<T>::value);
+
+private:
+  int size_;
+  std::vector<T> buffer_;
+
+  std::atomic<unsigned long long> pread_{0};
+  std::atomic<unsigned long long> pwrite_{0};
+  std::atomic<unsigned long long> internal_pread_{0};
+  std::atomic<unsigned long long> internal_pwrite_{0};
+};
+
+template <typename T>
+T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) {
+  unsigned long long current;
+  do {
+    current = internal_pread_.load();
+  } while(!internal_pread_.compare_exchange_weak(current, current+1));
+          
+  while(current >= pwrite_.load());
+
+  auto item = std::move(buffer_[current%size_]); 
+  auto aux = current;
+  do {
+    current = aux;
+  } while(!pread_.compare_exchange_weak(current, current+1));
+     
+  // TODO: Is this move needed
+  return std::move(item);
+}
+
+template <typename T>
+// TODO: What should be the best way of passing item
+void atomic_mpmc_queue<T>::push(T item) noexcept(std::is_nothrow_move_constructible<T>::value) {
+  unsigned long long current;
+  do{
+    current = internal_pwrite_.load();
+  } while(!internal_pwrite_.compare_exchange_weak(current, current+1));
+
+  while (current >= (pread_.load()+size_));
+
+  buffer_[current%size_] = std::move(item);
+  
+  auto aux = current;
+  do {
+    current = aux;
+  } while(!pwrite_.compare_exchange_weak(current, current+1));
+}
+
+template <typename T>
+class locked_mpmc_queue {
+public:
+
+  using value_type = T;
+
+  locked_mpmc_queue(int size) :
+    size_{size},
+    buffer_{std::vector<T>(size)},
+    pread_{0},
+    pwrite_{0}
+  {}
+
+  locked_mpmc_queue(locked_mpmc_queue && q) noexcept :
+    size_{q.size_},
+    buffer_{std::move(q.buffer_)},
+    pread_{q.pread_.load()},
+    pwrite_{q.pwrite_.load()}
+  {}
+
+  locked_mpmc_queue & operator=(locked_mpmc_queue && q) noexcept = delete;
+
+  locked_mpmc_queue(locked_mpmc_queue const & q) noexcept = delete;
+  locked_mpmc_queue & operator=(locked_mpmc_queue const & q) noexcept = delete;
+  
+  bool empty () const noexcept { 
+    return pread_.load() == pwrite_.load();
+  }
+
+  T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
+  void push (T item) noexcept(std::is_nothrow_move_constructible<T>::value);
+
+private:
+  bool is_full (unsigned long long current) const noexcept;
+  bool is_empty (unsigned long long current) const noexcept;
+
+private:
+  int size_;
+  std::vector<T> buffer_;
+
+  std::atomic<unsigned long long> pread_;
+  std::atomic<unsigned long long> pwrite_;
+
+  std::mutex mut_{};
+  std::condition_variable empty_{};
+  std::condition_variable full_{};
+};
+
+template <typename T>
+T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) {
+  std::unique_lock<std::mutex> lk(mut_);
+  while(pread_.load() >= pwrite_.load()) {
+    empty_.wait(lk);
+  }  
+  auto item = std::move(buffer_[pread_%size_]);
+  pread_++;    
+  lk.unlock();
+  full_.notify_one();
+     
+  // TODO: Is this move needed
+  return std::move(item);
+}
+
+template <typename T>
+// TODO: What should be the best way of passing item
+void locked_mpmc_queue<T>::push(T item) noexcept(std::is_nothrow_move_constructible<T>::value) {
+  std::unique_lock<std::mutex> lk(mut_);
+  while (pwrite_.load() >= (pread_.load() + size_)) {
+    full_.wait(lk);
+  }
+  buffer_[pwrite_%size_] = std::move(item);
+
+  pwrite_++;
+  lk.unlock();
+  empty_.notify_one();
+}
 
 enum class queue_mode {lockfree = true, blocking = false};
 
@@ -84,6 +238,7 @@ class mpmc_queue{
       std::condition_variable full{};
 
 };
+
 
 
 template <typename T>
