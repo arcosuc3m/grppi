@@ -183,69 +183,76 @@ enum class queue_mode {lockfree = true, blocking = false};
 
 template <typename T>
 class mpmc_queue{
-
-   public:
+public:
       using value_type = T;
 
       mpmc_queue<T>(int q_size, queue_mode q_mode ) :
-        mode{q_mode}, 
-        atomic_queue_{q_size},
-        locked_queue_{q_size}
+        self_{make_queue(q_size,q_mode)}
       {}
       
       mpmc_queue(mpmc_queue && q) :
-        mode{q.mode},
-        atomic_queue_{std::move(q.atomic_queue_)},
-        locked_queue_{std::move(q.locked_queue_)}
+        self_{std::move(q.self_)}
       {}
+
       mpmc_queue & operator=(mpmc_queue &&) = delete;
 
       mpmc_queue(const mpmc_queue &) = delete; 
       mpmc_queue & operator=(const mpmc_queue &) = delete;
     
-      bool is_empty () const noexcept;
-      T pop ();
-      bool push (T item) ;
+      bool is_empty () const noexcept {
+        return self_->empty();
+      }
 
-   private:
-      queue_mode mode;
-      atomic_mpmc_queue<T> atomic_queue_;
-      locked_mpmc_queue<T> locked_queue_;
+      T pop () {
+        return self_->pop();
+      }
+
+      bool push(T &&item) {
+        self_->push(std::forward<T>(item));
+        return true;
+      }
+
+      bool push(T const & x) {
+        self_->push(x);
+        return true;
+      }
+
+private:
+  struct base_queue {
+    virtual ~base_queue() = default;
+    virtual bool empty() const noexcept = 0;
+    virtual T pop() = 0;
+    virtual void push(T &&) = 0;
+    virtual void push(const T &) = 0;
+  };
+
+  template <typename Q>
+  class concrete_queue : public base_queue {
+  public:
+    concrete_queue(int size) : queue_{size} {}
+    ~concrete_queue() = default;
+    virtual bool empty() const noexcept override { return queue_.empty(); }
+    virtual T pop() override { return queue_.pop(); }
+    virtual void push(T && x) { queue_.push(std::forward<T>(x)); }
+    virtual void push(T const & x) { queue_.push(x); }
+  private:
+    Q queue_;
+  };
+
+  std::unique_ptr<base_queue> make_queue(int size, queue_mode m) {
+    switch (m) {
+      case queue_mode::lockfree:
+        return std::make_unique<concrete_queue<atomic_mpmc_queue<T>>>(size);
+      case queue_mode::blocking:
+        return std::make_unique<concrete_queue<locked_mpmc_queue<T>>>(size);
+      default:
+        return nullptr;
+    }
+  }
+
+  std::unique_ptr<base_queue> self_;
 };
 
-
-
-template <typename T>
-bool mpmc_queue<T>::is_empty() const noexcept {
-  if (mode==queue_mode::lockfree) {
-    return atomic_queue_.empty();
-  }
-  else {
-    return locked_queue_.empty();
-  }
-}
-
-template <typename T>
-T mpmc_queue<T>::pop(){
-  if(mode == queue_mode::lockfree){
-    return atomic_queue_.pop();
-  }
-  else{
-    return locked_queue_.pop();
-  }
-}
-
-template <typename T>
-bool mpmc_queue<T>::push(T item){
-  if(mode == queue_mode::lockfree){
-    atomic_queue_.push(item);
-    return true;
-  }
-  else {
-    locked_queue_.push(item);
-    return true;
-  }
-}
 
 namespace internal {
 
