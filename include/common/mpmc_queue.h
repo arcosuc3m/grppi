@@ -188,142 +188,63 @@ class mpmc_queue{
       using value_type = T;
 
       mpmc_queue<T>(int q_size, queue_mode q_mode ) :
-          size{q_size}, 
-          buffer{std::vector<T>(q_size)}, 
-          mode{q_mode}, 
-          pread{0}, 
-          pwrite{0}, 
-          internal_pread{0}, 
-          internal_pwrite{0} 
+        mode{q_mode}, 
+        atomic_queue_{q_size},
+        locked_queue_{q_size}
       {}
       
       mpmc_queue(mpmc_queue && q) :
-        size{q.size},
-        buffer{std::move(q.buffer)},
         mode{q.mode},
-        pread{q.pread.load()},
-        pwrite{q.pwrite.load()},
-        internal_pread{q.internal_pread.load()},
-        internal_pwrite{q.internal_pwrite.load()},
-        m{},
-        empty{},
-        full{}
+        atomic_queue_{std::move(q.atomic_queue_)},
+        locked_queue_{std::move(q.locked_queue_)}
       {}
+      mpmc_queue & operator=(mpmc_queue &&) = delete;
 
       mpmc_queue(const mpmc_queue &) = delete; 
       mpmc_queue & operator=(const mpmc_queue &) = delete;
     
       bool is_empty () const noexcept;
-      T pop () ;
+      T pop ();
       bool push (T item) ;
 
    private:
-      bool is_full (unsigned long long current) const noexcept;
-      bool is_empty (unsigned long long current) const noexcept;
-
-      int size;
-      std::vector<T> buffer;
       queue_mode mode;
-
-      std::atomic<unsigned long long> pread;
-      std::atomic<unsigned long long> pwrite;
-      std::atomic<unsigned long long> internal_pread;
-      std::atomic<unsigned long long> internal_pwrite;
-
-
-      std::mutex m {};
-      std::condition_variable empty{};
-      std::condition_variable full{};
-
+      atomic_mpmc_queue<T> atomic_queue_;
+      locked_mpmc_queue<T> locked_queue_;
 };
 
 
 
 template <typename T>
 bool mpmc_queue<T>::is_empty() const noexcept {
-    return pread.load()==pwrite.load();
+  if (mode==queue_mode::lockfree) {
+    return atomic_queue_.empty();
+  }
+  else {
+    return locked_queue_.empty();
+  }
 }
 
 template <typename T>
 T mpmc_queue<T>::pop(){
   if(mode == queue_mode::lockfree){
-    
-     unsigned long long current;
-
-     do{
-        current = internal_pread.load();
-     }while(!internal_pread.compare_exchange_weak(current, current+1));
-          
-     while(is_empty(current));
-
-     auto item = std::move(buffer[current%size]); 
-     auto aux = current;
-     do{
-        current = aux;
-     }while(!pread.compare_exchange_weak(current, current+1));
-     
-     return std::move(item);
-  }else{
-     
-     std::unique_lock<std::mutex> lk(m);
-     while(is_empty(pread)){
-        empty.wait(lk);
-     }  
-     auto item = std::move(buffer[pread%size]);
-     pread++;    
-     lk.unlock();
-     full.notify_one();
-     
-     return std::move(item);
+    return atomic_queue_.pop();
   }
-
+  else{
+    return locked_queue_.pop();
+  }
 }
 
 template <typename T>
 bool mpmc_queue<T>::push(T item){
   if(mode == queue_mode::lockfree){
-     unsigned long long current;
-     do{
-         current = internal_pwrite.load();
-     }while(!internal_pwrite.compare_exchange_weak(current, current+1));
-
-     while(is_full(current));
-
-     buffer[current%size] = std::move(item);
-  
-     auto aux = current;
-     do{
-        current = aux;
-     }while(!pwrite.compare_exchange_weak(current, current+1));
-
-     return true;
-  }else{
-
-    std::unique_lock<std::mutex> lk(m);
-    while(is_full(pwrite)){
-        full.wait(lk);
-    }
-    buffer[pwrite%size] = std::move(item);
-
-    pwrite++;
-    lk.unlock();
-    empty.notify_one();
-
+    atomic_queue_.push(item);
     return true;
   }
-}
-
-template <typename T>
-bool mpmc_queue<T>::is_empty(unsigned long long current) const noexcept {
-  if(current >= pwrite.load()) return true;
-  return false;
-}
-
-template <typename T>
-bool mpmc_queue<T>::is_full(unsigned long long current) const noexcept{
-  if(current >= (pread.load()+size)) return true;
-  return false;
-
+  else {
+    locked_queue_.push(item);
+    return true;
+  }
 }
 
 namespace internal {
