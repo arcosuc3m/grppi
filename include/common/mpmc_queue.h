@@ -55,7 +55,8 @@ public:
   }
 
   T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
-  void push (T item) noexcept(std::is_nothrow_move_constructible<T>::value);
+  void push (T && item) noexcept(std::is_nothrow_move_assignable<T>::value);
+  void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value);
 
 private:
   int size_;
@@ -86,8 +87,7 @@ T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
 }
 
 template <typename T>
-// TODO: What should be the best way of passing item
-void atomic_mpmc_queue<T>::push(T item) noexcept(std::is_nothrow_move_constructible<T>::value) {
+void atomic_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assignable<T>::value) {
   unsigned long long current;
   do{
     current = internal_pwrite_.load();
@@ -96,6 +96,23 @@ void atomic_mpmc_queue<T>::push(T item) noexcept(std::is_nothrow_move_constructi
   while (current >= (pread_.load()+size_));
 
   buffer_[current%size_] = std::move(item);
+  
+  auto aux = current;
+  do {
+    current = aux;
+  } while(!pwrite_.compare_exchange_weak(current, current+1));
+}
+
+template <typename T>
+void atomic_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) {
+  unsigned long long current;
+  do{
+    current = internal_pwrite_.load();
+  } while(!internal_pwrite_.compare_exchange_weak(current, current+1));
+
+  while (current >= (pread_.load()+size_));
+
+  buffer_[current%size_] = item;
   
   auto aux = current;
   do {
@@ -133,7 +150,8 @@ public:
   }
 
   T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
-  void push (T item) noexcept(std::is_nothrow_move_constructible<T>::value);
+  void push (T && item) noexcept(std::is_nothrow_move_assignable<T>::value);
+  void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value);
 
 private:
   bool is_full (unsigned long long current) const noexcept;
@@ -166,13 +184,25 @@ T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
 }
 
 template <typename T>
-// TODO: What should be the best way of passing item
-void locked_mpmc_queue<T>::push(T item) noexcept(std::is_nothrow_move_constructible<T>::value) {
+void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assignable<T>::value) {
   std::unique_lock<std::mutex> lk(mut_);
   while (pwrite_.load() >= (pread_.load() + size_)) {
     full_.wait(lk);
   }
   buffer_[pwrite_%size_] = std::move(item);
+
+  pwrite_++;
+  lk.unlock();
+  empty_.notify_one();
+}
+
+template <typename T>
+void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) {
+  std::unique_lock<std::mutex> lk(mut_);
+  while (pwrite_.load() >= (pread_.load() + size_)) {
+    full_.wait(lk);
+  }
+  buffer_[pwrite_%size_] = item;
 
   pwrite_++;
   lk.unlock();
