@@ -216,13 +216,34 @@ class mpmc_queue{
 public:
       using value_type = T;
 
-      mpmc_queue<T>(int q_size, queue_mode q_mode ) :
-        self_{make_queue(q_size,q_mode)}
-      {}
-      
-      mpmc_queue(mpmc_queue && q) :
-        self_{std::move(q.self_)}
-      {}
+      mpmc_queue<T>(int q_size, queue_mode q_mode ) 
+      {
+        switch (q_mode) {
+          case queue_mode::lockfree:
+            new (&buffer_) concrete_queue<atomic_mpmc_queue<T>>(q_size);
+            break;
+          case queue_mode::blocking:
+            new (&buffer_) concrete_queue<atomic_mpmc_queue<T>>(q_size);
+            break;
+        }
+      }
+
+      mpmc_queue(mpmc_queue && q) 
+      {
+        using concrete_atomic = concrete_queue<atomic_mpmc_queue<T>>;
+        using concrete_locked = concrete_queue<locked_mpmc_queue<T>>;
+
+        auto * patomic = dynamic_cast<concrete_atomic*>(q.pself());
+        if (patomic) {
+          new (&buffer_) concrete_atomic{std::forward<concrete_atomic>(*patomic)};
+          return;
+        }
+        auto * plocked = dynamic_cast<concrete_locked*>(q.pself());
+        if (plocked) {
+          new (&buffer_) concrete_locked{std::forward<concrete_locked>(*plocked)};
+          return;
+        }
+      }
 
       mpmc_queue & operator=(mpmc_queue &&) = delete;
 
@@ -230,22 +251,23 @@ public:
       mpmc_queue & operator=(const mpmc_queue &) = delete;
     
       bool is_empty () const noexcept {
-        return self_->empty();
+        return pself_const()->empty();
       }
 
       T pop () {
-        return self_->pop();
+        return pself()->pop();
       }
 
       void push(T &&item) {
-        self_->push(std::forward<T>(item));
+        pself()->push(std::forward<T>(item));
       }
 
       void push(T const & x) {
-        self_->push(x);
+        pself()->push(x);
       }
 
 private:
+
   struct base_queue {
     virtual ~base_queue() = default;
     virtual bool empty() const noexcept = 0;
@@ -258,6 +280,7 @@ private:
   class concrete_queue : public base_queue {
   public:
     concrete_queue(int size) : queue_{size} {}
+    concrete_queue(concrete_queue<Q>&&) = default;
     ~concrete_queue() = default;
     virtual bool empty() const noexcept override { return queue_.empty(); }
     virtual T pop() override { return queue_.pop(); }
@@ -267,18 +290,17 @@ private:
     Q queue_;
   };
 
-  std::unique_ptr<base_queue> make_queue(int size, queue_mode m) {
-    switch (m) {
-      case queue_mode::lockfree:
-        return std::make_unique<concrete_queue<atomic_mpmc_queue<T>>>(size);
-      case queue_mode::blocking:
-        return std::make_unique<concrete_queue<locked_mpmc_queue<T>>>(size);
-      default:
-        return nullptr;
-    }
+  base_queue * pself() noexcept {
+    return reinterpret_cast<base_queue*>(&buffer_);
+  }
+      
+  base_queue const * pself_const() const noexcept {
+    return reinterpret_cast<base_queue const*>(&buffer_);
   }
 
-  std::unique_ptr<base_queue> self_;
+  std::aligned_union_t<0,
+      concrete_queue<atomic_mpmc_queue<T>>,
+      concrete_queue<locked_mpmc_queue<T>>> buffer_;
 };
 
 
