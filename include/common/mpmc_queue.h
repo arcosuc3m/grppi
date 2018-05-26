@@ -17,9 +17,8 @@
 #define GRPPI_COMMON_MPMC_QUEUE_H
 
 
-#include <vector>
+#include <memory>
 #include <atomic>
-#include <iostream>
 #include <mutex>
 #include <condition_variable>
 
@@ -48,7 +47,7 @@ public:
   */
   atomic_mpmc_queue(int size) :
     size_{size},
-    buffer_{std::vector<T>(size)}
+    buffer_{std::make_unique<T[]>(size)}
   {}
 
   /**
@@ -103,7 +102,8 @@ private:
   int size_;
 
   /// Buffer of elements.
-  std::vector<T> buffer_;
+  std::unique_ptr<T[]> buffer_;
+  //std::vector<T> buffer_;
 
   /// Index to next position to read.
   std::atomic<unsigned long long> pread_{0};
@@ -188,7 +188,7 @@ public:
   */
   locked_mpmc_queue(int size) :
     size_{size},
-    buffer_{std::vector<T>(size)},
+    buffer_{std::make_unique<T[]>(size)},
     pread_{0},
     pwrite_{0}
   {}
@@ -243,7 +243,7 @@ private:
   int size_;
 
   /// Buffer of elements.
-  std::vector<T> buffer_;
+  std::unique_ptr<T[]> buffer_;
 
   /// Index to next position to read.
   int pread_;
