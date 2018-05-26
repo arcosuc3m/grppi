@@ -214,57 +214,31 @@ enum class queue_mode {lockfree = true, blocking = false};
 template <typename T>
 class mpmc_queue{
 public:
-      using value_type = T;
+  using value_type = T;
 
-      mpmc_queue<T>(int q_size, queue_mode q_mode ) 
-      {
-        switch (q_mode) {
-          case queue_mode::lockfree:
-            new (&buffer_) concrete_queue<atomic_mpmc_queue<T>>(q_size);
-            break;
-          case queue_mode::blocking:
-            new (&buffer_) concrete_queue<atomic_mpmc_queue<T>>(q_size);
-            break;
-        }
-      }
+  mpmc_queue(int q_size, queue_mode q_mode); 
 
-      mpmc_queue(mpmc_queue && q) 
-      {
-        using concrete_atomic = concrete_queue<atomic_mpmc_queue<T>>;
-        using concrete_locked = concrete_queue<locked_mpmc_queue<T>>;
+  mpmc_queue(mpmc_queue && q); 
+  mpmc_queue & operator=(mpmc_queue &&) = delete;
 
-        auto * patomic = dynamic_cast<concrete_atomic*>(q.pself());
-        if (patomic) {
-          new (&buffer_) concrete_atomic{std::forward<concrete_atomic>(*patomic)};
-          return;
-        }
-        auto * plocked = dynamic_cast<concrete_locked*>(q.pself());
-        if (plocked) {
-          new (&buffer_) concrete_locked{std::forward<concrete_locked>(*plocked)};
-          return;
-        }
-      }
-
-      mpmc_queue & operator=(mpmc_queue &&) = delete;
-
-      mpmc_queue(const mpmc_queue &) = delete; 
-      mpmc_queue & operator=(const mpmc_queue &) = delete;
+  mpmc_queue(const mpmc_queue &) = delete; 
+  mpmc_queue & operator=(const mpmc_queue &) = delete;
     
-      bool is_empty () const noexcept {
-        return pself_const()->empty();
-      }
+  bool is_empty () const noexcept {
+    return pself_const()->empty();
+  }
 
-      T pop () {
-        return pself()->pop();
-      }
+  T pop () {
+    return pself()->pop();
+  }
 
-      void push(T &&item) {
-        pself()->push(std::forward<T>(item));
-      }
+  void push(T &&item) {
+    pself()->push(std::forward<T>(item));
+  }
 
-      void push(T const & x) {
-        pself()->push(x);
-      }
+  void push(T const & x) {
+    pself()->push(x);
+  }
 
 private:
 
@@ -280,6 +254,7 @@ private:
   class concrete_queue : public base_queue {
   public:
     concrete_queue(int size) : queue_{size} {}
+    concrete_queue(const concrete_queue<Q>&) = delete;
     concrete_queue(concrete_queue<Q>&&) = default;
     ~concrete_queue() = default;
     virtual bool empty() const noexcept override { return queue_.empty(); }
@@ -298,11 +273,37 @@ private:
     return reinterpret_cast<base_queue const*>(&buffer_);
   }
 
+  using concrete_atomic_queue = concrete_queue<atomic_mpmc_queue<T>>;
+  using concrete_locked_queue = concrete_queue<locked_mpmc_queue<T>>;
+
   std::aligned_union_t<0,
-      concrete_queue<atomic_mpmc_queue<T>>,
-      concrete_queue<locked_mpmc_queue<T>>> buffer_;
+      concrete_atomic_queue,
+      concrete_locked_queue> buffer_;
 };
 
+template <typename T>
+mpmc_queue<T>::mpmc_queue(int q_size, queue_mode q_mode)
+{
+  switch (q_mode) {
+    case queue_mode::lockfree:
+      new (&buffer_) concrete_atomic_queue(q_size);
+      break;
+    case queue_mode::blocking:
+      new (&buffer_) concrete_atomic_queue(q_size);
+      break;
+  }
+}
+
+template <typename T>
+mpmc_queue<T>::mpmc_queue(mpmc_queue && q) 
+{
+  if (auto * patomic = dynamic_cast<concrete_atomic_queue*>(q.pself())) {
+    new (&buffer_) concrete_atomic_queue{std::move(*patomic)};
+  }
+  else if (auto * plocked = dynamic_cast<concrete_locked_queue*>(q.pself())) {
+    new (&buffer_) concrete_locked_queue{std::move(*plocked)};
+  }
+}
 
 namespace internal {
 
