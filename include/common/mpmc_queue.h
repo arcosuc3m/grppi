@@ -136,8 +136,8 @@ public:
   locked_mpmc_queue(locked_mpmc_queue && q) noexcept :
     size_{q.size_},
     buffer_{std::move(q.buffer_)},
-    pread_{q.pread_.load()},
-    pwrite_{q.pwrite_.load()}
+    pread_{q.pread_},
+    pwrite_{q.pwrite_}
   {}
 
   locked_mpmc_queue & operator=(locked_mpmc_queue && q) noexcept = delete;
@@ -146,7 +146,7 @@ public:
   locked_mpmc_queue & operator=(locked_mpmc_queue const & q) noexcept = delete;
   
   bool empty () const noexcept { 
-    return pread_.load() == pwrite_.load();
+    return pread_== pwrite_;
   }
 
   T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
@@ -154,15 +154,11 @@ public:
   void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value);
 
 private:
-  bool is_full (unsigned long long current) const noexcept;
-  bool is_empty (unsigned long long current) const noexcept;
-
-private:
   int size_;
   std::vector<T> buffer_;
 
-  std::atomic<unsigned long long> pread_;
-  std::atomic<unsigned long long> pwrite_;
+  int pread_;
+  int pwrite_;
 
   std::mutex mut_{};
   std::condition_variable empty_{};
@@ -173,7 +169,7 @@ template <typename T>
 T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) 
 {
   std::unique_lock<std::mutex> lk(mut_);
-  while(pread_.load() >= pwrite_.load()) {
+  while(pread_ >= pwrite_) {
     empty_.wait(lk);
   }  
   auto item = std::move(buffer_[pread_%size_]);
@@ -189,7 +185,7 @@ void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assigna
 {
   {
     std::unique_lock<std::mutex> lk(mut_);
-    while (pwrite_.load() >= (pread_.load() + size_)) {
+    while (pwrite_ >= (pread_ + size_)) {
       full_.wait(lk);
     }
     buffer_[pwrite_%size_] = std::move(item);
@@ -204,7 +200,7 @@ void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_as
 {
   {
     std::unique_lock<std::mutex> lk(mut_);
-    while (pwrite_.load() >= (pread_.load() + size_)) {
+    while (pwrite_ >= (pread_ + size_)) {
       full_.wait(lk);
     }
     buffer_[pwrite_%size_] = item;
