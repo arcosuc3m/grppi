@@ -170,13 +170,14 @@ private:
 };
 
 template <typename T>
-T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) {
+T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) 
+{
   std::unique_lock<std::mutex> lk(mut_);
   while(pread_.load() >= pwrite_.load()) {
     empty_.wait(lk);
   }  
   auto item = std::move(buffer_[pread_%size_]);
-  pread_++;    
+  pread_++;
   lk.unlock();
   full_.notify_one();
      
@@ -184,28 +185,32 @@ T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
 }
 
 template <typename T>
-void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assignable<T>::value) {
-  std::unique_lock<std::mutex> lk(mut_);
-  while (pwrite_.load() >= (pread_.load() + size_)) {
-    full_.wait(lk);
-  }
-  buffer_[pwrite_%size_] = std::move(item);
+void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assignable<T>::value) 
+{
+  {
+    std::unique_lock<std::mutex> lk(mut_);
+    while (pwrite_.load() >= (pread_.load() + size_)) {
+      full_.wait(lk);
+    }
+    buffer_[pwrite_%size_] = std::move(item);
 
-  pwrite_++;
-  lk.unlock();
+    pwrite_++;
+  }
   empty_.notify_one();
 }
 
 template <typename T>
-void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) {
-  std::unique_lock<std::mutex> lk(mut_);
-  while (pwrite_.load() >= (pread_.load() + size_)) {
-    full_.wait(lk);
-  }
-  buffer_[pwrite_%size_] = item;
+void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) 
+{
+  {
+    std::unique_lock<std::mutex> lk(mut_);
+    while (pwrite_.load() >= (pread_.load() + size_)) {
+      full_.wait(lk);
+    }
+    buffer_[pwrite_%size_] = item;
 
-  pwrite_++;
-  lk.unlock();
+    pwrite_++;
+  }
   empty_.notify_one();
 }
 
