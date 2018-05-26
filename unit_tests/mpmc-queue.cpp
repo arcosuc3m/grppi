@@ -104,32 +104,32 @@ TYPED_TEST(mpmc_test , concurrent_pop_push){
 
 TEST(mpmc_queue_blocking, constructor){
   mpmc_queue<int> queue(10, queue_mode::blocking);
-  EXPECT_TRUE(queue.is_empty());
+  EXPECT_TRUE(queue.empty());
 }
 
 
 TEST(mpmc_queue_lockfree, constructor){
   mpmc_queue<int> queue(10, queue_mode::lockfree);
-  EXPECT_TRUE(queue.is_empty());
+  EXPECT_TRUE(queue.empty());
 }
 
 TEST(mpmc_queue_blocking, push_pop){
   mpmc_queue<int> queue(10, queue_mode::blocking);
   queue.push(1);
-  EXPECT_FALSE(queue.is_empty());
+  EXPECT_FALSE(queue.empty());
 
   int value = queue.pop();
-  EXPECT_TRUE(queue.is_empty());
+  EXPECT_TRUE(queue.empty());
   EXPECT_EQ(1,value);
 }
 
 TEST(mpmc_queue_lockfree, push_pop){
   mpmc_queue<int> queue(10, queue_mode::lockfree);
   queue.push(1);
-  EXPECT_FALSE(queue.is_empty());
+  EXPECT_FALSE(queue.empty());
 
   int value = queue.pop();
-  EXPECT_TRUE(queue.is_empty());
+  EXPECT_TRUE(queue.empty());
   EXPECT_EQ(1,value);
 }
 
@@ -152,7 +152,7 @@ TEST(mpmc_queue_blocking, concurrent_push_pop){
   }
 
   EXPECT_EQ(15, val);
-  EXPECT_TRUE(q.is_empty());
+  EXPECT_TRUE(q.empty());
 }
 
 
@@ -174,7 +174,7 @@ TEST(mpmc_queue_lockfree, concurrent_push_pop){
     t.join();
   }
   EXPECT_EQ(15, val);
-  EXPECT_TRUE(q.is_empty());
+  EXPECT_TRUE(q.empty());
 }
 
 TEST(mpmc_queue_blocking, concurrent_pop_push){
@@ -197,7 +197,7 @@ TEST(mpmc_queue_blocking, concurrent_pop_push){
   int val = std::accumulate(std::begin(v), std::end(v), 0);
 
   EXPECT_EQ(15, val);
-  EXPECT_TRUE(q.is_empty());
+  EXPECT_TRUE(q.empty());
 }
 
 
@@ -222,6 +222,6 @@ TEST(mpmc_queue_lockfree, concurrent_pop_push){
   auto val = std::accumulate(std::begin(v), std::end(v), 0);
 
   EXPECT_EQ(15, val);
-  EXPECT_TRUE(q.is_empty());
+  EXPECT_TRUE(q.empty());
 }
 

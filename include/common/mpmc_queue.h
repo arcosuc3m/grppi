@@ -216,7 +216,7 @@ public:
   mpmc_queue(const mpmc_queue &) = delete; 
   mpmc_queue & operator=(const mpmc_queue &) = delete;
     
-  bool is_empty () const noexcept {
+  bool empty () const noexcept {
     return pself_const()->empty();
   }
 
