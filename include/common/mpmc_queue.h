@@ -25,17 +25,36 @@
 
 namespace grppi{
 
+/**
+\defgroup communication Communication
+\brief Communication support types.
+@{
+*/
+
+/**
+\brief A lock-free multiple producer multiple consumer queue.
+\tparam T Element type for the queue.
+*/
 template <typename T>
 class atomic_mpmc_queue {
 public:
 
+  /// Type alias for element type.
   using value_type = T;
 
+  /**
+  \brief Constructs an atomic queue with a given size.
+  \param size Size of the queue.
+  */
   atomic_mpmc_queue(int size) :
     size_{size},
     buffer_{std::vector<T>(size)}
   {}
 
+  /**
+  \brief Move constructs an atomic queue from another one.
+  \param q The queue to move from.
+  */
   atomic_mpmc_queue(atomic_mpmc_queue && q) noexcept :
     size_{q.size_},
     buffer_{std::move(q.buffer_)},
@@ -50,26 +69,58 @@ public:
   atomic_mpmc_queue(atomic_mpmc_queue const & q) noexcept = delete;
   atomic_mpmc_queue & operator=(atomic_mpmc_queue const & q) noexcept = delete;
   
+  /**
+  \brief Checks if the queue is empty.
+  \return true if the queue is empty, false otherwise.
+  */
   bool empty () const noexcept { 
     return pread_.load() == pwrite_.load();
   }
 
+  /**
+  \brief Pops an item from the queue.
+  \return The value that has been extracted from the queue.
+  \note This call may block by busy waiting if the queue is empty.
+  */
   T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
+
+  /**
+  \brief Pushes an element in the queue by move.
+  \param item Value to be moved into the queue.
+  \note This call may block by busy waiting if the queue is full.
+  */
   void push (T && item) noexcept(std::is_nothrow_move_assignable<T>::value);
+
+  /**
+  \brief Pushes an element in the queue by copy.
+  \param item Value to be copied into the queue.
+  \note This call may block by busy waiting if the queue is full.
+  */
   void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value);
 
 private:
+  /// Maximum number of elements in the queue.
   int size_;
+
+  /// Buffer of elements.
   std::vector<T> buffer_;
 
+  /// Index to next position to read.
   std::atomic<unsigned long long> pread_{0};
+
+  /// Index to next position to write.
   std::atomic<unsigned long long> pwrite_{0};
+
+  /// Internal index to next position to read.
   std::atomic<unsigned long long> internal_pread_{0};
+
+  /// Internal index to next position to write.
   std::atomic<unsigned long long> internal_pwrite_{0};
 };
 
 template <typename T>
-T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) {
+T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) 
+{
   unsigned long long current;
   do {
     current = internal_pread_.load();
@@ -120,12 +171,21 @@ void atomic_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_as
   } while(!pwrite_.compare_exchange_weak(current, current+1));
 }
 
+/**
+\brief A lock-based multiple producer multiple consumer queue.
+\tparam T Element type for the queue.
+*/
 template <typename T>
 class locked_mpmc_queue {
 public:
 
+  /// Type alias for element type.
   using value_type = T;
 
+  /**
+  \brief Constructs a locked queue with a given size.
+  \param size Size of the queue.
+  */
   locked_mpmc_queue(int size) :
     size_{size},
     buffer_{std::vector<T>(size)},
@@ -133,6 +193,10 @@ public:
     pwrite_{0}
   {}
 
+  /**
+  \brief Move constructs a locked queue from another one.
+  \param q The queue to move from.
+  */
   locked_mpmc_queue(locked_mpmc_queue && q) noexcept :
     size_{q.size_},
     buffer_{std::move(q.buffer_)},
@@ -145,23 +209,55 @@ public:
   locked_mpmc_queue(locked_mpmc_queue const & q) noexcept = delete;
   locked_mpmc_queue & operator=(locked_mpmc_queue const & q) noexcept = delete;
   
+  /**
+  \brief Checks if the queue is empty.
+  \return true if the queue is empty, false otherwise.
+  */
   bool empty () const noexcept { 
     return pread_== pwrite_;
   }
 
+  /**
+  \brief Pops an item from the queue.
+  \return The value that has been extracted from the queue.
+  \note This call may block through a mutex if the queue is empty.
+  */
   T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
+
+  /**
+  \brief Pushes an element in the queue by move.
+  \param item Value to be moved into the queue.
+  \note This call may block through a mutex if the queue is empty.
+  */
   void push (T && item) noexcept(std::is_nothrow_move_assignable<T>::value);
+
+  /**
+  \brief Pushes an element in the queue by copy.
+  \param item Value to be copied into the queue.
+  \note This call may block through a mutex if the queue is empty.
+  */
   void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value);
 
 private:
+  /// Maximum number of elements in the queue.
   int size_;
+
+  /// Buffer of elements.
   std::vector<T> buffer_;
 
+  /// Index to next position to read.
   int pread_;
+
+  /// Index to next position to write.
   int pwrite_;
 
+  /// Mutex to synchronize access to the queue.
   std::mutex mut_{};
+
+  /// Condition variable to signal empty queue.
   std::condition_variable empty_{};
+
+  /// Condition variable to signal full queue.
   std::condition_variable full_{};
 };
 
@@ -296,6 +392,10 @@ mpmc_queue<T>::mpmc_queue(mpmc_queue && q)
     new (&buffer_) concrete_locked_queue{std::move(*plocked)};
   }
 }
+
+/**
+@}
+*/
 
 namespace internal {
 
