@@ -297,47 +297,97 @@ void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_as
   empty_.notify_one();
 }
 
-enum class queue_mode {lockfree = true, blocking = false};
+/**
+\brief Synchronization mode for queues.
+*/
+enum class queue_mode {
+  /// Lock-free synchronization using atomics.
+  lockfree = true, 
+  /// Mutex based synchronization.
+  blocking = false
+};
 
+/**
+\brief A multiple producer multiple consumer queue.
+\tparam T Element type for the queue.
+The mpmc_queue may be constructed providing a synchronization mode 
+(lockfree or blocking).
+*/
 template <typename T>
 class mpmc_queue{
 public:
   using value_type = T;
 
-  mpmc_queue(int q_size, queue_mode q_mode); 
+  /**
+  \brief Constructs a queue with a given size and a synchronization mode.
+  \param size Size of the queue.
+  \param mode Synchronization mode.
+  */
+  mpmc_queue(int size, queue_mode mode); 
 
+  /**
+  \brief Move constructs a queue from another one.
+  \param q The queue to move from.
+  */
   mpmc_queue(mpmc_queue && q); 
+
   mpmc_queue & operator=(mpmc_queue &&) = delete;
 
   mpmc_queue(const mpmc_queue &) = delete; 
   mpmc_queue & operator=(const mpmc_queue &) = delete;
     
+  /**
+  \brief Checks if the queue is empty.
+  \return true if the queue is empty, false otherwise.
+  */
   bool empty () const noexcept {
     return pself_const()->empty();
   }
 
-  T pop () {
+  /**
+  \brief Pops an item from the queue.
+  \return The value that has been extracted from the queue.
+  \note This call may block if the queue is empty.
+  */
+  T pop () noexcept(std::is_nothrow_move_constructible<T>::value) {
     return pself()->pop();
   }
 
-  void push(T &&item) {
+  /**
+  \brief Pushes an element in the queue by move.
+  \param item Value to be moved into the queue.
+  \note This call may block if the queue is empty.
+  */
+  void push (T && item) noexcept(std::is_nothrow_move_assignable<T>::value) {
     pself()->push(std::forward<T>(item));
   }
 
-  void push(T const & x) {
-    pself()->push(x);
+  /**
+  \brief Pushes an element in the queue by copy.
+  \param item Value to be copied into the queue.
+  \note This call may block if the queue is empty.
+  */
+  void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) {
+    pself()->push(item);
   }
 
 private:
 
+  /**
+  \brief Interface for polymorphic queue.
+  */
   struct base_queue {
-    virtual ~base_queue() = default;
+    virtual ~base_queue() noexcept = default;
     virtual bool empty() const noexcept = 0;
-    virtual T pop() = 0;
-    virtual void push(T &&) = 0;
-    virtual void push(const T &) = 0;
+    virtual T pop () noexcept(std::is_nothrow_move_constructible<T>::value) = 0;
+    virtual void push (T && item) noexcept(std::is_nothrow_move_assignable<T>::value) = 0;
+    virtual void push (T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) = 0;
   };
 
+  /**
+  \brief Derived polymorphic interface to a concrete queue.
+  \tparam Q Concrete queue to be wrapped.
+  */
   template <typename Q>
   class concrete_queue : public base_queue {
   public:
@@ -345,39 +395,52 @@ private:
     concrete_queue(const concrete_queue<Q>&) = delete;
     concrete_queue(concrete_queue<Q>&&) = default;
     ~concrete_queue() = default;
-    virtual bool empty() const noexcept override { return queue_.empty(); }
-    virtual T pop() override { return queue_.pop(); }
-    virtual void push(T && x) { queue_.push(std::forward<T>(x)); }
-    virtual void push(T const & x) { queue_.push(x); }
+    bool empty() const noexcept override { return queue_.empty(); }
+    T pop () noexcept(std::is_nothrow_move_constructible<T>::value) override
+      { return queue_.pop(); }
+    void push (T && x) noexcept(std::is_nothrow_move_assignable<T>::value) override
+      { queue_.push(std::forward<T>(x)); }
+    void push (T const & x) noexcept(std::is_nothrow_copy_assignable<T>::value) override
+      { queue_.push(x); }
   private:
     Q queue_;
   };
 
+  /**
+  \brief Get buffer containing queue wrapper as a pointer to base_queue.
+  */
   base_queue * pself() noexcept {
     return reinterpret_cast<base_queue*>(&buffer_);
   }
       
+  /**
+  \brief Get buffer containing queue wrapper as a pointer to constant base_queue.
+  */
   base_queue const * pself_const() const noexcept {
     return reinterpret_cast<base_queue const*>(&buffer_);
   }
 
+  /// Type for concrete atomic queue.
   using concrete_atomic_queue = concrete_queue<atomic_mpmc_queue<T>>;
+
+  /// Type for concrete locked queue.
   using concrete_locked_queue = concrete_queue<locked_mpmc_queue<T>>;
 
+  /// Buffer that can hold any queue.
   std::aligned_union_t<0,
       concrete_atomic_queue,
       concrete_locked_queue> buffer_;
 };
 
 template <typename T>
-mpmc_queue<T>::mpmc_queue(int q_size, queue_mode q_mode)
+mpmc_queue<T>::mpmc_queue(int size, queue_mode mode)
 {
-  switch (q_mode) {
+  switch (mode) {
     case queue_mode::lockfree:
-      new (&buffer_) concrete_atomic_queue(q_size);
+      new (&buffer_) concrete_atomic_queue(size);
       break;
     case queue_mode::blocking:
-      new (&buffer_) concrete_atomic_queue(q_size);
+      new (&buffer_) concrete_atomic_queue(size);
       break;
   }
 }
