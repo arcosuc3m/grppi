@@ -124,15 +124,17 @@ T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
   unsigned long long current;
   do {
     current = internal_pread_.load();
-  } while(!internal_pread_.compare_exchange_weak(current, current+1));
+  } 
+  while (!internal_pread_.compare_exchange_weak(current, current+1));
           
-  while(current >= pwrite_.load());
+  while (current >= pwrite_.load()) {}
 
   auto item = std::move(buffer_[current%size_]); 
   auto aux = current;
   do {
     current = aux;
-  } while(!pread_.compare_exchange_weak(current, current+1));
+  } 
+  while (!pread_.compare_exchange_weak(current, current+1));
      
   return item;
 }
@@ -140,35 +142,39 @@ T atomic_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
 template <typename T>
 void atomic_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assignable<T>::value) {
   unsigned long long current;
-  do{
+  do {
     current = internal_pwrite_.load();
-  } while(!internal_pwrite_.compare_exchange_weak(current, current+1));
+  } 
+  while (!internal_pwrite_.compare_exchange_weak(current, current+1));
 
-  while (current >= (pread_.load()+size_));
+  while (current >= (pread_.load()+size_)) {}
 
   buffer_[current%size_] = std::move(item);
   
   auto aux = current;
   do {
     current = aux;
-  } while(!pwrite_.compare_exchange_weak(current, current+1));
+  } 
+  while (!pwrite_.compare_exchange_weak(current, current+1));
 }
 
 template <typename T>
 void atomic_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) {
   unsigned long long current;
-  do{
+  do {
     current = internal_pwrite_.load();
-  } while(!internal_pwrite_.compare_exchange_weak(current, current+1));
+  } 
+  while (!internal_pwrite_.compare_exchange_weak(current, current+1));
 
-  while (current >= (pread_.load()+size_));
+  while (current >= (pread_.load()+size_)) {}
 
   buffer_[current%size_] = item;
   
   auto aux = current;
   do {
     current = aux;
-  } while(!pwrite_.compare_exchange_weak(current, current+1));
+  } 
+  while (!pwrite_.compare_exchange_weak(current, current+1));
 }
 
 /**
@@ -302,9 +308,9 @@ void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_as
 */
 enum class queue_mode {
   /// Lock-free synchronization using atomics.
-  lockfree = true, 
+  lockfree, 
   /// Mutex based synchronization.
-  blocking = false
+  blocking 
 };
 
 /**
