@@ -760,7 +760,7 @@ template <typename ... InputIterators, typename Identity,
 auto parallel_execution_native::map_reduce(
     std::tuple<InputIterators...> firsts, 
     std::size_t sequence_size,
-    Identity &&,
+    Identity && identity,
     Transformer && transform_op, Combiner && combine_op) const
 {
   using result_type = std::decay_t<Identity>;
@@ -769,7 +769,7 @@ auto parallel_execution_native::map_reduce(
   constexpr sequential_execution seq;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t id) {
     partial_results[id] = seq.map_reduce(f, sz,
-        std::forward<Identity>(partial_results[id]),
+        std::forward<Identity>(identity),
         std::forward<Transformer>(transform_op),
         std::forward<Combiner>(combine_op));
   };
@@ -789,8 +789,8 @@ auto parallel_execution_native::map_reduce(
     process_chunk(chunk_firsts, sequence_size - delta, concurrency_degree_-1);
   } // Pool synch
 
-  return seq.reduce(std::next(partial_results.begin()), 
-     partial_results.size()-1, std::forward<result_type>(partial_results[0]),
+  return seq.reduce(partial_results.begin(), 
+     partial_results.size(), std::forward<Identity>(identity),
      std::forward<Combiner>(combine_op));
 }
 
