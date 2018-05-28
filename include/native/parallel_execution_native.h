@@ -1369,7 +1369,7 @@ void parallel_execution_native::do_pipeline(
         input_queue.push(new_item);
       }
     }
-    while (!input_queue.is_empty()) {
+    while (!input_queue.empty()) {
       auto item = input_queue.pop();
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
