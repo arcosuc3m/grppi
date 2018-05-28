@@ -1,22 +1,18 @@
-/**
-* @version		GrPPI v0.3
-* @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You have received a copy of the GNU General Public License in LICENSE.txt
-* also available in <http://www.gnu.org/licenses/gpl.html>.
-*
-* See COPYRIGHT.txt for copyright notices and details.
-*/
+/*
+ * Copyright 2018 Universidad Carlos III de Madrid
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <atomic>
 
 #include <gtest/gtest.h>
@@ -57,7 +53,29 @@ public:
   }
 
   template <typename E>
-  void run_nary_tuple_range(const E &e) {
+  void run_unary_size(const E & e) {
+    grppi::map(e, 
+      v.begin(), v.size(), w.begin(),
+      [this](int i) {
+        invocations++; 
+        return i*2; 
+      }
+    );
+  }
+
+  template <typename E>
+  void run_unary_range(const E & e) {
+    grppi::map(e,
+      v, w,
+      [this](int i) {
+        invocations++;
+        return i*2;
+      }
+    );
+  }
+
+  template <typename E>
+  void run_nary_tuple_iter(const E &e) {
     grppi::map(e, 
       make_tuple(v.begin(),v2.begin(),v3.begin()),
       v.end(), w.begin(),
@@ -80,6 +98,18 @@ public:
     );
   }
 
+  template<typename E>
+  void run_nary_tuple_range(const E & e) {
+    grppi::map(e,
+      grppi::zip(v,v2,v3),
+      w,
+       [this](int x, int y, int z){
+         invocations++;
+         return x+y+z;
+       }
+    );
+  }
+
   void setup_empty() {
   }
 
@@ -93,8 +123,8 @@ public:
   }
 
   void check_single_unary() {
-    EXPECT_EQ(1, this->invocations); // one invocation
-    EXPECT_EQ(84, this->w[0]);
+    EXPECT_EQ(1, invocations); // one invocation
+    EXPECT_EQ(84, w[0]);
   }
 
   void setup_multiple_unary() {
@@ -104,8 +134,8 @@ public:
   }
 
   void check_multiple_unary() {
-    EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(5, invocations); // five invocations
+    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w)));
   }
 
   void setup_single_nary() {
@@ -116,8 +146,8 @@ public:
   }
 
   void check_single_nary() {
-    EXPECT_EQ(1, this->invocations); // one invocation
-    EXPECT_EQ(66, this->w[0]);
+    EXPECT_EQ(1, invocations); // one invocation
+    EXPECT_EQ(66, w[0]);
   }
 
   void setup_multiple_nary() {
@@ -129,8 +159,8 @@ public:
   }
 
   void check_multiple_nary() {
-    EXPECT_EQ(5, this->invocations); // five invocations
-    EXPECT_TRUE(equal(begin(this->expected), end(this->expected), begin(this->w)));
+    EXPECT_EQ(5, invocations); // five invocations
+    EXPECT_TRUE(equal(begin(expected), end(expected), begin(w)));
   }
 
 };
@@ -145,10 +175,38 @@ TYPED_TEST(map_test, static_empty_unary)
   this->check_empty();
 }
 
+TYPED_TEST(map_test, static_empty_unary_size)
+{
+  this->setup_empty();
+  this->run_unary_size(this->execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, static_empty_unary_range)
+{
+  this->setup_empty();
+  this->run_unary_range(this->execution_);
+  this->check_empty();
+}
+
 TYPED_TEST(map_test, dyn_empty_unary)
 {
   this->setup_empty();
   this->run_unary(this->dyn_execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, dyn_empty_unary_size)
+{
+  this->setup_empty();
+  this->run_unary_size(this->dyn_execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, dyn_empty_unary_range)
+{
+  this->setup_empty();
+  this->run_unary_range(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -159,10 +217,38 @@ TYPED_TEST(map_test, static_single_unary)
   this->check_single_unary();
 }
 
+TYPED_TEST(map_test, static_single_unary_size)
+{
+  this->setup_single_unary();
+  this->run_unary_size(this->execution_);
+  this->check_single_unary();
+}
+
+TYPED_TEST(map_test, static_single_unary_range)
+{
+  this->setup_single_unary();
+  this->run_unary_range(this->execution_);
+  this->check_single_unary();
+}
+
 TYPED_TEST(map_test, dyn_single_unary)
 {
   this->setup_single_unary();
   this->run_unary(this->dyn_execution_);
+  this->check_single_unary();
+}
+
+TYPED_TEST(map_test, dyn_single_unary_size)
+{
+  this->setup_single_unary();
+  this->run_unary_size(this->dyn_execution_);
+  this->check_single_unary();
+}
+
+TYPED_TEST(map_test, dyn_single_unary_range)
+{
+  this->setup_single_unary();
+  this->run_unary_range(this->dyn_execution_);
   this->check_single_unary();
 }
 
@@ -173,6 +259,20 @@ TYPED_TEST(map_test, static_multiple_unary)
   this->check_multiple_unary();
 }
 
+TYPED_TEST(map_test, static_multiple_unary_size)
+{
+  this->setup_multiple_unary();
+  this->run_unary_size(this->execution_);
+  this->check_multiple_unary();
+}
+
+TYPED_TEST(map_test, static_multiple_unary_range)
+{
+  this->setup_multiple_unary();
+  this->run_unary_range(this->execution_);
+  this->check_multiple_unary();
+}
+
 TYPED_TEST(map_test, dyn_multiple_unary)
 {
   this->setup_multiple_unary();
@@ -180,6 +280,33 @@ TYPED_TEST(map_test, dyn_multiple_unary)
   this->check_multiple_unary();
 }
 
+TYPED_TEST(map_test, dyn_multiple_unary_size)
+{
+  this->setup_multiple_unary();
+  this->run_unary_size(this->dyn_execution_);
+  this->check_multiple_unary();
+}
+
+TYPED_TEST(map_test, dyn_multiple_unary_range)
+{
+  this->setup_multiple_unary();
+  this->run_unary_range(this->dyn_execution_);
+  this->check_multiple_unary();
+}
+
+TYPED_TEST(map_test, static_empty_nary_tuple_iter)
+{
+  this->setup_empty();
+  this->run_nary_tuple_iter(this->execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, static_empty_nary_tuple_size)
+{
+  this->setup_empty();
+  this->run_nary_tuple_size(this->execution_);
+  this->check_empty();
+}
 
 TYPED_TEST(map_test, static_empty_nary_tuple_range)
 {
@@ -188,46 +315,10 @@ TYPED_TEST(map_test, static_empty_nary_tuple_range)
   this->check_empty();
 }
 
-TYPED_TEST(map_test, dyn_empty_nary_tuple_range)
+TYPED_TEST(map_test, dyn_empty_nary_tuple_iter)
 {
   this->setup_empty();
-  this->run_nary_tuple_range(this->dyn_execution_);
-  this->check_empty();
-}
-
-TYPED_TEST(map_test, static_single_nary_tuple_range)
-{
-  this->setup_single_nary();
-  this->run_nary_tuple_range(this->execution_);
-  this->check_single_nary();
-}
-
-TYPED_TEST(map_test, dyn_single_nary_tuple_range)
-{
-  this->setup_single_nary();
-  this->run_nary_tuple_range(this->dyn_execution_);
-  this->check_single_nary();
-}
-
-TYPED_TEST(map_test, static_multiple_nary_tuple_range)
-{
-  this->setup_multiple_nary();
-  this->run_nary_tuple_range(this->execution_);
-  this->check_multiple_nary();
-}
-
-TYPED_TEST(map_test, dyn_multiple_nary_tuple_range)
-{
-  this->setup_multiple_nary();
-  this->run_nary_tuple_range(this->execution_);
-  this->check_multiple_nary();
-}
-
-
-TYPED_TEST(map_test, static_empty_nary_tuple_size)
-{
-  this->setup_empty();
-  this->run_nary_tuple_size(this->execution_);
+  this->run_nary_tuple_iter(this->dyn_execution_);
   this->check_empty();
 }
 
@@ -238,10 +329,38 @@ TYPED_TEST(map_test, dyn_empty_nary_tuple_size)
   this->check_empty();
 }
 
+TYPED_TEST(map_test, dyn_empty_nary_tuple_range)
+{
+  this->setup_empty();
+  this->run_nary_tuple_range(this->dyn_execution_);
+  this->check_empty();
+}
+
+TYPED_TEST(map_test, static_single_nary_tuple_iter)
+{
+  this->setup_single_nary();
+  this->run_nary_tuple_iter(this->execution_);
+  this->check_single_nary();
+}
+
 TYPED_TEST(map_test, static_single_nary_tuple_size)
 {
   this->setup_single_nary();
   this->run_nary_tuple_size(this->execution_);
+  this->check_single_nary();
+}
+
+TYPED_TEST(map_test, static_single_nary_tuple_range)
+{
+  this->setup_single_nary();
+  this->run_nary_tuple_range(this->execution_);
+  this->check_single_nary();
+}
+
+TYPED_TEST(map_test, dyn_single_nary_tuple_iter)
+{
+  this->setup_single_nary();
+  this->run_nary_tuple_iter(this->dyn_execution_);
   this->check_single_nary();
 }
 
@@ -252,10 +371,38 @@ TYPED_TEST(map_test, dyn_single_nary_tuple_size)
   this->check_single_nary();
 }
 
+TYPED_TEST(map_test, dyn_single_nary_tuple_range)
+{
+  this->setup_single_nary();
+  this->run_nary_tuple_range(this->dyn_execution_);
+  this->check_single_nary();
+}
+
+TYPED_TEST(map_test, static_multiple_nary_tuple_iter)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_iter(this->execution_);
+  this->check_multiple_nary();
+}
+
 TYPED_TEST(map_test, static_multiple_nary_tuple_size)
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_size(this->execution_);
+  this->check_multiple_nary();
+}
+
+TYPED_TEST(map_test, static_multiple_nary_tuple_range)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_range(this->execution_);
+  this->check_multiple_nary();
+}
+
+TYPED_TEST(map_test, dyn_multiple_nary_tuple_iter)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_iter(this->execution_);
   this->check_multiple_nary();
 }
 
@@ -265,3 +412,11 @@ TYPED_TEST(map_test, dyn_multiple_nary_tuple_size)
   this->run_nary_tuple_size(this->execution_);
   this->check_multiple_nary();
 }
+
+TYPED_TEST(map_test, dyn_multiple_nary_tuple_range)
+{
+  this->setup_multiple_nary();
+  this->run_nary_tuple_range(this->execution_);
+  this->check_multiple_nary();
+}
+

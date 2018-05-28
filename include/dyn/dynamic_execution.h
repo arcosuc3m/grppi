@@ -1,23 +1,18 @@
-/**
-* @version		GrPPI v0.3
-* @copyright		Copyright (C) 2017 Universidad Carlos III de Madrid. All rights reserved.
-* @license		GNU/GPL, see LICENSE.txt
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You have received a copy of the GNU General Public License in LICENSE.txt
-* also available in <http://www.gnu.org/licenses/gpl.html>.
-*
-* See COPYRIGHT.txt for copyright notices and details.
-*/
-
+/*
+ * Copyright 2018 Universidad Carlos III de Madrid
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef GRPPI_DYN_DYNAMIC_EXECUTION_H
 #define GRPPI_DYN_DYNAMIC_EXECUTION_H
 
@@ -26,6 +21,7 @@
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
 #include "../ff/parallel_execution_ff.h"
+#include "../common/configuration.h"
 
 #include <memory>
 
@@ -34,9 +30,27 @@ namespace grppi{
 class dynamic_execution {
 public:
 
-  dynamic_execution() noexcept :
-    execution_{}
-  {}
+  dynamic_execution() noexcept : execution_{} 
+  {
+    configuration<> config;
+    switch (config.dynamic_backend()) {
+      case execution_backend::seq:
+        execution_ = make_execution<sequential_execution>();
+        break;
+      case execution_backend::native:
+        execution_ = make_execution<parallel_execution_native>();
+        break;
+      case execution_backend::omp:
+        execution_ = make_execution<parallel_execution_omp>();
+        break;
+      case execution_backend::tbb:
+        execution_ = make_execution<parallel_execution_tbb>();
+        break;
+      case execution_backend::ff:
+        execution_ = make_execution<parallel_execution_ff>();
+        break;
+    }
+  }
 
   template <typename E>
   dynamic_execution(const E & e) : execution_{std::make_unique<execution<E>>(e)} {}
@@ -179,7 +193,7 @@ public:
           Transformers && ... transform_ops) const;
 
 private:
-
+  
   class execution_base {
   public:
     virtual ~execution_base() {};
@@ -192,6 +206,11 @@ private:
     virtual ~execution() = default;
     E ex_;
   };
+
+  template <typename E>
+  std::unique_ptr<execution<E>> make_execution() {
+    return std::make_unique<execution<E>>(E{});
+  }
 
 private:
   /// Pointer to dynamically allocated execution policy.

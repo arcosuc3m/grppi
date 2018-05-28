@@ -61,11 +61,49 @@ R r = op(it, n);
 An unary **stencil** takes a data set and transforms each element in the data set by
 applying a transformation to each data item using the data item and its neighbourhood.
 
-The only interface currently offered for this pattern is based in iterators
+There are two interfaces for the unary stencil:
+
+  * A range based interface.
+  * An iterator based interface.
+
+#### Unary range based stencil
+
+The range based interface specifies sequences as ranges. 
+A **range** is any type satisfying the `grppi::range_concept`. 
+In particular, any STL sequence is a **range**. 
+Thus, the sequences provided to `grppi::stencil` are:
+
+  * The input data set is specified by a range.
+  * The output data set is specified by a range.
+
+---
+**Example**: Stencil operation adding neighbours in a vector.
+~~~{.cpp}
+vector<double> v = get_the_vector();
+vector<double> w(v.size());
+grppi::stencil(ex, v, w, 
+    // Add current element and neighbours
+    [](auto it, auto n) {
+      return *it + accumulate(begin(n), end(n)); 
+    }
+    // Neighbours are prev and next
+    [&](auto it) {
+      vector<double> r;
+      if (it!=begin(v)) r.push_back(*prev(it));
+      if (distance(it,end(end))>1) r.push_back(*next(it));
+      return r;
+    }
+);
+~~~
+---
+
+#### Unary iterator based stencil
+
+The iterator based interface specifies sequences in terms of iterators 
 (following the C++ standard library conventions):
 
-* The input data set is specified by two iterators.
-* The output data set is specified by an iterator to the start of the output sequence.
+  * The input data set is specified by two iterators (or by an iterator and a size).
+  * The output data set is specified by an iterator to the start of the output sequence.
 
 ---
 **Example**: Stencil operation adding neighbours in a vector.
@@ -84,6 +122,21 @@ grppi::stencil(ex, begin(v), end(v), begin(w),
       if (distance(it,end(end))>1) r.push_back(*next(it));
       return r;
     }
+);
+
+grppi::stencil(ex, begin(v), v.size(), begin(w),
+    // Add current element and neighbours
+    [](auto it, auto n) {
+      return *it + accumulate(begin(n), end(n)); 
+    }
+    // Neighbours are prev and next
+    [&](auto it) {
+      vector<double> r;
+      if (it!=begin(v)) r.push_back(*prev(it));
+      if (distance(it,end(end))>1) r.push_back(*next(it));
+      return r;
+    }
+);
 ~~~
 ---
 
@@ -93,23 +146,79 @@ An n-ary **stencil** takes multiple data sets and transforms each element in the
 applying a transformation to each data item form the first data set and the neighbourhood
 obtained from all data sets.
 
-The only interface currently offered for this pattern is based in iterators:
+There are two interfaces for the n-ary map/reduce:
 
-* The first data set is specified by two iterators.
-* The output data set is specified by an iterator to the start of the output sequence.
-* All the other input data sets are specified by iterators to the start of the input data sequences.
+  * A range based interface.
+  * An iterator based interface.
+
+#### Range based N-ary stencil
+
+The range based interface specifies sequences as **ranges**. 
+A range is any type satisfying the `grppi::range_concept`. 
+In particular, any STL sequence is a **range**. 
+Thus, the sequences provided to `grppi::stencil` are:
+
+  * Each input data set is specified by a range.
 
 ---
-**Example**: Stencil operation adding neighbours in two vector.
+**Example**: Stencil operation adding neighbours in two vectors.
 ~~~{.cpp}
 vector<double> v1 = get_the_vector();
 vector<double> v2 = get_the_vector();
 vector<double> w(v.size());
 
-auto get_around = [](auto i, auto b, auto e) {
-};
+grppi::stencil(ex, v1, v2, w, 
+    // Add current element and neighbours
+    [](auto it, auto n) {
+      return *it + accumulate(begin(n), end(n)); 
+    }
+    // Neighbours are prev and next
+    [&](auto it1, auto it2) {
+      vector<double> r;
+      if (it1!=begin(v1)) r.push_back(*prev(it1));
+      if (distance(it1,end(v1))>1) r.push_back(*next(it1));
+      if (it2!=begin(v2)) r.push_back(*prev(it2));
+      if (distance(it2,end(v2))>2) r.push_back(*next(it2));
+      return r;
+    }
+);
+~~~
+---
+#### Iterator based N-ary stencil
 
-grppi::stencil(ex, begin(v), end(v), begin(w),
+The iterator based interface specifies sequences in terms of iterators 
+(following the C++ standard library conventions):
+
+  * The input data sets are specified by a tuple of iterators to the start of each sequence
+  * Additionally, the size of those sequences is specified by either an iterator to the end of the first sequence or by an integral value.
+  * The output data set is specified by an iterator to the start of the output sequence.
+
+---
+**Example**: Stencil operation adding neighbours in two vectors.
+~~~{.cpp}
+vector<double> v1 = get_the_vector();
+vector<double> v2 = get_the_vector();
+vector<double> w(v.size());
+
+grppi::stencil(ex, std::make_tuple(begin(v1), begin(v2)), end(v1), 
+    begin(w),
+    // Add current element and neighbours
+    [](auto it, auto n) {
+      return *it + accumulate(begin(n), end(n)); 
+    }
+    // Neighbours are prev and next
+    [&](auto it1, auto it2) {
+      vector<double> r;
+      if (it1!=begin(v1)) r.push_back(*prev(it1));
+      if (distance(it1,end(v1))>1) r.push_back(*next(it1));
+      if (it2!=begin(v2)) r.push_back(*prev(it2));
+      if (distance(it2,end(v2))>2) r.push_back(*next(it2));
+      return r;
+    }
+);
+
+grppi::stencil(ex, std::make_tuple(begin(v1), begin(v2)), v1.size(), 
+    begin(w),
     // Add current element and neighbours
     [](auto it, auto n) {
       return *it + accumulate(begin(n), end(n)); 
