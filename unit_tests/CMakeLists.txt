@@ -60,6 +60,7 @@ if(GRPPI_UNIT_TEST_ENABLE)
       ${GTEST_BOTH_LIBRARIES}
       gcov
       ${TBB_LIBRARIES}
+      ${HWLOC_LIB}
       ${CMAKE_THREAD_LIBS_INIT}
   )
   

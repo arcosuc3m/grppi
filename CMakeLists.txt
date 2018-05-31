@@ -52,6 +52,23 @@ endif()
 # GrPPI library
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
+# HWLOC Library
+find_package(HWLOC)
+if (HWLOC_FOUND)
+  option(GRPPI_HWLOC_ENABLE "Use HWLOC library" ON)
+  message(STATUS "HWLOC found")
+else (HWLOC_FOUND)
+  option(GRPPI_HWLOC_ENABLE "Use HWLOC library" OFF)
+  set(GRPPI_HWLOC_ENABLE OFF CACHE BOOL "Use HWLOC library" FORCE)
+  message(STATUS "HWLOC not found")
+endif (HWLOC_FOUND)
+
+message(STATUS "HWLOC: " ${GRPPI_HWLOC_ENABLE})
+if (GRPPI_HWLOC_ENABLE)
+  include_directories(${HWLOC_INCLUDE_DIR})
+  add_definitions(-DGRPPI_HWLOC)
+endif (GRPPI_HWLOC_ENABLE)
+
 # TBB Library
 find_package( TBB ) 
 if( TBB_FOUND )

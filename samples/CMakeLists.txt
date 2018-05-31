@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Sample of common utilities
+add_subdirectory(common)
+
 # Data-parallel patterns
 add_subdirectory(map)
 add_subdirectory(reduce)
