@@ -17,6 +17,7 @@
 #define private public
 #include "common/hwloc_topology.h"
 #include "common/native_topology.h"
+#include "common/hardware_topology.h"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ using topologies = ::testing::Types<grppi::native_topology
 #ifdef GRPPI_HWLOC
 ,grppi::hwloc_topology
 #endif
+,grppi::hardware_topology
 >;
 
 TYPED_TEST_CASE(topology_test, topologies);

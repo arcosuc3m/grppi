@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #ifndef GRPPI_COMMON_HWLOC_TOPOLOGY_H
-#define GRPPI_NATIVE_HWLOC_TOPOLOGY_H
+#define GRPPI_COMMON_HWLOC_TOPOLOGY_H
 
 #include <thread>
 
