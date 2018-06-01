@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#Link libraries
+if(GRPPI_HWLOC_ENABLE)
+link_libraries(${HWLOC_LIB})
+endif(GRPPI_HWLOC_ENABLE)
+
 # Sample of common utilities
 add_subdirectory(common)
 
