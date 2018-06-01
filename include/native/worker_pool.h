@@ -18,6 +18,8 @@
 
 #include <thread>
 
+#include "../common/hardware_topology.h"
+
 namespace grppi {
 
 /**
@@ -33,7 +35,11 @@ class worker_pool {
     \brief Creates a worker pool with a number of threads.
     \param num_threads Number of threads for the pool.
     */
-    worker_pool() noexcept = default;
+    worker_pool() noexcept :
+      topology_{},
+      processor_{topology_.first_processor_unit()},
+      workers_{}
+    {}
 
     /**
     \brief Destructs the worker pool after joining with all threads in the 
@@ -59,6 +65,8 @@ class worker_pool {
         auto manager = ex.thread_manager();
         f(args...);
       });
+      topology_.pin_thread(workers_.back(), processor_);
+      processor_++;
     }
 
     template <typename E, typename F, typename ... Args>
@@ -68,6 +76,8 @@ class worker_pool {
           auto manager = ex.thread_manager();
           f(args...);
         });
+        topology_.pin_thread(workers_.back(), processor_);
+        processor_++;
       }
     }
 
@@ -81,6 +91,8 @@ class worker_pool {
     }
 
   private:
+    hardware_topology topology_;
+    hardware_topology::processor_type processor_;
     std::vector<std::thread> workers_;
 };
 
