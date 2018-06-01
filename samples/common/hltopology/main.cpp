@@ -46,7 +46,7 @@ void print_nodes(const grppi::hwloc_topology & t) {
   std::cout << "Nodes (" << max << "):\n";
   for (int i=0; i<max; ++i) {
     std::cout << "Unit " << i << "<" << p.index() << "> -> (" 
-        << p.os_index() << "\n";
+        << p.os_index() << ")" << "\n";
     ++p;
   }
 }
