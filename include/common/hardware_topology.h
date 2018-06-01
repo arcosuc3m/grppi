@@ -23,11 +23,13 @@ namespace grppi {
 
 class hardware_topology {
 
-private:
+public:
 #ifdef GRPPI_HWLOC
   using topology_type = hwloc_topology;
+  using processor_type = hwloc_processor_unit;
 #else
   using topology_type = native_topology;
+  using processor_type = native_processor_unit;
 #endif
 
 public:
@@ -45,7 +47,7 @@ public:
   int logical_core_nodes() const { return topology_.logical_core_nodes(); }
 
   void pin_thread(std::thread & t, hwloc_processor_unit & pu) const {
-    pin_thread(t,pu);
+    topology_.pin_thread(t,pu);
   }
 
 private:
