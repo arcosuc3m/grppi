@@ -704,7 +704,7 @@ void parallel_execution_native::map(
   const int chunk_size = sequence_size / concurrency_degree_;
   
   {
-    worker_pool workers{concurrency_degree_};
+    worker_pool workers;
     for (int i=0; i!=concurrency_degree_-1; ++i) {
       const auto delta = chunk_size * i;
       const auto chunk_firsts = iterators_next(firsts,delta);
@@ -737,7 +737,7 @@ auto parallel_execution_native::reduce(
   const auto chunk_size = sequence_size / concurrency_degree_;
 
   { 
-    worker_pool workers{concurrency_degree_};
+    worker_pool workers;
     for (int i=0; i<concurrency_degree_-1; ++i) {
       const auto delta = chunk_size * i;
       const auto chunk_first = std::next(first,delta);
@@ -777,7 +777,7 @@ auto parallel_execution_native::map_reduce(
   const auto chunk_size = sequence_size / concurrency_degree_;
 
   {
-    worker_pool workers{concurrency_degree_};
+    worker_pool workers;
     for(int i=0;i<concurrency_degree_-1;++i){    
       const auto delta = chunk_size * i;
       const auto chunk_firsts = iterators_next(firsts,delta);
@@ -813,7 +813,7 @@ void parallel_execution_native::stencil(
 
   const auto chunk_size = sequence_size / concurrency_degree_;
   {
-    worker_pool workers{concurrency_degree_};
+    worker_pool workers;
 
     for (int i=0; i!=concurrency_degree_-1; ++i) {
       const auto delta = chunk_size * i;
@@ -918,7 +918,7 @@ auto parallel_execution_native::divide_conquer(
 
   int division = 0;
 
-  worker_pool workers{num_threads.load()};
+  worker_pool workers;
   auto i = subproblems.begin() + 1;
   while (i!=subproblems.end() && num_threads.load()>0) {
     workers.launch(*this,process_subproblem, i++, division++);
@@ -975,7 +975,7 @@ auto parallel_execution_native::divide_conquer(
 
   int division = 0;
 
-  worker_pool workers{num_threads.load()};
+  worker_pool workers;
   auto i = subproblems.begin() + 1;
   while (i!=subproblems.end() && num_threads.load()>0) {
     workers.launch(*this,process_subproblem, i++, division++);
@@ -1113,7 +1113,7 @@ void parallel_execution_native::do_pipeline(
 {
   using namespace std;
 
-  auto farm_task = [&](int) {
+  auto farm_task = [&]() {
     auto item{input_queue.pop()}; 
     while (item.first) {
       farm_obj(*item.first);
@@ -1123,8 +1123,8 @@ void parallel_execution_native::do_pipeline(
   };
 
   auto ntasks = farm_obj.cardinality();
-  worker_pool workers{ntasks};
-  workers.launch_tasks(*this, farm_task, ntasks);  
+  worker_pool workers;
+  workers.launch_tasks(ntasks, *this, farm_task);  
   workers.wait();
 }
 
@@ -1155,8 +1155,8 @@ void parallel_execution_native::do_pipeline(Queue & input_queue,
     output_queue.push( make_pair(output_optional_type{}, -1) );
   };
 
-  worker_pool workers{1};
-  workers.launch_tasks(*this, context_task);
+  worker_pool workers;
+  workers.launch_tasks(1, *this, context_task);
 
   do_pipeline(output_queue,
       forward<OtherTransformers>(other_ops)... );
@@ -1188,20 +1188,20 @@ void parallel_execution_native::do_pipeline(
     get_output_queue<output_item_type>(other_transform_ops...);
 
   atomic<int> done_threads{0};
+  const int ntasks = farm_obj.cardinality();
 
-  auto farm_task = [&](int nt) {
+  auto farm_task = [&]() {
     do_pipeline(input_queue, farm_obj.transformer(), output_queue);
     done_threads++;
-    if (done_threads == nt) {
+    if (done_threads == ntasks) {
       output_queue.push(make_pair(output_optional_type{}, -1));
     }else{
       input_queue.push(input_item_type{});
     }
   };
 
-  auto ntasks = farm_obj.cardinality();
-  worker_pool workers{ntasks};
-  workers.launch_tasks(*this, farm_task, ntasks);  
+  worker_pool workers;
+  workers.launch_tasks(ntasks, *this, farm_task);  
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_transform_ops)... );
   

@@ -33,10 +33,7 @@ class worker_pool {
     \brief Creates a worker pool with a number of threads.
     \param num_threads Number of threads for the pool.
     */
-    worker_pool(int num_threads) noexcept : 
-        num_threads_{num_threads},
-        workers_{}
-    {}
+    worker_pool() noexcept = default;
 
     /**
     \brief Destructs the worker pool after joining with all threads in the 
@@ -65,8 +62,8 @@ class worker_pool {
     }
 
     template <typename E, typename F, typename ... Args>
-    void launch_tasks(const E & ex, F && f, Args && ... args) {
-      for (int i=0; i<num_threads_; ++i) {
+    void launch_tasks(int ntasks, const E & ex, F && f, Args && ... args) {
+      for (int i=0; i<ntasks; ++i) {
         workers_.emplace_back([=,&ex]() {
           auto manager = ex.thread_manager();
           f(args...);
@@ -84,7 +81,6 @@ class worker_pool {
     }
 
   private:
-    const int num_threads_;
     std::vector<std::thread> workers_;
 };
 
