@@ -14,18 +14,57 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#define private public
 #include "common/hwloc_topology.h"
+#include "common/native_topology.h"
 
 using namespace std;
 
-#ifdef GRPPI_HWLOC
+template <typename T>
+class topology_test : public ::testing::Test {
+};
 
-TEST(hwloc_topology_test, properties)
+using topologies = ::testing::Types<grppi::native_topology
+#ifdef GRPPI_HWLOC
+,grppi::hwloc_topology
+#endif
+>;
+
+TYPED_TEST_CASE(topology_test, topologies);
+
+TYPED_TEST(topology_test, properties)
 {
-  grppi::hwloc_topology t;
+  TypeParam t;
   EXPECT_TRUE(t.numa_nodes() > 0);
   EXPECT_TRUE(t.core_nodes() > 0);
   EXPECT_TRUE(t.logical_core_nodes() > 0);
 }
 
-#endif
+TYPED_TEST(topology_test, iteration)
+{
+  TypeParam t;
+  auto node = t.first_processor_unit();
+  EXPECT_TRUE(node.index() == 0);
+  node++;
+  EXPECT_TRUE(node.index() == 1);
+}
+
+// Private members tests
+
+TEST(native_processor_unit_test, construct)
+{
+  grppi::native_processor_unit pu{0,2};
+  EXPECT_EQ(0, pu.index());
+  EXPECT_EQ(0, pu.os_index());
+}
+
+TEST(native_processor_unit_test, iterate)
+{
+  grppi::native_processor_unit pu{0,2};
+  pu++;
+  EXPECT_EQ(1, pu.index());
+  EXPECT_EQ(1, pu.os_index());
+  pu++;
+  EXPECT_EQ(0, pu.index());
+  EXPECT_EQ(0, pu.os_index());
+}

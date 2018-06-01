@@ -16,29 +16,40 @@
 #ifndef GRPPI_COMMON_HWLOC_TOPOLOGY_H
 #define GRPPI_NATIVE_HWLOC_TOPOLOGY_H
 
-#ifdef GRPPI_HWLOC
-
 #include <thread>
+
+#ifdef GRPPI_HWLOC
 
 #include <hwloc.h>
 
 namespace grppi {
 
-
 class hwloc_processor_unit {
-public:
+private:
   hwloc_processor_unit(const hwloc_obj_t & o) : object_{o} {}
 
+public:
   int index() { return object_->logical_index; }
 
   int os_index() { return object_->os_index; }
 
-  hwloc_processor_unit operator++() {
-    object_ = object_->next_cousin;
-    return {object_};
+  hwloc_processor_unit operator++(int) {
+    hwloc_processor_unit old{*this};
+    this->operator++();
+    return old;
   }
 
-  operator bool() { return object_!=nullptr; }
+  hwloc_processor_unit & operator++() {
+    if (object_->next_cousin != nullptr) {
+      object_ = object_->next_cousin;
+    }
+    else {
+      while (object_->prev_cousin != nullptr) {
+        object_ = object_->prev_cousin;
+      }
+    }
+    return *this;
+  }
 
 private:
   hwloc_obj_t object_;
@@ -108,7 +119,7 @@ private:
 
 }
 
-#endif // HWLOC_GRPPI
+#endif // GRPPI_HWLOC
 
 
 #endif

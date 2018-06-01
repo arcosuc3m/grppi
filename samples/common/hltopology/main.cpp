@@ -63,7 +63,6 @@ void run_threads(const grppi::hwloc_topology & t, int nthreads) {
           << " to pu " << pu.index() << " (" << pu.os_index() << ")" << "\n";
     }
     ++pu;
-    if (!pu) pu = t.first_processor_unit();
   }
 
   for (auto && th : tasks) { th.join(); }
