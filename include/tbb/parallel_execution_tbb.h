@@ -66,7 +66,10 @@ public:
   /**
   \brief Set number of grppi threads.
   */
-  void set_concurrency_degree(int degree) noexcept { concurrency_degree_ = degree; }
+  void set_concurrency_degree(int degree) noexcept { 
+    concurrency_degree_ = degree; 
+    num_tokens_ = token_factor_ * concurrency_degree_;
+  }
 
   /**
   \brief Get number of grppi threads.
@@ -457,6 +460,9 @@ private:
       std::index_sequence<I...>) const;
 
 private:
+
+  constexpr static int token_factor_ = 4;
+
   configuration<> config_{};
 
   int concurrency_degree_ = config_.concurrency_degree();
@@ -465,9 +471,7 @@ private:
 
   int queue_size_ = config_.queue_size();
 
-  constexpr static int default_num_tokens = 100;
-
-  int num_tokens_ = default_num_tokens;
+  int num_tokens_ = token_factor_ * concurrency_degree_;
 
   queue_mode queue_mode_ = config_.mode();
 };
