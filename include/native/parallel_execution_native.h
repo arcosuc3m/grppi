@@ -622,6 +622,8 @@ private:
   int queue_size_ = config_.queue_size();
 
   queue_mode queue_mode_ = config_.mode();
+
+  mutable worker_pool workers_{};
 };
 
 /**
@@ -704,19 +706,19 @@ void parallel_execution_native::map(
   const int chunk_size = sequence_size / concurrency_degree_;
   
   {
-    worker_pool workers;
+    pool_context ctx{workers_};
     for (int i=0; i!=concurrency_degree_-1; ++i) {
       const auto delta = chunk_size * i;
       const auto chunk_firsts = iterators_next(firsts,delta);
       const auto chunk_first_out = next(first_out, delta);
-      workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_first_out);
+      workers_.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_first_out);
     }
 
     const auto delta = chunk_size * (concurrency_degree_ - 1);
     const auto chunk_firsts = iterators_next(firsts,delta);
     const auto chunk_first_out = next(first_out, delta);
     process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
-  } // Pool synch
+  } 
 }
 
 template <typename InputIterator, typename Identity, typename Combiner>
@@ -737,18 +739,18 @@ auto parallel_execution_native::reduce(
   const auto chunk_size = sequence_size / concurrency_degree_;
 
   { 
-    worker_pool workers;
+    pool_context ctx{workers_};
     for (int i=0; i<concurrency_degree_-1; ++i) {
       const auto delta = chunk_size * i;
       const auto chunk_first = std::next(first,delta);
-      workers.launch(*this, process_chunk, chunk_first, chunk_size, i);
+      workers_.launch(*this, process_chunk, chunk_first, chunk_size, i);
     }
 
     const auto delta = chunk_size * (concurrency_degree_-1);
     const auto chunk_first = std::next(first, delta);
     const auto chunk_sz = sequence_size - delta;
     process_chunk(chunk_first, chunk_sz, concurrency_degree_-1);
-  } // Pool synch
+  } 
 
   return seq.reduce(std::next(partial_results.begin()), 
       partial_results.size()-1, std::forward<result_type>(partial_results[0]), 
@@ -777,17 +779,17 @@ auto parallel_execution_native::map_reduce(
   const auto chunk_size = sequence_size / concurrency_degree_;
 
   {
-    worker_pool workers;
+    pool_context ctx{workers_};
     for(int i=0;i<concurrency_degree_-1;++i){    
       const auto delta = chunk_size * i;
       const auto chunk_firsts = iterators_next(firsts,delta);
-      workers.launch(*this, process_chunk, chunk_firsts, chunk_size, i);
+      workers_.launch(*this, process_chunk, chunk_firsts, chunk_size, i);
     }
 
     const auto delta = chunk_size * (concurrency_degree_-1);
     const auto chunk_firsts = iterators_next(firsts, delta);
     process_chunk(chunk_firsts, sequence_size - delta, concurrency_degree_-1);
-  } // Pool synch
+  } 
 
   return seq.reduce(std::next(partial_results.begin()), 
      partial_results.size()-1, std::forward<result_type>(partial_results[0]),
@@ -813,20 +815,20 @@ void parallel_execution_native::stencil(
 
   const auto chunk_size = sequence_size / concurrency_degree_;
   {
-    worker_pool workers;
+    pool_context ctx{workers_};
 
     for (int i=0; i!=concurrency_degree_-1; ++i) {
       const auto delta = chunk_size * i;
       const auto chunk_firsts = iterators_next(firsts,delta);
       const auto chunk_out = std::next(first_out,delta);
-      workers.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_out);
+      workers_.launch(*this, process_chunk, chunk_firsts, chunk_size, chunk_out);
     }
 
     const auto delta = chunk_size * (concurrency_degree_ - 1);
     const auto chunk_firsts = iterators_next(firsts,delta);
     const auto chunk_out = std::next(first_out,delta);
     process_chunk(chunk_firsts, sequence_size - delta, chunk_out);
-  } // Pool synch
+  } 
 }
 
 template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -918,24 +920,28 @@ auto parallel_execution_native::divide_conquer(
 
   int division = 0;
 
-  worker_pool workers;
-  auto i = subproblems.begin() + 1;
-  while (i!=subproblems.end() && num_threads.load()>0) {
-    workers.launch(*this,process_subproblem, i++, division++);
-    num_threads--;
-  }
+  auto get_result = [&]() {
+    pool_context ctx{workers_};
+    auto i = subproblems.begin() + 1;
+    while (i!=subproblems.end() && num_threads.load()>0) {
+      workers_.launch(*this,process_subproblem, i++, division++);
+      num_threads--;
+    }
 
-  while (i!=subproblems.end()) {
-    partials[division] = seq.divide_conquer(std::forward<Input>(*i++), 
+    while (i!=subproblems.end()) {
+      partials[division] = seq.divide_conquer(std::forward<Input>(*i++), 
+          std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
+          std::forward<Combiner>(combine_op));
+    }
+
+    auto subresult = divide_conquer(std::forward<Input>(*subproblems.begin()), 
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
-        std::forward<Combiner>(combine_op));
-  }
+        std::forward<Combiner>(combine_op), num_threads);
 
-  auto subresult = divide_conquer(std::forward<Input>(*subproblems.begin()), 
-      std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
-      std::forward<Combiner>(combine_op), num_threads);
+    return subresult;
+  };
 
-  workers.wait();
+  auto subresult = get_result();
 
   return seq.reduce(partials.begin(), partials.size(), 
       std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
