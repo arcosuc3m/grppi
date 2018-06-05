@@ -210,6 +210,8 @@ public:
   \brief Get index of current thread in the thread table
   \pre The current thread is currently registered.
   */
+  [[deprecated("Thread ids are deprecated.\n"
+               "If you have a specific use case file a bug")]]
   int get_thread_id() const noexcept {
     return thread_registry_.current_index();
   }

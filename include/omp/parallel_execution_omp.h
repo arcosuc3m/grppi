@@ -153,6 +153,8 @@ public:
   /**
   \brief Get index of current thread in the thread table
   */
+  [[deprecated("Thread ids are deprecated.\n"
+               "If you have a specific use case file a bug")]]
   int get_thread_id() const noexcept {
     int result;
     #pragma omp parallel
