@@ -96,6 +96,14 @@ class worker_pool {
     std::vector<std::thread> workers_;
 };
 
+class pool_context {
+public:
+  pool_context(worker_pool & wp) noexcept : pool_{wp} {}
+  ~pool_context() noexcept { pool_.wait(); }
+private:
+  worker_pool & pool_;
+};
+
 }
 
 #endif
