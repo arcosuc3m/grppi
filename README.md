@@ -1,5 +1,7 @@
 # Generic Reusable Parallel Pattern Interface - GrPPI
 
+[![HitCount](http://hits.dwyl.io/arcosuc3m/grppi.svg)](http://hits.dwyl.io/arcosuc3m/grppi)
+
 ## Introduction ##
 
 **GrPPI** is an open source *generic and reusable parallel pattern programming
