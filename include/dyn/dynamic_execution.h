@@ -18,6 +18,7 @@
 
 #include "../seq/sequential_execution.h"
 #include "../native/parallel_execution_native.h"
+#include "../task/parallel_execution_task.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
 #include "../ff/parallel_execution_ff.h"
