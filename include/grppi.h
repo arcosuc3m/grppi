@@ -52,6 +52,7 @@ namespace grppi {
 #include "stream_filter.h"
 #include "stream_iteration.h"
 #include "stream_reduce.h"
+#include "stream_pool.h"
 
 namespace grppi {
 

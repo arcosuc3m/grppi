@@ -192,6 +192,28 @@ public:
   void pipeline(Generator && generate_op, 
           Transformers && ... transform_ops) const;
 
+  /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
+
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
+
 private:
   
   class execution_base {
@@ -267,6 +289,12 @@ constexpr bool supports_divide_conquer<dynamic_execution>() { return true; }
 template <>
 constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_stream_pool<dynamic_execution>() { return true; }
 
 
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
@@ -404,6 +432,20 @@ void dynamic_execution::pipeline(
 {
   GRPPI_TRY_PATTERN_ALL(pipeline, std::forward<Generator>(generate_op),
       std::forward<Transformers>(transform_ops)...);
+}
+
+template <typename Population, typename Selection, typename Evolution,
+          typename Evaluation, typename Predicate>
+void dynamic_execution::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+ GRPPI_TRY_PATTERN_ALL(stream_pool, population, std::forward<Selection>(selection_op),
+      std::forward<Evolution>(evolve_op),
+      std::forward<Evaluation>(eval_op),
+      std::forward<Predicate>(termination_op));
 }
 
 #undef GRPPI_TRY_PATTERN

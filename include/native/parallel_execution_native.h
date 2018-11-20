@@ -410,6 +410,27 @@ public:
     do_pipeline(input_queue, std::forward<Transformer>(transform_op), output_queue);
   }
 
+  /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
+
 private:
 
   template <typename Input, typename Divider, typename Solver, typename Combiner>
@@ -684,6 +705,13 @@ constexpr bool supports_divide_conquer<parallel_execution_native>() { return tru
 template <>
 constexpr bool supports_pipeline<parallel_execution_native>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the split join pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stream_pool<parallel_execution_native>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_native::map(
@@ -887,6 +915,79 @@ void parallel_execution_native::pipeline(
   do_pipeline(output_queue, forward<Transformers>(transform_ops)...);
   generator_task.join();
 }
+
+template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+void parallel_execution_native::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+  using namespace std;
+  using namespace experimental; 
+
+  using selected_type = typename std::result_of<Selection(Population&)>::type;
+  using individual_type = typename Population::value_type;
+  using selected_op_type = optional<selected_type>;
+  using individual_op_type = optional<individual_type>;
+
+  auto selected_queue = make_queue<selected_op_type>();
+  auto output_queue = make_queue<individual_op_type>();
+      
+  std::atomic<bool> end{false};
+  std::atomic<int> done_threads{0};
+  std::atomic_flag lock = ATOMIC_FLAG_INIT;
+
+  auto evol_task = [&](){
+    auto selection = selected_queue.pop();
+    while(selection){
+      auto evolved = evolve_op(*selection);
+      auto filtered = eval_op(*selection, evolved);
+      if(termination_op(filtered)){
+        end=true;
+      }
+      output_queue.push({filtered});
+      selection = selected_queue.pop();
+    }
+    done_threads++;
+    if(done_threads == concurrency_degree_)
+      output_queue.push(individual_op_type{});
+  };
+
+  thread selector([&](){
+     for(;;){
+       if(end) break;
+       while(lock.test_and_set());
+       if( population.size() != 0 ){
+         auto selection = selection_op(population);
+         lock.clear();
+         selected_queue.push({selection});
+       }else{
+         lock.clear();
+       }
+     }
+     for( int i = 0; i < concurrency_degree_; i++) 
+       selected_queue.push(selected_op_type{});
+  });
+
+  thread sink([&](){
+    auto item = output_queue.pop();
+    while(item) {
+      while(lock.test_and_set());
+      population.push_back(*item);
+      lock.clear();
+      item = output_queue.pop();
+    }
+  });
+
+  worker_pool workers{concurrency_degree_};
+  workers.launch_tasks(*this, evol_task);
+  selector.join();
+  sink.join();
+  workers.wait();
+}
+
 
 // PRIVATE MEMBERS
 

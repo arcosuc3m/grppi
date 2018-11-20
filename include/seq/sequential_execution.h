@@ -233,6 +233,27 @@ public:
   }
 
 
+  /**
+  \brief Invoke \ref md_stream_pool.
+  \tparam Population Type for the initial population.
+  \tparam Selection Callable type for the selection operation.
+  \tparam Selection Callable type for the evolution operation.
+  \tparam Selection Callable type for the evaluation operation.
+  \tparam Selection Callable type for the termination operation.
+  \param population initial population.
+  \param selection_op Selection operation.
+  \param evolution_op Evolution operations.
+  \param eval_op Evaluation operation.
+  \param termination_op Termination operation.
+  */
+  template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+  void stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const;
+
 private:
 
   template <typename Item, typename Consumer,
@@ -445,6 +466,15 @@ constexpr bool supports_divide_conquer<sequential_execution>() { return true; }
 template <>
 constexpr bool supports_pipeline<sequential_execution>() { return true; }
 
+
+/**
+\brief Determines if an execution policy supports the stream pool pattern.
+\note Specialization for parallel_execution_native.
+*/
+template <>
+constexpr bool supports_stream_pool<sequential_execution>() { return true; }
+
+
 template <typename ... InputIterators, typename OutputIterator,
           typename Transformer>
 constexpr void sequential_execution::map(
@@ -571,6 +601,23 @@ void sequential_execution::pipeline(
     do_pipeline(*x, std::forward<Transformers>(transform_ops)...);
   }
 }
+
+template <typename Population, typename Selection, typename Evolution,
+            typename Evaluation, typename Predicate>
+void sequential_execution::stream_pool(Population & population,
+                Selection && selection_op,
+                Evolution && evolve_op,
+                Evaluation && eval_op,
+                Predicate && termination_op) const
+{
+  for(;;) {
+    auto selection = selection_op(population);
+    auto evolved = evolve_op(selection);
+    population.push_back(eval_op(selection,evolved));
+    if( termination_op(evolved) ) break;
+  }
+}
+
 
 template <typename Item, typename Consumer,
           requires_no_pattern<Consumer>>
