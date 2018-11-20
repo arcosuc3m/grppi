@@ -610,6 +610,7 @@ void sequential_execution::stream_pool(Population & population,
                 Evaluation && eval_op,
                 Predicate && termination_op) const
 {
+  if(population.size() == 0 ) return;
   for(;;) {
     auto selection = selection_op(population);
     auto evolved = evolve_op(selection);

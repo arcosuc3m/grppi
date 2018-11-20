@@ -859,6 +859,7 @@ void parallel_execution_omp::stream_pool(Population & population,
   using selected_op_type = optional<selected_type>;
   using individual_op_type = optional<individual_type>;
 
+  if( population.size() == 0 ) return;
 
   #pragma omp parallel
   {

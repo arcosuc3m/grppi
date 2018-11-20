@@ -754,6 +754,8 @@ void parallel_execution_tbb::stream_pool(Population & population,
   using individual_type = typename Population::value_type;
   using selected_op_type = optional<selected_type>;
   using individual_op_type = optional<individual_type>;
+  
+  if( population.size() == 0 ) return;
 
   auto selected_queue = make_queue<selected_op_type>();
   auto output_queue = make_queue<individual_op_type>();
@@ -763,7 +765,7 @@ void parallel_execution_tbb::stream_pool(Population & population,
   std::atomic_flag lock = ATOMIC_FLAG_INIT;
   tbb::task_group g;
   
-  for(auto i = 0; i< concurrency_degree_; i++){
+  for(auto i = 0; i< concurrency_degree_-2; i++){
     g.run( [&](){
 
     auto selection = selected_queue.pop();
@@ -778,12 +780,13 @@ void parallel_execution_tbb::stream_pool(Population & population,
     }
      
     done_threads++;
-    if(done_threads == concurrency_degree_){
+    if(done_threads == concurrency_degree_-2){
       output_queue.push(individual_op_type{});
     }
     
    });
   }
+
   g.run([&](){
     for(;;) {
       if(end) break;
@@ -798,7 +801,7 @@ void parallel_execution_tbb::stream_pool(Population & population,
       }
 
     }
-    for(int i=0;i<concurrency_degree_;i++){ 
+    for(int i=0;i<concurrency_degree_-2;i++){ 
       selected_queue.push(selected_op_type{});
     }
   });

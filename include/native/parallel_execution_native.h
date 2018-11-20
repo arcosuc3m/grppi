@@ -932,6 +932,8 @@ void parallel_execution_native::stream_pool(Population & population,
   using selected_op_type = optional<selected_type>;
   using individual_op_type = optional<individual_type>;
 
+  if( population.size() == 0 ) return;
+
   auto selected_queue = make_queue<selected_op_type>();
   auto output_queue = make_queue<individual_op_type>();
       
