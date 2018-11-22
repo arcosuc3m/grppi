@@ -20,12 +20,17 @@
 
 namespace grppi {
 
+template <typename T>
+struct support{
+  static constexpr bool value = false;
+};
+
 /**
 \brief Determines if an execution policy is supported in the current compilation.
 \note This must be specialized by every execution policy.
 */
 template <typename E>
-constexpr bool is_supported() { return false; }
+constexpr bool is_supported() { return support<E>::value; }
 
 template <typename E>
 using requires_execution_supported =
@@ -40,21 +45,21 @@ using requires_execution_not_supported =
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_map() { return false; }
+constexpr bool supports_map() { return support<E>::value; }
 
 /**
 \brief Determines if an execution policy supports the reduce pattern.
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_reduce() { return false; }
+constexpr bool supports_reduce() { return support<E>::value; }
 
 /**
 \brief Determines if an execution policy supports the map-reduce pattern.
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_map_reduce() { return false; }
+constexpr bool supports_map_reduce() { return support<E>::value; }
 
 /**
 \brief Determines if an execution policy supports the stencil pattern.
