@@ -66,14 +66,14 @@ constexpr bool supports_map_reduce() { return support<E>::value; }
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_stencil() { return false; }
+constexpr bool supports_stencil() { return support<E>::value; }
 
 /**
 \brief Determines if an execution policy supports the divide-conquer pattern.
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_divide_conquer() { return false; }
+constexpr bool supports_divide_conquer() { return support<E>::value; }
 
 /**
 \brief Determines if an execution policy supports the pipeline pattern.

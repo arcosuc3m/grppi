@@ -231,6 +231,12 @@ public:
   T pop () noexcept(std::is_nothrow_move_constructible<T>::value);
 
   /**
+  \brief Try to pop an item from the queue.
+  \return If has been extracted from the queue.
+  \note This call do not block the execution.
+  */
+  bool try_pop(T& item);
+  /**
   \brief Pushes an element in the queue by move.
   \param item Value to be moved into the queue.
   \note This call may block through a mutex if the queue is empty.
@@ -266,6 +272,20 @@ private:
   /// Condition variable to signal full queue.
   std::condition_variable full_{};
 };
+
+template <typename T>
+bool locked_mpmc_queue<T>::try_pop(T& item) 
+{
+  std::unique_lock<std::mutex> lk(mut_);
+  auto empty =  pread_ < pwrite_;
+  if(empty){
+    item = buffer_[pread_%size_];
+    pread_++;
+    full_.notify_one();
+  }
+  lk.unlock();
+  return empty;
+}
 
 template <typename T>
 T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) 

@@ -22,27 +22,14 @@ class pool
     scheduler{s}
     {
       for (auto i=0; i<pool_size; i++){
-/*          pool_threads.push_back(
-             std::async(std::launch::async,
-              [this](){
-                while(1){
-                  task_type t = scheduler.get_task();
-                  if( t == task_type{-1}) break;
-                  scheduler.start_task(),
-                  scheduler.functions[t.get_id()](t),
-                  scheduler.finalize_task();
-                }
-              }
-            )
-          );*/
          pool_threads.emplace_back(std::thread(
               [this](){
                 while(1){
                   task_type t = scheduler.get_task();
-                  if( t == task_type{-1}) break;
+                  if( t == task_type{-1,-1}) break;
                   scheduler.start_task(),
                   scheduler.functions[t.get_id()](t),
-                  scheduler.finalize_task();
+                  scheduler.finalize_task(t);
                 }
               }
 
@@ -53,7 +40,7 @@ class pool
     void finalize_pool()
     {
        for(unsigned int i=0; i < pool_threads.size(); i++){
-          scheduler.launch_task(task_type{-1});
+          scheduler.launch_task(task_type{-1,-1});
        }
        for(unsigned int i=0; i < pool_threads.size(); i++){
           //pool_threads[i].get();

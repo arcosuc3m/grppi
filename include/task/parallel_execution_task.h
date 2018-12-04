@@ -323,7 +323,7 @@ public:
 
 private:
 
-  template <typename Input, typename Divider, typename Solver, typename Combiner>
+  /*template <typename Input, typename Divider, typename Solver, typename Combiner>
   auto divide_conquer(Input && input, 
                       Divider && divide_op, 
                       Solver && solve_op, 
@@ -337,7 +337,7 @@ private:
                       Solver && solve_op,
                       Combiner && combine_op,
                       std::atomic<int> & num_threads) const;
-
+*/
 
   template <typename Queue, typename Consumer,
             requires_no_pattern<Consumer> = 0>
@@ -626,29 +626,59 @@ void parallel_execution_task<Scheduler>::map(
     }
   };
 
-  const int chunk_size = sequence_size / concurrency_degree_;
-  std::vector<int> task_ids;
 
-  for (int i=0; i!=concurrency_degree_-1; ++i) {
-    const auto delta = chunk_size * i;
-    const auto chunk_firsts = iterators_next(firsts,delta);
-    const auto chunk_first_out = next(first_out, delta);
-    scheduler.register_data_parallel_task([chunk_size, chunk_firsts, chunk_first_out,this, &process_chunk](task_type){
-      process_chunk(chunk_firsts, chunk_size, chunk_first_out);
-      scheduler.notify_consume();
-    });
-  }
+  //Naive implementation of the data manager
+  std::atomic_flag used[100] = {ATOMIC_FLAG_INIT};
+  std::tuple < std::tuple<InputIterators...>, std::size_t, OutputIterator > data_manager[100];
   
-  const auto delta = chunk_size * (concurrency_degree_ - 1);
-  const auto chunk_firsts = iterators_next(firsts,delta);
-  const auto chunk_first_out = next(first_out, delta);
+  // Define granularity
+  int chunk_size = sequence_size / concurrency_degree_;
+  if(chunk_size == 0) chunk_size = sequence_size;
+  //int chunk_size = 48;
 
-  scheduler.register_data_parallel_task([sequence_size,delta, chunk_firsts, chunk_first_out, this, &process_chunk](task_type){
-    process_chunk(chunk_firsts, sequence_size - delta, chunk_first_out);
+  int function_id = scheduler.register_data_parallel_task([this,&process_chunk,&data_manager,&used](task_type &task){
+    //Get data
+    auto input_data = data_manager[task.get_data_location()];
+    process_chunk(std::get<0>(input_data), std::get<1>(input_data), std::get<2>(input_data));
+    //Notify consume and free the position
+    used[task.get_data_location()].clear();
     scheduler.notify_consume();
   });
 
-  scheduler.run_data();
+  auto aux_in = firsts;
+  auto aux_out = first_out;
+
+  auto p_id = scheduler.start_pattern();
+  for(unsigned int i=0; i< sequence_size / chunk_size; ++i){
+    bool introduced=false;
+    int pos = 0;
+    //Check for an empty position
+    while(!introduced){
+      for(int j = 0; j<100; j++){
+        if(!used[j].test_and_set()) {
+          introduced=true;
+          pos = j;
+        }
+      }
+    }
+
+    // Last iteration
+    if( i == (sequence_size/chunk_size)-1 ) 
+      chunk_size += sequence_size % chunk_size;
+
+    //Store data in data manager
+    data_manager[pos] = make_tuple(aux_in, chunk_size, aux_out);
+    task_type t{function_id, scheduler.get_task_id()};
+    t.set_data_location(pos);
+    t.set_pattern_id(p_id);
+    //Launch the task
+    scheduler.launch_data_task(t);
+    aux_in = iterators_next(aux_in, chunk_size);
+    aux_out = next(aux_out, chunk_size);
+  }
+
+  scheduler.run_data(p_id);
+
 }
 
 template <typename Scheduler>
@@ -659,37 +689,66 @@ auto parallel_execution_task<Scheduler>::reduce(
     Combiner && combine_op) const
 {
   using result_type = std::decay_t<Identity>;
-  std::vector<result_type> partial_results(concurrency_degree_);
+ 
+  // Define granularity
+  int chunk_size = sequence_size / concurrency_degree_;
+  if(chunk_size == 0) chunk_size = sequence_size;
+
+  std::vector<result_type> partial_results( sequence_size/chunk_size );   
 
   constexpr sequential_execution seq;
   auto process_chunk = [&](InputIterator f, std::size_t sz, std::size_t id) {
     partial_results[id] = seq.reduce(f,sz, std::forward<Identity>(identity), 
         std::forward<Combiner>(combine_op));
   };
+  
+  //Naive implementation of the data manager - Only std cointainers
+  std::atomic_flag used[100] = {ATOMIC_FLAG_INIT};
+  std::tuple < InputIterator, std::size_t, std::size_t > data_manager[100];
 
-
-  const auto chunk_size = sequence_size / concurrency_degree_;
-  for (int i=0; i<concurrency_degree_-1; ++i) {
-    const auto delta = chunk_size * i;
-    const auto chunk_first = std::next(first,delta);
-    scheduler.register_data_parallel_task([chunk_size, chunk_first, i, this, &process_chunk](task_type){
-      process_chunk(chunk_first, chunk_size, i);
+  int function_id = scheduler.register_data_parallel_task([this, &process_chunk, &data_manager, &used](task_type &task){
+      auto input_data = data_manager[task.get_data_location()];
+      process_chunk(std::get<0>(input_data), std::get<1>(input_data), std::get<2>(input_data));
+      //Notify consume and free the position
+      used[task.get_data_location()].clear();
       scheduler.notify_consume();
-    });
-  }
-
-  const auto delta = chunk_size * (concurrency_degree_-1);
-  const auto chunk_first = std::next(first, delta);
-  const auto chunk_sz = sequence_size - delta;
-  scheduler.register_data_parallel_task([chunk_sz, chunk_first, this, &process_chunk](task_type){
-    process_chunk(chunk_first, chunk_sz, concurrency_degree_ -1);
-    scheduler.notify_consume();
   });
 
-  scheduler.run_data();
+  auto p_id = scheduler.start_pattern();
+  auto aux_in = first;
+
+  for(unsigned int i=0; i< sequence_size / chunk_size; ++i){
+    bool introduced=false;
+    int pos = 0;
+
+    //Check for an empty position
+    while(!introduced){
+      for(int j = 0; j<100; j++){
+        if(!used[j].test_and_set()) {
+          introduced=true;
+          pos = j;
+        }
+      }
+    }
+
+    // Last iteration
+    if( i == (sequence_size/chunk_size)-1 ) 
+      chunk_size += sequence_size % chunk_size;
+
+    //Store data in data manager
+    data_manager[pos] = make_tuple(aux_in, chunk_size, i);
+    task_type t{function_id, scheduler.get_task_id()};
+    t.set_data_location(pos);
+    t.set_pattern_id(p_id);
+    //Launch the task
+    scheduler.launch_data_task(t);
+    aux_in = std::next(aux_in, chunk_size);
+  }
+
+  scheduler.run_data(p_id);
 
   return seq.reduce(partial_results.begin(), 
-      partial_results.size()-1, std::forward<Identity>(identity), 
+      partial_results.size(), std::forward<Identity>(identity), 
       std::forward<Combiner>(combine_op));
 }
 
@@ -703,57 +762,84 @@ auto parallel_execution_task<Scheduler>::map_reduce(
     Transformer && transform_op, Combiner && combine_op) const
 {
   using result_type = std::decay_t<Identity>;
-  std::vector<result_type> partial_results(concurrency_degree_);
+
+  // Define granularity
+  int chunk_size = sequence_size / concurrency_degree_;
+  if(chunk_size == 0) chunk_size = sequence_size;
+  std::vector<result_type> partial_results( sequence_size/chunk_size );   
 
   constexpr sequential_execution seq;
   auto process_chunk = [&](auto f, std::size_t sz, std::size_t id) {
-        if(sz != 1) std::cout<<"IN PROCESS CHUNK "<<sz<<std::endl;
     partial_results[id] = seq.map_reduce(f, sz,
         std::forward<Identity>(partial_results[id]),
         std::forward<Transformer>(transform_op),
         std::forward<Combiner>(combine_op));
   };
 
-  const std::size_t chunk_size = sequence_size / concurrency_degree_;
-  std::cout<<"CHUNK SIZE: "<<chunk_size<<std::endl;
-  for(int i=0;i<concurrency_degree_-1;++i){    
-    const auto delta = chunk_size * i;
-    const auto chunk_firsts = iterators_next(firsts,delta);
-    scheduler.register_data_parallel_task(
-      [chunk_size, chunk_firsts, i , this, &process_chunk](task_type){
-         if(chunk_size != 1) std::cout<<"IN STORED LAMBDA"<<chunk_size<<std::endl;
-         process_chunk(chunk_firsts, chunk_size, i),
-         scheduler.notify_consume();
-       }
-    );
+  //Naive implementation of the data manager - Only std cointainers
+  std::atomic_flag used[100] = {ATOMIC_FLAG_INIT};
+  std::tuple < std::tuple<InputIterators...>, std::size_t, std::size_t > data_manager[100];
+
+  int function_id = scheduler.register_data_parallel_task([this, &process_chunk, &data_manager, &used](task_type &task){
+      auto input_data = data_manager[task.get_data_location()];
+      process_chunk(std::get<0>(input_data), std::get<1>(input_data), std::get<2>(input_data));
+      //Notify consume and free the position
+      used[task.get_data_location()].clear();
+      scheduler.notify_consume();
+  });
+
+  auto aux_in = firsts;
+  auto p_id = scheduler.start_pattern();
+
+  for(unsigned int i=0; i< sequence_size / chunk_size; ++i){
+    bool introduced=false;
+    int pos = 0;
+    //Check for an empty position
+    while(!introduced){
+      for(int j = 0; j<100; j++){
+        if(!used[j].test_and_set()) {
+          introduced=true;
+          pos = j;
+        }
+      }
+    }
+
+    // Last iteration
+    if( i == (sequence_size/chunk_size)-1 ) 
+      chunk_size += sequence_size % chunk_size;
+
+    //Store data in data manager
+    data_manager[pos] = make_tuple(aux_in, chunk_size, i);
+    task_type t{function_id, scheduler.get_task_id()};
+    t.set_data_location(pos);
+    t.set_pattern_id(p_id);
+    //Launch the task
+    scheduler.launch_data_task(t);
+    aux_in = iterators_next(aux_in, chunk_size);
   }
 
-  const auto delta = chunk_size * (concurrency_degree_-1);
-  const auto chunk_firsts = iterators_next(firsts, delta);
-  std::cout<<"LAST TASK "<<sequence_size - delta << std::endl;
-  scheduler.register_data_parallel_task(
-    [sequence_size, chunk_firsts, delta, this, &process_chunk](task_type){
-  if(sequence_size-delta != 1) std::cout<<"IN LAST TASK "<<sequence_size - delta << std::endl;
-      process_chunk(chunk_firsts, sequence_size-delta, concurrency_degree_-1),
-      scheduler.notify_consume();
-    }
-  );
-  scheduler.run_data();
+  scheduler.run_data(p_id);
 
   return seq.reduce(std::next(partial_results.begin()), 
      partial_results.size()-1, std::forward<result_type>(partial_results[0]),
      std::forward<Combiner>(combine_op));
 }
-/*
+
+template <typename Scheduler>
 template <typename ... InputIterators, typename OutputIterator,
           typename StencilTransformer, typename Neighbourhood>
-void parallel_execution_task::stencil(
+void parallel_execution_task<Scheduler>::stencil(
     std::tuple<InputIterators...> firsts, OutputIterator first_out,
     std::size_t sequence_size,
     StencilTransformer && transform_op,
     Neighbourhood && neighbour_op) const
 {
   constexpr sequential_execution seq;
+
+  // Define granularity
+  int chunk_size = sequence_size / concurrency_degree_;
+  if(chunk_size == 0) chunk_size = sequence_size;
+
   auto process_chunk =
   [&transform_op, &neighbour_op,seq](auto fins, std::size_t sz, auto fout)
   {
@@ -762,62 +848,194 @@ void parallel_execution_task::stencil(
       std::forward<Neighbourhood>(neighbour_op));
   };
 
+  //Naive implementation of the data manager - Only std cointainers
+  std::atomic_flag used[100] = {ATOMIC_FLAG_INIT};
+  std::tuple < std::tuple<InputIterators...>, std::size_t, OutputIterator > data_manager[100];
 
-  const auto chunk_size = sequence_size / concurrency_degree_;
-  std::vector<int> task_ids;
+  int function_id = scheduler.register_data_parallel_task([this, &process_chunk, &data_manager, &used](task_type &task){
+      auto input_data = data_manager[task.get_data_location()];
+      process_chunk(std::get<0>(input_data), std::get<1>(input_data), std::get<2>(input_data));
+      //Notify consume and free the position
+      used[task.get_data_location()].clear();
+      scheduler.notify_consume();
+  });
 
-  for (int i=0; i!=concurrency_degree_-1; ++i) {
-    const auto delta = chunk_size * i;
-    const auto chunk_firsts = iterators_next(firsts,delta);
-    const auto chunk_out = std::next(first_out,delta);
-    task_ids.push_back(thread_pool.add_data_parallel_task([chunk_size, chunk_firsts, chunk_out, this, &process_chunk](){
-      process_chunk(chunk_firsts, chunk_size, chunk_out);
-      thread_pool.tokens--;
-    }));
+  auto aux_in = firsts;
+  auto aux_out = first_out;
+  auto p_id = scheduler.start_pattern();
+
+  for(unsigned int i=0; i< sequence_size / chunk_size; ++i){
+    bool introduced=false;
+    int pos = 0;
+    //Check for an empty position
+    while(!introduced){
+      for(int j = 0; j<100; j++){
+        if(!used[j].test_and_set()) {
+          introduced=true;
+          pos = j;
+        }
+      }
+    }
+
+    // Last iteration
+    if( i == (sequence_size/chunk_size)-1 ) 
+      chunk_size += sequence_size % chunk_size;
+
+    //Store data in data manager
+    data_manager[pos] = make_tuple(aux_in, chunk_size, aux_out);
+    task_type t{function_id, scheduler.get_task_id()};
+    t.set_data_location(pos);
+    t.set_pattern_id(p_id);
+    //Launch the task
+    scheduler.launch_data_task(t);
+    aux_in = iterators_next(aux_in, chunk_size);
+    aux_out = std::next(aux_out, chunk_size);
   }
 
-  const auto delta = chunk_size * (concurrency_degree_ - 1);
-  const auto chunk_firsts = iterators_next(firsts,delta);
-  const auto chunk_out = std::next(first_out,delta);
-  task_ids.push_back(thread_pool.add_data_parallel_task([sequence_size, chunk_firsts, delta, chunk_out, this, &process_chunk](){
-    process_chunk(chunk_firsts, sequence_size - delta, chunk_out);
-    thread_pool.tokens--;
-  }));
-  
-  thread_pool.run_data(task_ids);
+  scheduler.run_data(p_id);
+
 }
 
+
+template <typename Scheduler>
 template <typename Input, typename Divider, typename Solver, typename Combiner>
-auto parallel_execution_task::divide_conquer(
+auto parallel_execution_task<Scheduler>::divide_conquer(
     Input && problem, 
     Divider && divide_op, 
     Solver && solve_op, 
     Combiner && combine_op) const
-{
-  std::atomic<int> num_threads{concurrency_degree_-1};
-  
-  return divide_conquer(std::forward<Input>(problem), std::forward<Divider>(divide_op), 
-        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op),
-        num_threads);
+{ 
 }
 
-
+template <typename Scheduler>
 template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
-auto parallel_execution_task::divide_conquer(
-    Input && problem,
+auto parallel_execution_task<Scheduler>::divide_conquer(
+    Input && input,
     Divider && divide_op,
     Predicate && predicate_op,
     Solver && solve_op,
     Combiner && combine_op) const
 {
-  std::atomic<int> num_threads{concurrency_degree_-1};
+  using result_type = 
+    std::decay_t<typename std::result_of<Solver(Input)>::type>;
+  //Naive implementation of the data manager 
+  std::atomic_flag used[1000] = {ATOMIC_FLAG_INIT};
+  std::tuple < std::decay_t<Input>, result_type > data_manager[1000];
+  constexpr sequential_execution seq;
 
-  return divide_conquer(std::forward<Input>(problem), std::forward<Divider>(divide_op),
-        std::forward<Predicate>(predicate_op),
-        std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op),
-        num_threads);
+  // Merge task
+  int merger_id =scheduler.register_data_parallel_task([&combine_op,&data_manager,&used,this](task_type &task)
+  {
+    auto data = &data_manager[task.get_data_location()];
+    for(auto it = task.multiple_input_location.begin(); it != task.multiple_input_location.end(); it++) {
+      auto input = data_manager[*it];
+      std::get<1>(*data) = combine_op(std::get<1>(*data), std::get<1>(input));
+      used[*it].clear();
+    }
+    scheduler.notify_consume();
+  });
+
+  int function_id = scheduler.register_data_parallel_task(
+     [&divide_op,&predicate_op, &solve_op,&combine_op, &data_manager, &used, this, &seq, &merger_id](task_type &task){
+       auto data = &data_manager[task.get_data_location()];
+       if( predicate_op(std::get<0>(*data) ) ) {
+         std::get<1>(*data) = solve_op( std::get<0>(*data) );
+         scheduler.notify_consume();
+         return;
+       }
+       auto subproblems = divide_op( std::get<0>(*data) );
+       if( scheduler.is_full(subproblems.size()))
+       {
+         std::get<1>(*data) = seq.divide_conquer(std::get<0>(*data),
+            std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
+            std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op) );
+       }
+       else {
+         task_type merger{merger_id,task.get_task_id()};
+         merger.set_data_location(task.get_data_location());
+         merger.after_dependencies_ = std::move(task.after_dependencies_);
+         task.after_dependencies_.clear();
+         for( unsigned int i = 0; i < subproblems.size(); i++){
+           bool introduced=false;
+           int pos = 0;
+           //Check for an empty position
+           while(!introduced){
+             for(int j = 0; j<1000; j++){
+               if(!used[j].test_and_set()) {
+                 introduced=true;
+                 pos = j;
+                 break;
+               }
+             }
+           }
+           //Store data in data manager
+           data_manager[pos] = std::make_tuple(subproblems[i], result_type{});
+           task_type t{1, scheduler.get_task_id()};
+           t.set_data_location(pos);
+           merger.set_task_dependency(t);
+           merger.multiple_input_location.push_back(pos);
+           //Launch the task
+           scheduler.launch_data_task(t);
+         } 
+         scheduler.wait_for_dependencies(merger);
+       }   
+       scheduler.notify_consume();
+  });
+  
+  
+
+  if( predicate_op(input) ) 
+     return solve_op( input);
+
+  auto subproblems = divide_op( input );
+  if( scheduler.is_full(subproblems.size()) ){ 
+         return seq.divide_conquer(input,
+            std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op), 
+            std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op) );
+  }
+
+  task_type merger{merger_id,scheduler.get_task_id()}; 
+  bool introduced=false;
+  while(!introduced){
+    for(int j = 0; j<1000; j++){
+      if(!used[j].test_and_set()) {
+        introduced=true;
+        merger.set_data_location(j);
+        break;
+      }
+    }
+  }
+
+  for(unsigned int i = 0; i < subproblems.size(); i++){
+    introduced=false;
+    int pos = 0;
+    //Check for an empty position
+    while(!introduced){
+      for(int j = 0; j<1000; j++){
+        if(!used[j].test_and_set()) {
+          introduced=true;
+          pos = j;
+          break;
+        }
+      }
+    }
+    //Store data in data manager
+    data_manager[pos] = std::make_tuple(subproblems[i],result_type{});
+    task_type t{function_id, scheduler.get_task_id()};
+    t.set_data_location(pos);
+    merger.set_task_dependency(t);
+    merger.multiple_input_location.push_back(pos);
+    //Launch the task
+    scheduler.launch_data_task(t);
+  } 
+  scheduler.wait_for_dependencies(merger);
+  
+  scheduler.run_data();
+  auto result = &data_manager[merger.get_data_location()];
+  return std::get<1>(*result);
 }
-
+   
+/*
 template <typename Generator, typename ... Transformers>
 void parallel_execution_task::pipeline(
     Generator && generate_op, 
@@ -854,7 +1072,10 @@ auto parallel_execution_task::divide_conquer(
     Combiner && combine_op,
     std::atomic<int> & num_threads) const
 {
+ 
+  auto subproblems = divide_op(std::forward<Input>(input));
   constexpr sequential_execution seq;
+
   num_threads++;
     return seq.divide_conquer(std::forward<Input>(input), 
         std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
