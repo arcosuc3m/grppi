@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
-
+#include <experimental/optional>
 
 #include "grppi.h"
 #include "task/parallel_execution_task.h"
@@ -96,6 +96,25 @@ int main(){
   );
     std::cout<<i<<": "<<fib<<std::endl; 
   }
+  std::cout<<"PIPELINE"<<std::endl;
+  int val = 0;
+  grppi::pipeline(p,
+    [&val]()-> std::experimental::optional<int> {
+      if(val < 10 ) return {val++};
+      else return {};
+    },
+    grppi::farm(4,
+      grppi::pipeline(
+        [](int val) { return val * 2;},
+        [](int val) { return val * 2;}
+      )
+    ),
+    [](int val)
+    {
+      std::cout<< val<<std::endl;
+    }
+  );
+
   std::cout<<"FINISHED"<<std::endl; 
 
 }

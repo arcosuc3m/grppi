@@ -80,7 +80,7 @@ constexpr bool supports_divide_conquer() { return support<E>::value; }
 \note This must be specialized by every execution policy supporting the pattern.
 */
 template <typename E>
-constexpr bool supports_pipeline() { return false; }
+constexpr bool supports_pipeline() { return support<E>::value; }
 
 } // end namespace grppi
 

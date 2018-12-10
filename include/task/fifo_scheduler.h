@@ -20,12 +20,14 @@ class fifo_scheduler{
      functions.reserve(max_functions);
    } 
 
-   void register_sequential_task(std::function<void(Task&)> && f)
+   int register_sequential_task(std::function<void(Task&)> && f)
    {
-     Task t{(int)functions.size()};
+     Task t{(int)functions.size(), 0};
+     int function_id = (int) functions.size();
      functions.push_back(f);
      flags.emplace(t, 0);
      seq_tasks.emplace(t, 0);
+     return function_id;
    }
   
    int register_parallel_stage(std::function<void(Task&)> && f)
@@ -237,6 +239,14 @@ class fifo_scheduler{
    bool is_full(int new_tokens)
    {
      return tokens+new_tokens>=max_tokens/2;
+   }
+
+   void new_token(){
+      tokens++;
+   }
+
+   void pipe_stop(){
+      gen_end=true;
    }
 
   public:

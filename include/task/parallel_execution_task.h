@@ -1035,9 +1035,10 @@ auto parallel_execution_task<Scheduler>::divide_conquer(
   return std::get<1>(*result);
 }
    
-/*
+
+template <typename Scheduler>
 template <typename Generator, typename ... Transformers>
-void parallel_execution_task::pipeline(
+void parallel_execution_task<Scheduler>::pipeline(
     Generator && generate_op, 
     Transformers && ... transform_ops) const
 {
@@ -1047,152 +1048,41 @@ void parallel_execution_task::pipeline(
   auto output_queue = make_queue<output_type>();
 
   long order=0;
-  thread_pool.add_parallel_task([output_queue,&generate_op, this, &order](){
+  (void) scheduler.register_parallel_stage([output_queue,&generate_op, this, &order](task_type t){
      auto item{generate_op()};
      if(item){ 
-       thread_pool.tokens++;
+       scheduler.new_token();
        output_queue->push(make_pair(item, order));
-       thread_pool.launch_task(0);
-       thread_pool.launch_task(1);
+       thread_pool.launch_task(t);
+       thread_pool.launch_task(task_type{1,1});
        order++;
      } else {
-        thread_pool.gen_end=true;
+       scheduler.pipe_stop();
      }
   });
 
   do_pipeline(output_queue, forward<Transformers>(transform_ops)...);
 }
 // PRIVATE MEMBERS
-
-template <typename Input, typename Divider, typename Solver, typename Combiner>
-auto parallel_execution_task::divide_conquer(
-    Input && input, 
-    Divider && divide_op, 
-    Solver && solve_op, 
-    Combiner && combine_op,
-    std::atomic<int> & num_threads) const
-{
- 
-  auto subproblems = divide_op(std::forward<Input>(input));
-  constexpr sequential_execution seq;
-
-  num_threads++;
-    return seq.divide_conquer(std::forward<Input>(input), 
-        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
-        std::forward<Combiner>(combine_op));
-
-  auto subproblems = divide_op(std::forward<Input>(input));
-  if (subproblems.size()<=1) { return solve_op(std::forward<Input>(input)); }
-
-  using subresult_type = 
-      std::decay_t<typename std::result_of<Solver(Input)>::type>;
-  std::vector<subresult_type> partials(subproblems.size()-1);
-
-  auto process_subproblem = [&,this](auto it, std::size_t div) {
-    partials[div] = this->divide_conquer(std::forward<Input>(*it), 
-        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
-        std::forward<Combiner>(combine_op), num_threads);
-  };
-
-  int division = 0;
-
-  worker_pool workers{num_threads.load()};
-  auto i = subproblems.begin() + 1;
-  while (i!=subproblems.end() && num_threads.load()>0) {
-    workers.launch(*this,process_subproblem, i++, division++);
-    num_threads--;
-  }
-
-  while (i!=subproblems.end()) {
-    partials[division] = seq.divide_conquer(std::forward<Input>(*i++), 
-        std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
-        std::forward<Combiner>(combine_op));
-  }
-
-  auto subresult = divide_conquer(std::forward<Input>(*subproblems.begin()), 
-      std::forward<Divider>(divide_op), std::forward<Solver>(solve_op), 
-      std::forward<Combiner>(combine_op), num_threads);
-
-  workers.wait();
-
-}
-
-template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
-auto parallel_execution_task::divide_conquer(
-    Input && input,
-    Divider && divide_op,
-    Predicate && predicate_op,
-    Solver && solve_op,
-    Combiner && combine_op,
-    std::atomic<int> & num_threads) const
-{
-  constexpr sequential_execution seq;
-  //TODO: Need to introduce a task-dependency control mechanism
-  num_threads++;
-//  if (num_threads.load() <=0) {
-    return seq.divide_conquer(std::forward<Input>(input),
-        std::forward<Divider>(divide_op),
-        std::forward<Predicate>(predicate_op),
-        std::forward<Solver>(solve_op),
-        std::forward<Combiner>(combine_op));
-*//*  }
-
-  if (predicate_op(input)) { return solve_op(std::forward<Input>(input)); }
-  auto subproblems = divide_op(std::forward<Input>(input));
-
-  using subresult_type =
-      std::decay_t<typename std::result_of<Solver(Input)>::type>;
-  std::vector<subresult_type> partials(subproblems.size()-1);
-
-  auto process_subproblem = [&,this](auto it, std::size_t div) {
-    partials[div] = this->divide_conquer(std::forward<Input>(*it),
-        std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
-        std::forward<Solver>(solve_op),
-        std::forward<Combiner>(combine_op), num_threads);
-  };
-
-  int division = 0;
-
-  worker_pool workers{num_threads.load()};
-  auto i = subproblems.begin() + 1;
-  while (i!=subproblems.end() && num_threads.load()>0) {
-    workers.launch(*this,process_subproblem, i++, division++);
-    num_threads--;
-  }
-
-  while (i!=subproblems.end()) {
-    partials[division] = seq.divide_conquer(std::forward<Input>(*i++),
-        std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op), std::forward<Solver>(solve_op),
-        std::forward<Combiner>(combine_op));
-  }
-
-  auto subresult = divide_conquer(std::forward<Input>(*subproblems.begin()),
-      std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op), std::forward<Solver>(solve_op),
-      std::forward<Combiner>(combine_op), num_threads);
-
-  workers.wait();
-
-  return seq.reduce(partials.begin(), partials.size(),
-      std::forward<subresult_type>(subresult), std::forward<Combiner>(combine_op));
-  *//*
-}
+template <typename Scheduler>
 template <typename Queue, typename Consumer,
           requires_no_pattern<Consumer>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue, 
     Consumer && consume_op) const
 {
   using namespace std;
   // using input_type = typename Queue::value_type;
   //TODO: Need to reimplement ordering
-  auto task_id = thread_pool.functions.size();
-  thread_pool.add_sequential_task([input_queue, &consume_op, this, task_id](){
+  (void) scheduler.register_sequential_task([input_queue, &consume_op, this](task_type t){
      auto item=input_queue->pop();
      consume_op(*item.first);
-     thread_pool.seq_consume(task_id);
+     scheduler.notify_consume();
+     scheduler.notify_seq_end(t);
   });
-  thread_pool.run();
-*//*
+
+  scheduler.run();
+/*
   auto manager = thread_manager();
   if (!is_ordered()) {
     for (;;) {
@@ -1230,34 +1120,34 @@ void parallel_execution_task::do_pipeline(
       elements.erase(it);
       current++;
     }
-  }*//*
+  }*/
 }
 
-
+template <typename Scheduler>
 template <typename Inqueue, typename Transformer, typename output_type,
             requires_no_pattern<Transformer>>
-void parallel_execution_task::do_pipeline(Inqueue & input_queue, Transformer && transform_op,
+void parallel_execution_task<Scheduler>::do_pipeline(Inqueue & input_queue, Transformer && transform_op,
       std::shared_ptr<mpmc_queue<output_type>> & output_queue) const
 {
   using namespace std;
   using namespace experimental;
  
   using output_item_value_type = typename output_type::first_type::value_type;
-  int task_id = thread_pool.functions.size();
-  thread_pool.add_parallel_task([this, input_queue, output_queue, &transform_op, task_id](){
+  (void) scheduler.register_parallel_stage([this, input_queue, output_queue, &transform_op](task_type t){
     auto item{input_queue->pop()}; 
     auto out = output_item_value_type{transform_op(*item.first)};
     output_queue->push(make_pair(out,item.second)) ;
-    thread_pool.launch_task(task_id+1);
+    scheduler.launch_task(task_type{t.get_id()+1,0});
   });
 }
 
 
 
+template <typename Scheduler>
 template <typename Queue, typename Transformer, 
           typename ... OtherTransformers,
           requires_no_pattern<Transformer>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue, 
     Transformer && transform_op,
     OtherTransformers && ... other_transform_ops) const
@@ -1275,39 +1165,39 @@ void parallel_execution_task::do_pipeline(
   decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_transform_ops...);
 
-  int task_id = thread_pool.functions.size();
-  thread_pool.add_sequential_task([this,output_queue,input_queue,&transform_op,task_id]() {
+  (void) scheduler.register_sequential_task([this,output_queue,input_queue,&transform_op](task_type t) {
     auto item{input_queue->pop()};
     auto out = output_item_value_type{transform_op(*item.first)};
     output_queue->push(make_pair(out, item.second));
-    thread_pool.launch_task(task_id+1);
-      thread_pool.end_seq(task_id);
+    scheduler.launch_task(task_type{t.get_id()+1,0});
+    scheduler.end_sequential_task(t);
   });
 
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_transform_ops)...);
 }
 
+template <typename Scheduler>
 template <typename Queue, typename FarmTransformer,
           template <typename> class Farm,
           requires_farm<Farm<FarmTransformer>>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue, 
     Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
 
-  thread_pool.add_parallel_task([input_queue,this,&farm_obj](){
+  (void) scheduler.register_parallel_task([input_queue,this,&farm_obj](task_type t){
     auto item{input_queue->pop()}; 
     farm_obj(*item.first);
-    thread_pool.tokens--; 
+    scheduler.notify_consume();
   });
 
-  thread_pool.run();
+  scheduler.run();
 
 }
 
-
+/*
 template <typename Queue, typename Execution, typename Transformer,
           template <typename, typename> class Context,
           typename ... OtherTransformers,
@@ -1340,13 +1230,14 @@ void parallel_execution_task::do_pipeline(Queue & input_queue,
       forward<OtherTransformers>(other_ops)... );*//*
 
 }
+*/
 
-
+template <typename Scheduler>
 template <typename Queue, typename FarmTransformer, 
           template <typename> class Farm,
           typename ... OtherTransformers,
           requires_farm<Farm<FarmTransformer>>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue, 
     Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -1369,7 +1260,7 @@ void parallel_execution_task::do_pipeline(
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_transform_ops)... );
 }
-
+/*
 template <typename Queue, typename Predicate, 
           template <typename> class Filter,
           typename ... OtherTransformers,
@@ -1494,11 +1385,12 @@ void parallel_execution_task::do_pipeline(
   static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
 
-
+*/
+template <typename Scheduler>
 template <typename Queue, typename ... Transformers,
           template <typename...> class Pipeline,
           requires_pipeline<Pipeline<Transformers...>>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue,
     Pipeline<Transformers...> && pipeline_obj) const
 {
@@ -1508,11 +1400,12 @@ void parallel_execution_task::do_pipeline(
       std::make_index_sequence<sizeof...(Transformers)>());
 }
 
+template <typename Scheduler>
 template <typename Queue, typename ... Transformers,
           template <typename...> class Pipeline,
           typename ... OtherTransformers,
           requires_pipeline<Pipeline<Transformers...>>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue,
     Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -1524,9 +1417,10 @@ void parallel_execution_task::do_pipeline(
       std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
 }
 
+template <typename Scheduler>
 template <typename Queue, typename ... Transformers,
           std::size_t ... I>
-void parallel_execution_task::do_pipeline_nested(
+void parallel_execution_task<Scheduler>::do_pipeline_nested(
     Queue & input_queue, 
     std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
@@ -1535,11 +1429,12 @@ void parallel_execution_task::do_pipeline_nested(
       std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 
+template <typename Scheduler>
 template<typename T, typename... Others>
-void parallel_execution_task::do_pipeline(std::shared_ptr<mpmc_queue<T>> &, std::shared_ptr<mpmc_queue<T>> &, Others &&...) const
+void parallel_execution_task<Scheduler>::do_pipeline(std::shared_ptr<mpmc_queue<T>> &, std::shared_ptr<mpmc_queue<T>> &, Others &&...) const
 {
 }
-*/
+
 } // end namespace grppi
 
 #endif

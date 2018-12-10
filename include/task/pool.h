@@ -50,7 +50,7 @@ class pool
 
     void launch_task(task_type t)
     {
-      if( t != task_type{-1} )
+      if( t != task_type{-1,-1} )
       {
         scheduler.launch_task(t);
       }
