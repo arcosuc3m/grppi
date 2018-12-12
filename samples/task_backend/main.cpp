@@ -4,9 +4,6 @@
 #include <experimental/optional>
 
 #include "grppi.h"
-#include "task/parallel_execution_task.h"
-#include "task/fifo_scheduler.h"
-#include "task/simple_task.h"
 
 using namespace grppi;
 
@@ -35,6 +32,8 @@ int main(){
   std::vector<long> v(size);
   std::vector<double> v2(size);
   for(int i = 0; i<size;i++) v[i] = i;
+
+  p.set_chunk_size(100);
 
   std::cout<<"NESTED MAP"<<std::endl;
   map(p, matrix.begin(), matrix.end(), matrixout.begin(), [&size,&p](std::vector<int> b){
@@ -98,17 +97,21 @@ int main(){
   }
   std::cout<<"PIPELINE"<<std::endl;
   int val = 0;
+  parallel_execution_native e{};
   grppi::pipeline(p,
     [&val]()-> std::experimental::optional<int> {
       if(val < 10 ) return {val++};
       else return {};
     },
+    grppi::discard([](int val){return val%2 == 0; }),
     grppi::farm(4,
       grppi::pipeline(
         [](int val) { return val * 2;},
         [](int val) { return val * 2;}
       )
     ),
+    run_with(e,  grppi::reduce(2,1,0,[](int a, int b) { return a+b; } ) ),
+    grppi::repeat_until([](int val) { return val * 2; } , [](int val){return val > 50;}),
     [](int val)
     {
       std::cout<< val<<std::endl;

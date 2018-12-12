@@ -46,7 +46,7 @@ void capitalize(grppi::dynamic_execution & ex,
       if (!ifile) return {};
       return line;
     },
-    run_with(ex, grppi::farm(4,
+    run_with(inner_ex, grppi::farm(4,
         [](const string & line) {
           string r;
           for (auto x : line) {

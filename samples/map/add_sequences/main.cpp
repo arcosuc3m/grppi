@@ -43,7 +43,8 @@ void test_map(grppi::dynamic_execution & e, int n) {
 
   vector<int> out(n);
   grppi::map(e, make_tuple(begin(v1),begin(v2)), end(v1), begin(out),
-    [](int x, int y) { return x+y; }
+    [](int x, int y) { 
+    return x+y; }
   );
 
   copy(begin(out), end(out), ostream_iterator<int>(cout, " "));

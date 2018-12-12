@@ -31,7 +31,8 @@ enum class execution_backend {
   native,
   omp,
   tbb,
-  ff
+  ff,
+  task
 };
 
 class environment_option_getter {
@@ -146,6 +147,9 @@ public:
      }
      else if (std::strcmp("ff", str) == 0) {
        dynamic_backend_ = execution_backend::ff;
+     }
+     else if (std::strcmp("task", str) == 0) {
+       dynamic_backend_ = execution_backend::task;
      }
      else {
        std::cerr << "GrPPI: Invalid backend \"" << str << "\"\n";

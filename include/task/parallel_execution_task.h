@@ -37,17 +37,13 @@
 namespace grppi {
 
 
-class execution_task_base
-{};
-
-
 /** 
  \brief Native task-based parallel execution policy.
  This policy uses ISO C++ threads as implementation building block allowing
  usage in any ISO C++ compliant platform.
  */
 template <typename Scheduler>
-class parallel_execution_task : public execution_task_base {
+class parallel_execution_task {
 public:
   // Alias type for the scheduler and the task type
   using scheduler_type = Scheduler;
@@ -60,48 +56,90 @@ public:
 
   The concurrency degree is determined by the platform.
 
-  \note The concurrency degree is fixed to 2 times the hardware concurrency
+  \note The concurrency degree is fixed to the hardware concurrency
    degree.
   */
-  parallel_execution_task(Scheduler &s) noexcept :
-   scheduler{s},thread_pool{scheduler,concurrency_degree_}
+  parallel_execution_task() noexcept:
+    scheduler{},thread_pool{scheduler,concurrency_degree_}
   {
   }
 
-  parallel_execution_task(Scheduler &s, int concurrency_degree) noexcept :
+  /** 
+  \brief Construct a task parallel execution policy.
+
+  Creates a parallel execution task object using the same scheduler configuration
+  as the argument.
+
+  The concurrency degree is determined by the platform.
+
+  \param sched Number of threads used for parallel algorithms.
+  \note The concurrency degree is fixed to the hardware concurrency
+   degree.
+  */
+  parallel_execution_task(Scheduler &) noexcept :
+   scheduler{}, thread_pool{scheduler,concurrency_degree_}
+  {
+  }
+
+   /** 
+  \brief Construct a task parallel execution policy.
+
+  Creates a parallel execution task object using the same scheduler configuration
+  and concurrency degree as the arguments.
+
+  \param sched Number of threads used for parallel algorithms.
+  \param concurrency_degree Number of threads used for parallel algorithms.
+  */
+  
+  parallel_execution_task(Scheduler &, int concurrency_degree) noexcept :
     concurrency_degree_{concurrency_degree},
-    scheduler{s}, thread_pool{scheduler,concurrency_degree_}
+    scheduler{}, thread_pool{scheduler,concurrency_degree_}
   {
   }
 
   /** 
   \brief Constructs a task parallel execution policy.
 
-  Creates a parallel execution task object selecting the concurrency degree
+  Creates a parallel execution task object selecting the scheduler, concurrency degree
   and ordering mode.
+
+  \param sched Number of threads used for parallel algorithms.
   \param concurrency_degree Number of threads used for parallel algorithms.
   \param order Whether ordered executions is enabled or disabled.
   */
-  parallel_execution_task(Scheduler s, int concurrency_degree, bool ordering) noexcept :
+  parallel_execution_task(Scheduler, int concurrency_degree, bool ordering) noexcept :
     concurrency_degree_{concurrency_degree},
-    ordering_{ordering},
-    scheduler{s}, thread_pool{scheduler,concurrency_degree_}
+    scheduler{},
+    thread_pool{scheduler,concurrency_degree_},
+    ordering_{ordering}
   {
   }
 
   parallel_execution_task(const parallel_execution_task & ex) :
-      parallel_execution_task{ex.scheduler, ex.concurrency_degree_, ex.ordering_}
-  {}
+    concurrency_degree_{ex.concurrency_degree_},
+    scheduler{},
+    thread_pool{scheduler, ex.concurrency_degree_}
+  {
+  }
+//      parallel_execution_task{ex.scheduler, ex.concurrency_degree_, ex.ordering_}
 
-   
+
   /** 
   \brief Destroy a task parallel execution policy.
 
   */
-  ~parallel_execution_task(){
+  __attribute__((optimize("O0"))) ~parallel_execution_task(){
+     std::cout<<"DESTROY"<<std::endl;
      thread_pool.finalize_pool();
+     std::cout<<"FINALIZED"<<std::endl;
   }
 
+  /**
+  \brief Set the chunk size for data patterns.
+  */
+  void set_chunk_size(const unsigned int chunk_size) noexcept {
+    chunk_size_= chunk_size;
+  }
   /**
   \brief Set number of grppi threads.
   */
@@ -524,12 +562,12 @@ private:
 
 private: 
 
+  int concurrency_degree_ = config_.concurrency_degree();
+
   mutable Scheduler scheduler;  
 
   configuration<> config_{};
 
-  int concurrency_degree_ = config_.concurrency_degree();
-  
   mutable pool<Scheduler> thread_pool;
   
   bool ordering_ = config_.ordering();
@@ -537,6 +575,8 @@ private:
   int queue_size_ = config_.queue_size();
 
   queue_mode queue_mode_ = config_.mode();
+
+  unsigned int chunk_size_ = 0;
 };
 
 /**
@@ -630,11 +670,14 @@ void parallel_execution_task<Scheduler>::map(
   //Naive implementation of the data manager
   std::atomic_flag used[100] = {ATOMIC_FLAG_INIT};
   std::tuple < std::tuple<InputIterators...>, std::size_t, OutputIterator > data_manager[100];
-  
-  // Define granularity
-  int chunk_size = sequence_size / concurrency_degree_;
-  if(chunk_size == 0) chunk_size = sequence_size;
-  //int chunk_size = 48;
+
+  // Compute task size
+  unsigned int chunk_size = chunk_size_;
+  if(chunk_size_ == 0 ){
+    chunk_size = sequence_size / concurrency_degree_;
+  }
+  if(chunk_size == 0 || chunk_size > sequence_size) 
+    chunk_size = sequence_size;
 
   int function_id = scheduler.register_data_parallel_task([this,&process_chunk,&data_manager,&used](task_type &task){
     //Get data
@@ -658,6 +701,7 @@ void parallel_execution_task<Scheduler>::map(
         if(!used[j].test_and_set()) {
           introduced=true;
           pos = j;
+          break;
         }
       }
     }
@@ -668,7 +712,7 @@ void parallel_execution_task<Scheduler>::map(
 
     //Store data in data manager
     data_manager[pos] = make_tuple(aux_in, chunk_size, aux_out);
-    task_type t{function_id, scheduler.get_task_id()};
+    task_type t{function_id, 0}; //scheduler.get_task_id()};
     t.set_data_location(pos);
     t.set_pattern_id(p_id);
     //Launch the task
@@ -690,9 +734,14 @@ auto parallel_execution_task<Scheduler>::reduce(
 {
   using result_type = std::decay_t<Identity>;
  
-  // Define granularity
-  int chunk_size = sequence_size / concurrency_degree_;
-  if(chunk_size == 0) chunk_size = sequence_size;
+  // Compute task size
+  unsigned int chunk_size = chunk_size_;
+  if(chunk_size_ == 0 ){
+    chunk_size = sequence_size / concurrency_degree_;
+  }
+  if(chunk_size == 0 || chunk_size > sequence_size) 
+    chunk_size = sequence_size;
+
 
   std::vector<result_type> partial_results( sequence_size/chunk_size );   
 
@@ -720,17 +769,16 @@ auto parallel_execution_task<Scheduler>::reduce(
   for(unsigned int i=0; i< sequence_size / chunk_size; ++i){
     bool introduced=false;
     int pos = 0;
-
     //Check for an empty position
     while(!introduced){
       for(int j = 0; j<100; j++){
         if(!used[j].test_and_set()) {
           introduced=true;
           pos = j;
+          break;
         }
       }
     }
-
     // Last iteration
     if( i == (sequence_size/chunk_size)-1 ) 
       chunk_size += sequence_size % chunk_size;
@@ -763,9 +811,15 @@ auto parallel_execution_task<Scheduler>::map_reduce(
 {
   using result_type = std::decay_t<Identity>;
 
-  // Define granularity
-  int chunk_size = sequence_size / concurrency_degree_;
-  if(chunk_size == 0) chunk_size = sequence_size;
+  // Compute task size
+  unsigned int chunk_size = chunk_size_;
+  if(chunk_size_ == 0 ){
+    chunk_size = sequence_size / concurrency_degree_;
+  }
+  if(chunk_size == 0 || chunk_size > sequence_size) 
+    chunk_size = sequence_size;
+
+
   std::vector<result_type> partial_results( sequence_size/chunk_size );   
 
   constexpr sequential_execution seq;
@@ -776,7 +830,7 @@ auto parallel_execution_task<Scheduler>::map_reduce(
         std::forward<Combiner>(combine_op));
   };
 
-  //Naive implementation of the data manager - Only std cointainers
+  //Naive implementation of the data manager
   std::atomic_flag used[100] = {ATOMIC_FLAG_INIT};
   std::tuple < std::tuple<InputIterators...>, std::size_t, std::size_t > data_manager[100];
 
@@ -800,6 +854,7 @@ auto parallel_execution_task<Scheduler>::map_reduce(
         if(!used[j].test_and_set()) {
           introduced=true;
           pos = j;
+          break;
         }
       }
     }
@@ -836,9 +891,13 @@ void parallel_execution_task<Scheduler>::stencil(
 {
   constexpr sequential_execution seq;
 
-  // Define granularity
-  int chunk_size = sequence_size / concurrency_degree_;
-  if(chunk_size == 0) chunk_size = sequence_size;
+  // Compute task size
+  unsigned int chunk_size = chunk_size_;
+  if(chunk_size_ == 0 ){
+    chunk_size = sequence_size / concurrency_degree_;
+  }
+  if(chunk_size == 0 || chunk_size > sequence_size) 
+    chunk_size = sequence_size;
 
   auto process_chunk =
   [&transform_op, &neighbour_op,seq](auto fins, std::size_t sz, auto fout)
@@ -873,6 +932,7 @@ void parallel_execution_task<Scheduler>::stencil(
         if(!used[j].test_and_set()) {
           introduced=true;
           pos = j;
+          break;
         }
       }
     }
@@ -1046,7 +1106,7 @@ void parallel_execution_task<Scheduler>::pipeline(
   using result_type = decay_t<typename result_of<Generator()>::type>;
   using output_type = pair<result_type,long>;
   auto output_queue = make_queue<output_type>();
-
+  
   long order=0;
   (void) scheduler.register_parallel_stage([output_queue,&generate_op, this, &order](task_type t){
      auto item{generate_op()};
@@ -1054,7 +1114,7 @@ void parallel_execution_task<Scheduler>::pipeline(
        scheduler.new_token();
        output_queue->push(make_pair(item, order));
        thread_pool.launch_task(t);
-       thread_pool.launch_task(task_type{1,1});
+       thread_pool.launch_task(task_type{1,0});
        order++;
      } else {
        scheduler.pipe_stop();
@@ -1187,7 +1247,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
 {
   using namespace std;
 
-  (void) scheduler.register_parallel_task([input_queue,this,&farm_obj](task_type t){
+  (void)scheduler.register_parallel_stage([input_queue,this,&farm_obj](task_type t){
     auto item{input_queue->pop()}; 
     farm_obj(*item.first);
     scheduler.notify_consume();
@@ -1197,18 +1257,23 @@ void parallel_execution_task<Scheduler>::do_pipeline(
 
 }
 
-/*
+template <typename Scheduler>
 template <typename Queue, typename Execution, typename Transformer,
           template <typename, typename> class Context,
           typename ... OtherTransformers,
           requires_context<Context<Execution,Transformer>>>
-void parallel_execution_task::do_pipeline(Queue & input_queue, 
+void parallel_execution_task<Scheduler>::do_pipeline(Queue & input_queue, 
     Context<Execution,Transformer> && context_op,
     OtherTransformers &&... other_ops) const
 {
-  using namespace std;
+  // WARNING: Ignore context - Inner context do not launch the next task.
+  do_pipeline(input_queue, std::forward<Transformer>(context_op.transformer()),
+    std::forward<OtherTransformers>(other_ops)...);
+
+  /*using namespace std;
   using namespace experimental;
-*//*  using input_item_type = typename Queue::value_type;
+
+  using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
 
   using output_type = typename stage_return_type<input_item_value_type, Transformer>::type;
@@ -1217,20 +1282,22 @@ void parallel_execution_task::do_pipeline(Queue & input_queue,
 
   decltype(auto) output_queue =
     get_output_queue<output_item_type>(other_ops...);
-  */
-  /*auto context_task = [&]() {
+
+
+  auto context_task = [&]() {
     context_op.execution_policy().pipeline(input_queue, context_op.transformer(), output_queue);
     output_queue.push( make_pair(output_optional_type{}, -1) );
-  };*//*
+  };
+
   do_pipeline(input_queue, std::forward<Transformer>(context_op.transformer()),
       forward<OtherTransformers>(other_ops)... );
   
-*/ /* do_pipeline(input_queue, context_op.transformer(), output_queue);
+  do_pipeline(input_queue, context_op.transformer(), output_queue);
   do_pipeline(output_queue,
-      forward<OtherTransformers>(other_ops)... );*//*
-
-}
+      forward<OtherTransformers>(other_ops)... );
 */
+}
+
 
 template <typename Scheduler>
 template <typename Queue, typename FarmTransformer, 
@@ -1260,33 +1327,32 @@ void parallel_execution_task<Scheduler>::do_pipeline(
   do_pipeline(output_queue, 
       forward<OtherTransformers>(other_transform_ops)... );
 }
-/*
+
+template <typename Scheduler>
 template <typename Queue, typename Predicate, 
           template <typename> class Filter,
           typename ... OtherTransformers,
           requires_filter<Filter<Predicate>>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue, 
     Filter<Predicate> && filter_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
   using namespace experimental;
-  //TODO: to be implemented
   
   using input_item_type = typename Queue::element_type::value_type;
 
   auto filter_queue = make_queue<input_item_type>();
-  auto task_id = thread_pool.functions.size();
 
-  thread_pool.add_parallel_task([input_queue, filter_queue, &filter_obj, this, task_id](){
+  (void) scheduler.register_parallel_stage([input_queue, filter_queue, &filter_obj, this](task_type t){
     auto item{input_queue->pop()};
       if (filter_obj(*item.first)) {
         filter_queue->push(item);
-        thread_pool.launch_task(task_id+1);
+        scheduler.launch_task(task_type{t.get_id()+1,0});
       }
       else {
-        thread_pool.tokens--;
+        scheduler.notify_consume();
       }
   });
 
@@ -1294,11 +1360,12 @@ void parallel_execution_task::do_pipeline(
 
 }
 
+template <typename Scheduler>
 template <typename Queue, typename Combiner, typename Identity,
           template <typename C, typename I> class Reduce,
           typename ... OtherTransformers,
           requires_reduce<Reduce<Combiner,Identity>>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue && input_queue, 
     Reduce<Combiner,Identity> && reduce_obj,
     OtherTransformers && ... other_transform_ops) const
@@ -1312,72 +1379,70 @@ void parallel_execution_task::do_pipeline(
     get_output_queue<output_item_type>(other_transform_ops...);
 
   // Review if it can be transformed into parallel task
-  int task_id = thread_pool.functions.size();
   // Transform into atomic if used as a parallel task
   long int order = 0;
 
-  thread_pool.add_sequential_task([input_queue, output_queue, &reduce_obj, this, task_id, &order](){
+  scheduler.register_sequential_task([input_queue, output_queue, &reduce_obj, this, &order](task_type t){
     auto item{input_queue->pop()};
     reduce_obj.add_item(std::forward<Identity>(*item.first));
     if(reduce_obj.reduction_needed()) {
       constexpr sequential_execution seq;
       auto red = reduce_obj.reduce_window(seq);
       output_queue->push(make_pair(red, order++));
-      thread_pool.launch_task(task_id+1);
+      scheduler.launch_task(task_type{t.get_id()+1,0});
     } else{
-      thread_pool.tokens--;
+      scheduler.notify_consume();
     }
-    thread_pool.end_seq(task_id);
+    scheduler.end_sequential_task(t);
   });
+
   do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
 }
 
+template <typename Scheduler>
 template <typename Queue, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_no_pattern<Transformer>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue & input_queue, 
     Iteration<Transformer,Predicate> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
   using namespace experimental;
-  //TODO: to be implemented
-  
-
 
   using input_item_type = typename decay_t<typename Queue::element_type>::value_type;
 
   decltype(auto) output_queue =
     get_output_queue<input_item_type>(other_transform_ops...);
 
-  auto task_id = thread_pool.functions.size();
 
-  thread_pool.add_parallel_task([input_queue, output_queue, &iteration_obj, this, task_id](){
+  (void) scheduler.register_parallel_stage([input_queue, output_queue, &iteration_obj, this](task_type t){
       auto item = input_queue->pop();
       auto value = iteration_obj.transform(*item.first);
       auto new_item = input_item_type{value,item.second};
       if (iteration_obj.predicate(value)) {
         output_queue->push(new_item);
-        thread_pool.launch_task(task_id+1);
+        scheduler.launch_task(task_type{t.get_id()+1, 0 } );
       }
       else {
         input_queue->push(new_item);
-        thread_pool.launch_task(task_id);
+        scheduler.launch_task(t);
       }
   });
 
   do_pipeline(output_queue, forward<OtherTransformers>(other_transform_ops)...);
 }
 
+template <typename Scheduler>
 template <typename Queue, typename Transformer, typename Predicate,
           template <typename T, typename P> class Iteration,
           typename ... OtherTransformers,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_pipeline<Transformer>>
-void parallel_execution_task::do_pipeline(
+void parallel_execution_task<Scheduler>::do_pipeline(
     Queue &,
     Iteration<Transformer,Predicate> &&,
     OtherTransformers && ...) const
@@ -1385,7 +1450,6 @@ void parallel_execution_task::do_pipeline(
   static_assert(!is_pipeline<Transformer>, "Not implemented");
 }
 
-*/
 template <typename Scheduler>
 template <typename Queue, typename ... Transformers,
           template <typename...> class Pipeline,

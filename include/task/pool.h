@@ -1,3 +1,21 @@
+/*
+ * Copyright 2018 Universidad Carlos III de Madrid
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef GRPPI_POOL_H
+#define GRPPI_POOL_H
+
 #include <future>
 #include <iostream>
 #include <vector>
@@ -18,34 +36,43 @@ class pool
 
     pool() = delete;   
  
-    pool(Scheduler &s, int pool_size):
+    pool(Scheduler &s,int pool_size):
     scheduler{s}
     {
+      std::cout<<"NEW POOL"<<std::endl;
       for (auto i=0; i<pool_size; i++){
          pool_threads.emplace_back(std::thread(
               [this](){
                 while(1){
                   task_type t = scheduler.get_task();
-                  if( t == task_type{-1,-1}) break;
+                  if( t == task_type{-1,-1})
+                    break;
                   scheduler.start_task(),
                   scheduler.functions[t.get_id()](t),
                   scheduler.finalize_task(t);
                 }
               }
-
          ));
        }
     }
    
-    void finalize_pool()
+    pool(const pool &) = delete;   
+ 
+    pool(const pool&&) = delete;
+
+    void __attribute__ ((noinline)) finalize_pool()
     {
+       std::cout<<"POOL SIZE " << pool_threads.size() << std::endl;
        for(unsigned int i=0; i < pool_threads.size(); i++){
+          std::cout<<"PUSHING END TASK " <<i<<" "<<pool_threads.size()<<std::endl;
           scheduler.launch_task(task_type{-1,-1});
        }
        for(unsigned int i=0; i < pool_threads.size(); i++){
-          //pool_threads[i].get();
+          std::cout<<"JOIN THREAD " <<i<<" "<<pool_threads.size()<<std::endl;
           pool_threads[i].join();
        }
+       pool_threads.clear();
+       std::cout<<"POOL SIZE " << pool_threads.size() << std::endl;
     }
 
     void launch_task(task_type t)
@@ -73,4 +100,4 @@ class pool
 };
 
 }
-
+#endif

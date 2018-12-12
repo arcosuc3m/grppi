@@ -18,6 +18,11 @@
 
 #include "../seq/sequential_execution.h"
 #include "../native/parallel_execution_native.h"
+
+#include "../task/parallel_execution_task.h"
+#include "../task/fifo_scheduler.h"
+#include "../task/simple_task.h"
+
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
 #include "../ff/parallel_execution_ff.h"
@@ -48,6 +53,9 @@ public:
         break;
       case execution_backend::ff:
         execution_ = make_execution<parallel_execution_ff>();
+        break;
+      case execution_backend::task:
+        execution_ = make_execution<parallel_execution_task<fifo_scheduler<simple_task>>>();
         break;
     }
   }
@@ -267,8 +275,6 @@ constexpr bool supports_divide_conquer<dynamic_execution>() { return true; }
 template <>
 constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 
-
-
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
 {\
   if (supports_##PATTERN<E>()) {\
@@ -306,6 +312,7 @@ GRPPI_TRY_PATTERN(parallel_execution_ff,PATTERN,__VA_ARGS__)
 #define GRPPI_TRY_PATTERN_ALL(...) \
 GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
 GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
+GRPPI_TRY_PATTERN(parallel_execution_task<fifo_scheduler<simple_task>>, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
 GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
 GRPPI_TRY_PATTERN_FF(__VA_ARGS__) \
@@ -314,6 +321,7 @@ GRPPI_PATTERN_NOT_IMPLEMENTED(__VA_ARGS__)\
 #define GRPPI_TRY_PATTERN_ALL_NOFF(...) \
 GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
 GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
+GRPPI_TRY_PATTERN(parallel_execution_task<fifo_scheduler<simple_task>>, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
 GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
 GRPPI_PATTERN_NOT_IMPLEMENTED(__VA_ARGS__)\

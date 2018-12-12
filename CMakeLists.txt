@@ -131,6 +131,12 @@ if( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
   add_subdirectory(samples)
 endif( GRPPI_EXAMPLE_APPLICATIONS_ENABLE )
 
+# Example applications
+option( GRPPI_PERFORMANCE_TEST_ENABLE "Performance tests" OFF )
+if( GRPPI_PERFORMANCE_TEST_ENABLE )
+  add_subdirectory(performance_tests)
+endif( GRPPI_PERFORMANCE_TEST_ENABLE )
+
 # Unit Tests
 enable_testing()
 option( GRPPI_UNIT_TEST_ENABLE "Unit tests" ON )
