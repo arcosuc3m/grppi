@@ -128,7 +128,7 @@ public:
   \brief Destroy a task parallel execution policy.
 
   */
-  __attribute__((optimize("O0"))) ~parallel_execution_task(){
+  ~parallel_execution_task(){
      std::cout<<"DESTROY"<<std::endl;
      thread_pool.finalize_pool();
      std::cout<<"FINALIZED"<<std::endl;

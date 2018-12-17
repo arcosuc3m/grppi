@@ -53,7 +53,7 @@ grppi::dynamic_execution execution_mode(const std::string & opt, int conc_degr=0
   		parallel_execution_task<fifo_scheduler<simple_task>> e{};
 /*  		if(!order)
   			e.disable_ordering();*/
-  		return e;
+        return e;
   	}
   }
 

@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
 	int cores = stoi(argv[1]) != 0 ? stoi(argv[1]) : get_phys_cores();
 	int insize = stoi(argv[2]);
-	dynamic_execution e(execution_mode(argv[3], cores, ord));
+    auto e = execution_mode(argv[3], cores, ord);
 
 	if(!e.has_execution()) {
 		cerr << "Exec_mode " << argv[3] << " not supported" << endl;
@@ -88,7 +88,6 @@ int main(int argc, char **argv) {
 	test.run_multiple(e, cores);
 	auto t2 = system_clock::now();
 	auto diff = duration_cast<milliseconds>(t2-t1);
-    e.~dynamic_execution();
 
 	cerr << "[FARM-GRPPI] Cores: " << cores
 			<< "; InSize: " << insize
