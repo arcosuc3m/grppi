@@ -22,7 +22,11 @@
 #include <numeric>
 #include <stdexcept>
 #include <random>
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 
 // grppi
 #include "grppi.h"

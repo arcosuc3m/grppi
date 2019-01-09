@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 #include <atomic>
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 
 #include <gtest/gtest.h>
 
@@ -26,8 +30,11 @@
 
 using namespace std;
 using namespace grppi;
+#if __cplusplus < 201703L
 template <typename T>
 using optional = std::experimental::optional<T>;
+#endif
+
 
 template <typename T>
 class stream_iteration_test : public ::testing::Test {

@@ -679,7 +679,9 @@ void parallel_execution_tbb::pipeline(
     Transformers && ... transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using result_type = decay_t<typename result_of<Generator()>::type>;
   using output_value_type = typename result_type::value_type;
@@ -826,7 +828,9 @@ auto parallel_execution_tbb::make_filter(
     Transformer && transform_op) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input; 
   using input_type = optional<input_value_type>;
@@ -845,7 +849,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input; 
   static_assert(!is_void<input_value_type>::value, 
@@ -877,7 +883,9 @@ auto parallel_execution_tbb::make_filter(
     Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input; 
   using input_type = optional<input_value_type>;
@@ -898,7 +906,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input;
   static_assert(!is_void<input_value_type>::value, 
@@ -927,7 +937,9 @@ auto parallel_execution_tbb::make_filter(
     Filter<Predicate> &&) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input; 
   using input_type = optional<input_value_type>;
@@ -948,7 +960,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input;
   static_assert(!is_void<input_value_type>::value, 
@@ -975,7 +989,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input;
   using input_type = optional<input_value_type>;
@@ -1006,7 +1022,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_value_type = Input;
   using input_type = optional<input_value_type>;

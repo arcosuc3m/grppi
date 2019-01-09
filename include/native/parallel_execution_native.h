@@ -28,7 +28,11 @@
 #include <vector>
 #include <type_traits>
 #include <tuple>
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
@@ -1055,7 +1059,9 @@ void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer &
       mpmc_queue<output_type> & output_queue) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using output_item_value_type = typename output_type::first_type::value_type;
   for (;;) {
@@ -1077,7 +1083,9 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1140,13 +1148,15 @@ void parallel_execution_native::do_pipeline(Queue & input_queue,
     OtherTransformers &&... other_ops) const 
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
 
   using output_type = typename stage_return_type<input_item_value_type, Transformer>::type;
-  using output_optional_type = experimental::optional<output_type>;
+  using output_optional_type = optional<output_type>;
   using output_item_type = pair <output_optional_type, long> ;
 
   decltype(auto) output_queue =
@@ -1177,13 +1187,15 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
 
   using output_type = typename stage_return_type<input_item_value_type, FarmTransformer>::type;
-  using output_optional_type = experimental::optional<output_type>;
+  using output_optional_type = optional<output_type>;
   using output_item_type = pair <output_optional_type, long> ;
 
   decltype(auto) output_queue = 
@@ -1220,7 +1232,9 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_item_type = typename Queue::value_type;
   using input_value_type = typename input_item_type::first_type;
@@ -1313,7 +1327,9 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
@@ -1351,7 +1367,9 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   using input_item_type = typename decay_t<Queue>::value_type;
 

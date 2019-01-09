@@ -35,7 +35,9 @@ void capitalize(grppi::dynamic_execution & ex,
                 std::istream & ifile, std::ostream & ofile)
 {
   using namespace std;
+#if __cplusplus < 201703L
   using namespace experimental;
+#endif
 
   grppi::parallel_execution_native inner_ex{2};
 

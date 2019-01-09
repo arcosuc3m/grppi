@@ -15,7 +15,11 @@
  */
 #include <atomic>
 #include <utility>
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 
 #include <gtest/gtest.h>
 
@@ -27,8 +31,11 @@
 
 using namespace std;
 using namespace grppi;
+
+#if __cplusplus < 201703L
 template <typename T>
 using optional = std::experimental::optional<T>;
+#endif
 
 template <typename T>
 class farm_pipeline_test : public ::testing::Test {

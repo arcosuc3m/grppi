@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 
 #include <gtest/gtest.h>
 

@@ -26,7 +26,11 @@
 #include <type_traits>
 #include <tuple>
 #include <thread>
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 
 #include <ff/parallel_for.hpp>
 #include <ff/dc.hpp>

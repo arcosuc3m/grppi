@@ -21,7 +21,11 @@
 #include <string>
 #include <numeric>
 #include <stdexcept>
+#if __cplusplus < 201703L
 #include <experimental/optional>
+#else
+#include <optional>
+#endif
 
 // grppi
 #include "grppi.h"
