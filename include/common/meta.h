@@ -18,8 +18,8 @@
 
 #if __has_include(<experimental/type_traits>)
 #  include <experimental/type_traits>
-#  ifndef __cpp_lib_experimental_detect
-#    error "C++ detection idiom not supported. Upgrade your C++ compiler"
+#  if __cpp_lib_experimental_detect < 201505
+#    error "C++ detection idiom not supported. Upgrade your C++ compiler/standard library"
 #  endif
 #else
 #  error "Experimental type traits not found. Upgrade your C++ compiler."
