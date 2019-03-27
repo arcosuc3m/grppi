@@ -25,6 +25,9 @@ grppi::dynamic_execution execution_mode(const std::string & opt) {
   if ("omp" == opt) return parallel_execution_omp{};
   if ("tbb" == opt) return parallel_execution_tbb{};
   if ("ff" == opt)  return parallel_execution_ff{};
+  if("task"== opt) 
+    return parallel_execution_task<fifo_scheduler<simple_task>>(fifo_scheduler<simple_task>{},2);
+
   return {};
 }
 

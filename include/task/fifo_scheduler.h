@@ -370,9 +370,14 @@ class fifo_scheduler{
        //TODO: Probably not the best solution
        Task t{-1,-1};
        if( try_get_task(t) && t.get_id() != -1){
+         print(" get task "+ std::to_string(t.get_task_id()));
+         print(" data.get("+std::to_string(t.get_data_location())+")");
+         print(" run() ");
          start_task(),
          functions[t.get_id()](t),
          finalize_task(t);
+         print(" data.set(...)");
+         print(" end task ");
        } 
      }
      while(pattern_instantiation.test_and_set());
