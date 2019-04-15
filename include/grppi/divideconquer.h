@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include "common/execution_traits.h"
+#include "grppi/common/execution_traits.h"
 
 namespace grppi {
 

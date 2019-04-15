@@ -18,9 +18,9 @@
 
 #include <gtest/gtest.h>
 
-#include "pipeline.h"
-#include "stream_reduce.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/pipeline.h"
+#include "grppi/stream_reduce.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

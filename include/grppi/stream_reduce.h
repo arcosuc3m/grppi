@@ -16,7 +16,7 @@
 #ifndef GRPPI_STREAM_REDUCE_H
 #define GRPPI_STREAM_REDUCE_H
 
-#include "common/patterns.h"
+#include "grppi/common/patterns.h"
 
 namespace grppi {
 

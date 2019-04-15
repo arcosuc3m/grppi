@@ -22,7 +22,7 @@
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
 #include "../common/configuration.h"
-#include "../seq/sequential_execution.h"
+#include "grppi/seq/sequential_execution.h"
 
 #include <type_traits>
 #include <tuple>

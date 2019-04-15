@@ -16,7 +16,7 @@
 #ifndef GRPPI_SAMPLES_UTIL_H
 #define GRPPI_SAMPLES_UTIL_H
 
-#include "dyn/dynamic_execution.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 grppi::dynamic_execution execution_mode(const std::string & opt) {
   using namespace grppi;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
-#include "common/configuration.h"
+#include "grppi/common/configuration.h"
 
 using namespace std;
 using namespace grppi;
