@@ -18,9 +18,9 @@
 
 #include <utility>
 
-#include "common/callable_traits.h"
-#include "common/execution_traits.h"
-#include "common/pipeline_pattern.h"
+#include "grppi/common/callable_traits.h"
+#include "grppi/common/execution_traits.h"
+#include "grppi/common/pipeline_pattern.h"
 
 namespace grppi {
 

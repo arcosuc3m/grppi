@@ -24,7 +24,7 @@
 #include <random>
 
 // grppi
-#include "grppi.h"
+#include "grppi/grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"

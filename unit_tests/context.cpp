@@ -19,8 +19,8 @@
 
 #include <gtest/gtest.h>
 
-#include "grppi.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/grppi.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

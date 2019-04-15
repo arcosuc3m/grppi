@@ -13,30 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRPPI_STREAM_ITERATION_H
-#define GRPPI_STREAM_ITERATION_H
+#ifndef GRPPI_FARM_H
+#define GRPPI_FARM_H
 
-#include "common/iteration_pattern.h"
+#include "grppi/common/farm_pattern.h"
 
 namespace grppi {
 
-/**
+/** 
 \addtogroup stream_patterns
 @{
-\defgroup stream_iteration_pattern Stream iteration pattern
-\brief Interface for applyinng the \ref md_stream-iteration.
-@}
+\defgroup farm_pattern Farm pattern
+\brief Interface for applyinng the \ref md_farm.
+@{
 */
 
-template <typename Transformer, typename Predicate>
-auto repeat_until(
-    Transformer && transform_op,
-    Predicate && predicate_op)
+/**
+\brief Invoke \ref md_farm on a data stream 
+that can be composed in other streaming patterns.
+\tparam Execution Execution policy type.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param transform_op Transformer operation.
+*/
+template <typename Transformer>
+auto farm(int ntasks, Transformer && transform_op)
 {
-  return iteration_t<Transformer,Predicate>(
-      std::forward<Transformer>(transform_op),
-      std::forward<Predicate>(predicate_op));
+   return farm_t<Transformer>{ntasks,
+       std::forward<Transformer>(transform_op)};
 }
+
+/**
+@}
+@}
+*/
 
 }
 

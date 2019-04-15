@@ -19,9 +19,9 @@
 #include <tuple>
 #include <utility>
 
-#include "common/zip_view.h"
-#include "common/execution_traits.h"
-#include "common/iterator_traits.h"
+#include "grppi/common/zip_view.h"
+#include "grppi/common/execution_traits.h"
+#include "grppi/common/iterator_traits.h"
 
 namespace grppi {
 

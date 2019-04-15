@@ -18,9 +18,9 @@
 
 #include <utility>
 
-#include "common/range_concept.h"
-#include "common/iterator_traits.h"
-#include "common/execution_traits.h"
+#include "grppi/common/range_concept.h"
+#include "grppi/common/iterator_traits.h"
+#include "grppi/common/execution_traits.h"
 
 namespace grppi {
 

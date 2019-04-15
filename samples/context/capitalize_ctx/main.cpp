@@ -24,9 +24,9 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
-#include "context.h"
+#include "grppi/pipeline.h"
+#include "grppi/farm.h"
+#include "grppi/context.h"
 
 // Samples shared utilities
 #include "../../util/util.h"

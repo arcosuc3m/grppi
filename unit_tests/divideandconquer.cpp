@@ -18,8 +18,8 @@
 
 #include <gtest/gtest.h>
 
-#include "divideconquer.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/divideconquer.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

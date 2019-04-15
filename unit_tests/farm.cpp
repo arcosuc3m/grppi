@@ -19,9 +19,9 @@
 
 #include <gtest/gtest.h>
 
-#include "farm.h"
-#include "pipeline.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/farm.h"
+#include "grppi/pipeline.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

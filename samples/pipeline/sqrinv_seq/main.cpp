@@ -24,7 +24,7 @@
 
 // grppi
 #include "poly/polymorphic_execution.h"
-#include "pipeline.h"
+#include "grppi/pipeline.h"
 
 // Samples shared utilities
 #include "../../util/util.h"

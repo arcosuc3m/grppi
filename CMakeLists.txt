@@ -50,7 +50,7 @@ else()
 endif()
 
 # GrPPI library
-include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/include")
 
 # TBB Library
 find_package( TBB ) 
@@ -122,7 +122,8 @@ if( GRPPI_DOXY_ENABLE )
 endif( GRPPI_DOXY_ENABLE )
 
 # Installation
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/${CMAKE_PROJECT_NAME}"
+        DESTINATION "include"
         FILES_MATCHING PATTERN "*.h")
 
 # Example applications
