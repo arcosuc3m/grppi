@@ -33,7 +33,7 @@ void test_map(grppi::dynamic_execution & e, int n, int window_size, int offset) 
   using namespace std;
 
   int i = 0;
-  auto generator = [&i,n]() -> optional<int> {
+  auto generator = [&i,n]() -> grppi::optional<int> {
     if (i<n) return i++;
     else     return {};
   };
