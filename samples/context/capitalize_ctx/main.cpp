@@ -35,12 +35,11 @@ void capitalize(grppi::dynamic_execution & ex,
                 std::istream & ifile, std::ostream & ofile)
 {
   using namespace std;
-  using namespace experimental;
 
   grppi::parallel_execution_native inner_ex{2};
 
   grppi::pipeline(ex,
-    [&ifile]() -> optional<string> {
+    [&ifile]() -> grppi::optional<string> {
       string line;
       getline(ifile, line);
       if (!ifile) return {};

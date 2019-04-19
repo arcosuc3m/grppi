@@ -20,7 +20,7 @@
 #include "../native/parallel_execution_native.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
-#include "grppi/ff/parallel_execution_ff.h"
+#include "../ff/parallel_execution_ff.h"
 #include "../common/configuration.h"
 
 #include <memory>

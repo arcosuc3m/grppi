@@ -61,7 +61,7 @@ public:
   {}
 
   void * svc(void *) {
-    std::experimental::optional<Output> result{generate_op_()};
+    grppi::optional<Output> result{generate_op_()};
     if (result) {
       return new (ff_arena) Output{*result};
     }

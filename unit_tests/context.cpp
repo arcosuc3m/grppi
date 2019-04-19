@@ -26,8 +26,6 @@
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class context_test : public ::testing::Test {
@@ -68,7 +66,7 @@ public:
   template <typename E>
   void run_three_stages_farm_with_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {}; 
@@ -90,7 +88,7 @@ public:
   template <typename E>
   void run_three_stages_farm_with_native(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {}; 
@@ -112,7 +110,7 @@ public:
   template <typename E>
   void run_three_stages_farm_with_omp(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {}; 
@@ -136,7 +134,7 @@ public:
   template <typename E>
   void run_three_stages_farm_with_tbb(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {}; 
@@ -160,7 +158,7 @@ public:
   template <typename E>
   void run_three_stages_farm_with_ff(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -199,7 +197,7 @@ public:
   template <typename E>
   void run_composed_pipeline_with_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -226,7 +224,7 @@ public:
   template <typename E>
   void run_composed_pipeline_with_native(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -253,7 +251,7 @@ public:
   template <typename E>
   void run_composed_pipeline_with_omp(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -282,7 +280,7 @@ public:
   template <typename E>
   void run_composed_pipeline_with_tbb(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -311,7 +309,7 @@ public:
   template <typename E>
   void run_composed_pipeline_with_ff(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -354,7 +352,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_sequential_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -389,7 +387,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_sequential_native(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -424,7 +422,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_sequential_omp(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -461,7 +459,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_sequential_tbb(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -498,7 +496,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_sequential_ff(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -537,7 +535,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_native_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -572,7 +570,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_omp_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -609,7 +607,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_tbb_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -646,7 +644,7 @@ public:
   template <typename E>
   void run_double_composed_pipeline_ff_sequential(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};

@@ -26,8 +26,6 @@
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class stream_filter_test : public ::testing::Test {
@@ -56,7 +54,7 @@ public:
   template <typename E>
   void run_keep_empty(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         return {}; 
     },
@@ -73,7 +71,7 @@ public:
   template <typename E>
   void run_discard_empty(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         return {}; 
     },
@@ -107,7 +105,7 @@ public:
   template <typename E>
   void run_keep_single(const E & e) {
     grppi::pipeline (e,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       invocations_in++;
       if(idx_in < v.size() ) return v[idx_in++];
       else return {};
@@ -126,7 +124,7 @@ public:
   template <typename E>
   void run_discard_single(const E & e) {
     grppi::pipeline (e,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       invocations_in++;
       if(idx_in < v.size() ) return v[idx_in++];
       else return {};
@@ -166,7 +164,7 @@ public:
   template <typename E>
   void run_keep_multiple(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> {
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         if (idx_in < v.size() ) return v[idx_in++];
         else return {};
@@ -185,7 +183,7 @@ public:
   template <typename E>
   void run_discard_multiple(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> {
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         if (idx_in < v.size()) return v[idx_in++];
         else return {};

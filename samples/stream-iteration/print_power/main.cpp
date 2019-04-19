@@ -31,9 +31,8 @@
 
 void print_power(grppi::dynamic_execution & e, int n) {
   using namespace std;
-  using namespace experimental;
 
-  auto generator = [i=1,max=n+1]() mutable -> optional<int> {
+  auto generator = [i=1,max=n+1]() mutable -> grppi::optional<int> {
     if (i<max) return i++;
     else return {};
   };

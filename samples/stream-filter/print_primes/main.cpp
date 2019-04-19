@@ -40,11 +40,10 @@ bool is_prime(int n) {
 
 void print_primes(grppi::dynamic_execution & exec, int n) {
   using namespace std;
-  using namespace experimental;
 
   int i=0;
   grppi::pipeline(exec,
-    [&i,n]() -> optional<int> {
+    [&i,n]() -> grppi::optional<int> {
       if (i<=n) return i++;
       else return {};
     },
