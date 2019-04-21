@@ -59,5 +59,7 @@ install:
   - sudo make install
   - cd ${TRAVIS_BUILD_DIR}/build
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+  - cat CMakeFiles/CMakeError.log || true
+  - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
   - ctest -VV
