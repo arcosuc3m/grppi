@@ -57,7 +57,7 @@ install:
   - cd build/gtest-${GTEST_VERSION}
   - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
   - make -j 2
-  - make install
+  - sudo make install
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
   - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
