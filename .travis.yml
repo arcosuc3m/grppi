@@ -5,7 +5,7 @@ script: cmake
 env:
   global:
     - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
-    - CMAKE_VERSION="3.6.3"
+    - CMAKE_VERSION="3.2.0"
 
 cache:
   directories:
