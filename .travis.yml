@@ -55,7 +55,7 @@ install:
   - mkdir -p build
   - mkdir -p build/gtest-${GTEST_VERSION}
   - cd build/gtest-${GTEST_VERSION}
-  - cmake ${DEP_DIR}/gtest-${GTEST_VERSION} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+  - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
   - make -j 2
   - make install
   - cat CMakeFiles/CMakeError.log || true
