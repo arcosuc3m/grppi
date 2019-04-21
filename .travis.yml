@@ -53,14 +53,14 @@ before_install:
 
 install:
   - mkdir -p build
-  - mkdir -p build/gtest-${GTEST_VERSION}
-  - cd build/gtest-${GTEST_VERSION}
+  - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
+  - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
   - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-  - make -j 2
-  - sudo make install
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
-  - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
+  - make -j 2
+  - sudo make install
+  - cd ${TRAVIS_BUILD_DIR}/build
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
