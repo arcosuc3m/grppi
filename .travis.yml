@@ -22,9 +22,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
 
-#    - env: GCC_VERSION=6 BUILD_TYPE=Release CPP=14
-#      os: linux
-#      addons: *gcc6
+    - env: GCC_VERSION=6 BUILD_TYPE=Release CPP=14
+      os: linux
+      addons: *gcc6
 
 before_install:
   - set -e
@@ -55,13 +55,9 @@ install:
   - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
   - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
   - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DCMAKE_BUILD_TYPE=Debug
-  - cat CMakeFiles/CMakeError.log || true
-  - cat CMakeFiles/CMakeOutput.log || true
   - make -j 2
   - sudo make install
   - cd ${TRAVIS_BUILD_DIR}/build
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-  - cat CMakeFiles/CMakeError.log || true
-  - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
-  - make test
+  - ctest -VV
