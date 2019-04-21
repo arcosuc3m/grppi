@@ -6,6 +6,7 @@ env:
   global:
     - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
     - CMAKE_VERSION="3.2.0"
+    - GTEST_VERSION="1.8.1"
 
 cache:
   directories:
@@ -39,6 +40,20 @@ before_install:
         touch ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached
       fi
       export PATH="${DEPS_DIR}/cmake-${CMAKE_VERSION}/bin:${PATH}"
+      if [ -f ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached ]; then
+        echo "Using chached gtest version ${GTEST_VERSION}."
+      else
+        GTEST_URL="https://github.com/google/googletest/archive/release-1.8.1.tar.gz"
+        mkdir -p ${DEPS_DIR}/gtest-${GTEST_VERSION}
+        travis_retry wget --no-check-certificate --quiet -O - "${GTEST_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/gtest-${GTEST_VERSION}
+        touch ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached
+        mkdir -p ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached/build
+        cd ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached/build
+        cmake ..
+        make
+        make install
+        cd ${TRAVIS_BUILD_DIR}
+      fi
     fi
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
 
@@ -49,4 +64,4 @@ install:
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
-  - ctest -VV
+  - make test
