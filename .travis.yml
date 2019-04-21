@@ -56,7 +56,8 @@ install:
   - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
   - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_SHARED_LIBS=ON -DBUILD_GMOCK=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external
   - make -j 2
-  - sudo make install
+  - make install
+  - ls ${DEPS_DIR}/external/lib
   - cd ${TRAVIS_BUILD_DIR}/build
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGTEST_ROOT=${DEPS_DIR}/external
   - cat CMakeFiles/CMakeError.log || true
