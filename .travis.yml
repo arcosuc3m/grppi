@@ -5,7 +5,7 @@ env:
   global:
     - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
     - CMAKE_VERSION="3.2.0"
-    - GTEST_VERSION="1.8.1"
+    - GTEST_VERSION="1.8"
 
 cache:
   directories:
