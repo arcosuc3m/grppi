@@ -42,7 +42,7 @@ before_install:
       if [ -f ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached ]; then
         echo "Using chached gtest version ${GTEST_VERSION}."
       else
-        GTEST_URL="https://github.com/google/googletest/archive/release-1.8.1.tar.gz"
+        GTEST_URL="https://github.com/google/googletest/archive/release-1.8.0.tar.gz"
         mkdir -p ${DEPS_DIR}/gtest-${GTEST_VERSION}
         travis_retry wget --no-check-certificate --quiet -O - "${GTEST_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/gtest-${GTEST_VERSION}
         touch ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached
