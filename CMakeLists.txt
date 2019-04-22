@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.2.0)
+cmake_minimum_required (VERSION 3.10.0)
 set(PROJECT_NAME_STR grppi)
 project(${PROJECT_NAME_STR})
 

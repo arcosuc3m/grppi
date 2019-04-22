@@ -4,7 +4,7 @@ sudo: true
 env:
   global:
     - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
-    - CMAKE_VERSION="3.6.0"
+    - CMAKE_VERSION="3.10.0"
     - GTEST_VERSION="1.8"
 
 cache:
@@ -57,7 +57,7 @@ before_install:
       if [ -f ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached ]; then
         echo "Using cached cmake version ${CMAKE_VERSION}."
       else
-        CMAKE_URL="https://cmake.org/files/v3.6/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
+        CMAKE_URL="https://cmake.org/files/v3.10/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
         mkdir -p ${DEPS_DIR}/cmake-${CMAKE_VERSION}
         travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake-${CMAKE_VERSION}
         touch ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached
