@@ -58,7 +58,7 @@ install:
   - make -j 2
   - make install
   - cd ${TRAVIS_BUILD_DIR}/build
-  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGTEST_ROOT=${DEPS_DIR}/external
+  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
