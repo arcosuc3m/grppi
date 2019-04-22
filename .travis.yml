@@ -68,3 +68,6 @@ install:
   - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
   #- ctest -VV --timeout 10
+
+script:
+  - ctest -I 1,1 -VV --timeout 10
