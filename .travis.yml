@@ -89,4 +89,5 @@ install:
   #- ctest -VV --timeout 10
 
 script:
-  - ctest -I 1,1 -VV --timeout 10
+  - export OMP_NUM_THREADS=4
+  - ctest -I 1,40 -VV --timeout 10
