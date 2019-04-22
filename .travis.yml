@@ -62,4 +62,4 @@ install:
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
-  - ctest -VV
+  - ctest -VV --timeout 10
