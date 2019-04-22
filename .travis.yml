@@ -97,9 +97,9 @@ matrix:
       os: osx
       osx_image: xcode9.4
 
-    - env: XCODE_VERSION=10.2 BUILD_TYPE=Release CPPSTD=14
-      os: osx
-      osx_image: xcode10.2
+    #- env: XCODE_VERSION=10.2 BUILD_TYPE=Release CPPSTD=14
+    #  os: osx
+    #  osx_image: xcode10.2
 
 
 before_install:
@@ -139,11 +139,11 @@ before_install:
 install:
   - mkdir -p build
   - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
-  - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
+  - set +e; cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE; set -e; pwd
   - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - make -j 2
   - make install
-  - cd ${TRAVIS_BUILD_DIR}/build
+  - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
