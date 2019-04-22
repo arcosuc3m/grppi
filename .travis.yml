@@ -13,16 +13,21 @@ cache:
 
 matrix:
   include:
-    - env: GCC_VERSION=6 BUILD_TYPE=Debug CPP=14
+    - env: GCC_VERSION=6 BUILD_TYPE=Debug CPPSTD=14
       os: linux
       addons: &gcc6
         apt:
           packages:
             - g++-6
+            - libtbb-dev
           sources:
             - ubuntu-toolchain-r-test
 
-    - env: GCC_VERSION=6 BUILD_TYPE=Release CPP=14
+    - env: GCC_VERSION=6 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: *gcc6
+
+    - env: GCC_VERSION=6 BUILD_TYPE=Release CPPSTD=17
       os: linux
       addons: *gcc6
 
@@ -54,12 +59,12 @@ install:
   - mkdir -p build
   - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
   - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
-  - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external
+  - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - make -j 2
   - make install
   - cd ${TRAVIS_BUILD_DIR}/build
-  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external
+  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
   - make -j2 VERBOSE=1
-  - ctest -VV --timeout 10
+  #- ctest -VV --timeout 10

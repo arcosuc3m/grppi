@@ -11,7 +11,11 @@ message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER} )
 message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER} )
 message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
-set(CMAKE_CXX_STANDARD 14)
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+  message(STATUS "C++ standard not set")
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
 
 add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra)
 
