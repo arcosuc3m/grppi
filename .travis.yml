@@ -27,7 +27,7 @@ matrix:
       os: linux
       addons: *gcc6
 
-    - env: GCC_VERSION=6 BUILD_TYPE=Release CPPSTD=17
+    - env: GCC_VERSION=6 BUILD_TYPE=Release CPPSTD=1z
       os: linux
       addons: *gcc6
 
