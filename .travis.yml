@@ -27,9 +27,28 @@ matrix:
       os: linux
       addons: *gcc6
 
-    - env: GCC_VERSION=6 BUILD_TYPE=Release CPPSTD=1z
+    - env: GCC_VERSION=7 BUILD_TYPE=Debug CPPSTD=14
       os: linux
-      addons: *gcc6
+      addons: &gcc7
+        apt:
+          packages:
+            - g++-7
+            - libtbb-dev
+          sources:
+            - ubuntu-toolchain-r-test
+
+    - env: GCC_VERSION=7 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: *gcc7
+
+    - env: GCC_VERSION=7 BUILD_TYPE=Debug CPPSTD=17
+      os: linux
+      addons: *gcc7
+
+    - env: GCC_VERSION=7 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *gcc7
+
 
 before_install:
   - set -e
