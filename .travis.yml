@@ -13,6 +13,7 @@ cache:
 
 matrix:
   include:
+    # GCC supported versions gcc6, gcc7, gcc8
     - env: GCC_VERSION=6 BUILD_TYPE=Debug CPPSTD=14
       os: linux
       addons: &gcc6
@@ -48,6 +49,28 @@ matrix:
     - env: GCC_VERSION=7 BUILD_TYPE=Release CPPSTD=17
       os: linux
       addons: *gcc7
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Debug CPPSTD=14
+      os: linux
+      addons: &gcc8
+        apt:
+          packages:
+            - g++-8
+            - libtbb-dev
+          sources:
+            - ubuntu-toolchain-r-test
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: *gcc8
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Debug CPPSTD=18
+      os: linux
+      addons: *gcc8
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Release CPPSTD=18
+      os: linux
+      addons: *gcc8
 
 
 before_install:
