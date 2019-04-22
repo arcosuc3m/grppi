@@ -91,6 +91,7 @@ matrix:
             - libstdc++-6-dev
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-4.0
 
     - env: XCODE_VERSION=9.4 BUILD_TYPE=Release CPPSTD=14
       os: osx
@@ -103,6 +104,14 @@ matrix:
 
 before_install:
   - set -e
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+          brew update
+          brew install gnu-sed
+          brew install gnu-which
+          brew upgrade cmake
+          export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    fi
   - |
     if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
       if [ -f ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached ]; then
