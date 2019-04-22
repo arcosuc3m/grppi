@@ -54,7 +54,7 @@ install:
   - mkdir -p build
   - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
   - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
-  - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external
+  - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external
   - make -j 2
   - make install
   - cd ${TRAVIS_BUILD_DIR}/build
