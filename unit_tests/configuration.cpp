@@ -21,7 +21,8 @@ using namespace grppi;
 
 TEST(configuration_environment, get_config){
   configuration<> config;
-  EXPECT_EQ(std::thread::hardware_concurrency(), config.concurrency_degree());
+  EXPECT_EQ(static_cast<int>(std::thread::hardware_concurrency()),
+      config.concurrency_degree());
   EXPECT_TRUE(config.ordering());
   EXPECT_EQ(config.default_queue_size, config.queue_size());
   EXPECT_EQ(queue_mode::blocking, config.mode());
@@ -49,7 +50,8 @@ TEST(configuration_synthetic, get_zero_nthreads){
   };
 
   configuration<getter> config;
-  EXPECT_EQ(std::thread::hardware_concurrency(), config.concurrency_degree());
+  EXPECT_EQ(static_cast<int>(std::thread::hardware_concurrency()),
+      config.concurrency_degree());
 }
 
 TEST(configuration_synthetic, get_negative_nthreads){
@@ -61,7 +63,8 @@ TEST(configuration_synthetic, get_negative_nthreads){
   };
 
   configuration<getter> config;
-  EXPECT_EQ(std::thread::hardware_concurrency(), config.concurrency_degree());
+  EXPECT_EQ(static_cast<int>(std::thread::hardware_concurrency()),
+            config.concurrency_degree());
 }
 
 TEST(configuration_synthetic, get_true_ordering){
