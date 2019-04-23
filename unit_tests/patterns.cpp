@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <experimental/optional>
-
 #include <gtest/gtest.h>
 
 #include "grppi/common/patterns.h"
