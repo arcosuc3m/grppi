@@ -114,7 +114,7 @@ matrix:
         apt:
           packages:
             - clang-6.0
-            - libstdc++-6-dev
+            - libstdc++-7-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-6.0
@@ -129,7 +129,7 @@ matrix:
         apt:
           packages:
             - clang-7
-            - libstdc++-6-dev
+            - libstdc++-8-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-7
@@ -144,7 +144,7 @@ matrix:
         apt:
           packages:
             - clang-8
-            - libstdc++-6-dev
+            - libstdc++-9-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-8
