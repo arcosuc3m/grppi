@@ -93,6 +93,61 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-4.0
 
+    -env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang50
+        apt:
+          packages:
+            - clang-5.0
+            - libstdc++-6-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+
+    -env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang60
+        apt:
+          packages:
+            - clang-6.0
+            - libstdc++-6-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
+
+    -env: CLANG_VERSION=7.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang7
+        apt:
+          packages:
+            - clang-7
+            - libstdc++-6-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
+
+    -env: CLANG_VERSION=8.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang8
+        apt:
+          packages:
+            - clang-8.0
+            - libstdc++-6-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+
+    -env: CLANG_VERSION=9.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang9
+        apt:
+          packages:
+            - clang-9.0
+            - libstdc++-6-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-9
+
     #- env: XCODE_VERSION=9.4 BUILD_TYPE=Release CPPSTD=14
     #  os: osx
     #  osx_image: xcode9.4
