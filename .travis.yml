@@ -103,6 +103,10 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-5.0
+            -
+    - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *clang50
 
     - env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=14
       os: linux
@@ -115,7 +119,7 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-6.0
 
-    - env: CLANG_VERSION=7.0 BUILD_TYPE=Release CPPSTD=14
+    - env: CLANG_VERSION=7 BUILD_TYPE=Release CPPSTD=14
       os: linux
       addons: &clang7
         apt:
@@ -131,7 +135,7 @@ matrix:
       addons: &clang8
         apt:
           packages:
-            - clang-8.0
+            - clang-8
             - libstdc++-6-dev
           sources:
             - ubuntu-toolchain-r-test
@@ -142,7 +146,7 @@ matrix:
       addons: &clang9
         apt:
           packages:
-            - clang-9.0
+            - clang-9
             - libstdc++-6-dev
           sources:
             - ubuntu-toolchain-r-test
