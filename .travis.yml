@@ -1,5 +1,6 @@
 language: cpp
 sudo: true
+dist: xenial
 
 env:
   global:
@@ -21,6 +22,7 @@ matrix:
           packages:
             - g++-6
             - libtbb-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
@@ -35,6 +37,7 @@ matrix:
           packages:
             - g++-7
             - libtbb-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
@@ -57,6 +60,7 @@ matrix:
           packages:
             - g++-8
             - libtbb-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
@@ -79,6 +83,7 @@ matrix:
           packages:
             - clang-3.9
             - libstdc++-6-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
@@ -89,6 +94,7 @@ matrix:
           packages:
             - clang-4.0
             - libstdc++-6-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-4.0
@@ -100,6 +106,7 @@ matrix:
           packages:
             - clang-5.0
             - libstdc++-7-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-5.0
@@ -115,6 +122,7 @@ matrix:
           packages:
             - clang-6.0
             - libstdc++-7-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-6.0
@@ -130,6 +138,7 @@ matrix:
           packages:
             - clang-7
             - libstdc++-8-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-7
@@ -145,6 +154,7 @@ matrix:
           packages:
             - clang-8
             - libstdc++-8-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-8
@@ -167,6 +177,11 @@ matrix:
     #  compiler: clang
 
 
+before_script:
+  - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main'
+  - sudo apt-get update
+
 before_install:
   - set -e
   - |
@@ -176,18 +191,6 @@ before_install:
           brew install gnu-which
           brew upgrade cmake
           export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-    fi
-  - |
-    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      if [ -f ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached ]; then
-        echo "Using cached cmake version ${CMAKE_VERSION}."
-      else
-        CMAKE_URL="https://cmake.org/files/v3.10/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
-        mkdir -p ${DEPS_DIR}/cmake-${CMAKE_VERSION}
-        travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake-${CMAKE_VERSION}
-        touch ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached
-      fi
-      export PATH="${DEPS_DIR}/cmake-${CMAKE_VERSION}/bin:${PATH}"
     fi
   - |
     if [ -f ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached ]; then
