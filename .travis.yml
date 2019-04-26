@@ -97,7 +97,7 @@ matrix:
             - cmake
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-4.0
+            - llvm-toolchain-xenial-4.0
 
     - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=14
       os: linux
@@ -109,8 +109,8 @@ matrix:
             - cmake
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
-            -
+            - llvm-toolchain-xenial-5.0
+
     - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=17
       os: linux
       addons: *clang50
@@ -125,7 +125,7 @@ matrix:
             - cmake
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
 
     - env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=17
       os: linux
@@ -141,7 +141,7 @@ matrix:
             - cmake
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-7
+            - llvm-toolchain-xenial-7
 
     - env: CLANG_VERSION=7 BUILD_TYPE=Release CPPSTD=17
       os: linux
@@ -157,7 +157,7 @@ matrix:
             - cmake
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-8
+            - llvm-toolchain-xenial-8
 
     - env: CLANG_VERSION=8 BUILD_TYPE=Release CPPSTD=17
       os: linux
