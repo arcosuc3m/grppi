@@ -15,7 +15,6 @@
  */
 #include <atomic>
 #include <utility>
-#include <experimental/optional>
 
 #include <gtest/gtest.h>
 

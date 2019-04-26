@@ -24,22 +24,19 @@ if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
   if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
     message(FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} 
        " not supported. Upgrade to 3.9 or above.")
-  else()
-    message( STATUS "C++ Compiler is Clang" )
   endif()
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 6.0))
     message(FATAL_ERROR "g++ version " ${CMAKE_CXX_COMPILER_VERSION} 
         " not supported. Upgrade to 6.0 or above.")
   else()
-    message( STATUS "C++ Compiler is GNU")
     if (${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 7.0)
       #g++ 7 warns in non C++17 for over-aligned new otherwise
       add_compile_options(-faligned-new)
     endif()
   endif()
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
-  message(FATAL_ERROR "Intel compiler is not currently supported")   
+  message(WARNING "Intel compiler is not currently supported")
 # if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
 #   message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} 
 #       " not supported. Upgrade to 16.0 or above.")
@@ -47,11 +44,10 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
 #   message( STATUS "C++ Compiler is Intel" )
 #   message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
 # endif()
-else()
-  message( FATAL_ERROR "Unsupported compiler: " 
-      ${CMAKE_CXX_COMPILER_ID} 
-      ${CMAKE_CXX_COMPILER_VERSION})
 endif()
+
+message(STATUS "C++ Compiler is " ${CMAKE_CXX_COMPILER_ID}
+        " version " ${CMAKE_CXX_COMPILER_VERSION})
 
 # GrPPI library
 include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/include")

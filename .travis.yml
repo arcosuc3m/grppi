@@ -1,5 +1,6 @@
 language: cpp
 sudo: true
+dist: xenial
 
 env:
   global:
@@ -13,6 +14,7 @@ cache:
 
 matrix:
   include:
+    # GCC supported versions gcc6, gcc7, gcc8
     - env: GCC_VERSION=6 BUILD_TYPE=Debug CPPSTD=14
       os: linux
       addons: &gcc6
@@ -20,6 +22,7 @@ matrix:
           packages:
             - g++-6
             - libtbb-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
@@ -34,6 +37,7 @@ matrix:
           packages:
             - g++-7
             - libtbb-dev
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
@@ -49,43 +53,170 @@ matrix:
       os: linux
       addons: *gcc7
 
+    - env: GCC_VERSION=8 BUILD_TYPE=Debug CPPSTD=14
+      os: linux
+      addons: &gcc8
+        apt:
+          packages:
+            - g++-8
+            - libtbb-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: *gcc8
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Debug CPPSTD=17
+      os: linux
+      addons: *gcc8
+
+    - env: GCC_VERSION=8 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *gcc8
+
+    - env: CLANG_VERSION=3.9 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang39
+        apt:
+          packages:
+            - clang-3.9
+            - libstdc++-6-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+
+    - env: CLANG_VERSION=4.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang40
+        apt:
+          packages:
+            - clang-4.0
+            - libstdc++-6-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-4.0
+
+    - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang50
+        apt:
+          packages:
+            - clang-5.0
+            - libstdc++-7-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-5.0
+
+    - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *clang50
+
+    - env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang60
+        apt:
+          packages:
+            - clang-6.0
+            - libstdc++-7-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-6.0
+
+    - env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *clang60
+
+    - env: CLANG_VERSION=7 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang7
+        apt:
+          packages:
+            - clang-7
+            - libstdc++-8-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-7
+
+    - env: CLANG_VERSION=7 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *clang7
+
+    - env: CLANG_VERSION=8 BUILD_TYPE=Release CPPSTD=14
+      os: linux
+      addons: &clang8
+        apt:
+          packages:
+            - clang-8
+            - libstdc++-8-dev
+            - cmake
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-8
+
+    - env: CLANG_VERSION=8 BUILD_TYPE=Release CPPSTD=17
+      os: linux
+      addons: *clang8
+
+
+    #- env: XCODE_VERSION=9.4 BUILD_TYPE=Release CPPSTD=14
+    #  os: osx
+    #  osx_image: xcode9.4
+
+    #- env: XCODE_VERSION=10.2 BUILD_TYPE=Release CPPSTD=14
+    #  os: osx
+    #  osx_image: xcode10.2
+
+    #- env: BUILD_TYPE=Release CPPSTD=14
+    #  os: osx
+    #  compiler: clang
+
+
+before_script:
+  - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main'
+  - sudo apt-get update
 
 before_install:
   - set -e
   - |
-    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      if [ -f ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached ]; then
-        echo "Using cached cmake version ${CMAKE_VERSION}."
-      else
-        CMAKE_URL="https://cmake.org/files/v3.10/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
-        mkdir -p ${DEPS_DIR}/cmake-${CMAKE_VERSION}
-        travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake-${CMAKE_VERSION}
-        touch ${DEPS_DIR}/cmake-${CMAKE_VERSION}/cached
-      fi
-      export PATH="${DEPS_DIR}/cmake-${CMAKE_VERSION}/bin:${PATH}"
-      if [ -f ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached ]; then
-        echo "Using chached gtest version ${GTEST_VERSION}."
-      else
-        GTEST_URL="https://github.com/google/googletest/archive/release-1.8.0.tar.gz"
-        mkdir -p ${DEPS_DIR}/gtest-${GTEST_VERSION}
-        travis_retry wget --no-check-certificate --quiet -O - "${GTEST_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/gtest-${GTEST_VERSION}
-        touch ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached
-      fi
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+          brew update
+          brew install gnu-sed
+          brew install gnu-which
+          brew upgrade cmake
+          export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    fi
+  - |
+    if [ -f ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached ]; then
+      echo "Using chached gtest version ${GTEST_VERSION}."
+    else
+      GTEST_URL="https://github.com/google/googletest/archive/release-1.8.0.tar.gz"
+      mkdir -p ${DEPS_DIR}/gtest-${GTEST_VERSION}
+      travis_retry wget --no-check-certificate --quiet -O - "${GTEST_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/gtest-${GTEST_VERSION}
+      touch ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached
     fi
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
+  - if [ -n "$CLANG_VERSION" ]; then export CXX="clang++-${CLANG_VERSION}" CC="clang-${CLANG_VERSION}"; fi
+  - which $CXX & $CXX --version
 
 install:
   - mkdir -p build
   - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
-  - cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE
+  - set +e; cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE; set -e; pwd
   - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - make -j 2
   - make install
-  - cd ${TRAVIS_BUILD_DIR}/build
+  - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - cat CMakeFiles/CMakeError.log || true
   - cat CMakeFiles/CMakeOutput.log || true
-  - make -j2 VERBOSE=1
+  - make -j2
   #- ctest -VV --timeout 10
 
 script:
