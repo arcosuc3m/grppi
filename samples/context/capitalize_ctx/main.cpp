@@ -24,9 +24,9 @@
 #include <stdexcept>
 
 // grppi
-#include "pipeline.h"
-#include "farm.h"
-#include "context.h"
+#include "grppi/pipeline.h"
+#include "grppi/farm.h"
+#include "grppi/context.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -35,12 +35,11 @@ void capitalize(grppi::dynamic_execution & ex,
                 std::istream & ifile, std::ostream & ofile)
 {
   using namespace std;
-  using namespace experimental;
 
   grppi::parallel_execution_native inner_ex{2};
 
   grppi::pipeline(ex,
-    [&ifile]() -> optional<string> {
+    [&ifile]() -> grppi::optional<string> {
       string line;
       getline(ifile, line);
       if (!ifile) return {};

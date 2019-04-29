@@ -16,7 +16,7 @@
 #ifndef GRPPI_STREAM_FILTER_H
 #define GRPPI_STREAM_FILTER_H
 
-#include "common/patterns.h"
+#include "grppi/common/patterns.h"
 
 namespace grppi {
 

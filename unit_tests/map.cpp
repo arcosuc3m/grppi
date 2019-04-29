@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include "map.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/map.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

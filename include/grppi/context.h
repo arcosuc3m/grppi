@@ -16,7 +16,7 @@
 #ifndef GRPPI_CONTEXT_H
 #define GRPPI_CONTEXT_H
 
-#include "common/context.h"
+#include "grppi/common/context.h"
 
 namespace grppi {
 

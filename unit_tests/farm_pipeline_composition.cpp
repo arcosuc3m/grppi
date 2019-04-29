@@ -15,20 +15,18 @@
  */
 #include <atomic>
 #include <utility>
-#include <experimental/optional>
 
 #include <gtest/gtest.h>
 
-#include "farm.h"
-#include "pipeline.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/farm.h"
+#include "grppi/pipeline.h"
+#include "grppi/dyn/dynamic_execution.h"
+#include "grppi/common/optional.h"
 
 #include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class farm_pipeline_test : public ::testing::Test {
@@ -60,7 +58,7 @@ public:
   template <typename E>
   void run_empty(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int>{
+      [this]() -> grppi::optional<int>{
         invocations_in++;
         return {};
       },
@@ -91,7 +89,7 @@ public:
   template <typename E>
   void run_empty_sink(const E & e) {
     grppi::pipeline (e,
-      [this]() -> optional<int>{
+      [this]() -> grppi::optional<int>{
         invocations_in++;
         return {};
       },
@@ -125,7 +123,7 @@ public:
   template <typename E>
   void run_empty_ary(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<tuple<int,int,int>> {
+      [this]() -> grppi::optional<tuple<int,int,int>> {
         invocations_in++;
         return {};
       },
@@ -161,7 +159,7 @@ public:
   template <typename E>
   void run_single_sink(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> {
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         if (idx_in < v.size() ) {
           idx_in++;
@@ -207,7 +205,7 @@ public:
   template <typename E>
   void run_single_ary_sink(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<tuple<int,int,int>> {
+      [this]() -> grppi::optional<tuple<int,int,int>> {
         invocations_in++;
         if (idx_in < v.size()) {
           idx_in++;
@@ -250,7 +248,7 @@ public:
   template <typename E>
   void run_multiple_sink(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> {
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         if (idx_in < v.size()) {
           idx_in++;
@@ -294,7 +292,7 @@ public:
   template <typename E>
   void run_multiple_ary_sink(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<tuple<int,int,int>> {
+      [this]() -> grppi::optional<tuple<int,int,int>> {
         invocations_in++;
         if (idx_in < v.size()) {
           idx_in++;

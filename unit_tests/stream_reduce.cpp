@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 #include <atomic>
-#include <experimental/optional>
 
 #include <gtest/gtest.h>
 
-#include "pipeline.h"
-#include "stream_reduce.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/pipeline.h"
+#include "grppi/stream_reduce.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class stream_reduce_test : public ::testing::Test {
@@ -51,7 +48,7 @@ public:
   template <typename E>
   void run_reduction_add(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this]() -> grppi::optional<int> {
         invocations_gen++; 
         if(v.size() > 0){
           auto problem = v.back();

@@ -1,5 +1,6 @@
 # Generic Reusable Parallel Pattern Interface - GrPPI
 
+[![Build Status](https://travis-ci.com/arcosuc3m/grppi.svg?branch=master)](https://travis-ci.com/arcosuc3m/grppi)
 [![HitCount](http://hits.dwyl.io/arcosuc3m/grppi.svg)](http://hits.dwyl.io/arcosuc3m/grppi)
 
 ## Introduction ##

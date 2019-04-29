@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 #include <atomic>
-#include <experimental/optional>
 #include <numeric>
 
 #include <gtest/gtest.h>
 
-#include "pipeline.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/pipeline.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class pipeline_test : public ::testing::Test {
@@ -55,7 +52,7 @@ public:
   template <typename E>
   void run_two_stages(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {}; 
@@ -90,7 +87,7 @@ public:
   template <typename E>
   void run_three_stages(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {}; 
@@ -120,7 +117,7 @@ public:
   template <typename E>
   void run_composed_last(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -150,7 +147,7 @@ public:
         }
     );
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -174,7 +171,7 @@ public:
   template <typename E>
   void run_composed(const E & e) {
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};
@@ -206,7 +203,7 @@ public:
       });
 
     grppi::pipeline(e,
-      [this,i=0,max=counter]() mutable -> optional<int> {
+      [this,i=0,max=counter]() mutable -> grppi::optional<int> {
         invocations_init++;
         if (++i<=max) return i;
         else return {};

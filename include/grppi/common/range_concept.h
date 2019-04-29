@@ -16,7 +16,7 @@
 #ifndef GRPPI_COMMON_RANGE_CONCEPT_H
 #define GRPPI_COMMON_RANGE_CONCEPT_H
 
-#include "common/meta.h"
+#include "meta.h"
 
 namespace grppi {
 

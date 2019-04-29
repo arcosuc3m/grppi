@@ -18,7 +18,7 @@
 
 #ifdef GRPPI_FF
 
-#include "detail/pipeline_impl.h"
+#include "grppi/ff/detail/pipeline_impl.h"
 
 #include "../common/iterator.h"
 #include "../common/execution_traits.h"
@@ -26,7 +26,6 @@
 #include <type_traits>
 #include <tuple>
 #include <thread>
-#include <experimental/optional>
 
 #include <ff/parallel_for.hpp>
 #include <ff/dc.hpp>

@@ -18,11 +18,11 @@
 
 #include <gtest/gtest.h>
 
-#include "seq/sequential_execution.h"
-#include "native/parallel_execution_native.h"
-#include "omp/parallel_execution_omp.h"
-#include "tbb/parallel_execution_tbb.h"
-#include "ff/parallel_execution_ff.h"
+#include "grppi/seq/sequential_execution.h"
+#include "grppi/native/parallel_execution_native.h"
+#include "grppi/omp/parallel_execution_omp.h"
+#include "grppi/tbb/parallel_execution_tbb.h"
+#include "grppi/ff/parallel_execution_ff.h"
 
 using executions = ::testing::Types<
   grppi::sequential_execution,

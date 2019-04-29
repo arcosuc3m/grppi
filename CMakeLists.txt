@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.2.0)
+cmake_minimum_required (VERSION 3.10.0)
 set(PROJECT_NAME_STR grppi)
 project(${PROJECT_NAME_STR})
 
@@ -11,7 +11,11 @@ message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER} )
 message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER} )
 message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
-set(CMAKE_CXX_STANDARD 14)
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+  message(STATUS "C++ standard not set")
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
 
 add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra)
 
@@ -20,22 +24,19 @@ if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
   if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 3.9.0))
     message(FATAL_ERROR "Clang version " ${CMAKE_CXX_COMPILER_VERSION} 
        " not supported. Upgrade to 3.9 or above.")
-  else()
-    message( STATUS "C++ Compiler is Clang" )
   endif()
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 6.0))
     message(FATAL_ERROR "g++ version " ${CMAKE_CXX_COMPILER_VERSION} 
         " not supported. Upgrade to 6.0 or above.")
   else()
-    message( STATUS "C++ Compiler is GNU")
     if (${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 7.0)
       #g++ 7 warns in non C++17 for over-aligned new otherwise
       add_compile_options(-faligned-new)
     endif()
   endif()
 elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
-  message(FATAL_ERROR "Intel compiler is not currently supported")   
+  message(WARNING "Intel compiler is not currently supported")
 # if(NOT(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 16.0))
 #   message( FATAL_ERROR "Intel version " ${CMAKE_CXX_COMPILER_VERSION} 
 #       " not supported. Upgrade to 16.0 or above.")
@@ -43,20 +44,30 @@ elseif ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
 #   message( STATUS "C++ Compiler is Intel" )
 #   message( WARNING "WARNING: GrPPI has not been fully tested with Intel compiler." )
 # endif()
-else()
-  message( FATAL_ERROR "Unsupported compiler: " 
-      ${CMAKE_CXX_COMPILER_ID} 
-      ${CMAKE_CXX_COMPILER_VERSION})
 endif()
 
+message(STATUS "C++ Compiler is " ${CMAKE_CXX_COMPILER_ID}
+        " version " ${CMAKE_CXX_COMPILER_VERSION})
+
 # GrPPI library
-include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/include")
 
 # TBB Library
 find_package( TBB ) 
 if( TBB_FOUND )
-  option(GRPPI_TBB_ENABLE "Require TBB library" ON)
-  message(STATUS "TBB found")
+  if (${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 8.0)
+    if (${CMAKE_CXX_STANDARD} STREQUAL 17)
+      option(GRPPI_TBB_ENABLE "Require TBB library" OFF )
+      set(GRPPI_TBB_ENABLE OFF CACHE BOOL "Require TBB library" FORCE)
+      message(STATUS "TBB not supported in C++17 with g++-8")
+    else()
+      option(GRPPI_TBB_ENABLE "Require TBB library" ON)
+      message(STATUS "TBB found")
+    endif()
+  else()
+    option(GRPPI_TBB_ENABLE "Require TBB library" ON)
+    message(STATUS "TBB found")
+  endif()
 else( TBB_FOUND )
   option(GRPPI_TBB_ENABLE "Require TBB library" OFF )
   set(GRPPI_TBB_ENABLE OFF CACHE BOOL "Require TBB library" FORCE)
@@ -93,15 +104,21 @@ endif( GRPPI_OMP_ENABLE )
 #FastFlow library
 find_package(FF)
 if (FF_FOUND)
-  option( GRPPI_FF_ENABLE "Require FastFlow library" ON)
-  message(STATUS "FastFlow found")
+  if (${CMAKE_CXX_STANDARD} STREQUAL "17")
+    option(GRPPI_FF_ENABLE "Require FastFlow library" OFF)
+    set(GRPPI_FF_ENABLE OFF CACHE BOOL "Require FastFlow library" FORCE)
+    message(STATUS "FastFlow not supported in C++17")
+  else()
+    option( GRPPI_FF_ENABLE "Require FastFlow library" ON)
+    message(STATUS "FastFlow found")
+  endif()
 else()
-  option(GRPPI_FF_ENABLE "Require FastFlow library" OFF)
-  set(GRPPI_FF_ENABLE OFF CACHE BOOL "Require FastFlow library" FORCE)
-  message(STATUS "FastFlow not found")
-  message(STATUS "  GRPPI_FF_ENABLE has been set to OFF")
-  message(STATUS "  To enable it, please, first install FastFlow")
-  message(STATUS "  https://github.com/fastflow/fastflow")
+    option(GRPPI_FF_ENABLE "Require FastFlow library" OFF)
+    set(GRPPI_FF_ENABLE OFF CACHE BOOL "Require FastFlow library" FORCE)
+    message(STATUS "FastFlow not found")
+    message(STATUS "  GRPPI_FF_ENABLE has been set to OFF")
+    message(STATUS "  To enable it, please, first install FastFlow")
+    message(STATUS "  https://github.com/fastflow/fastflow")
 endif()
 
 message( STATUS "FastFlow: " ${GRPPI_FF_ENABLE})
@@ -122,7 +139,8 @@ if( GRPPI_DOXY_ENABLE )
 endif( GRPPI_DOXY_ENABLE )
 
 # Installation
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION "include/${CMAKE_PROJECT_NAME}"
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/${CMAKE_PROJECT_NAME}"
+        DESTINATION "include"
         FILES_MATCHING PATTERN "*.h")
 
 # Example applications

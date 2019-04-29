@@ -26,7 +26,6 @@
 #include <type_traits>
 #include <tuple>
 #include <iterator>
-//#include <experimental/optional>
 
 namespace grppi {
 

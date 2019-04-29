@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <experimental/optional>
-
 #include <gtest/gtest.h>
 
-#include "common/patterns.h"
-#include "farm.h"
-#include "stream_filter.h"
-#include "pipeline.h"
+#include "grppi/common/patterns.h"
+#include "grppi/farm.h"
+#include "grppi/stream_filter.h"
+#include "grppi/pipeline.h"
 
 #include <iostream>
 

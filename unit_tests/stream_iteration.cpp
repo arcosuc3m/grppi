@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 #include <atomic>
-#include <experimental/optional>
 
 #include <gtest/gtest.h>
 
-#include "pipeline.h"
-#include "stream_iteration.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/pipeline.h"
+#include "grppi/stream_iteration.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class stream_iteration_test : public ::testing::Test {
@@ -52,7 +49,7 @@ public:
   template <typename E>
   void run_nested_iteration(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this]() -> grppi::optional<int> {
         invocations_gen++; 
         if (count < n) {
           count++;;
@@ -79,7 +76,7 @@ public:
   template <typename E>
   void run_nested_iteration_pipeline(const E & e) {
   grppi::pipeline(e,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       invocations_gen++;
       if (count < n) {
         count+=1;
@@ -188,7 +185,7 @@ TYPED_TEST(stream_iteration_test, static_composed_farm)
 {
   this->setup_composed_farm();
   grppi::repeat_until(this->execution_,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       this->invocations_gen++;
       if (this->count < this->n) {
        this->count+=1;
@@ -218,7 +215,7 @@ TYPED_TEST(stream_iteration_test, dyn_composed_farm)
 {
   this->setup_composed_farm();
   grppi::repeat_until(this->dyn_execution_,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       this->invocations_gen++;
       if (this->count < this->n) {
        this->count+=1;

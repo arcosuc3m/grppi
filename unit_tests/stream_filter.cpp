@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 #include <atomic>
-#include <experimental/optional>
 
 #include <gtest/gtest.h>
 
-#include "stream_filter.h"
-#include "pipeline.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/stream_filter.h"
+#include "grppi/pipeline.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class stream_filter_test : public ::testing::Test {
@@ -56,7 +53,7 @@ public:
   template <typename E>
   void run_keep_empty(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         return {}; 
     },
@@ -73,7 +70,7 @@ public:
   template <typename E>
   void run_discard_empty(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> { 
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         return {}; 
     },
@@ -107,7 +104,7 @@ public:
   template <typename E>
   void run_keep_single(const E & e) {
     grppi::pipeline (e,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       invocations_in++;
       if(idx_in < v.size() ) return v[idx_in++];
       else return {};
@@ -126,7 +123,7 @@ public:
   template <typename E>
   void run_discard_single(const E & e) {
     grppi::pipeline (e,
-    [this]() -> optional<int> {
+    [this]() -> grppi::optional<int> {
       invocations_in++;
       if(idx_in < v.size() ) return v[idx_in++];
       else return {};
@@ -166,7 +163,7 @@ public:
   template <typename E>
   void run_keep_multiple(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> {
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         if (idx_in < v.size() ) return v[idx_in++];
         else return {};
@@ -185,7 +182,7 @@ public:
   template <typename E>
   void run_discard_multiple(const E & e) {
     grppi::pipeline(e,
-      [this]() -> optional<int> {
+      [this]() -> grppi::optional<int> {
         invocations_in++;
         if (idx_in < v.size()) return v[idx_in++];
         else return {};

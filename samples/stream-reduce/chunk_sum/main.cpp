@@ -24,17 +24,16 @@
 #include <experimental/optional>
 
 // grppi
-#include "grppi.h"
+#include "grppi/grppi.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
 
 void test_map(grppi::dynamic_execution & e, int n, int window_size, int offset) {
   using namespace std;
-  using namespace experimental;
 
   int i = 0;
-  auto generator = [&i,n]() -> optional<int> {
+  auto generator = [&i,n]() -> grppi::optional<int> {
     if (i<n) return i++;
     else     return {};
   };

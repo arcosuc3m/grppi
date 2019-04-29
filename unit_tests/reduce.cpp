@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include "reduce.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/reduce.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

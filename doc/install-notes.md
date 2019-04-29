@@ -88,7 +88,7 @@ GrPPI tries to detect if your system has Intel TBB installed. In case, Intel TBB
 is found `GRPPI_TBB_ENABLE` will default to `ON`. If Intel TBB is not found,
 any attempt to enable GrPPI/TBB back-end will be ignored.
 
-Please refer to (Additional Libraries)[#additional-libraries] for details on
+Please refer to [Additional Libraries](#additional-libraries) for details on
 Intel TBB install.
 
 If you have installed Intel TBB and GrPPI refuses to enable the TBB back-end,
@@ -103,8 +103,8 @@ GrPPI tries to detect if your system has FastFlow installed. In case, FastFlow
 is found `GRPPI_TBB_ENABLE` will default to `ON`. If FastFlow is not found,
 any attempt to enable GrPPI/FF back-end will be ignored.
 
-Please refer to (Additional Libraries)[#additional-libraries] for details on
-Intel TBB install.
+Please refer to [Additional Libraries](#additional-libraries) for details on
+FastFlow install.
 
 If you have installed FastFlow and GrPPI refuses to enable the FastFlow back-end,
 please, open an issue providing details.

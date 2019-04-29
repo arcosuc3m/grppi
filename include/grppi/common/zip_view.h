@@ -16,7 +16,7 @@
 #ifndef GRPPI_COMMON_ZIP_VIEW_H
 #define GRPPI_COMMON_ZIP_VIEW_H
 
-#include "common/range_concept.h"
+#include "range_concept.h"
 
 namespace grppi {
 

@@ -18,8 +18,8 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "mapreduce.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/mapreduce.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 

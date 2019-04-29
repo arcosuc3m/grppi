@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
-#include "common/mpmc_queue.h"
+#include "grppi/common/mpmc_queue.h"
 
 #include <thread>
 #include <atomic>

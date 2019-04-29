@@ -18,6 +18,7 @@
 
 #ifdef GRPPI_TBB
 
+#include "../common/optional.h"
 #include "../common/mpmc_queue.h"
 #include "../common/iterator.h"
 #include "../common/patterns.h"
@@ -707,11 +708,10 @@ void parallel_execution_tbb::pipeline(
     Transformers && ... transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
 
   using result_type = decay_t<typename result_of<Generator()>::type>;
   using output_value_type = typename result_type::value_type;
-  using output_type = optional<output_value_type>;
+  using output_type = grppi::optional<output_value_type>;
 
   auto generator = tbb::make_filter<void, output_type>(
     tbb::filter::serial_in_order, 
@@ -937,10 +937,9 @@ auto parallel_execution_tbb::make_filter(
     Transformer && transform_op) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input; 
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, void>( 
       tbb::filter::serial_in_order, 
@@ -956,17 +955,16 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input; 
   static_assert(!is_void<input_value_type>::value, 
       "Transformer must take non-void argument");
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
   using output_value_type = 
     decay_t<typename result_of<Transformer(input_value_type)>::type>;
   static_assert(!is_void<output_value_type>::value,
       "Transformer must return a non-void result");
-  using output_type = optional<output_value_type>;
+  using output_type = grppi::optional<output_value_type>;
 
 
   return 
@@ -988,10 +986,9 @@ auto parallel_execution_tbb::make_filter(
     Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input; 
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, void>(
       tbb::filter::parallel,
@@ -1009,16 +1006,15 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input;
   static_assert(!is_void<input_value_type>::value, 
       "Farm must take non-void argument");
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
   using output_value_type = decay_t<typename result_of<FarmTransformer(input_value_type)>::type>;
   static_assert(!is_void<output_value_type>::value,
       "Farm must return a non-void result");
-  using output_type = optional<output_value_type>;
+  using output_type = grppi::optional<output_value_type>;
 
   return tbb::make_filter<input_type, output_type>(
       tbb::filter::parallel,
@@ -1038,10 +1034,9 @@ auto parallel_execution_tbb::make_filter(
     Filter<Predicate> &&) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input; 
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, void>(
       tbb::filter::parallel,
@@ -1059,12 +1054,11 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input;
   static_assert(!is_void<input_value_type>::value, 
       "Filter must take non-void argument");
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, input_type>(
       tbb::filter::parallel,
@@ -1086,10 +1080,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input;
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, input_type>(
       tbb::filter::serial,
@@ -1117,10 +1110,9 @@ auto parallel_execution_tbb::make_filter(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
 
   using input_value_type = Input;
-  using input_type = optional<input_value_type>;
+  using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, input_type>(
       tbb::filter::serial,
