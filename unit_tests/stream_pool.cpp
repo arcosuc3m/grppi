@@ -17,15 +17,13 @@
 
 #include <gtest/gtest.h>
 
-#include "stream_pool.h"
-#include "dyn/dynamic_execution.h"
+#include "grppi/stream_pool.h"
+#include "grppi/dyn/dynamic_execution.h"
 
 #include "supported_executions.h"
 
 using namespace std;
 using namespace grppi;
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 template <typename T>
 class stream_pool_test : public ::testing::Test {

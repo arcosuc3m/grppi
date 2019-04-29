@@ -925,7 +925,6 @@ void parallel_execution_native::stream_pool(Population & population,
                 Predicate && termination_op) const
 {
   using namespace std;
-  using namespace experimental; 
 
   using selected_type = typename std::result_of<Selection(Population&)>::type;
   using individual_type = typename Population::value_type;
