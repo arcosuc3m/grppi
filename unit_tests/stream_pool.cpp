@@ -96,7 +96,7 @@ public:
 
 };
 
-TYPED_TEST_CASE(stream_pool_test, executions);
+TYPED_TEST_CASE(stream_pool_test, executions_noff);
 
 TYPED_TEST(stream_pool_test, static_empty)
 {

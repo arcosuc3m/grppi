@@ -442,7 +442,8 @@ void dynamic_execution::stream_pool(Population & population,
                 Evaluation && eval_op,
                 Predicate && termination_op) const
 {
- GRPPI_TRY_PATTERN_ALL(stream_pool, population, std::forward<Selection>(selection_op),
+ GRPPI_TRY_PATTERN_ALL_NOFF(stream_pool, population, std::forward<Selection>
+     (selection_op),
       std::forward<Evolution>(evolve_op),
       std::forward<Evaluation>(eval_op),
       std::forward<Predicate>(termination_op));
