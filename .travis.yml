@@ -221,4 +221,4 @@ install:
 
 script:
   - export OMP_NUM_THREADS=4
-  - ctest --timeout 100
+  - ctest -I 265,266 -VV --timeout 100
