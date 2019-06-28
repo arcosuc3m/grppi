@@ -295,10 +295,10 @@ template <typename T>
 T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::value) 
 {
   std::unique_lock<std::mutex> lk(mut_);
-  std::cout<<"[POP before] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
+//  std::cout<<"[POP before] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
   
   empty_.wait(lk, [this] {return pread_ < pwrite_; });
-  std::cout<<"[POP after] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
+//  std::cout<<"[POP after] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
   auto item = std::move(buffer_[pread_%size_]);
   pread_++;
   lk.unlock();
@@ -311,7 +311,7 @@ void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assigna
 {
   {
     std::unique_lock<std::mutex> lk(mut_);
-    std::cout<<"[PUSH] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
+//    std::cout<<"[PUSH] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
     full_.wait(lk, [this] { return pwrite_ < (pread_ + size_); });
     buffer_[pwrite_%size_] = std::move(item);
     pwrite_++;
@@ -325,7 +325,7 @@ void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_as
   {
     std::unique_lock<std::mutex> lk(mut_);
     full_.wait(lk, [this] { return pwrite_ < (pread_ + size_); });
-    std::cout<<"[PUSH] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
+ //   std::cout<<"[PUSH] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
     buffer_[pwrite_%size_] = item;
     pwrite_++;
   }
