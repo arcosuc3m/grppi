@@ -17,11 +17,17 @@
 #define GRPPI_ZMQ_TASK_H
 
 #include <set>
+#include <iostream>
+#include <sstream>
 
+//#pragma GCC diagnostic warning "-Wparentheses"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/set.hpp>
+//#pragma GCC diagnostic pop
+
+#include "zmq_data_reference.h"
 
 namespace grppi{
 
@@ -33,7 +39,6 @@ namespace grppi{
   This type is used as an example of a task type.
 */
 
-template <typename data_reference>
 class zmq_task{
   public:
 
@@ -42,7 +47,9 @@ class zmq_task{
 
     Creates a task with the end function and task ids.
     */
-    zmq_task(): function_id_{-1}, task_id_{-1} {};
+    zmq_task(): function_id_{-1}, task_id_{-1}, data_location_{-1,-1} {
+      std::cout << "CREATE TASK: (-1,-1,-1,-1)" << std::endl;
+    };
 
     /**
     \brief Construct a task.
@@ -52,7 +59,11 @@ class zmq_task{
     \param f_id function id
     \param t_id task id
     */
-    zmq_task(int f_id, long t_id): function_id_{f_id}, task_id_{t_id} {};
+    zmq_task(int f_id, long t_id): function_id_{f_id}, task_id_{t_id}, data_location_{-1,-1} {
+        {std::ostringstream foo;
+         foo << "CREATE TASK: ("<< f_id << ","<< t_id << ",-1,-1)" << std::endl;
+        std::cout << foo.str();}
+    };
    
     /**
     \brief Construct a task.
@@ -63,8 +74,13 @@ class zmq_task{
     \param t_id task id
     \param data_location data location reference
     */
-    zmq_task(int f_id, long t_id, data_location ref):
-      function_id_{f_id}, task_id_{t_id} data_location_{data_location};
+    zmq_task(int f_id, long t_id, zmq_data_reference ref):
+      function_id_{f_id}, task_id_{t_id}, data_location_{ref} {
+      {std::ostringstream foo;
+      foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
+      std::cout << foo.str();}
+
+      }
 
     inline bool operator==(const zmq_task& rhs) const {
       return function_id_ == rhs.function_id_;
@@ -101,13 +117,13 @@ class zmq_task{
     {
       return task_id_;
     }
-    s
+    
     /** 
     \brief Return the input data location of the task.
 
     Return the input data location of the task.
     */
-    data_location_ get_data_location()
+    zmq_data_reference get_data_location()
     {
       return data_location_;
     } 
@@ -117,7 +133,7 @@ class zmq_task{
 
     Store the input data location of the task.
     */
-    void set_data_location(data_location_ loc)
+    void set_data_location(zmq_data_reference loc)
     {
       data_location_ = loc;
     }
@@ -125,7 +141,7 @@ class zmq_task{
   private:
     int function_id_;
     long task_id_;
-    data_reference data_location_;
+    zmq_data_reference data_location_;
 
     friend class boost::serialization::access;
 
@@ -135,11 +151,13 @@ class zmq_task{
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-        ar & function_id_;
-        ar & task_id_;
-        ar & data_location_;
+        if (version >= 0) {
+          ar & function_id_;
+          ar & task_id_;
+          ar & data_location_;
+        }
     }
-  };
+};
 
 }
 

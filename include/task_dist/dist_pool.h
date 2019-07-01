@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRPPI_POOL_H
-#define GRPPI_POOL_H
+#ifndef GRPPI_DIST_POOL_H
+#define GRPPI_DIST_POOL_H
 
 #include <future>
 #include <iostream>
@@ -29,41 +29,43 @@
 namespace grppi{
 
 template <typename Scheduler>
-class pool
+class dist_pool
 {
   public:
     using task_type = typename Scheduler::task_type;
 
-    pool() = delete;   
+    dist_pool() = delete;
  
-    pool(Scheduler &s,int pool_size):
+    dist_pool(std::shared_ptr<Scheduler> s, int pool_size):
     scheduler{s}
     {
+      //std::cout << "dist_pool contructor: pool_size = " << pool_size << std::endl;
       for (auto i=0; i<pool_size; i++){
          pool_threads.emplace_back(std::thread(
               [this](){
+                //std::cout << "thread: " << std::endl;
                 while(1){
-                  task_type t = scheduler.get_task();
+                  task_type t = scheduler->get_task();
                   if( t == task_type{-1,-1})
                     break;
                   
-                  scheduler.start_task(),
-                  scheduler.functions[t.get_id()](t),
-                  scheduler.finalize_task(t);
+                  scheduler->start_task(),
+                  scheduler->functions[t.get_id()](t),
+                  scheduler->finalize_task(t);
                 }
               }
          ));
        }
     }
    
-    pool(const pool &) = delete;   
+    dist_pool(const dist_pool &) = delete;
  
-    pool(const pool&&) = delete;
+    dist_pool(const dist_pool&&) = delete;
 
     void __attribute__ ((noinline)) finalize_pool()
     {
        for(unsigned int i=0; i < pool_threads.size(); i++){
-          scheduler.launch_task(task_type{-1,-1});
+          scheduler->launch_task(task_type{-1,-1});
        }
        for(unsigned int i=0; i < pool_threads.size(); i++){
           pool_threads[i].join();
@@ -75,24 +77,24 @@ class pool
     {
       if( t != task_type{-1,-1} )
       {
-        scheduler.launch_task(t);
+        scheduler->launch_task(t);
       }
     }
  
     void end_seq(task_type t)
     {
-      scheduler.notify_sequential_end(t);
+      scheduler->notify_sequential_end(t);
     }
 
     void seq_consume(task_type t)
     {
-      scheduler.notify_consumer_end(t);
+      scheduler->notify_consumer_end(t);
     }
 
   private: 
-    Scheduler& scheduler;
+    std::shared_ptr<Scheduler> scheduler;
 //    std::vector<std::future<void>> pool_threads;
-   std::vector<std::thread> pool_threads;
+    std::vector<std::thread> pool_threads;
 };
 
 }

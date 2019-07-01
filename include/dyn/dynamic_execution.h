@@ -23,6 +23,10 @@
 #include "../task/fifo_scheduler.h"
 #include "../task/simple_task.h"
 
+#include "../task_dist/parallel_execution_dist_task.h"
+#include "../task_dist/zmq_scheduler.h"
+#include "../task_dist/zmq_task.h"
+
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
 #include "../ff/parallel_execution_ff.h"

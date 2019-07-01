@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRPPI_FIFO_SCHEDULER_H
-#define GRPPI_FIFO_SCHEDULER_H
+#ifndef GRPPI_ZMQ_SCHEDULER_H
+#define GRPPI_ZMQ_SCHEDULER_H
 
 #include <vector>
 #include <map>
 #include <memory>
 
+#include "../common/mpmc_queue.h"
+
+#include "zmq_data_reference.h"
+#include "zmq_data_service.h"
+
 namespace grppi{
 
-constexpr int max_functions = 10000;
-constexpr int max_tokens = 100;
+#pragma GCC diagnostic warning "-Wunused-parameter"
 
 template <typename Task>
 class zmq_scheduler{
@@ -36,7 +40,7 @@ class zmq_scheduler{
    */
    zmq_scheduler(){
      functions.reserve(max_functions);
-     data_service_ = make_shared<zmq_data_service>();
+     data_service_ = std::make_shared<zmq_data_service>();
    };
 
    zmq_scheduler(const zmq_scheduler&) : zmq_scheduler{}
@@ -55,11 +59,13 @@ class zmq_scheduler{
    */
    int register_sequential_task(std::function<void(Task&)> && f)
    {
-     Task t{(int)functions.size(), 0};
-     int function_id = (int) functions.size();
+     while(task_gen.test_and_set());
+     int function_id = functions.size();;
      functions.push_back(f);
-     flags.emplace(t, 0);
-     seq_tasks.emplace(t, 0);
+     flags.emplace(function_id, 0);
+     seq_tasks.emplace(function_id, max_tokens_);
+     task_gen.clear();
+     std::cout << "register_sequential_task: func_id=" << function_id << std::endl;
      return function_id;
    }
   
@@ -79,6 +85,7 @@ class zmq_scheduler{
      int function_id = (int) functions.size();
      functions.emplace_back(f);
      task_gen.clear();
+     std::cout << "register_parallel_stage: func_id=" << function_id << std::endl;
      return function_id;
    }
 
@@ -102,8 +109,9 @@ class zmq_scheduler{
    */
    void launch_task(Task t)
    {
-      if(seq_tasks.find(t) != seq_tasks.end()) {
-         seq_tasks[t]++;
+      //std::cout << "scheduler: launch_task (" << t.get_id() << ", " << t.get_task_id() << ")" << std::endl;
+      if(seq_tasks.find(t.get_id()) != seq_tasks.end()) {
+         seq_tasks.at(t.get_id()).push(t);
       }
       else {
         tasks.push(t);
@@ -124,9 +132,8 @@ class zmq_scheduler{
         for(auto &i: flags)
         {
           if(!i.second.test_and_set()){
-            if(seq_tasks[i.first]>0) {
-              seq_tasks[i.first]--;
-              return i.first;
+            if(!(seq_tasks.at(i.first).empty())) {
+              return seq_tasks.at(i.first).pop();
             }
             i.second.clear();
           }
@@ -152,9 +159,11 @@ class zmq_scheduler{
 
    \param t finished task.
    */
+   #pragma GCC diagnostic ignored "-Wunused-parameter"
    void finalize_task(Task t){
      running_tasks--;
    }
+   #pragma GCC diagnostic pop
 
    /**
    \brief Notifies the finalization of a sequential stage.
@@ -162,10 +171,12 @@ class zmq_scheduler{
    Notifies the finalization of a sequential stage in stream patterns.
    \param t finished task
    */
+   #pragma GCC diagnostic ignored "-Wunused-parameter"
    void notify_sequential_end(Task t)
    {
-     flags[t].clear();
+     flags[t.get_id()].clear();
    }
+   #pragma GCC diagnostic pop
 
    /**
    \brief Notifies the consumption of an item in stream patterns.
@@ -214,12 +225,12 @@ class zmq_scheduler{
   \brief Get the data element from the server and position
   referenced in the ref param.
   \tparam T Element type for the data element.
-  \param ref zmq_reference of the server and position for tha data.
+  \param ref zmq_data_reference of the server and position for tha data.
   */
   template <class T>
-  T get (zmq_reference ref)
+  T get (zmq_data_reference ref)
   {
-    return data_service->get(ref);
+    return data_service_->get<T>(ref);
   }
 
   /**
@@ -227,25 +238,33 @@ class zmq_scheduler{
   referenced in the ref param.
   \tparam T Element type for the data element.
   \param elem element to store at the data server.
-  \param ref zmq_reference of the server and position for tha data.
+  \param ref zmq_data_reference of the server and position for tha data.
   */
   template <class T>
-  zmq_reference set(T item)
+  zmq_data_reference set(T item)
   {
-      return data_service->set(ref);
+      return data_service_->set(item);
   }
   
   
   public:
    std::vector<std::function<void(Task&)>> functions;
   private:
+   constexpr static int max_functions = 10000;
+   constexpr static int max_tokens = 100;
+
+   const int max_functions_ = max_functions;
+   const int max_tokens_ = max_tokens;
+
    std::atomic_flag task_gen = ATOMIC_FLAG_INIT;
    std::atomic<bool> gen_end{true};
    std::atomic<int> tokens{0};
    std::atomic<int> running_tasks{0};
-   std::map<Task, std::atomic<int>> seq_tasks;
-   std::map<Task, std::atomic_flag> flags;
+   std::map<int, locked_mpmc_queue<Task>> seq_tasks;
+   std::map<int, std::atomic_flag> flags;
    locked_mpmc_queue<Task> tasks = locked_mpmc_queue<Task>(max_tokens);
-   std::shared_ptr<zmq_data_service> data_service = std::shared_ptr<zmq_data_service>();
+   std::shared_ptr<zmq_data_service> data_service_ = std::shared_ptr<zmq_data_service>();
+};
+
 }
 #endif

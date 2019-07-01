@@ -12,24 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Data-parallel patterns
-add_subdirectory(map)
-add_subdirectory(reduce)
-add_subdirectory(map-reduce)
-add_subdirectory(stencil)
+include_directories("${BOOST_INCLUDEDIR}")
+include_directories("${PC_LIBZMQ_INCLUDE_DIRS}")
 
-# Task-parallel patterns
-add_subdirectory(divide-conquer)
-add_subdirectory(task_backend)
-add_subdirectory(task_dist_backend)
+add_executable(task_dist_test main.cpp )
 
-# Streaming patterns
-add_subdirectory(pipeline)
-add_subdirectory(context)
-add_subdirectory(farm)
-add_subdirectory(stream-reduce)
-add_subdirectory(stream-filter)
-add_subdirectory(stream-iteration)
-
-# ZeroMQ tests
-add_subdirectory(data_store)
+target_link_libraries(task_dist_test 
+  ${ZeroMQ_LIBRARY}
+  ${Boost_LIBRARIES})

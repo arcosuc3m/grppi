@@ -115,6 +115,32 @@ if(GRPPI_FF_ENABLE)
   endif()
 endif(GRPPI_FF_ENABLE)
 
+# BOOST library
+find_package(Boost 1.66.0 COMPONENTS serialization REQUIRED)
+if ( Boost_FOUND )
+  option( GRPPI_BOOST_ENABLE "Require BOOST library" ON )
+  link_directories(${Boost_LIBRARY_DIRS})
+else( Boost_FOUND )
+  option( GRPPI_BOOST_ENABLE "Require BOOST library" OFF )
+endif( Boost_FOUND) 
+
+find_package(ZeroMQ QUIET)
+
+# libzmq autotools install: fallback to pkg-config
+if(NOT ZeroMQ_FOUND)
+    message(STATUS "CMake libzmq package not found, trying again with pkg-config (normal install of zeromq)")
+    find_package(ZeroMQ_pkg-config REQUIRED)
+endif()
+
+# TODO "REQUIRED" above should already cause a fatal failure if not found, but this doesn't seem to work
+if(NOT ZeroMQ_FOUND)
+    message(FATAL_ERROR "ZeroMQ was not found, neither as a CMake package nor via pkg-config")
+endif()
+
+if (ZeroMQ_FOUND AND (NOT TARGET libzmq OR NOT TARGET libzmq-static))
+  message(FATAL_ERROR "ZeroMQ version not supported!")
+endif()
+
 # Doxygen Documentation
 option( GRPPI_DOXY_ENABLE "Require Doxygen library" OFF )
 if( GRPPI_DOXY_ENABLE )

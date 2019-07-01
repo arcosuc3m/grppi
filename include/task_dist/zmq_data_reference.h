@@ -17,9 +17,10 @@
 #ifndef GRPPI_ZMQ_DATA_REFERENCE_H
 #define GRPPI_ZMQ_DATA_REFERENCE_H
 
-
+//#pragma GCC diagnostic warning "-Wparentheses"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+//#pragma GCC diagnostic pop
 
 namespace grppi{
 
@@ -40,8 +41,10 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-        ar & server_id_;
-        ar & pos_;
+        if (version >= 0) {
+          ar & server_id_;
+          ar & pos_;
+        }
     }
     int server_id_;
     int pos_;

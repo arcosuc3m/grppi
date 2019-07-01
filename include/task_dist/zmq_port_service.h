@@ -29,11 +29,13 @@
 
 #include <zmq.hpp>
 
+//#pragma GCC diagnostic warning "-Wparentheses"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
+//#pragma GCC diagnostic pop
 
 namespace grppi{
 
@@ -54,9 +56,11 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-        ar & machine_id_;
-        ar & key_;
-        ar & wait_;
+        if (version >= 0) {
+          ar & machine_id_;
+          ar & key_;
+          ar & wait_;
+        }
     }
     int machine_id_;
     int key_;
@@ -128,7 +132,7 @@ public:
   \param wait wait until the port is set or not.
   \return port number desired.
   */
-  int get (int machine_id_, int key, bool wait) throw(std::runtime_error)
+  int get (int machine_id_, int key, bool wait)
   {
     // send the command tag
     requestSock_.send(getCmd.data(), getCmd.size(), ZMQ_SNDMORE);
@@ -181,7 +185,7 @@ public:
   \param key key for this port.
   \param port number to store.
   */
-  void set(int machine_id_, int key, int port) throw (std::runtime_error)
+  void set(int machine_id_, int key, int port)
   {
     //std::cout << "set send id:" << server_id_ << std::endl;
     // send the command tag
