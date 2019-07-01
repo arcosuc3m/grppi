@@ -48,7 +48,7 @@ class zmq_task{
     Creates a task with the end function and task ids.
     */
     zmq_task(): function_id_{-1}, task_id_{-1}, data_location_{-1,-1} {
-      std::cout << "CREATE TASK: (-1,-1,-1,-1)" << std::endl;
+      //std::cout << "CREATE TASK: (-1,-1,-1,-1)" << std::endl;
     };
 
     /**
@@ -60,9 +60,9 @@ class zmq_task{
     \param t_id task id
     */
     zmq_task(int f_id, long t_id): function_id_{f_id}, task_id_{t_id}, data_location_{-1,-1} {
-        {std::ostringstream foo;
-         foo << "CREATE TASK: ("<< f_id << ","<< t_id << ",-1,-1)" << std::endl;
-        std::cout << foo.str();}
+        //{std::ostringstream foo;
+        // foo << "CREATE TASK: ("<< f_id << ","<< t_id << ",-1,-1)" << std::endl;
+        //std::cout << foo.str();}
     };
    
     /**
@@ -76,9 +76,9 @@ class zmq_task{
     */
     zmq_task(int f_id, long t_id, zmq_data_reference ref):
       function_id_{f_id}, task_id_{t_id}, data_location_{ref} {
-      {std::ostringstream foo;
-      foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
-      std::cout << foo.str();}
+      //{std::ostringstream foo;
+      //foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
+      //std::cout << foo.str();}
 
       }
 

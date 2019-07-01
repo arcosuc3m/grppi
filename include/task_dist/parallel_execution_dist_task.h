@@ -444,11 +444,11 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 
   //std::cout << "pipeline: generator" << std::endl;
   long order=0;
-  std::cout << "GENERATOR" << std::endl;
+  //std::cout << "GENERATOR" << std::endl;
   (void) scheduler_->register_parallel_stage([&generate_op, this, &order](task_type t){
-     {std::ostringstream foo;
-     foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-     std::cout << foo.str();}
+     //{std::ostringstream foo;
+     //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+     //std::cout << foo.str();}
      auto item{generate_op()};
      if(item){
        //std::cout << "task: generator item = true" << std::endl;
@@ -456,15 +456,15 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
        //std::cout << "task: generator set begin" << std::endl;
        auto ref = scheduler_->set(make_pair(*item, order));
        //std::cout << "task: generator set end" << std::endl;
-       {std::ostringstream foo;
-       foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id()+1 <<"," << order << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-       std::cout << foo.str();}
+       //{std::ostringstream foo;
+       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id()+1 <<"," << order << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+       //std::cout << foo.str();}
        thread_pool_.launch_task(task_type{t.get_id()+1,order,ref});
        // increase order
        order++;
-       {std::ostringstream foo;
-       foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id() << ","<< order << "], ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-       std::cout << foo.str();}
+       //{std::ostringstream foo;
+       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id() << ","<< order << "], ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+       //std::cout << foo.str();}
        thread_pool_.launch_task(task_type{t.get_id(),order});
      } else {
        //std::cout << "task: generator item = false" << std::endl;
@@ -484,11 +484,11 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   //std::cout << "pipeline: consumer" << std::endl;
   using namespace std;
   //TODO: Need to reimplement ordering
-    std::cout << "CONSUMER" << std::endl;
+    //std::cout << "CONSUMER" << std::endl;
     (void) scheduler_->register_sequential_task([&consume_op, this](task_type t){
-       {std::ostringstream foo;
-       foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-       std::cout << foo.str();}
+       //{std::ostringstream foo;
+       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+       //std::cout << foo.str();}
        auto item = scheduler_->template get<InputItemType>(t.get_data_location());
        consume_op(item.first);
        scheduler_->notify_consumer_end();
@@ -513,17 +513,17 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
       decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
   using output_item_type = pair<transform_result_type,long>;
 
-  std::cout << "NO PATTERN" << std::endl;
+  //std::cout << "NO PATTERN" << std::endl;
   (void) scheduler_->register_sequential_task([this,&transform_op](task_type t) {
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    std::cout << foo.str();}
+    //{std::ostringstream foo;
+    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    //std::cout << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
     auto out = transform_op(item.first);
     auto ref = scheduler_->set(make_pair(out,item.second));
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-    std::cout << foo.str();}
+    //{std::ostringstream foo;
+    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+    //std::cout << foo.str();}
     scheduler_->launch_task(task_type{t.get_id()+1,t.get_task_id(),ref});
     scheduler_->notify_sequential_end(t);
   });
@@ -543,18 +543,18 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(Transformer && transfo
     return;
   }
   
-  std::cout << "NO PATTERN END" << std::endl;
+  //std::cout << "NO PATTERN END" << std::endl;
   
   (void) scheduler_->register_parallel_stage([this, &transform_op](task_type t){
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    std::cout << foo.str();}
+    //{std::ostringstream foo;
+    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    //std::cout << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
     auto out = transform_op(item.first);
     auto ref = scheduler_->set(make_pair(out,item.second));
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-    std::cout << foo.str();}
+    //{std::ostringstream foo;
+    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+    //std::cout << foo.str();}
     scheduler_->launch_task(task_type{t.get_id()+1,t.get_task_id(),ref});
   });
 }
@@ -568,11 +568,11 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
 {
   using namespace std;
 
-  std::cout << "FARM CONSUMER" << std::endl;
+  //std::cout << "FARM CONSUMER" << std::endl;
   (void)scheduler_->register_parallel_stage([this,&farm_obj](task_type t){
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    std::cout << foo.str();}
+    //{std::ostringstream foo;
+    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    //std::cout << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
     farm_obj(item.first);
     scheduler_->notify_consumer_end();
@@ -599,7 +599,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using output_type = typename stage_return_type<input_item_value_type, FarmTransformer>::type;
   using output_item_type = pair <output_type, long> ;
 
-  std::cout << "FARM" << std::endl;
+  //std::cout << "FARM" << std::endl;
   do_pipeline<InputItemType>(farm_obj.transformer(),true);
   do_pipeline<output_item_type>(forward<OtherTransformers>(other_transform_ops)... );
 }
@@ -616,22 +616,22 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace std;
   using namespace experimental;
 
-  std::cout << "FILTER" << std::endl;
+  //std::cout << "FILTER" << std::endl;
   (void) scheduler_->register_parallel_stage([&filter_obj, this](task_type t){
-      {std::ostringstream foo;
-      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-      std::cout << foo.str();}
+      //{std::ostringstream foo;
+      //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+      //std::cout << foo.str();}
       auto item = scheduler_->template get<InputItemType>(t.get_data_location());
       if (filter_obj(item.first)) {
         auto ref = scheduler_->set(item);
-        {std::ostringstream foo;
-        foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-        std::cout << foo.str();}
+        //{std::ostringstream foo;
+        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+        //std::cout << foo.str();}
         scheduler_->launch_task(task_type{t.get_id()+1,t.get_task_id(),ref});
       } else {
-        {std::ostringstream foo;
-        foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter is consumed" << std::endl;
-        std::cout << foo.str();}
+        //{std::ostringstream foo;
+        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter is consumed" << std::endl;
+        //std::cout << foo.str();}
         scheduler_->notify_consumer_end();
       }
   });
@@ -659,20 +659,20 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   // Transform into atomic if used as a parallel task
   long int order = 0;
 
-  std::cout << "REDUCE" << std::endl;
+  //std::cout << "REDUCE" << std::endl;
   scheduler_->register_sequential_task([&reduce_obj, this, &order](task_type t){
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    std::cout << foo.str();}
+    //{std::ostringstream foo;
+    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    //std::cout << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
     reduce_obj.add_item(std::forward<Identity>(item.first));
     if(reduce_obj.reduction_needed()) {
       constexpr sequential_execution seq;
       auto red = reduce_obj.reduce_window(seq);
       auto ref = scheduler_->set(make_pair(red, order++));
-      {std::ostringstream foo;
-      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-      std::cout << foo.str();}
+      //{std::ostringstream foo;
+      //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+      //std::cout << foo.str();}
       scheduler_->launch_task(task_type{t.get_id()+1,t.get_task_id(),ref});
     } else{
       scheduler_->notify_consumer_end();
@@ -696,27 +696,27 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace std;
   using namespace experimental;
 
-  std::cout << "ITERATION" << std::endl;
+  //std::cout << "ITERATION" << std::endl;
   (void) scheduler_->register_parallel_stage([&iteration_obj, this](task_type t){
-      {std::ostringstream foo;
-      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-      std::cout << foo.str();}
+      //{std::ostringstream foo;
+      //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+      //std::cout << foo.str();}
       auto item = scheduler_->template get<InputItemType>(t.get_data_location());
       auto value = iteration_obj.transform(item.first);
       auto new_item = InputItemType{value,item.second};
       if (iteration_obj.predicate(value)) {
         auto ref = scheduler_->set(new_item);
-        {std::ostringstream foo;
-        foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-        std::cout << foo.str();}
+        //{std::ostringstream foo;
+        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+        //std::cout << foo.str();}
         scheduler_->launch_task(task_type{t.get_id()+1, t.get_task_id(), ref} );
       }
       else {
         auto ref = scheduler_->set(new_item);
         t.set_data_location(ref);
-        {std::ostringstream foo;
-        foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id() <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-        std::cout << foo.str();}
+        //{std::ostringstream foo;
+        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id() <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+        //std::cout << foo.str();}
         scheduler_->launch_task(t);
       }
   });
@@ -744,7 +744,7 @@ template <typename InputItemType, typename ... Transformers,
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
     Pipeline<Transformers...> && pipeline_obj) const
 {
-  std::cout << "PIPELINE 1" << std::endl;
+  //std::cout << "PIPELINE 1" << std::endl;
   do_pipeline_nested<InputItemType>(
       pipeline_obj.transformers(),
       std::make_index_sequence<sizeof...(Transformers)>());
@@ -759,7 +759,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
     Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const
 {
-  std::cout << "PIPELINE 1-1" << std::endl;
+  //std::cout << "PIPELINE 1-1" << std::endl;
   do_pipeline_nested<InputItemType>(
       std::tuple_cat(pipeline_obj.transformers(),
           std::forward_as_tuple(other_transform_ops...)),
@@ -773,7 +773,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline_nested(
     std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
 {
-  std::cout << "PIPELINE 2" << std::endl;
+  //std::cout << "PIPELINE 2" << std::endl;
   do_pipeline<InputItemType>(std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 

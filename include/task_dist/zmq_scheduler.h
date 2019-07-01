@@ -65,7 +65,7 @@ class zmq_scheduler{
      flags.emplace(function_id, 0);
      seq_tasks.emplace(function_id, max_tokens_);
      task_gen.clear();
-     std::cout << "register_sequential_task: func_id=" << function_id << std::endl;
+     //std::cout << "register_sequential_task: func_id=" << function_id << std::endl;
      return function_id;
    }
   
@@ -85,7 +85,7 @@ class zmq_scheduler{
      int function_id = (int) functions.size();
      functions.emplace_back(f);
      task_gen.clear();
-     std::cout << "register_parallel_stage: func_id=" << function_id << std::endl;
+     //std::cout << "register_parallel_stage: func_id=" << function_id << std::endl;
      return function_id;
    }
 
