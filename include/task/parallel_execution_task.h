@@ -129,9 +129,9 @@ public:
 
   */
   ~parallel_execution_task(){
-     std::cout<<"DESTROY"<<std::endl;
+//     std::cout<<"DESTROY"<<std::endl;
      thread_pool.finalize_pool();
-     std::cout<<"FINALIZED"<<std::endl;
+//     std::cout<<"FINALIZED"<<std::endl;
   }
 
   /**
@@ -965,6 +965,10 @@ auto parallel_execution_task<Scheduler>::divide_conquer(
     Solver && solve_op, 
     Combiner && combine_op) const
 { 
+   sequential_execution seq{};
+   return seq.divide_conquer(problem,divide_op,solve_op,combine_op);
+    
+   
 }
 
 template <typename Scheduler>
@@ -1247,7 +1251,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
 {
   using namespace std;
 
-  (void)scheduler.register_parallel_stage([input_queue,this,&farm_obj](task_type t){
+  (void)scheduler.register_parallel_stage([input_queue,this,&farm_obj](task_type ){
     auto item{input_queue->pop()}; 
     farm_obj(*item.first);
     scheduler.notify_consume();

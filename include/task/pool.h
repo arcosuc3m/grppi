@@ -39,7 +39,7 @@ class pool
     pool(Scheduler &s,int pool_size):
     scheduler{s}
     {
-      std::cout<<"NEW POOL"<<std::endl;
+//      std::cout<<"NEW POOL"<<std::endl;
       for (auto i=0; i<pool_size; i++){
          pool_threads.emplace_back(std::thread(
               [this](){
@@ -62,17 +62,17 @@ class pool
 
     void __attribute__ ((noinline)) finalize_pool()
     {
-       std::cout<<"POOL SIZE " << pool_threads.size() << std::endl;
+      // std::cout<<"POOL SIZE " << pool_threads.size() << std::endl;
        for(unsigned int i=0; i < pool_threads.size(); i++){
-          std::cout<<"PUSHING END TASK " <<i<<" "<<pool_threads.size()<<std::endl;
+         // std::cout<<"PUSHING END TASK " <<i<<" "<<pool_threads.size()<<std::endl;
           scheduler.launch_task(task_type{-1,-1});
        }
        for(unsigned int i=0; i < pool_threads.size(); i++){
-          std::cout<<"JOIN THREAD " <<i<<" "<<pool_threads.size()<<std::endl;
+          //std::cout<<"JOIN THREAD " <<i<<" "<<pool_threads.size()<<std::endl;
           pool_threads[i].join();
        }
        pool_threads.clear();
-       std::cout<<"POOL SIZE " << pool_threads.size() << std::endl;
+       //std::cout<<"POOL SIZE " << pool_threads.size() << std::endl;
     }
 
     void launch_task(task_type t)
