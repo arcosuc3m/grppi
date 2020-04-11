@@ -44,7 +44,7 @@
 #include "zmq_data_reference.h"
 
 #undef COUT
-#define COUT if (1) std::cout
+#define COUT if (0) std::cout
 
 namespace grppi{
 
@@ -343,37 +343,37 @@ private:
     if (isServer_) {
       try {
         int pos=0;
-        for (int i=0; i<3; i++) {
-          if (i == 0) {
-            // inproc server socket binded
-            std::ostringstream ss;
-            ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
-            COUT << "zmq_data_service 3.1: " << ss.str() << std::endl;
-            localServer_.emplace_back(context_,ZMQ_REP);
-            localServer_[pos].bind(ss.str());
-            numLocalServers_++;
-            pos++;
-            COUT << "zmq_data_service 3.1 end" << std::endl;
-          } else if ( (i == 1) && (isRequiredIPC) ) {
-            // ipc server socket binded
-            try {
-              std::ostringstream ss;
-              ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
-              COUT << "zmq_data_service 3.2: " << ss.str() << std::endl;
-              localServer_.emplace_back(context_,ZMQ_REP);
-              localServer_[pos].bind(ss.str());
-              numLocalServers_++;
-              pos++;
-              COUT << "zmq_data_service 3.2 end" << std::endl;
-            } catch (std::exception& e) {
-              // if not supported erase and enable TCP
-              try {
-                localServer_.at(pos);
-                localServer_.erase(localServer_.begin() + pos);
-              } catch (...){}
-              isRequiredTCP = true;
-            }
-          } else if ( (i == 2) && (isRequiredTCP) ) {
+//        for (int i=0; i<3; i++) {
+//          if (i == 0) {
+//            // inproc server socket binded
+//            std::ostringstream ss;
+//            ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
+//            COUT << "zmq_data_service 3.1: " << ss.str() << std::endl;
+//            localServer_.emplace_back(context_,ZMQ_REP);
+//            localServer_[pos].bind(ss.str());
+//            numLocalServers_++;
+//            pos++;
+//            COUT << "zmq_data_service 3.1 end" << std::endl;
+//          } else if ( (i == 1) && (isRequiredIPC) ) {
+//            // ipc server socket binded
+//            try {
+//              std::ostringstream ss;
+//              ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
+//              COUT << "zmq_data_service 3.2: " << ss.str() << std::endl;
+//              localServer_.emplace_back(context_,ZMQ_REP);
+//              localServer_[pos].bind(ss.str());
+//              numLocalServers_++;
+//              pos++;
+//              COUT << "zmq_data_service 3.2 end" << std::endl;
+//            } catch (std::exception& e) {
+//              // if not supported erase and enable TCP
+//              try {
+//                localServer_.at(pos);
+//                localServer_.erase(localServer_.begin() + pos);
+//              } catch (...){}
+//              isRequiredTCP = true;
+//            }
+//          } else if ( (i == 2) && (isRequiredTCP) ) {
             // inproc server socket binded
             std::ostringstream ss;
             ss << tcpBindPattern[0];
@@ -386,8 +386,8 @@ private:
             localServer_[pos].getsockopt(ZMQ_LAST_ENDPOINT,buf,&size);
             std::string address(buf);
             std::string delimiter = ":";
-            int pos = address.find(delimiter, address.find(delimiter)+1)+1;
-            std::string srtPort = address.substr(pos); // token is "scott"
+            int position = address.find(delimiter, address.find(delimiter)+1)+1;
+            std::string srtPort = address.substr(position); // token is "scott"
             COUT << "zmq_data_service 3.3: " << srtPort << std::endl;
 
             int port = atoi(srtPort.c_str());
@@ -396,8 +396,8 @@ private:
             numLocalServers_++;
             pos++;
             COUT << "zmq_data_service 3.3 end" << std::endl;
-          }
-        }
+//          }
+//        }
         COUT << "zmq_data_service 4" << std::endl;
 
         // server thread launched
@@ -416,33 +416,33 @@ private:
       servers_.emplace(std::piecewise_construct,
                        std::forward_as_tuple(elem.second),
                        std::forward_as_tuple(context_,ZMQ_REQ));
-      if (elem.second == id_) { /* same machine and process */
-        std::ostringstream ss;
-        ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
-        COUT << "zmq_data_service 6.3: " << elem.second << ": " << ss.str() << std::endl;
-        servers_.at(elem.second).connect(ss.str());
-      } else if (elem.first == machines_[id_]) {
-        try {
-          std::ostringstream ss;
-          ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
-          COUT << "zmq_data_service 6.3: " << elem.second << ": " << ss.str() << std::endl;
-          servers_.at(elem.second).connect(ss.str());
-        } catch (std::exception& e) {  // if ipc sockets are not supported, change to TCP
-          int port = port_service_->get(elem.second,dataServer_port_,true);
-          COUT << "zmq_data_service 6.3: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << std::endl;
-          std::ostringstream ss;
-          ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
-          COUT << "zmq_data_service 6.3: " << ss.str() << std::endl;
-          servers_.at(elem.second).connect(ss.str());
-        }
-      } else {
+//      if (elem.second == id_) { /* same machine and process */
+//        std::ostringstream ss;
+//        ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
+//        COUT << "zmq_data_service 6.3: " << elem.second << ": " << ss.str() << std::endl;
+//        servers_.at(elem.second).connect(ss.str());
+//      } else if (elem.first == machines_[id_]) {
+//        try {
+//          std::ostringstream ss;
+//          ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
+//          COUT << "zmq_data_service 6.3: " << elem.second << ": " << ss.str() << std::endl;
+//          servers_.at(elem.second).connect(ss.str());
+//        } catch (std::exception& e) {  // if ipc sockets are not supported, change to TCP
+//          int port = port_service_->get(elem.second,dataServer_port_,true);
+//          COUT << "zmq_data_service 6.3: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << std::endl;
+//          std::ostringstream ss;
+//          ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
+//          COUT << "zmq_data_service 6.3: " << ss.str() << std::endl;
+//          servers_.at(elem.second).connect(ss.str());
+//        }
+//      } else {
         int port = port_service_->get(elem.second,dataServer_port_,true);
         COUT << "zmq_data_service 6.3: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << std::endl;
         std::ostringstream ss;
         ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
         COUT << "zmq_data_service 6.3: " << ss.str() << std::endl;
         servers_.at(elem.second).connect(ss.str());
-      }
+//      }
       } catch(const std::exception &e) {
       std::cerr << "zmq_data_service:init_data_service - for (const auto& elem : machinesMap_) {}" << e.what() << '\n';
       }
@@ -461,33 +461,34 @@ private:
     
     COUT << "server_func begin" << std::endl;
     //  Initialize poll set
-    std::vector<zmq::pollitem_t> items;
-    items.resize(numLocalServers_);
-    for (int i=0; i<numLocalServers_; i++) {
-      items[i] = zmq::pollitem_t{(void *)localServer_[i], 0, ZMQ_POLLIN, 0 };
-      //items[i].socket = (void *)localServer_[i];
-      //items[i].fd = 0;
-      //items[i].events = ZMQ_POLLIN;
-      //items[i].revents = 0;
-      COUT << "server_func poll: " << i << std::endl;
-    };
+//    std::vector<zmq::pollitem_t> items;
+//    items.resize(numLocalServers_);
+//    for (int i=0; i<numLocalServers_; i++) {
+//      items[i] = zmq::pollitem_t{(void *)localServer_[i], 0, ZMQ_POLLIN, 0 };
+//      //items[i].socket = (void *)localServer_[i];
+//      //items[i].fd = 0;
+//      //items[i].events = ZMQ_POLLIN;
+//      //items[i].revents = 0;
+//      COUT << "server_func poll: " << i << std::endl;
+//    };
 
     while (1) {
       int next=0;
       
-      COUT << "server_func waitting for polling" << std::endl;
-      //wait until next connection
-      //zmq::poll (&items [0], numLocalServers_, -1);
-      zmq::poll (items.data(), numLocalServers_, -1);
-      for (int i=0; i<numLocalServers_; i++) {
-        if (items [i].revents & ZMQ_POLLIN) {
-            next=i;
-            COUT << "server_func wakeup socket: " << next << std::endl;
-            break;
-        }
-      }
+//      COUT << "server_func waitting for polling" << std::endl;
+//      //wait until next connection
+//      //zmq::poll (&items [0], numLocalServers_, -1);
+//      zmq::poll (items.data(), numLocalServers_, -1);
+//      for (int i=0; i<numLocalServers_; i++) {
+//        if (items [i].revents & ZMQ_POLLIN) {
+//            next=i;
+//            COUT << "server_func wakeup socket: " << next << std::endl;
+//            break;
+//        }
+//      }
       
       // recv command
+      COUT << "server_func waitting for recviving command" << std::endl;
       zmq::message_t msg;
       localServer_[next].recv(&msg);
 
