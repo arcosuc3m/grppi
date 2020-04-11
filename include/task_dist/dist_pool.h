@@ -26,6 +26,9 @@
 #include <tuple>
 #include <memory>
 
+#undef COUT
+#define COUT if (0) std::cout
+
 namespace grppi{
 
 template <typename Scheduler>
@@ -34,65 +37,65 @@ class dist_pool
   public:
     using task_type = typename Scheduler::task_type;
 
-    dist_pool() = delete;
+    //dist_pool() = delete;
  
-    dist_pool(std::shared_ptr<Scheduler> s, int pool_size):
-    scheduler{s}
+    void init (Scheduler * sched, int pool_size)
     {
-      //std::cout << "dist_pool contructor: pool_size = " << pool_size << std::endl;
+      scheduler = sched;
+      COUT << "dist_pool::dist_pool pool_size = " << pool_size << std::endl;
       for (auto i=0; i<pool_size; i++){
          pool_threads.emplace_back(std::thread(
-              [this](){
-                //std::cout << "thread: " << std::endl;
+              [this, i](){
+                try {
+                {std::ostringstream ss;
+                ss << "dist_pool::dist_pool (" << i << "): thread begin" << std::endl;
+                COUT << ss.str();}
+                auto t = task_type{-1,-1};
                 while(1){
-                  task_type t = scheduler->get_task();
+                  t = scheduler->get_task(t);
                   if( t == task_type{-1,-1})
                     break;
+                  {std::ostringstream ss;
+                  ss << "dist_pool::dist_pool (" << i << "): exec begin: task = (" << t.get_id()
+                     << ", " << t.get_task_id() << ")" << std::endl;
+                  COUT << ss.str();}
                   
-                  scheduler->start_task(),
-                  scheduler->functions[t.get_id()](t),
-                  scheduler->finalize_task(t);
+                  scheduler->functions[t.get_id()](t);
+                  
+                  {std::ostringstream ss;
+                  ss << "dist_pool::dist_pool (" << i << "): exec end: task = (" << t.get_id()
+                     << ", " << t.get_task_id() << ")" << std::endl;
+                  COUT << ss.str();}
+                }
+                {std::ostringstream ss;
+                ss << "dist_pool::dist_pool (" << i << "): thread end " << std::endl;
+                COUT << ss.str();}
+                } catch(const std::exception &e) {
+                  std::cerr << "dist_pool - pool_threads" << e.what() << '\n';
                 }
               }
          ));
        }
     }
    
-    dist_pool(const dist_pool &) = delete;
+    //dist_pool(const dist_pool &) = delete;
  
-    dist_pool(const dist_pool&&) = delete;
+    //dist_pool(const dist_pool&&) = delete;
 
     void __attribute__ ((noinline)) finalize_pool()
     {
-       for(unsigned int i=0; i < pool_threads.size(); i++){
-          scheduler->launch_task(task_type{-1,-1});
-       }
+       COUT << "dist_pool::finalize_pool BEGIN \n";
+
        for(unsigned int i=0; i < pool_threads.size(); i++){
           pool_threads[i].join();
        }
        pool_threads.clear();
-    }
+      COUT << "dist_pool::finalize_pool END \n";
 
-    void launch_task(task_type t)
-    {
-      if( t != task_type{-1,-1} )
-      {
-        scheduler->launch_task(t);
-      }
-    }
- 
-    void end_seq(task_type t)
-    {
-      scheduler->notify_sequential_end(t);
-    }
-
-    void seq_consume(task_type t)
-    {
-      scheduler->notify_consumer_end(t);
     }
 
   private: 
-    std::shared_ptr<Scheduler> scheduler;
+    Scheduler * scheduler = NULL;
 //    std::vector<std::future<void>> pool_threads;
     std::vector<std::thread> pool_threads;
 };

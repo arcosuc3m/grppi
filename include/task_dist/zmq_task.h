@@ -19,6 +19,7 @@
 #include <set>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 //#pragma GCC diagnostic warning "-Wparentheses"
 #include <boost/archive/binary_iarchive.hpp>
@@ -28,6 +29,9 @@
 //#pragma GCC diagnostic pop
 
 #include "zmq_data_reference.h"
+
+#undef COUT
+#define COUT if (0) std::cout
 
 namespace grppi{
 
@@ -48,7 +52,7 @@ class zmq_task{
     Creates a task with the end function and task ids.
     */
     zmq_task(): function_id_{-1}, task_id_{-1}, data_location_{-1,-1} {
-      //std::cout << "CREATE TASK: (-1,-1,-1,-1)" << std::endl;
+    COUT << "CREATE TASK: (-1,-1,-1,-1)" << std::endl;
     };
 
     /**
@@ -62,7 +66,7 @@ class zmq_task{
     zmq_task(int f_id, long t_id): function_id_{f_id}, task_id_{t_id}, data_location_{-1,-1} {
         //{std::ostringstream foo;
         // foo << "CREATE TASK: ("<< f_id << ","<< t_id << ",-1,-1)" << std::endl;
-        //std::cout << foo.str();}
+        // COUT << foo.str();}
     };
    
     /**
@@ -77,8 +81,8 @@ class zmq_task{
     zmq_task(int f_id, long t_id, zmq_data_reference ref):
       function_id_{f_id}, task_id_{t_id}, data_location_{ref} {
       //{std::ostringstream foo;
-      //foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
-      //std::cout << foo.str();}
+      // foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
+      // COUT << foo.str();}
 
       }
 
@@ -137,6 +141,52 @@ class zmq_task{
     {
       data_location_ = loc;
     }
+
+    /**
+    \brief Construct a task from the serialize string.
+
+    Construct a task from the serialize string.
+    \param str_data serialize string data
+    \param str_size serialize string size
+    */
+    void set_serialized_string(char * str_data, int str_size)
+    {
+      boost::iostreams::basic_array_source<char> device(str_data, str_size);
+      boost::iostreams::stream<boost::iostreams::basic_array_source<char> > is(device);
+      boost::archive::binary_iarchive ia(is);
+      try {
+        ia >> function_id_;
+        ia >> task_id_;
+        ia >> data_location_;
+      } catch (...) {
+        throw std::runtime_error("Type not serializable");
+      }
+    }
+    
+    /**
+    \brief Get the serialize string for the task.
+    
+    Get the serialize string for the task.
+    \return task serialize string
+    */
+    std::string get_serialized_string()
+    {
+      std::string serial_str;
+      boost::iostreams::back_insert_device<std::string> inserter(serial_str);
+      boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > os(inserter);
+      boost::archive::binary_oarchive oa(os);
+      try {
+        oa << function_id_;
+        oa << task_id_;
+        oa << data_location_;
+        os.flush();
+      } catch (...) {
+        throw std::runtime_error("Type not serializable");
+      }
+      return serial_str;
+    }
+    
+
 
   private:
     int function_id_;

@@ -12,11 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_directories("${BOOST_INCLUDEDIR}")
-include_directories("${PC_LIBZMQ_INCLUDE_DIRS}")
+#include_directories("${BOOST_INCLUDEDIR}")
+#include_directories("${ZMQ_INCLUDE_DIR}")
+#message( ${ZMQ_INCLUDE_DIR} )
 
 add_executable(task_dist_test main.cpp )
 
+target_include_directories(task_dist_test PUBLIC
+  ${ZMQ_INCLUDE_DIR}
+  ${BOOST_INCLUDEDIR}
+)
+
 target_link_libraries(task_dist_test 
-  ${ZeroMQ_LIBRARY}
+  ${ZMQ_LIBRARY}
   ${Boost_LIBRARIES})

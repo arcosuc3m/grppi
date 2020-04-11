@@ -13,23 +13,23 @@
 # limitations under the License.
 
 # Data-parallel patterns
-add_subdirectory(map)
-add_subdirectory(reduce)
-add_subdirectory(map-reduce)
-add_subdirectory(stencil)
+#add_subdirectory(map)
+#add_subdirectory(reduce)
+#add_subdirectory(map-reduce)
+#add_subdirectory(stencil)
 
 # Task-parallel patterns
-add_subdirectory(divide-conquer)
-add_subdirectory(task_backend)
+#add_subdirectory(divide-conquer)
+#add_subdirectory(task_backend)
 add_subdirectory(task_dist_backend)
 
 # Streaming patterns
-add_subdirectory(pipeline)
-add_subdirectory(context)
-add_subdirectory(farm)
-add_subdirectory(stream-reduce)
-add_subdirectory(stream-filter)
-add_subdirectory(stream-iteration)
+#add_subdirectory(pipeline)
+#add_subdirectory(context)
+#add_subdirectory(farm)
+#add_subdirectory(stream-reduce)
+#add_subdirectory(stream-filter)
+#add_subdirectory(stream-iteration)
 
 # ZeroMQ tests
 add_subdirectory(data_store)

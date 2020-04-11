@@ -93,14 +93,14 @@ int test_remote (grppi::zmq_data_service & data_service, int numTokens, int id)
 
 int main (int argc, char *argv[])
 {
-    std::vector<std::string> machines;
+    std::map <int,std::string> machines;
     if (argc < 3) {
         std::cout << "Usage: " << argv[0] << " id machine [...]" << std::endl;
         return -1;
     }
     int id = atoi(argv[1]);
     for (int i=2; i<argc; i++) {
-        machines.emplace_back(argv[i]);
+        machines[i-2]=argv[i];
     }
     int numTokens = 10;
     
@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
 
     std::cout << "init data service: " << numTokens << std::endl;
     //grppi::zmq_data_service data_service{};
-    grppi::zmq_data_service data_service(machines, id, port_service, 10, numTokens);
+    grppi::zmq_data_service data_service(machines, id, port_service, numTokens);
 
 
     std::cout << "local test: " << numTokens << std::endl;

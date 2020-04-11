@@ -24,8 +24,10 @@
 #include <string>
 #include <map>
 #include <thread>
+#include <atomic>
 #include <stdexcept>
 #include <utility>
+#include <memory>
 
 #include <zmq.hpp>
 
@@ -36,6 +38,9 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 //#pragma GCC diagnostic pop
+
+#undef COUT
+#define COUT if (0) std::cout
 
 namespace grppi{
 
@@ -93,22 +98,16 @@ public:
     server_(server),
     port_(port),
     is_server_(is_server),
-    context_(1),
-    requestSock_(context_,ZMQ_REQ)
+    context_(1)
   {
-    //std::cout << "zmq_port_service 1" << std::endl;
-
-    // connect request socket
-    std::ostringstream ss;
-    ss << tcpConnectPattern[0] << server_ << tcpConnectPattern[1] << port_;
-    requestSock_.connect(ss.str());
+    COUT << "zmq_port_service 1" << std::endl;
 
     // if server, bind reply socket and launch thread
     if (is_server_) {
       // server thread launched
       server_thread_ = std::thread(&zmq_port_service::server_func, this);
     }
-    //std::cout << "zmq_port_service end" << std::endl;
+    COUT << "zmq_port_service end" << std::endl;
   }
 
   /**
@@ -116,15 +115,33 @@ public:
   */
   ~zmq_port_service()
   {
-    //std::cout << "~zmq_port_service begin" << std::endl;
+    COUT << "~zmq_port_service begin" << std::endl;
     if (is_server_) {
-        ////std::cout << "join proxy_thread_" << std::endl;
-        requestSock_.send(endCmd.data(), endCmd.size(), 0);
+        COUT << "join proxy_thread_" << std::endl;
+        // Get the socket for this thread
+        while(accessSockMap.test_and_set());
+        if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
+            requestSockList_.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(std::this_thread::get_id()),
+                                    std::forward_as_tuple(create_socket()));
+        }
+        std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
+        accessSockMap.clear();
+        requestSock_->send(endCmd.data(), endCmd.size(), 0);
         server_thread_.join();
     }
-    //std::cout << "~zmq_port_service end" << std::endl;
+    COUT << "~zmq_port_service end" << std::endl;
   }
 
+  /**
+  \brief return a new port to be used
+  \return port number desired.
+  */
+  int new_port ()
+  {
+    return actual_port_number_++;
+  }
+  
   /**
   \brief Get the port number from the server and key
   \param machine_id_ id of the server machine.
@@ -134,9 +151,21 @@ public:
   */
   int get (int machine_id_, int key, bool wait)
   {
+  
+    // Get the socket for this thread
+    while(accessSockMap.test_and_set());
+    if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
+        requestSockList_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(std::this_thread::get_id()),
+                                 std::forward_as_tuple(create_socket()));
+    }
+    std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
+    accessSockMap.clear();
+
     // send the command tag
-    requestSock_.send(getCmd.data(), getCmd.size(), ZMQ_SNDMORE);
-    //std::cout << "get send cmd GET" << std::endl;
+    COUT << "zmq_port_service::get (machine_id_,key,wait): (" << machine_id_ << ", " << key << ", " << wait << ")" << std::endl;
+    requestSock_->send(getCmd.data(), getCmd.size(), ZMQ_SNDMORE);
+    COUT << "zmq_port_service::get send cmd GET" << std::endl;
 
     
     // serialize obj into an std::string
@@ -150,16 +179,16 @@ public:
     os.flush();
     
     // send the reference (server_id,pos)
-    requestSock_.send(serial_str.data(), serial_str.length());
-    //std::cout << "get send portkey: (" << portkey.get_id() << "," << portkey.get_key() << ")" << std::endl;
+    requestSock_->send(serial_str.data(), serial_str.length());
+    COUT << "zmq_port_service::get send portkey: (" << portkey.get_id() << "," << portkey.get_key() << ")" << std::endl;
 
     // receive the data
     zmq::message_t message;
-    requestSock_.recv(&message);
-    //std::cout << "get rec data: size=" << message.size() << std::endl;
+    requestSock_->recv(&message);
+    COUT << "zmq_port_service::get rec data: size=" << message.size() << std::endl;
 
     if (message.size() == 0) {
-        //std::cout << "Error Item not found" << std::endl;
+        COUT << "Error Item not found" << std::endl;
         throw std::runtime_error("Item not found");
     }
     
@@ -172,7 +201,7 @@ public:
     try {
       ia >> item;
     } catch (...) {
-        //std::cout << "Error Incorrect Type" << std::endl;
+        std::cerr << "Error Incorrect Type" << std::endl;
         throw std::runtime_error("Incorrect Type");
     }
 
@@ -187,10 +216,20 @@ public:
   */
   void set(int machine_id_, int key, int port)
   {
-    //std::cout << "set send id:" << server_id_ << std::endl;
+    // Get the socket for this thread
+    while(accessSockMap.test_and_set());
+    if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
+        requestSockList_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(std::this_thread::get_id()),
+                                 std::forward_as_tuple(create_socket()));
+    }
+    std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
+    accessSockMap.clear();
+
+    COUT << "zmq_port_service::set (machine_id_,key,port): (" << machine_id_ << ", " << key << ", " << port << ")" << std::endl;
     // send the command tag
-    requestSock_.send(setCmd.data(), setCmd.size(), ZMQ_SNDMORE);
-    //std::cout << "set send cmd SET" << std::endl;
+    requestSock_->send(setCmd.data(), setCmd.size(), ZMQ_SNDMORE);
+    COUT << "zmq_port_service::set send cmd SET" << std::endl;
 
     // serialize obj into an std::string
     std::string serial_str;
@@ -204,21 +243,22 @@ public:
         oa << port;
         os.flush();
     } catch (...) {
-        //std::cout << "Error Type not serializable" << std::endl;
+        std::cerr << "Error Type not serializable" << std::endl;
         throw std::runtime_error("Type not serializable");
     }
 
     // send the data
-    requestSock_.send(serial_str.data(), serial_str.length());
-    //std::cout << "set send data: size=" << serial_str.length() << std::endl;
+    COUT << "zmq_port_service::set send begin" << std::endl;
+    requestSock_->send(serial_str.data(), serial_str.length());
+    COUT << "zmq_port_service::set send data: size=" << serial_str.length() << std::endl;
 
     // receive the reference (server_id,pos)
     zmq::message_t message;
-    requestSock_.recv(&message);
+    requestSock_->recv(&message);
 
    
     if (message.size() != 0) {
-        //std::cout << "Error full data storage" << std::endl;
+        COUT << "Error full data storage" << std::endl;
         throw std::runtime_error("Full Data Storage");
     }
     return;
@@ -244,12 +284,37 @@ private:
   bool is_server_;
   std::map<zmq_port_key, int> port_data_;
   zmq::context_t context_;
-  zmq::socket_t requestSock_;
+  std::map<std::thread::id, std::shared_ptr<zmq::socket_t>> requestSockList_;
   std::map<std::pair<int,int>,int> portStorage_;
   std::map<std::pair<int,int>,std::vector<std::string>> waitQueue_;
   /// Proxy server address
   std::thread server_thread_;
+  //mutual exclusion data for socket map structure
+  std::atomic_flag accessSockMap = ATOMIC_FLAG_INIT;
 
+
+  /// actual port number to be delivered
+  int actual_port_number_{0};
+
+  /**
+  \brief Function to create a zmq request socket for the port service
+  \return Shared pointer with the zmq socket.
+  */
+  std::shared_ptr<zmq::socket_t> create_socket ()
+  {
+    COUT << "zmq_port_service::create_socket begin" << std::endl;
+    
+    // create rquest socket shared pointer
+    std::shared_ptr<zmq::socket_t> requestSock_ = std::make_shared<zmq::socket_t>(context_,ZMQ_REQ);
+
+    // connect request socket
+    std::ostringstream ss;
+    ss << tcpConnectPattern[0] << server_ << tcpConnectPattern[1] << port_;
+    COUT << "zmq_port_service::create_socket connect: " << ss.str() << std::endl;
+    requestSock_->connect(ss.str());
+
+    return requestSock_;
+  }
 
   /**
   \brief Server function to store and release data form the storage array.
@@ -257,19 +322,27 @@ private:
   void server_func ()
   {
     
-    //std::cout << "server_func begin" << std::endl;
+    COUT << "zmq_port_service::server_func begin" << std::endl;
     zmq::socket_t replySock_ = zmq::socket_t(context_,ZMQ_ROUTER);
     std::ostringstream ss;
     ss << tcpBindPattern[0] << port_ << tcpBindPattern[1];
+    COUT << "zmq_port_service::server_func bind: " << ss.str() << std::endl;
     replySock_.bind(ss.str());
 
     while (1) {
       
       zmq::message_t msg;
 
+      COUT << "zmq_port_service::server_func: replySock_.recv begin" << std::endl;
+
       // receive client id
-      replySock_.recv(&msg);
+      try {
+        replySock_.recv(&msg);
+      } catch (...) {
+        std::cerr << "zmq_port_service::server_func: ERROR : replySock_.recv" << std::endl;
+      }
       std::string client_id((char *)msg.data(), msg.size());
+      COUT << "zmq_port_service::server_func: replySock_.recv client_id: " << client_id << std::endl;
 
       // recv zero frame
       replySock_.recv(&msg);
@@ -277,15 +350,18 @@ private:
       // recv command
       replySock_.recv(&msg);
 
-      
+      COUT << "zmq_port_service::server_func: replySock_.recv cmd received" << std::endl;
+
       // set command
       if ( (msg.size() == setCmd.size()) &&
            (0 == std::memcmp(msg.data(),static_cast<const void*>(setCmd.data()),setCmd.size())) ) {
-        //std::cout << "server_func SET" << std::endl;
-        
+        COUT << "zmq_port_service::server_func SET" << std::endl;
+
         // recv item and copy it to the map storage
         replySock_.recv(&msg);
 
+        COUT << "zmq_port_service::server_func SET received" << std::endl;
+        
         boost::iostreams::basic_array_source<char> device((char *)msg.data(), msg.size());
         boost::iostreams::stream<boost::iostreams::basic_array_source<char> > s(device);
         boost::archive::binary_iarchive ia(s);
@@ -295,6 +371,8 @@ private:
         ia >> ref;
         ia >> port;
         
+        COUT << "zmq_port_service::server_func SET portkey: (" << ref.get_id() << "," << ref.get_key() << "," << ref.get_wait() <<")" << std::endl;
+
         // insert or subsitute port in portkey
         portStorage_[std::make_pair(ref.get_id(),ref.get_key())] = port;
         
@@ -322,7 +400,7 @@ private:
         }
       } else if ( (msg.size() == getCmd.size()) &&
            (0 == std::memcmp(msg.data(),static_cast<const void*>(getCmd.data()), getCmd.size())) ) {
-        //std::cout << "server_func GET" << std::endl;
+        COUT << "zmq_port_service::server_func GET" << std::endl;
         
         // recv item and copy it to the map storage
         replySock_.recv(&msg);
@@ -336,23 +414,23 @@ private:
           zmq_port_key ref;
           ia >> ref;
 
-          //std::cout << "server_func GET portkey: (" << ref.get_id() << "," << ref.get_key() << "," << ref.get_wait() <<")" << std::endl;
+          COUT << "zmq_port_service::server_func GET portkey: (" << ref.get_id() << "," << ref.get_key() << "," << ref.get_wait() <<")" << std::endl;
           try {
             port = portStorage_.at(std::make_pair(ref.get_id(),ref.get_key()));
           } catch (std::out_of_range &e) { // port is not stored
             if (ref.get_wait()) {
-              //std::cout << "server_func GET WAIT" << std::endl;
+              COUT << "zmq_port_service::server_func GET WAIT" << std::endl;
               waitQueue_[std::make_pair(ref.get_id(),ref.get_key())].emplace_back(client_id);
             } else {
-              //std::cout << "server_func GET NO WAIT" << std::endl;
-              //std::cout << "server_func ERROR get: port not found" << std::endl;
+              COUT << "zmq_port_service::server_func GET NO WAIT" << std::endl;
+              COUT << "zmq_port_service::server_func ERROR get: port not found" << std::endl;
               replySock_.send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
               replySock_.send("", 0, ZMQ_SNDMORE);
               replySock_.send("", 0);
             }
             continue; // process next message
           }
-          //std::cout << "server_func GET port: " << port << std::endl;
+          COUT << "zmq_port_service::server_func GET port: " << port << std::endl;
 
     
           std::string serial_str;
@@ -363,20 +441,20 @@ private:
           oa << port;
           os.flush();
 
-          //std::cout << "server_func GET port string: " << serial_str << std::endl;
+          COUT << "zmq_port_service::server_func GET port string: " << serial_str << std::endl;
 
           replySock_.send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
           replySock_.send("", 0, ZMQ_SNDMORE);
           replySock_.send(serial_str.data(), serial_str.length());
         } catch (...) {
-          //std::cout << "server_func ERROR get" << std::endl;
+          COUT << "zmq_port_service::server_func ERROR get" << std::endl;
           replySock_.send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
           replySock_.send("", 0, ZMQ_SNDMORE);
           replySock_.send("", 0);
         }
       } else if ( (msg.size() == endCmd.size()) &&
         (0 == std::memcmp(msg.data(), static_cast<const void*>(endCmd.data()), endCmd.size())) ) {
-        //std::cout << "server_func END" << std::endl;
+        COUT << "zmq_port_service::server_func END" << std::endl;
         // answer all pending requests with zero messsage
         for (auto it1 = waitQueue_.begin(); it1 != waitQueue_.end(); it1++) {
           for (auto it2 = it1->second.begin(); it2 != it1->second.end(); it2++) {
@@ -389,7 +467,7 @@ private:
       }
     }
     // need to release sockets???
-    //std::cout << "server_func end" << std::endl;
+    COUT << "zmq_port_service::server_func end" << std::endl;
   }
 };
 
