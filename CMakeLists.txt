@@ -116,7 +116,7 @@ if(GRPPI_FF_ENABLE)
 endif(GRPPI_FF_ENABLE)
 
 # BOOST library
-find_package(Boost 1.66.0 COMPONENTS serialization REQUIRED)
+find_package(Boost 1.65.0 COMPONENTS serialization REQUIRED)
 if ( Boost_FOUND )
   option( GRPPI_BOOST_ENABLE "Require BOOST library" ON )
   link_directories(${Boost_LIBRARY_DIRS})

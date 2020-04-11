@@ -464,7 +464,11 @@ private:
     std::vector<zmq::pollitem_t> items;
     items.resize(numLocalServers_);
     for (int i=0; i<numLocalServers_; i++) {
-      items[i] = zmq::pollitem_t{localServer_[i], 0, ZMQ_POLLIN, 0 };
+      //items[i] = zmq::pollitem_t{localServer_[i], 0, ZMQ_POLLIN, 0 };
+      items[i].socket = (void *)localServer_[i];
+      items[i].fd = 0;
+      items[i].events = ZMQ_POLLIN;
+      items[i].revents = 0;
       COUT << "server_func poll: " << i << std::endl;
     };
 

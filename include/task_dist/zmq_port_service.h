@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <utility>
 #include <memory>
+#include <sstream>
 
 #include <zmq.hpp>
 

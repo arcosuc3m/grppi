@@ -1,13 +1,21 @@
-include_directories("${BOOST_INCLUDEDIR}")
-include_directories("${ZMQ_INCLUDE_DIR}")
+#include_directories("${BOOST_INCLUDEDIR}")
+#include_directories("${ZMQ_INCLUDE_DIR}")
 
 add_executable(data_test data_test.cpp )
+
+target_include_directories(data_test PUBLIC
+  ${ZMQ_INCLUDE_DIR}
+  ${BOOST_INCLUDEDIR})
 
 target_link_libraries(data_test
   ${ZMQ_LIBRARY}
   ${Boost_LIBRARIES})
 
 add_executable(port_test port_test.cpp )
+
+target_include_directories(port_test PUBLIC
+  ${ZMQ_INCLUDE_DIR}
+  ${BOOST_INCLUDEDIR})
 
 target_link_libraries(port_test
   ${ZMQ_LIBRARY}
