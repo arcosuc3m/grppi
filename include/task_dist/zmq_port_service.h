@@ -41,7 +41,7 @@
 //#pragma GCC diagnostic pop
 
 #undef COUT
-#define COUT if (0) std::cout
+#define COUT if (1) std::cout
 
 namespace grppi{
 
