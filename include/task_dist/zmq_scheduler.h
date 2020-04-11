@@ -1357,7 +1357,7 @@ class zmq_scheduler_thread{
     \brief Check sequential tasks for all servers with pending requests.
     */
     void exec_seq_task (zmq_scheduler<Task> * sched,
-                        std::set<int> set_req_servers)
+                        std::set<int> &set_req_servers)
     {
       try {
         static int index_new = 0;
@@ -1464,7 +1464,7 @@ class zmq_scheduler_thread{
     \brief Check parallel tasks with data on the same server for all remaining requests
     */
     void exec_par_task_same_server (zmq_scheduler<Task> * sched,
-                                    std::set<int> set_req_servers)
+                                    std::set<int> &set_req_servers)
     {
       try {
         COUT << "zmq_scheduler_thread::exec_par_task_same_server BEGIN\n";
