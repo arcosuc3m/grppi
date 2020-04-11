@@ -25,6 +25,7 @@ int main(int argc, char *argv[]){
   std::map<int, std::string> machines{{0, "127.0.0.1"}};
   //std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "127.0.0.1"}};
   //std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
+  //std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "172.16.83.183"}};
   auto port_serv = std::make_shared<zmq_port_service> (machines[0], 5570, is_server);
   std::cout << "port_service_->new_port() : " << port_serv->new_port() << std::endl;
   auto sched = std::make_unique<zmq_scheduler<zmq_task>>(machines, id,
