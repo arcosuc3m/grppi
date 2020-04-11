@@ -146,12 +146,14 @@ class multi_queue{
     */
     void push(TLabel queue_label, TElem elem)
     {
+      COUT << "multi_queue::multi_queue  push() begin \n";
       if ( (total_occupy_+total_used_) >= label_queue_size_) {
         clean_label_queue();
       }
       queues_.at(queue_label).push(elem);
       label_queue_.push(queue_label);
       total_occupy_++;
+      COUT << "multi_queue::multi_queue  push() end \n";
       return;
     }
 
@@ -162,6 +164,7 @@ class multi_queue{
     */
     TElem pop()
     {
+      COUT << "multi_queue::multi_queue  pop() begin \n";
       auto label = label_queue_.pop();
       while (used_[label] > 0) {
         used_[label]--;
@@ -169,7 +172,9 @@ class multi_queue{
         label = label_queue_.pop();
       }
       total_occupy_--;
-      return queues_.at(label).pop();
+      auto res = queues_.at(label).pop();
+      COUT << "multi_queue::multi_queue  pop() end \n";
+      return res;
     }
     
     /**
@@ -179,10 +184,12 @@ class multi_queue{
     */
     TElem pop(TLabel queue_label)
     {
+      COUT << "multi_queue::multi_queue  pop(label) begin \n";
       auto elem = queues_.at(queue_label).pop();
       used_[queue_label]++;
       total_used_++;
       total_occupy_--;
+      COUT << "multi_queue::multi_queue  pop(label) end \n";
       return elem;
     }
 
