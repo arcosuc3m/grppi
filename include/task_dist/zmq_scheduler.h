@@ -652,7 +652,7 @@ class zmq_scheduler_thread{
     /// server data
     int tokens_{0};
     double ratio_create_tokens_{0.5};
-    int running_threads_{0};
+    int pool_threads_{0};
     int total_running_servers_{0};
     int total_ending_servers_{0};
     int total_blocked_servers_{0};
@@ -1019,7 +1019,7 @@ class zmq_scheduler_thread{
         // store run request to wake it up at the end, increase running servers and threads
         run_requests_.push(client_id);
         total_running_servers_++;
-        running_threads_= running_threads_ + num_threads;
+        pool_threads_= pool_threads_ + num_threads;
 
         COUT << "zmq_scheduler_thread::srv_run_cmd total_running_servers_ = " << total_running_servers_ << std::endl;
         COUT << "zmq_scheduler_thread::srv_run_cmd sched->total_servers_ = " << sched->total_servers_ << std::endl;
@@ -1284,8 +1284,6 @@ class zmq_scheduler_thread{
 
           // reset counter of running servers
           total_running_servers_ = 0;
-          // reset counter of running threads
-          running_threads_ = 0;
           //reset all set of flags
           set_enabled_.clear();
           set_new_tok_tasks_.clear();
@@ -1303,9 +1301,10 @@ class zmq_scheduler_thread{
         // if all end request are received (after finishing run requests)
         // finish set task request to kill working threads,
         // finish end threads, and end sched thread
-        COUT << "zmq_scheduler_thread::finish_execution total_running_servers_: " << total_running_servers_ << ", total_ending_servers_: " << total_ending_servers_ << ", sched->total_servers_: " << sched->total_servers_ << std::endl;
+        COUT << "zmq_scheduler_thread::finish_execution total_running_servers_: " << total_running_servers_ << ", total_ending_servers_: " << total_ending_servers_ << ", sched->total_servers_: " << sched->total_servers_ << ", pool_threads_: " << pool_threads_ <<  std::endl;
         if ( (total_running_servers_ == 0)  &&
-             (total_ending_servers_ == sched->total_servers_) ) {
+             (total_ending_servers_ == sched->total_servers_) &&
+             (requests_.count() == pool_threads_) ) {
           // finish get task request
           // send a null task to all pending requests
           while (! requests_.empty()) {
@@ -1319,15 +1318,15 @@ class zmq_scheduler_thread{
               
             // decrease running threads.
             // If all done wake up all end replies and end sched. thread
-            running_threads_--;
+            pool_threads_--;
             {std::ostringstream ss;
             ss << "zmq_scheduler_thread::finish_execution: SENT GET TASK ACK NULL: task: (" << task.get_id() << ", " << task.get_task_id() << ")\n";
             COUT << ss.str();}
 
           }
-          COUT << "zmq_scheduler_thread::finish_execution: running_threads_ = "<< running_threads_ << std::endl;
+          COUT << "zmq_scheduler_thread::finish_execution: pool_threads_ = "<< pool_threads_ << std::endl;
 
-          if (running_threads_ <= 0) {
+          if (pool_threads_ <= 0) {
             while (! end_requests_.empty()) {
               // get run reply address and send back and ACK
               auto client_id = end_requests_.pop();

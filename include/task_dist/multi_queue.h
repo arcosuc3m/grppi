@@ -103,9 +103,19 @@ class multi_queue{
     Check if the whole multy queue is empty.
     */
     bool empty () {
-      //COUT << "total_occupy_ = " << total_occupy_ << std::endl;
-      //COUT << "total_used_ = " << total_used_ << std::endl;
+      COUT << "multi_queue::empty total_occupy_ = " << total_occupy_ << std::endl;
       return total_occupy_ <= 0;
+    }
+
+    /**
+    \brief return the number of elements int eh whole queue.
+    \return number of elements on the whole queue.
+
+    return the number of elements int eh whole queue.
+    */
+    int count () {
+      COUT << "multi_queue::count total_occupy_ = " << total_occupy_ << std::endl;
+      return total_occupy_;
     }
 
     /**
