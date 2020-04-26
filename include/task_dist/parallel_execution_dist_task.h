@@ -37,11 +37,14 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 #include <boost/serialization/utility.hpp>
 
 #undef COUT
 #define COUT if (0) std::cout
+
+#define DEBUG
 
 namespace grppi {
 
@@ -165,42 +168,42 @@ private:
 
   template <typename InputItemType, typename Consumer,
             requires_no_pattern<Consumer> = 0>
-  void do_pipeline(Consumer && consume_op) const;
+  void do_pipeline(bool is_farm, Consumer && consume_op) const;
 
   template <typename InputItemType, typename Transformer,
             typename ... OtherTransformers,
             requires_no_pattern<Transformer> = 0>
-  void do_pipeline(Transformer && transform_op,
+  void do_pipeline(bool is_farm, Transformer && transform_op,
       OtherTransformers && ... other_ops) const;
     
     
   template <typename InputItemType, typename Transformer,
             requires_no_pattern<Transformer> = 0>
-  void do_pipeline(Transformer && transform_op, bool check) const;
+  void do_pipeline(bool is_farm, Transformer && transform_op, bool check) const;
 
 
   template <typename InputItemType, typename FarmTransformer,
             template <typename> class Farm,
             requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Farm<FarmTransformer> & farm_obj) const
+  void do_pipeline(bool is_farm, Farm<FarmTransformer> & farm_obj) const
   {
-    do_pipeline<InputItemType>(std::move(farm_obj));
+    do_pipeline<InputItemType>(is_farm, std::move(farm_obj));
   }
 
   template <typename InputItemType, typename FarmTransformer,
             template <typename> class Farm,
             requires_farm<Farm<FarmTransformer>> = 0>
-  void do_pipeline(Farm<FarmTransformer> && farm_obj) const;
+  void do_pipeline(bool is_farm, Farm<FarmTransformer> && farm_obj) const;
 
   template <typename InputItemType, typename FarmTransformer,
             template <typename> class Farm,
             typename ... OtherTransformers,
             requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline(
-      Farm<FarmTransformer> & farm_obj,
+      bool is_farm, Farm<FarmTransformer> & farm_obj,
       OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline<InputItemType>(std::move(farm_obj),
+    do_pipeline<InputItemType>(is_farm, std::move(farm_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
@@ -209,7 +212,7 @@ private:
             typename ... OtherTransformers,
             requires_farm<Farm<FarmTransformer>> = 0>
   void do_pipeline(
-      Farm<FarmTransformer> && farm_obj,
+      bool is_farm, Farm<FarmTransformer> && farm_obj,
       OtherTransformers && ... other_transform_ops) const;
 
   template <typename InputItemType, typename Predicate,
@@ -217,10 +220,10 @@ private:
             typename ... OtherTransformers,
             requires_filter<Filter<Predicate>> =0>
   void do_pipeline(
-      Filter<Predicate> & filter_obj,
+      bool is_farm, Filter<Predicate> & filter_obj,
       OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline<InputItemType>(std::move(filter_obj),
+    do_pipeline<InputItemType>(is_farm, std::move(filter_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
@@ -229,17 +232,17 @@ private:
             typename ... OtherTransformers,
             requires_filter<Filter<Predicate>> =0>
   void do_pipeline(
-      Filter<Predicate> && farm_obj,
+      bool is_farm, Filter<Predicate> && farm_obj,
       OtherTransformers && ... other_transform_ops) const;
 
   template <typename InputItemType, typename Combiner, typename Identity,
             template <typename C, typename I> class Reduce,
             typename ... OtherTransformers,
             requires_reduce<Reduce<Combiner,Identity>> = 0>
-  void do_pipeline(Reduce<Combiner,Identity> & reduce_obj,
+  void do_pipeline(bool is_farm, Reduce<Combiner,Identity> & reduce_obj,
                    OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline<InputItemType>(std::move(reduce_obj),
+    do_pipeline<InputItemType>(is_farm, std::move(reduce_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
@@ -247,7 +250,7 @@ private:
             template <typename C, typename I> class Reduce,
             typename ... OtherTransformers,
             requires_reduce<Reduce<Combiner,Identity>> = 0>
-  void do_pipeline(Reduce<Combiner,Identity> && reduce_obj,
+  void do_pipeline(bool is_farm, Reduce<Combiner,Identity> && reduce_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename InputItemType, typename Transformer, typename Predicate,
@@ -255,10 +258,10 @@ private:
             typename ... OtherTransformers,
             requires_iteration<Iteration<Transformer,Predicate>> =0,
             requires_no_pattern<Transformer> =0>
-  void do_pipeline(Iteration<Transformer,Predicate> & iteration_obj,
+  void do_pipeline(bool is_farm, Iteration<Transformer,Predicate> & iteration_obj,
                    OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline<InputItemType>(std::move(iteration_obj),
+    do_pipeline<InputItemType>(is_farm, std::move(iteration_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
@@ -267,7 +270,7 @@ private:
             typename ... OtherTransformers,
             requires_iteration<Iteration<Transformer,Predicate>> =0,
             requires_no_pattern<Transformer> =0>
-  void do_pipeline(Iteration<Transformer,Predicate> && iteration_obj,
+  void do_pipeline(bool is_farm, Iteration<Transformer,Predicate> && iteration_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
   template <typename InputItemType, typename Transformer, typename Predicate,
@@ -275,7 +278,7 @@ private:
             typename ... OtherTransformers,
             requires_iteration<Iteration<Transformer,Predicate>> =0,
             requires_pipeline<Transformer> =0>
-  void do_pipeline(Iteration<Transformer,Predicate> && iteration_obj,
+  void do_pipeline(bool is_farm, Iteration<Transformer,Predicate> && iteration_obj,
                    OtherTransformers && ... other_transform_ops) const;
 
 
@@ -283,26 +286,26 @@ private:
             template <typename...> class Pipeline,
             requires_pipeline<Pipeline<Transformers...>> = 0>
   void do_pipeline(
-      Pipeline<Transformers...> & pipeline_obj) const
+      bool is_farm, Pipeline<Transformers...> & pipeline_obj) const
   {
-    do_pipeline<InputItemType>(std::move(pipeline_obj));
+    do_pipeline<InputItemType>(is_farm, std::move(pipeline_obj));
   }
 
   template <typename InputItemType, typename ... Transformers,
             template <typename...> class Pipeline,
             requires_pipeline<Pipeline<Transformers...>> = 0>
   void do_pipeline(
-      Pipeline<Transformers...> && pipeline_obj) const;
+      bool is_farm, Pipeline<Transformers...> && pipeline_obj) const;
 
   template <typename InputItemType, typename ... Transformers,
             template <typename...> class Pipeline,
             typename ... OtherTransformers,
             requires_pipeline<Pipeline<Transformers...>> = 0>
   void do_pipeline(
-      Pipeline<Transformers...> & pipeline_obj,
+      bool is_farm, Pipeline<Transformers...> & pipeline_obj,
       OtherTransformers && ... other_transform_ops) const
   {
-    do_pipeline<InputItemType>(std::move(pipeline_obj),
+    do_pipeline<InputItemType>(is_farm, std::move(pipeline_obj),
         std::forward<OtherTransformers>(other_transform_ops)...);
   }
 
@@ -311,13 +314,13 @@ private:
             typename ... OtherTransformers,
             requires_pipeline<Pipeline<Transformers...>> = 0>
   void do_pipeline(
-      Pipeline<Transformers...> && pipeline_obj,
+      bool is_farm, Pipeline<Transformers...> && pipeline_obj,
       OtherTransformers && ... other_transform_ops) const;
 
   template <typename InputItemType, typename ... Transformers,
             std::size_t ... I>
   void do_pipeline_nested(
-      std::tuple<Transformers...> && transform_ops,
+      bool is_farm, std::tuple<Transformers...> && transform_ops,
       std::index_sequence<I...>) const;
 
 private: 
@@ -409,13 +412,19 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 
   //COUT << "pipeline: generator" << std::endl;
   long order=0;
-  COUT << "GENERATOR" << std::endl;
-  scheduler_->register_sequential_task([&generate_op, this, &order](task_type &t) -> void
+  COUT << "GENERATOR: is_farm = 0" << std::endl;
+
+  std::function<void(task_type&)> task_func([&generate_op, this, &order](task_type &t) -> void
   {
-     //{std::ostringstream foo;
-     //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-     //COUT << foo.str();}
+     {std::ostringstream foo;
+     foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+     COUT << foo.str();}
+#ifdef DEBUG
+     std::vector<task_type> conf_tasks;
+     auto item{generate_op(conf_tasks)};
+#else
      auto item{generate_op()};
+#endif
      if(item){
        //COUT << "task: generator set begin" << std::endl;
        auto ref = scheduler_->set(make_pair(*item, order));
@@ -423,20 +432,32 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
        //{std::ostringstream foo;
        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id()+1 <<"," << order << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
        //COUT << foo.str();}
-       scheduler_->set_task(task_type{t.get_id()+1,order,ref},false);
+#ifdef DEBUG
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), ref};
+#else
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, std::vector<long>{scheduler_->get_node_id()}, false, ref};
+#endif
+       scheduler_->set_task(next_task,false);
+       
        // increase order
        order++;
        //{std::ostringstream foo;
        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id() << ","<< order << "], ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
        //COUT << foo.str();}
-       scheduler_->set_task(task_type{t.get_id(),order},true);
+#ifdef DEBUG
+       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, conf_tasks[0].get_local_ids(), conf_tasks[0].get_is_hard()};
+#else
+       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, std::vector<long>{scheduler_->get_node_id()}, false};
+#endif
+       scheduler_->set_task(gen_task,true);
      } else {
        //COUT << "task: generator item = false" << std::endl;
        scheduler_->consume_token();
      }
-  },true);
+  });
+  scheduler_->register_sequential_task(std::move(task_func), true);
 
-  do_pipeline<output_type>(forward<Transformers>(transform_ops)...);
+  do_pipeline<output_type>(false, forward<Transformers>(transform_ops)...);
 }
 
 // PRIVATE MEMBERS
@@ -444,21 +465,22 @@ template <typename Scheduler>
 template <typename InputItemType, typename Consumer,
           requires_no_pattern<Consumer>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Consumer && consume_op) const
+    bool is_farm, Consumer && consume_op) const
 {
-  //COUT << "pipeline: consumer" << std::endl;
+
   using namespace std;
   //TODO: Need to reimplement ordering
-    COUT << "CONSUMER" << std::endl;
-    scheduler_->register_sequential_task([&consume_op, this](task_type t) -> void
-    {
-       //{std::ostringstream foo;
-       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-       //COUT << foo.str();}
-       auto item = scheduler_->template get<InputItemType>(t.get_data_location());
-       consume_op(item.first);
-       scheduler_->consume_token();
-    },false);
+  COUT << "CONSUMER: is_farm = "<< is_farm << std::endl;
+  std::function<void(task_type&)> task_func([&consume_op, this](task_type t) -> void
+  {
+     {std::ostringstream foo;
+     foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+     COUT << foo.str();}
+     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+     consume_op(item.first);
+     scheduler_->consume_token();
+  });
+  scheduler_->register_sequential_task(std::move(task_func), false);
   scheduler_->run();
 }
 
@@ -467,7 +489,7 @@ template <typename InputItemType, typename Transformer,
           typename ... OtherTransformers,
           requires_no_pattern<Transformer>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Transformer && transform_op,
+    bool is_farm, Transformer && transform_op,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
@@ -478,28 +500,45 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
       decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
   using output_item_type = pair<transform_result_type,long>;
 
-  COUT << "NO PATTERN" << std::endl;
-  scheduler_->register_sequential_task([this,&transform_op](task_type t) -> void
+  COUT << "NO PATTERN: is_farm = "<< is_farm << std::endl;
+
+  std::function<void(task_type&)> task_func([this,&transform_op](task_type t) -> void
   {
-    //{std::ostringstream foo;
-    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    //COUT << foo.str();}
+    {std::ostringstream foo;
+    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    COUT << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
-    auto out = transform_op(item.first);
+#ifdef DEBUG
+     std::vector<task_type> conf_tasks;
+     auto out = transform_op(item.first, conf_tasks);
+#else
+     auto out = transform_op(item.first);
+#endif
     auto ref = scheduler_->set(make_pair(out,item.second));
     //{std::ostringstream foo;
     //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
     //COUT << foo.str();}
-    scheduler_->set_task(task_type{t.get_id()+1,t.get_task_id(),ref},false);
-  }, false);
+#ifdef DEBUG
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), ref};
+#else
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+#endif
+    scheduler_->set_task(next_task,false);
+  });
+  
+  if (is_farm) {
+    scheduler_->register_parallel_stage(std::move(task_func),false);
+  } else {
+    scheduler_->register_sequential_task(std::move(task_func), false);
+  }
 
-  do_pipeline<output_item_type>(forward<OtherTransformers>(other_transform_ops)...);
+  do_pipeline<output_item_type>(is_farm, forward<OtherTransformers>(other_transform_ops)...);
 }
 
 template <typename Scheduler>
 template <typename InputItemType, typename Transformer,
             requires_no_pattern<Transformer>>
-void parallel_execution_dist_task<Scheduler>::do_pipeline(Transformer && transform_op, bool check) const
+void parallel_execution_dist_task<Scheduler>::do_pipeline(bool is_farm, Transformer && transform_op, bool check) const
 {
   using namespace std;
   using namespace experimental;
@@ -508,21 +547,37 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(Transformer && transfo
     return;
   }
   
-  COUT << "NO PATTERN END" << std::endl;
+  COUT << "NO PATTERN END: is_farm = "<< is_farm << std::endl;
   
-  scheduler_->register_parallel_stage([this, &transform_op](task_type t) -> void
+  std::function<void(task_type&)> task_func([this, &transform_op](task_type t) -> void
   {
-    //{std::ostringstream foo;
-    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    //COUT << foo.str();}
+    {std::ostringstream foo;
+    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_end, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    COUT << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+#ifdef DEBUG
+    std::vector<task_type> conf_tasks;
+    auto out = transform_op(item.first, conf_tasks);
+#else
     auto out = transform_op(item.first);
+#endif
     auto ref = scheduler_->set(make_pair(out,item.second));
     //{std::ostringstream foo;
     //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
     //COUT << foo.str();}
-    scheduler_->set_task(task_type{t.get_id()+1,t.get_task_id(),ref},false);
-  },false);
+#ifdef DEBUG
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), ref};
+#else
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+#endif
+    scheduler_->set_task(next_task,false);
+  });
+
+  if (is_farm) {
+    scheduler_->register_parallel_stage(std::move(task_func),false);
+  } else {
+    scheduler_->register_sequential_task(std::move(task_func), false);
+  }
 }
 
 template <typename Scheduler>
@@ -530,21 +585,22 @@ template <typename InputItemType, typename FarmTransformer,
           template <typename> class Farm,
           requires_farm<Farm<FarmTransformer>>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Farm<FarmTransformer> && farm_obj) const
+    bool is_farm, Farm<FarmTransformer> && farm_obj) const
 {
   using namespace std;
-
-  COUT << "FARM CONSUMER" << std::endl;
-  scheduler_->register_parallel_stage([this,&farm_obj](task_type t) -> void
+  
+  
+  COUT << "FARM CONSUMER: is_farm = " << is_farm << std::endl;
+  std::function<void(task_type&)> task_func([this,&farm_obj](task_type t) -> void
   {
-    //{std::ostringstream foo;
-    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    //COUT << foo.str();}
+    {std::ostringstream foo;
+    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    COUT << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
     farm_obj(item.first);
     scheduler_->consume_token();
-  },false);
-
+  });
+  scheduler_->register_parallel_stage(std::move(task_func),false);
   scheduler_->run();
 
 }
@@ -555,7 +611,7 @@ template <typename InputItemType, typename FarmTransformer,
           typename ... OtherTransformers,
           requires_farm<Farm<FarmTransformer>>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Farm<FarmTransformer> && farm_obj,
+    bool is_farm, Farm<FarmTransformer> && farm_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
@@ -567,8 +623,8 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using output_item_type = pair <output_type, long> ;
 
   //COUT << "FARM" << std::endl;
-  do_pipeline<InputItemType>(farm_obj.transformer(),true);
-  do_pipeline<output_item_type>(forward<OtherTransformers>(other_transform_ops)... );
+  do_pipeline<InputItemType>(true, farm_obj.transformer(),true);
+  do_pipeline<output_item_type>(is_farm, forward<OtherTransformers>(other_transform_ops)... );
 }
 
 template <typename Scheduler>
@@ -577,34 +633,39 @@ template <typename InputItemType, typename Predicate,
           typename ... OtherTransformers,
           requires_filter<Filter<Predicate>>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Filter<Predicate> && filter_obj,
+    bool is_farm, Filter<Predicate> && filter_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
   using namespace experimental;
 
-  COUT << "FILTER" << std::endl;
-  scheduler_->register_parallel_stage([&filter_obj, this](task_type &t) -> void
+  COUT << "FILTER: is_farm = "<< is_farm << std::endl;
+  std::function<void(task_type&)> task_func([&filter_obj, this](task_type &t) -> void
   {
-      //{std::ostringstream foo;
-      //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-      //COUT << foo.str();}
+      {std::ostringstream foo;
+      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+      COUT << foo.str();}
       auto item = scheduler_->template get<InputItemType>(t.get_data_location());
       if (filter_obj(item.first)) {
         auto ref = scheduler_->set(item);
         //{std::ostringstream foo;
         //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
         //COUT << foo.str();}
-        scheduler_->set_task(task_type{t.get_id()+1,t.get_task_id(),ref},false);
+        task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+        scheduler_->set_task(next_task,false);
       } else {
         //{std::ostringstream foo;
         //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter is consumed" << std::endl;
         //COUT << foo.str();}
         scheduler_->consume_token();
       }
-  },false);
-
-  do_pipeline<InputItemType>(forward<OtherTransformers>(other_transform_ops)...);
+  });
+  if (is_farm) {
+    scheduler_->register_parallel_stage(std::move(task_func),false);
+  } else {
+    scheduler_->register_sequential_task(std::move(task_func), false);
+  }
+  do_pipeline<InputItemType>(is_farm, forward<OtherTransformers>(other_transform_ops)...);
 
 }
 
@@ -614,7 +675,7 @@ template <typename InputItemType, typename Combiner, typename Identity,
           typename ... OtherTransformers,
           requires_reduce<Reduce<Combiner,Identity>>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Reduce<Combiner,Identity> && reduce_obj,
+    bool is_farm, Reduce<Combiner,Identity> && reduce_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
@@ -627,12 +688,12 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   // Transform into atomic if used as a parallel task
   long int order = 0;
 
-  COUT << "REDUCE" << std::endl;
-  scheduler_->register_sequential_task([&reduce_obj, this, &order](task_type t) -> void
+  COUT << "REDUCE: is_farm = "<< is_farm << std::endl;
+  std::function<void(task_type&)> task_func([&reduce_obj, this, &order](task_type t) -> void
   {
-    //{std::ostringstream foo;
-    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    //COUT << foo.str();}
+    {std::ostringstream foo;
+    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+    COUT << foo.str();}
     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
     reduce_obj.add_item(std::forward<Identity>(item.first));
     if(reduce_obj.reduction_needed()) {
@@ -642,13 +703,14 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
       //{std::ostringstream foo;
       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
       //COUT << foo.str();}
-      scheduler_->set_task(task_type{t.get_id()+1,t.get_task_id(),ref},false);
+      scheduler_->set_task(task_type{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref},false);
     } else{
       scheduler_->consume_token();
     }
-  },false);
+  });
+  scheduler_->register_sequential_task(std::move(task_func), false);
 
-  do_pipeline<output_item_type>(forward<OtherTransformers>(other_transform_ops)...);
+  do_pipeline<output_item_type>(is_farm, forward<OtherTransformers>(other_transform_ops)...);
 }
 
 template <typename Scheduler>
@@ -658,18 +720,18 @@ template <typename InputItemType, typename Transformer, typename Predicate,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_no_pattern<Transformer>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Iteration<Transformer,Predicate> && iteration_obj,
+    bool is_farm, Iteration<Transformer,Predicate> && iteration_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
   using namespace experimental;
 
-  COUT << "ITERATION" << std::endl;
-  scheduler_->register_parallel_stage([&iteration_obj, this](task_type t) -> void
+  COUT << "ITERATION: is_farm = "<< is_farm << std::endl;
+  std::function<void(task_type&)> task_func([&iteration_obj, this](task_type t) -> void
   {
-      //{std::ostringstream foo;
-      //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-      //COUT << foo.str();}
+      {std::ostringstream foo;
+      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
+      COUT << foo.str();}
       auto item = scheduler_->template get<InputItemType>(t.get_data_location());
       auto value = iteration_obj.transform(item.first);
       auto new_item = InputItemType{value,item.second};
@@ -678,7 +740,8 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
         //{std::ostringstream foo;
         //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
         //COUT << foo.str();}
-        scheduler_->set_task(task_type{t.get_id()+1,t.get_task_id(),ref},false);
+        task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+        scheduler_->set_task(next_task,false);
       }
       else {
         auto ref = scheduler_->set(new_item);
@@ -688,9 +751,14 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
         //COUT << foo.str();}
         scheduler_->set_task(t,false);
       }
-  },false);
+  });
+  if (is_farm) {
+    scheduler_->register_parallel_stage(std::move(task_func),false);
+  } else {
+    scheduler_->register_sequential_task(std::move(task_func), false);
+  }
 
-  do_pipeline<InputItemType>(forward<OtherTransformers>(other_transform_ops)...);
+  do_pipeline<InputItemType>(is_farm, forward<OtherTransformers>(other_transform_ops)...);
 }
 
 template <typename Scheduler>
@@ -700,7 +768,7 @@ template <typename InputItemType, typename Transformer, typename Predicate,
           requires_iteration<Iteration<Transformer,Predicate>>,
           requires_pipeline<Transformer>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Iteration<Transformer,Predicate> &&,
+    bool is_farm, Iteration<Transformer,Predicate> &&,
     OtherTransformers && ...) const
 {
   static_assert(!is_pipeline<Transformer>, "Not implemented");
@@ -711,11 +779,11 @@ template <typename InputItemType, typename ... Transformers,
           template <typename...> class Pipeline,
           requires_pipeline<Pipeline<Transformers...>>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Pipeline<Transformers...> && pipeline_obj) const
+    bool is_farm, Pipeline<Transformers...> && pipeline_obj) const
 {
   //COUT << "PIPELINE 1" << std::endl;
   do_pipeline_nested<InputItemType>(
-      pipeline_obj.transformers(),
+      is_farm, pipeline_obj.transformers(),
       std::make_index_sequence<sizeof...(Transformers)>());
 }
 
@@ -725,12 +793,12 @@ template <typename InputItemType, typename ... Transformers,
           typename ... OtherTransformers,
           requires_pipeline<Pipeline<Transformers...>>>
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
-    Pipeline<Transformers...> && pipeline_obj,
+    bool is_farm, Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const
 {
   //COUT << "PIPELINE 1-1" << std::endl;
   do_pipeline_nested<InputItemType>(
-      std::tuple_cat(pipeline_obj.transformers(),
+      is_farm, std::tuple_cat(pipeline_obj.transformers(),
           std::forward_as_tuple(other_transform_ops...)),
       std::make_index_sequence<sizeof...(Transformers)+sizeof...(OtherTransformers)>());
 }
@@ -739,11 +807,11 @@ template <typename Scheduler>
 template <typename InputItemType, typename ... Transformers,
           std::size_t ... I>
 void parallel_execution_dist_task<Scheduler>::do_pipeline_nested(
-    std::tuple<Transformers...> && transform_ops,
+    bool is_farm, std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
 {
   //COUT << "PIPELINE 2" << std::endl;
-  do_pipeline<InputItemType>(std::forward<Transformers>(std::get<I>(transform_ops))...);
+  do_pipeline<InputItemType>(is_farm, std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 
 } // end namespace grppi

@@ -51,10 +51,11 @@ class zmq_task{
 
     Creates a task with the end function and task ids.
     */
-    zmq_task(): function_id_{-1}, task_id_{-1}, data_location_{-1,-1} {
-    COUT << "CREATE TASK: (-1,-1,-1,-1)" << std::endl;
+    zmq_task(): function_id_{-1}, task_id_{-1}, order_{-1}, local_ids_{}, is_hard_{false}, data_location_{-1,-1} {
+    COUT << "CREATE TASK: (-1,-1,-1,0,false,-1,-1)" << std::endl;
     };
 
+    
     /**
     \brief Construct a task.
 
@@ -62,13 +63,19 @@ class zmq_task{
 
     \param f_id function id
     \param t_id task id
+    \param order order of the data element of the pipeline
+    \param local_ids list of node ids for local execution
+    \param is_hard flag:can only execute on local nodes
     */
-    zmq_task(int f_id, long t_id): function_id_{f_id}, task_id_{t_id}, data_location_{-1,-1} {
-        //{std::ostringstream foo;
-        // foo << "CREATE TASK: ("<< f_id << ","<< t_id << ",-1,-1)" << std::endl;
-        // COUT << foo.str();}
-    };
-   
+    zmq_task(int f_id, long t_id, long order,
+             std::vector<long> local_ids, bool is_hard):
+      function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{-1,-1} {
+      //{std::ostringstream foo;
+      // foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << order_ << "," << local_ids_.size() << "," << is_hard_ << "," <<  ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
+      // COUT << foo.str();}
+
+    }
+    
     /**
     \brief Construct a task.
 
@@ -76,36 +83,45 @@ class zmq_task{
 
     \param f_id function id
     \param t_id task id
+    \param order order of the data element of the pipeline
+    \param local_ids list of node ids for local execution
+    \param is_hard flag:can only execute on local nodes
     \param data_location data location reference
     */
-    zmq_task(int f_id, long t_id, zmq_data_reference ref):
-      function_id_{f_id}, task_id_{t_id}, data_location_{ref} {
+    zmq_task(int f_id, long t_id, long order,
+                 std::vector<long> local_ids, bool is_hard,
+                 zmq_data_reference ref):
+      function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{ref} {
       //{std::ostringstream foo;
-      // foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
+      // foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << order_ << "," << local_ids_.size() << "," << is_hard_ << "," <<  ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
       // COUT << foo.str();}
 
       }
 
     inline bool operator==(const zmq_task& rhs) const {
-      return function_id_ == rhs.function_id_;
+      //COUT << "zmq_task::operator== \n";
+      return task_id_ == rhs.task_id_;
     }
 
     inline bool operator!=(const zmq_task& rhs) const {
-      return function_id_ != rhs.function_id_;
+      //COUT << "zmq_task::operator!= \n";
+      return task_id_ != rhs.task_id_;
     } 
 
     inline bool operator>(const zmq_task& rhs) const {
-      return function_id_ > rhs.function_id_;
+      //COUT << "zmq_task::operator> \n";
+      return task_id_ > rhs.task_id_;
     }
 
     inline bool operator<(const zmq_task& rhs) const {
-      return function_id_ < rhs.function_id_;
+      //COUT << "zmq_task::operator< \n";
+      return task_id_ < rhs.task_id_;
     }
     
     /**
     \brief Return the id of the task function.
     
-    Return the id of the task function
+    \return  id of the task function
     */
     int get_id() const
     {
@@ -115,31 +131,91 @@ class zmq_task{
     /**
     \brief Return the task id.
 
-    Return the task id.
+    \return  task id.
     */
     int get_task_id() const
     {
       return task_id_;
     }
     
-    /** 
+    /**
     \brief Return the input data location of the task.
 
-    Return the input data location of the task.
+    \return  input data location of the task.
     */
     zmq_data_reference get_data_location()
     {
       return data_location_;
-    } 
+    }
 
-    /** 
+    /**
     \brief Store the input data location of the task.
 
-    Store the input data location of the task.
+    \param loc input data location of the task.
     */
     void set_data_location(zmq_data_reference loc)
     {
       data_location_ = loc;
+    }
+
+    /**
+    \brief Return the order number of the task.
+
+    \return  order number of the task
+    */
+    long get_order()
+    {
+      return order_;
+    }
+
+    /**
+    \brief Store the order number of the task.
+
+    \param order order number of the task
+    */
+    void set_order(long order)
+    {
+      order_ = order;
+    }
+
+    /**
+    \brief Return the list of node ids for local execution.
+
+    \return list of node ids for local execution
+    */
+    std::vector<long> get_local_ids()
+    {
+      return local_ids_;
+    }
+
+    /**
+    \brief Store the list of node ids for local execution.
+
+    \param local_ids list of node ids for local execution
+    */
+    void set_local_ids(std::vector<long> local_ids)
+    {
+      local_ids_ = local_ids;
+    }
+
+    /**
+    \brief Return the flag:can only execute on local nodes.
+
+    \return flag:can only execute on local nodes
+    */
+    bool get_is_hard()
+    {
+      return is_hard_;
+    }
+
+    /**
+    \brief Store the flag:can only execute on local nodes.
+
+    \param is_hard flag:can only execute on local nodes
+    */
+    void set_is_hard(bool is_hard)
+    {
+      is_hard_ = is_hard;
     }
 
     /**
@@ -157,6 +233,9 @@ class zmq_task{
       try {
         ia >> function_id_;
         ia >> task_id_;
+        ia >> order_;
+        ia >> local_ids_;
+        ia >> is_hard_;
         ia >> data_location_;
       } catch (...) {
         throw std::runtime_error("Type not serializable");
@@ -178,6 +257,9 @@ class zmq_task{
       try {
         oa << function_id_;
         oa << task_id_;
+        oa << order_;
+        oa << local_ids_;
+        oa << is_hard_;
         oa << data_location_;
         os.flush();
       } catch (...) {
@@ -191,6 +273,9 @@ class zmq_task{
   private:
     int function_id_;
     long task_id_;
+    long order_;
+    std::vector<long> local_ids_;
+    bool is_hard_;
     zmq_data_reference data_location_;
 
     friend class boost::serialization::access;
@@ -204,6 +289,9 @@ class zmq_task{
         if (version >= 0) {
           ar & function_id_;
           ar & task_id_;
+          ar & order_;
+          ar & local_ids_;
+          ar & is_hard_;
           ar & data_location_;
         }
     }

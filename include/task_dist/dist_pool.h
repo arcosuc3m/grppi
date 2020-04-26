@@ -50,10 +50,10 @@ class dist_pool
                 {std::ostringstream ss;
                 ss << "dist_pool::dist_pool (" << i << "): thread begin" << std::endl;
                 COUT << ss.str();}
-                auto t = task_type{-1,-1};
+                auto t = task_type{};
                 while(1){
                   t = scheduler->get_task(t);
-                  if( t == task_type{-1,-1})
+                  if( t == task_type{})
                     break;
                   {std::ostringstream ss;
                   ss << "dist_pool::dist_pool (" << i << "): exec begin: task = (" << t.get_id()

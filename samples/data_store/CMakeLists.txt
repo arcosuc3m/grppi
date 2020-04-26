@@ -23,4 +23,4 @@ target_link_libraries(port_test
 
 add_executable(multi_queue_test multi_queue_test.cpp )
 
-target_link_libraries(multi_queue_test)
+add_executable(multi_queue_hard_test multi_queue_hard_test.cpp )

@@ -24,6 +24,7 @@
 #include <atomic>
 #include <thread>
 #include <exception>
+#include <iterator>
 #include <assert.h>
 
 #include <zmq.hpp>
@@ -36,6 +37,7 @@
 #include "zmq_data_service.h"
 #include "zmq_port_service.h"
 #include "multi_queue.h"
+#include "multi_queue_hard.h"
 
 #undef COUT
 #define COUT if (0) std::cout
@@ -62,42 +64,50 @@ class zmq_scheduler{
     /**
     \brief Default construct a zmq scheduler
     */
-
     zmq_scheduler(std::map<int, std::string> machines, int id,
               const std::shared_ptr<zmq_port_service> &port_service,
-              int numTokens, int server_id) :
-      machines_(machines.begin(), machines.end()),
-      id_(id),
-      server_id_(server_id),
-      is_sched_server_(id == server_id),
-      schedServer_portserv_port_(port_service->new_port()),
-      max_tokens_(numTokens),
-      total_servers_(machines_.size()),
-      port_service_(port_service),
-      context_(1)
+              int numTokens, int server_id, int concurrency_degree= configuration<>{}.concurrency_degree()) :
+      machines_{machines.begin(), machines.end()},
+      id_{id},
+      server_id_{server_id},
+      is_sched_server_{id == server_id},
+      schedServer_portserv_port_{port_service->new_port()},
+      max_tokens_{numTokens},
+      total_servers_{(int)machines_.size()},
+      port_service_{port_service},
+      context_{1},
+      concurrency_degree_{concurrency_degree}
     {
-    
+      // get total number of machines in machines_ map
+      total_machines_ = machines_.size();
+      // get order of local machine in machines_ map
+      machine_map_order_ = std::distance(std::begin(machines_), machines_.find(id_)) + 1;
+     
+      {std::ostringstream ss;
+      ss << "zmq_scheduler::zmq_scheduler total_machines_=" << total_machines_
+         << ", machine_map_order_=" <<  machine_map_order_ << std::endl;
+      COUT << ss.str();}
+
       functions.reserve(max_functions);
-      COUT << "zmq_scheduler: data_service_\n";
+      COUT << "zmq_scheduler::zmq_scheduler data_service_\n";
       data_service_ = std::make_shared<zmq_data_service>(machines_, id_,
                                                          port_service_, max_tokens_);
-      COUT << "zmq_scheduler: data_service_ done\n";
+      COUT << "zmq_scheduler::zmq_scheduler data_service_ done\n";
 
       // if server, bind reply socket and launch thread
       if (is_sched_server_) {
         // server thread launched
-        COUT << "zmq_scheduler: launch_thread()\n";
+        COUT << "zmq_scheduler::zmq_scheduler launch_thread()\n";
         launch_thread();
-        COUT << "zmq_scheduler: launch_thread() done\n";
+        COUT << "zmq_scheduler::zmq_scheduler launch_thread() done\n";
       }
 
       // get secheduler server port
-      COUT << "zmq_scheduler: port_service_->get \n";
+      COUT << "zmq_scheduler::zmq_scheduler port_service_->get \n";
       schedServer_port_ = port_service_->get(0,schedServer_portserv_port_, true);
-      COUT << "zmq_scheduler: port_service_->get end \n";
+      COUT << "zmq_scheduler::zmq_scheduler port_service_->get end \n";
    
       // launch thread pool
-      concurrency_degree_= configuration<>{}.concurrency_degree();
       thread_pool_.init(this,concurrency_degree_);
 
     };
@@ -130,7 +140,7 @@ class zmq_scheduler{
     int register_sequential_task(std::function<void(Task&)> && f,
                                 bool create_tokens)
     {
-      while(task_gen.test_and_set());
+      while(task_gen_.test_and_set());
       int function_id = functions.size();;
       functions.emplace_back(f);
       seq_func_ids_.push_back(function_id);
@@ -139,7 +149,7 @@ class zmq_scheduler{
       } else {
         new_token_func_.push_back(0);
       }
-      task_gen.clear();
+      task_gen_.clear();
       {std::ostringstream ss;
       ss << "register_sequential_task: func_id=" << function_id << std::endl;
       COUT << ss.str();}
@@ -160,7 +170,7 @@ class zmq_scheduler{
    int register_parallel_stage(std::function<void(Task&)> && f,
                                 bool create_tokens)
    {
-     while(task_gen.test_and_set());
+     while(task_gen_.test_and_set());
      int function_id = (int) functions.size();
      functions.emplace_back(f);
      if (create_tokens) {
@@ -168,7 +178,7 @@ class zmq_scheduler{
      } else {
        new_token_func_.push_back(0);
      }
-     task_gen.clear();
+     task_gen_.clear();
      {std::ostringstream ss;
      ss << "register_parallel_stage: func_id=" << function_id << std::endl;
      COUT << ss.str();}
@@ -181,7 +191,7 @@ class zmq_scheduler{
    */
    void clear_tasks()
    {
-     while(task_gen.test_and_set());
+     while(task_gen_.test_and_set());
     
      // reset functions vector
      functions.clear();
@@ -190,9 +200,42 @@ class zmq_scheduler{
      // reset functions vector
      seq_func_ids_.clear();
      seq_func_ids_.reserve(max_functions);
-     task_gen.clear();
+     task_gen_.clear();
    }
+   //**********   Managing  task ids
+   /**
+   \brief Get a new global task id based on the local task id and the machines_ distance.
+   Get a new global task id based on the local task id and the machines_ distance.
+   \return new global task id
+   */
 
+
+   long get_task_id()
+   {
+     while(task_ids_gen_.test_and_set());
+     // compute global task id
+     long task_id = (last_local_task_id_ * total_machines_) + machine_map_order_;
+     // increase local task id
+     last_local_task_id_++;
+     task_ids_gen_.clear();
+     
+     {std::ostringstream ss;
+     ss << "zmq_scheduler::get_task_id task_id=" << task_id << std::endl;
+     COUT << ss.str();}
+     return task_id;
+   }
+   
+   //**********   getting node ids
+   /**
+   \brief Get the node id which is the index in the machines_ list.
+   \return node id
+   */
+
+
+   long get_node_id()
+   {
+     return id_;
+   }
 
    //**********   client part of the server messages tasks
    
@@ -209,14 +252,14 @@ class zmq_scheduler{
        COUT << "zmq_scheduler:set_task BEGIN\n";
 
        // Get the socket for this thread
-       while(accessSockMap.test_and_set());
+       while(accessSockMap_.test_and_set());
        if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
           requestSockList_.emplace(std::piecewise_construct,
                                    std::forward_as_tuple(std::this_thread::get_id()),
                                    std::forward_as_tuple(create_socket()));
        }
        std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
-       accessSockMap.clear();
+       accessSockMap_.clear();
        COUT << "zmq_scheduler:set_task requestSock_ obtain\n";
 
        int new_token_int = (new_token ? 1 : 0);
@@ -268,14 +311,14 @@ class zmq_scheduler{
      try {
        COUT << "zmq_scheduler:get_task BEGIN\n";
        // Get the socket for this thread
-       while(accessSockMap.test_and_set());
+       while(accessSockMap_.test_and_set());
        if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
           requestSockList_.emplace(std::piecewise_construct,
                                    std::forward_as_tuple(std::this_thread::get_id()),
                                    std::forward_as_tuple(create_socket()));
        }
        std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
-       accessSockMap.clear();
+       accessSockMap_.clear();
        COUT << "zmq_scheduler:get_task requestSock_ obtain\n";
 
        //auto old_task_id = old_task.get_task_id();
@@ -322,14 +365,14 @@ class zmq_scheduler{
      try {
        COUT << "zmq_scheduler:consume_token BEGIN \n";
        // Get the socket for this thread
-       while(accessSockMap.test_and_set());
+       while(accessSockMap_.test_and_set());
        if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
           requestSockList_.emplace(std::piecewise_construct,
                                    std::forward_as_tuple(std::this_thread::get_id()),
                                    std::forward_as_tuple(create_socket()));
        }
        std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
-       accessSockMap.clear();
+       accessSockMap_.clear();
        COUT << "zmq_scheduler:consume_token requestSock_ obtain\n";
 
        requestSock_->send(consumeCmd.data(), consumeCmd.size());
@@ -364,14 +407,14 @@ class zmq_scheduler{
      try {
        COUT << "zmq_scheduler:run BEGIN\n";
        // Get the socket for this thread
-       while(accessSockMap.test_and_set());
+       while(accessSockMap_.test_and_set());
        if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
           requestSockList_.emplace(std::piecewise_construct,
                                    std::forward_as_tuple(std::this_thread::get_id()),
                                    std::forward_as_tuple(create_socket()));
        }
        std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
-       accessSockMap.clear();
+       accessSockMap_.clear();
        COUT << "zmq_scheduler::run requestSock_ obtain\n";
 
        int is_sched_server_int = (is_sched_server_ ? 1 : 0);
@@ -434,14 +477,14 @@ class zmq_scheduler{
      try {
        COUT << "zmq_scheduler:end BEGIN\n";
        // Get the socket for this thread
-       while(accessSockMap.test_and_set());
+       while(accessSockMap_.test_and_set());
        if (requestSockList_.find(std::this_thread::get_id()) == requestSockList_.end()) {
           requestSockList_.emplace(std::piecewise_construct,
                                    std::forward_as_tuple(std::this_thread::get_id()),
                                    std::forward_as_tuple(create_socket()));
        }
        std::shared_ptr<zmq::socket_t> requestSock_= requestSockList_.at(std::this_thread::get_id());
-       accessSockMap.clear();
+       accessSockMap_.clear();
        COUT << "zmq_scheduler::end requestSock_ obtain\n";
 
        requestSock_->send(tskEndCmd.data(), tskEndCmd.size(), ZMQ_SNDMORE);
@@ -563,14 +606,14 @@ class zmq_scheduler{
     std::shared_ptr<zmq_data_service> data_service_;
 
     //mutual exclusion data
-    std::atomic_flag task_gen = ATOMIC_FLAG_INIT;
+    std::atomic_flag task_gen_ = ATOMIC_FLAG_INIT;
     
     // zeroMQ data
     zmq::context_t context_;
     std::unique_ptr<zmq::socket_t> replySock_;
     std::map<std::thread::id, std::shared_ptr<zmq::socket_t>> requestSockList_;
     //mutual exclusion data for socket map structure
-    std::atomic_flag accessSockMap = ATOMIC_FLAG_INIT;
+    std::atomic_flag accessSockMap_ = ATOMIC_FLAG_INIT;
 
    
     /// server address
@@ -582,6 +625,17 @@ class zmq_scheduler{
 
     // pointer to zmq_scheduler_thread
     zmq_scheduler_thread<Task> * zmq_sched_thread_ = NULL;
+
+
+    // local counter for generating task ids
+    long last_local_task_id_ = 0;
+    // distance of local machine on machines_ maps
+    long machine_map_order_ = 0;
+    // number of machines in machines_ maps
+    long total_machines_ = 0;
+
+    //mutual exclusion data
+    std::atomic_flag task_ids_gen_ = ATOMIC_FLAG_INIT;
 
   /**
   \brief Function to create a zmq request socket for the port service
@@ -633,7 +687,7 @@ class zmq_scheduler_thread{
             COUT << ss.str();}
             maxTokens_ = maxTokens;
             total_servers_ = total_servers;
-            new_tok_par_tasks_.registry(100);
+            //new_tok_par_tasks_.registry(100); ///?????
         };
 
     /**
@@ -668,10 +722,10 @@ class zmq_scheduler_thread{
     std::map<int,int> seq_servers_;
     // sequential tasks queues (server_id, (task.get_id(),task))
     std::map<int,multi_queue<int,Task>> seq_tasks_;
-    // new token parallel tasks queue (blk_server_id, task)
-    multi_queue<int,Task> new_tok_par_tasks_;
-    // old token parallel tasks queue (blk_server_id, task)
-    multi_queue<int,Task> old_tok_par_tasks_;
+    // new token parallel tasks queue (list_server_id, task)
+    multi_queue_hard<long,Task> new_tok_par_tasks_;
+    // old token parallel tasks queue (list_server_id, task)
+    multi_queue_hard<long,Task> old_tok_par_tasks_;
     // waiting get requests queue (server_id, client_id)
     multi_queue<int,std::string> requests_;
     // queue for pending run request (client_id)
@@ -679,7 +733,7 @@ class zmq_scheduler_thread{
     // queue for pending end request (client_id)
     locked_mpmc_queue<std::string> end_requests_;
     // queue for blocked servers (client_id,server_id,task)
-    locked_mpmc_queue<std::tuple<std::string,int,Task>> blocked_servers_;
+    locked_mpmc_queue<std::tuple<std::string,Task>> blocked_servers_;
     // set of enabled sequential tasks (task.get_id())
     std::set<int> set_enabled_;
     // set of task that potentially can create new tokens (task.get_id())
@@ -764,6 +818,62 @@ class zmq_scheduler_thread{
       } catch(const std::exception &e) {
         std::cerr << "zmq_scheduler_thread::server_init: " << e.what() << std::endl;
       }
+    }
+    
+    /**
+    \brief Push a sequential task on its corresponding multique after checking and allocating.
+    */
+    void push_seq (zmq_scheduler<Task> * sched, Task task)
+    {
+    try {
+      COUT << "zmq_scheduler_thread::push_seq: BEGIN" << std::endl;
+      // allocate and register multi_queue if not done before
+      if ( (seq_tasks_.find(seq_servers_[task.get_id()]) != seq_tasks_.end()) &&
+           (seq_tasks_.find(seq_servers_[task.get_id()])->
+                            second.is_registered(task.get_id())) )  {
+        COUT << "zmq_scheduler_thread::push_seq: NOT first for task: "<< task.get_id() << std::endl;
+        auto local_ids = task.get_local_ids();
+        if ( (task.get_is_hard()) &&
+             (std::find(local_ids.begin(),
+                        local_ids.end(),
+                        seq_servers_[task.get_id()]) == local_ids.end()) ) {
+          // ERROR: used seq. server is not valid for actual iteration of the task
+          std::cerr << "zmq_scheduler_thread::push_seq ERROR sequential task: " << task.get_id() << " cannot execute on server " <<  seq_servers_[task.get_id()]  << std::endl;
+          assert (false);
+        }
+      } else {
+        auto local_ids = task.get_local_ids();
+
+        COUT << "zmq_scheduler_thread::push_seq: first for task: "<< task.get_id() << ", is_hard = " << task.get_is_hard() << ", task.get_local_ids().size() = " << local_ids.size() << ", task.get_local_ids()[0] = " << local_ids[0] << ", seq_servers_[" << task.get_id() << "] = " << seq_servers_[task.get_id()] << std::endl;
+        
+        if ( (task.get_is_hard()) &&
+             (std::find(local_ids.begin(),
+                         local_ids.end(),
+                         seq_servers_[task.get_id()]) == local_ids.end()) ) {
+          // prev. assigned server is not adecuate for this task, change it
+          COUT << "zmq_scheduler_thread::push_seq: change server " << std::endl;
+          seq_servers_[task.get_id()] = local_ids[0];
+        }
+          
+        // if multi_queue for this server do not exists, create it
+        if (seq_tasks_.find(seq_servers_[task.get_id()]) == seq_tasks_.end()) {
+          seq_tasks_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(seq_servers_[task.get_id()]),
+                             std::forward_as_tuple(sched->max_tokens_));
+        }
+        // if task is not registered in its multi_queue, register it
+        if (!seq_tasks_.find(seq_servers_[task.get_id()])->
+                             second.is_registered(task.get_id())) {
+          seq_tasks_.find(seq_servers_[task.get_id()])->second.registry(task.get_id());
+        }
+      }
+      // push task onto the multi_queue of the corresponding server
+      COUT << "zmq_scheduler_thread::push_seq: push: " << task.get_id() << std::endl;
+      seq_tasks_.find(seq_servers_[task.get_id()])->second.push(task.get_id(), task);
+      COUT << "zmq_scheduler_thread::push_seq: END" << std::endl;
+    } catch(const std::exception &e) {
+      std::cerr << "zmq_scheduler_thread::push_seq: ERROR: " << e.what() << std::endl;
+    }
     }
     
     /**
@@ -1039,26 +1149,20 @@ class zmq_scheduler_thread{
           }
           COUT << "zmq_scheduler_thread::srv_run_cmd set_enabled_.size() = " << set_enabled_.size() << std::endl;
           for (const auto &aux : set_enabled_)  {
-            COUT << "zmq_scheduler_thread::srv_run_cmd set_enabled_  elem = " << aux << std::endl;
+            COUT << "zmq_scheduler_thread::srv_run_cmd set_enabled_  elem = " << aux << ", initial server = " << seq_servers_[aux] << std::endl;
           }
-          // create all the multiqueues of the seq map
-          for (unsigned int i=0; i<servers_ids_.size(); i++) {
-            seq_tasks_.emplace(std::piecewise_construct,
-                               std::forward_as_tuple(servers_ids_[i]),
-                               std::forward_as_tuple(sched->max_tokens_));
-            for (unsigned int j=0; j<total_func_stages_; j++) {
-              seq_tasks_.find(servers_ids_[i])->second.registry(j);
-            }
-          }
+
           COUT << "zmq_scheduler_thread::srv_run_cmd servers_ids_.size() = " << servers_ids_.size() << std::endl;
             
+          Task task_seq = Task{0,0,0,std::vector<long>{seq_servers_[0]},false};
           if (seq_servers_.find(0) != seq_servers_.end()) {
+
             //run initial seq task (0) on its corresp. server
-            seq_tasks_.find(seq_servers_[0])->second.push(0, Task{0,0});
+            push_seq (sched, task_seq);
             COUT << "zmq_scheduler_thread::srv_run_cmd INIT SEQ = \n";
           } else {
             // run initial task on first server
-            new_tok_par_tasks_.push(servers_ids_[0],Task{0,0});
+            new_tok_par_tasks_.push(task_seq.get_local_ids(), task_seq, task_seq.get_is_hard());
             COUT << "zmq_scheduler_thread::srv_run_cmd INIT PAR = \n";
           }
           assert(tokens_==0);
@@ -1143,7 +1247,7 @@ class zmq_scheduler_thread{
         if (new_token) {
           if (tokens_ >= sched->max_tokens_) {
             // if tokens can't be increased block the server until they can
-            blocked_servers_.push(make_tuple(client_id,server_id,task));
+            blocked_servers_.push(make_tuple(client_id,task));
             total_blocked_servers_++;
 
             COUT << "zmq_scheduler_thread::srv_set_cmd: total_blocked_servers_" << total_blocked_servers_ << std::endl;
@@ -1166,16 +1270,16 @@ class zmq_scheduler_thread{
 
         // if new task is sequential, insert it on the corresponding server's queue
         if (seq_servers_.find(task.get_id()) != seq_servers_.end()) {
-          seq_tasks_.find(seq_servers_[task.get_id()])->second.push(task.get_id(), task);
+          push_seq (sched, task);
           COUT << "zmq_scheduler_thread::srv_set_cmd: NEW TASK SEQ\n";
 
         // if new task could create new tokens, insert on new_token_parallel_queue
         } else if (set_new_tok_tasks_.find(task.get_id())!=set_new_tok_tasks_.end()) {
-          new_tok_par_tasks_.push(server_id,task);
+          new_tok_par_tasks_.push(task.get_local_ids(), task, task.get_is_hard());
           COUT << "zmq_scheduler_thread::srv_set_cmd: NEW TASK NEW_TOKEN\n";
         // else insert on old_token_parallel_queue
         } else {
-          old_tok_par_tasks_.push(server_id,task);
+          old_tok_par_tasks_.push(task.get_local_ids(), task, task.get_is_hard());
           COUT << "zmq_scheduler_thread::srv_set_cmd: NEW TASK OLD_TOKEN\n";
         }
 
@@ -1187,7 +1291,7 @@ class zmq_scheduler_thread{
         COUT << "zmq_scheduler_thread::srv_set_cmd END\n";
         
        } catch(const std::exception &e) {
-        std::cerr << "zmq_scheduler_thread::srv_set_cmd: " << e.what() << std::endl;
+        std::cerr << "zmq_scheduler_thread::srv_set_cmd ERROR: " << e.what() << std::endl;
       }
       return (false);
     }
@@ -1207,26 +1311,24 @@ class zmq_scheduler_thread{
           // insert new task from blocked server and wake it up
           auto data = blocked_servers_.pop();
           auto blk_client_id = std::get<0>(data);
-          auto blk_server_id = std::get<1>(data);
-          auto blk_task = std::get<2>(data);
+          auto blk_task = std::get<1>(data);
           total_blocked_servers_--;
 
           COUT << "zmq_scheduler_thread::srv_consume_cmd: total_blocked_servers_" << total_blocked_servers_ << std::endl;
 
           // if new task is sequential, insert it on the corresponding server's queue
           if (seq_servers_.find(blk_task.get_id()) != seq_servers_.end()) {
-            seq_tasks_.find(seq_servers_[blk_task.get_id()])->
-                            second.push(blk_task.get_id(), blk_task);
-              COUT << "zmq_scheduler_thread::srv_consume_cmd: NEW TASK SEQ\n";
+            push_seq (sched, blk_task);
+            COUT << "zmq_scheduler_thread::srv_consume_cmd: NEW TASK SEQ\n";
 
           // if new task could create new tokens, insert on new_token_parallel_queue
           } else if (set_new_tok_tasks_.find(blk_task.get_id()) != set_new_tok_tasks_.end()) {
-            new_tok_par_tasks_.push(blk_server_id,blk_task);
+            new_tok_par_tasks_.push(blk_task.get_local_ids(), blk_task, blk_task.get_is_hard());
             COUT << "zmq_scheduler_thread::srv_consume_cmd: NEW TASK NEW_TOKEN\n";
 
           // else insert on old_token_parallel_queue
           } else {
-            old_tok_par_tasks_.push(blk_server_id,blk_task);
+            old_tok_par_tasks_.push(blk_task.get_local_ids(), blk_task, blk_task.get_is_hard());
             COUT << "zmq_scheduler_thread::srv_consume_cmd: NEW TASK OLD_TOKEN\n";
 
           }
@@ -1312,7 +1414,7 @@ class zmq_scheduler_thread{
             sched->replySock_->send(client_id.data(),
                                     client_id.size(), ZMQ_SNDMORE);
             sched->replySock_->send("", 0, ZMQ_SNDMORE);
-            Task task; // default/empty task
+            Task task{}; // default/empty task
             std::string task_string = task.get_serialized_string();
             sched->replySock_->send((char *)(task_string.data()), task_string.size());
               
@@ -1346,6 +1448,7 @@ class zmq_scheduler_thread{
             return (true);
           }
         }
+      COUT << "zmq_scheduler_thread::finish_execution  END\n";
       } catch(const std::exception &e) {
         std::cerr << "zmq_scheduler_thread::finish_execution: " << e.what() << std::endl;
       }
@@ -1367,7 +1470,14 @@ class zmq_scheduler_thread{
         int index = 0;
         auto it=set_req_servers.begin();
         while (it!=set_req_servers.end()) {
-        
+
+          //if requesting aerver do not have sequential task, end iteraction
+          if (seq_tasks_.find(*it) == seq_tasks_.end()) {
+            break;
+          }
+
+          COUT << "zmq_scheduler_thread::exec_seq_task try " << *it << " server\n";
+
           int search_end = false;
           do {
 
@@ -1418,10 +1528,9 @@ class zmq_scheduler_thread{
             
             // else end checking seq. tasks for this server
             } else {
+              COUT << "zmq_scheduler_thread::exec_seq_task: A- search_end = TRUE\n";
               it++;
               search_end = true;
-              COUT << "zmq_scheduler_thread::exec_seq_task: A- search_end = TRUE\n";
-
             }
             
             // if an index have been found
@@ -1474,7 +1583,7 @@ class zmq_scheduler_thread{
 
           int search_end = false;
           do {
-            Task task;
+            Task task{};
             double actual_ratio = ((double)tokens_) / ((double) sched->max_tokens_);
           
             COUT << "zmq_scheduler_thread::exec_par_task_same_server: actual_ratio = " << actual_ratio << ", ratio_create_tokens_ = " << ratio_create_tokens_ << std::endl;
@@ -1546,7 +1655,7 @@ class zmq_scheduler_thread{
  
         while (! requests_.empty()) {
           COUT << "zmq_scheduler_thread::exec_par_task_diff_server: check new request\n";
-          Task task;
+          Task task{};
           double actual_ratio = ((double)tokens_) / ((double) sched->max_tokens_);
           // if there are new token parallel tasks, select one
           COUT << "zmq_scheduler_thread::exec_par_task_diff_server: actual_ratio = " << actual_ratio << ", ratio_create_tokens_ = " << ratio_create_tokens_ << std::endl;

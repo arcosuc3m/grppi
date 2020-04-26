@@ -3,7 +3,7 @@
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * You may obtain a copy of the License at bb
  * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -82,10 +82,29 @@ class multi_queue{
     Registry a new label on the multi_queue, creating its label queue and used count.
     */
     void registry (TLabel queue_label) {
+    try {
       COUT << "multi_queue::registry  queue_size_ = " << queue_size_ << std::endl;
       queues_.emplace(queue_label,queue_size_);
       used_.emplace(queue_label,0);
       return;
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::registry ERROR: " << e.what() << std::endl;
+      return;
+    }
+    }
+
+    /**
+    \brief Check if a label queue is registered.
+
+    Check if a label queue is regeistered .
+    */
+    bool is_registered (TLabel queue_label) {
+    try {
+      return queues_.find(queue_label) != queues_.end();
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::is_registered(label) ERROR: " << e.what() << std::endl;
+      return false;
+    }
     }
 
     /**
@@ -94,7 +113,12 @@ class multi_queue{
     Check if a label queue is empty for an specified label.
     */
     bool empty (TLabel queue_label) {
+    try {
       return queues_.at(queue_label).empty();
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::empty(label) ERROR: " << e.what() << std::endl;
+      return true;
+    }
     }
 
     /**
@@ -126,13 +150,22 @@ class multi_queue{
     */
     template <typename ... TSet>
     std::set<TLabel> loaded_set (TSet... sets) {
+    try {
+      COUT << "multi_queue::loaded_set(sets) BEGIN \n";
+      COUT << "multi_queue::loaded_set(sets) queues_.size()=" << queues_.size() << "\n";
       std::set<TLabel> ret_set;
       for (auto it=queues_.begin(); it!=queues_.end(); it++) {
+          //COUT << "multi_queue::loaded_set(sets) iteracion \n";
           if (!it->second.empty() && label_in_sets(it->first, sets...)) {
             ret_set.insert(it->first);
           }
       }
+      COUT << "multi_queue::loaded_set(sets) END \n";
       return ret_set;
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::loaded_set(sets) ERROR: " << e.what() << std::endl;
+      return {};
+    }
     }
 
     /**
@@ -141,6 +174,8 @@ class multi_queue{
     Check which label queues are loaded
     */
     std::set<TLabel> loaded_set () {
+    try {
+      COUT << "multi_queue::loaded_set() BEGIN \n";
       std::set<TLabel> ret_set;
       for (auto it=queues_.begin(); it!=queues_.end(); it++) {
           if (!it->second.empty()) {
@@ -148,6 +183,10 @@ class multi_queue{
           }
       }
       return ret_set;
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::loaded_set() ERROR: " << e.what() << std::endl;
+      return {};
+    }
     }
     /**
     \brief Push a new element for a certain label.
@@ -156,6 +195,7 @@ class multi_queue{
     */
     void push(TLabel queue_label, TElem elem)
     {
+    try {
       COUT << "multi_queue::multi_queue  push() begin \n";
       if ( (total_occupy_+total_used_) >= label_queue_size_) {
         clean_label_queue();
@@ -165,6 +205,10 @@ class multi_queue{
       total_occupy_++;
       COUT << "multi_queue::multi_queue  push() end \n";
       return;
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::push() ERROR: " << e.what() << std::endl;
+      return;
+    }
     }
 
     /**
@@ -174,6 +218,7 @@ class multi_queue{
     */
     TElem pop()
     {
+    try {
       COUT << "multi_queue::multi_queue  pop() begin \n";
       auto label = label_queue_.pop();
       while (used_[label] > 0) {
@@ -185,6 +230,10 @@ class multi_queue{
       auto res = queues_.at(label).pop();
       COUT << "multi_queue::multi_queue  pop() end \n";
       return res;
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::pop() ERROR: " << e.what() << std::endl;
+      return {};
+    }
     }
     
     /**
@@ -194,6 +243,7 @@ class multi_queue{
     */
     TElem pop(TLabel queue_label)
     {
+    try {
       COUT << "multi_queue::multi_queue  pop(label) begin \n";
       auto elem = queues_.at(queue_label).pop();
       used_[queue_label]++;
@@ -201,6 +251,10 @@ class multi_queue{
       total_occupy_--;
       COUT << "multi_queue::multi_queue  pop(label) end \n";
       return elem;
+    } catch(const std::exception &e) {
+      std::cerr << "multi_queue::pop(label) ERROR: " << e.what() << std::endl;
+      return {};
+    }
     }
 
   private:

@@ -14,35 +14,37 @@ int main ()
   prueba.registry(10);
   prueba.registry(30);
   prueba.registry(50);
+  std::cout << "prueba register 10, 30, 50" << std::endl;
 
-  if (prueba.empty()) {
-    std::cout << "prueba is empty" << std::endl;
-  }
-  if (prueba.empty(10)) {
-    std::cout << "prueba 10 is empty" << std::endl;
-  }
+  std::cout << "prueba.empty() = " << prueba.empty() << std::endl;
+  
+  std::cout << "prueba.empty(10) = " << prueba.empty(10) << std::endl;
   
   prueba.push(10, 11);
   prueba.push(30, 31);
   prueba.push(50, 51);
-  
+
+  std::cout << "prueba push (10,11) - (30,31) - (50,51)" << std::endl;
+
   prueba.push(10, 12);
   prueba.push(30, 32);
   prueba.push(50, 52);
+
+  std::cout << "prueba push (10,12) - (30,32) - (50,52)" << std::endl;
 
   prueba.push(10, 13);
   prueba.push(30, 33);
   prueba.push(50, 53);
 
-  if (prueba.empty()) {
-    std::cout << "prueba is empty" << std::endl;
-  }
-  if (prueba.empty(10)) {
-    std::cout << "prueba 10 is empty" << std::endl;
-  }
+  std::cout << "prueba push (10,13) - (30,33) - (50,53)" << std::endl;
+
+
+  std::cout << "prueba.empty() = " << prueba.empty() << std::endl;
+
+  std::cout << "prueba.empty(10) = " << prueba.empty(10) << std::endl;
 
   {
-    std::cout << "prueba.loaded_set 1" << std::endl;
+    std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
     for (int i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
@@ -58,7 +60,7 @@ int main ()
 
   
   {
-    std::cout << "prueba.loaded_set 2" << std::endl;
+    std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
     for (int i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
@@ -78,7 +80,7 @@ int main ()
   }
 
   {
-    std::cout << "prueba.loaded_set 3" << std::endl;
+    std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
     for (int i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
@@ -93,7 +95,7 @@ int main ()
   }
 
   {
-    std::cout << "prueba.loaded_set 4" << std::endl;
+    std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
     for (int i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
