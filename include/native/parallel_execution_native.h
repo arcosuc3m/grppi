@@ -1055,7 +1055,7 @@ void parallel_execution_native::do_pipeline(Inqueue & input_queue, Transformer &
       mpmc_queue<output_type> & output_queue) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using output_item_value_type = typename output_type::first_type::value_type;
   for (;;) {
@@ -1077,7 +1077,7 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1140,7 +1140,7 @@ void parallel_execution_native::do_pipeline(Queue & input_queue,
     OtherTransformers &&... other_ops) const 
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1177,7 +1177,7 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1220,7 +1220,7 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::value_type;
   using input_value_type = typename input_item_type::first_type;
@@ -1313,7 +1313,7 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
@@ -1351,7 +1351,7 @@ void parallel_execution_native::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename decay_t<Queue>::value_type;
 

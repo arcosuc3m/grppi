@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 3.2.0)
 set(PROJECT_NAME_STR grppi)
+
 project(${PROJECT_NAME_STR})
 
 # Path for additional CMake modules
@@ -11,9 +12,18 @@ message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER} )
 message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER} )
 message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID} )
 
-set(CMAKE_CXX_STANDARD 14)
 
-add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+SET(CMAKE_CXX_FLAGS  " ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+
+#add_compile_options(-O0 -g)
+#add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra)
 
 # Set specific options depending on compiler
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
@@ -68,6 +78,7 @@ if( GRPPI_TBB_ENABLE )
   include_directories(${TBB_INCLUDE_DIRS} )
   add_definitions(-DGRPPI_TBB)
 endif( GRPPI_TBB_ENABLE )
+
 
 # Threads Library
 find_package(Threads REQUIRED)
@@ -144,6 +155,25 @@ endif()
 message( ${ZMQ_INCLUDE_DIR} )
 include_directories(${ZMQ_INCLUDE_DIR} )
 
+
+#This should be configured properly for the supported filesystems 
+option( ASPIDE_CONTAINERS_ENABLE "Aspide containers" OFF )
+message( STATUS "ASPIDE CONTAINERS: " ${ASPIDE_CONTAINERS_ENABLE} )
+if( ASPIDE_CONTAINERS_ENABLE )
+  include_directories("../containers/include/filesystems" )
+  include_directories("../containers/include/generic" )
+  #Add only the files for the supported file systems
+  add_library(localfs STATIC "../containers/src/text_in_container_local.cpp" 
+  	              "../containers/src/file_local.cpp"
+                      "../containers/src/block_local.cpp"
+               )		      
+  target_include_directories(localfs PUBLIC "../containers/include/filesystems"  "../containers/include/generic") 
+  link_libraries(localfs "stdc++fs")
+  add_definitions(-DGRPPI_DCEX)
+endif( ASPIDE_CONTAINERS_ENABLE )
+
+
+
 # Doxygen Documentation
 option( GRPPI_DOXY_ENABLE "Require Doxygen library" OFF )
 if( GRPPI_DOXY_ENABLE )
@@ -172,3 +202,5 @@ option( GRPPI_UNIT_TEST_ENABLE "Unit tests" ON )
 if( GRPPI_UNIT_TEST_ENABLE )
   add_subdirectory(unit_tests)
 endif( GRPPI_UNIT_TEST_ENABLE )
+
+

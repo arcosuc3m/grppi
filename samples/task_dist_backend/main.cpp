@@ -2,8 +2,14 @@
 #include <vector>
 #include <numeric>
 #include <memory>
-#include <experimental/optional>
+//#include <experimental/optional>
+#include <optional>
 #include <stdlib.h>     /* atoi */
+
+
+#include <string.h>
+//#include "text_in_container.hpp"
+//#include "file_generic.hpp"
 
 #include "grppi.h"
 #include "task_dist/zmq_port_service.h"
@@ -39,8 +45,8 @@ int main(int argc, char *argv[]){
  
   std::cout << "node_id = " << id << ", server_id = " << server_id << std::endl;
 
-  //std::map<int, std::string> machines{{0, "127.0.0.1"}};
-  std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "127.0.0.1"}};
+  std::map<int, std::string> machines{{0, "127.0.0.1"}};
+//  std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "127.0.0.1"}};
   //std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
   //std::map<int, std::string> machines{{0, "127.0.0.1"},{1, "172.16.83.183"}};
   auto port_serv = std::make_shared<zmq_port_service> (machines[0], 5570, is_server);
@@ -49,10 +55,13 @@ int main(int argc, char *argv[]){
                                                         port_serv, 100, server_id, 2);
   parallel_execution_dist_task<zmq_scheduler<zmq_task>> p{std::move(sched)};
 
+  aspide::text_in_container container("file://home/david/Aspide/grppi/build/samples/task_dist_backend/dir",'\n');
+
   //return 0;
   std::cout<<"---PIPELINE---"<<std::endl;
   int val = 0;
   grppi::pipeline(p,
+/*    [&val]()-> std::experimental::optional<int> {
     [&val](std::vector<zmq_task> &task = global_tasks)-> std::experimental::optional<int> {
       task.push_back(conf_tasks[0]);
       task.push_back(conf_tasks[1]);
@@ -61,7 +70,13 @@ int main(int argc, char *argv[]){
       std::cout << ss.str();
       if(val < 2 ) return {val++};
       else return {};
-    },
+    },*/
+    container,
+    grppi::farm(4,[](std::string s,std::vector<zmq_task> &task = global_tasks){
+        task.push_back(conf_tasks[0]);
+        task.push_back(conf_tasks[1]);
+             return stoi(s);
+	    }),
     [](int val, std::vector<zmq_task> &task = global_tasks){
         task.push_back(conf_tasks[1]);
         task.push_back(conf_tasks[2]);

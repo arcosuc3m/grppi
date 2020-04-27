@@ -41,10 +41,35 @@
 
 #include <boost/serialization/utility.hpp>
 
-#undef COUT
-#define COUT if (0) std::cout
 
-#define DEBUG
+// TODO: use macro for enabling this feature + prepare cmake for it
+#ifdef GRPPI_DCEX
+
+#include "text_in_container.hpp"
+
+
+template <typename T>
+static constexpr bool is_text_container = std::is_same<std::decay_t<T>, aspide::text_in_container>::value;
+
+template <typename T>
+constexpr bool is_aspide_container =
+   is_text_container<T>;
+
+template <typename T>
+constexpr bool is_not_container = !is_aspide_container<T>;
+
+template <typename T>
+using requires_container = std::enable_if_t<is_aspide_container<T>, int>;
+
+template <typename T>
+using requires_not_container = std::enable_if_t<is_not_container<T>, int>;
+
+#endif
+
+#undef COUT
+#define COUT if (1) std::cout
+
+//#define DEBUG
 
 namespace grppi {
 
@@ -143,9 +168,19 @@ public:
   \param generate_op Generator operation.
   \param transform_ops Transformer operations.
   */
-  template <typename Generator, typename ... Transformers>
+  template <typename Generator, typename ... Transformers
+#ifdef GRPPI_DCEX
+	  , requires_not_container<Generator> = 0
+#endif 
+	  >
   void pipeline(Generator && generate_op, 
                 Transformers && ... transform_ops) const;
+
+
+#ifdef GRPPI_DCEX
+  template <typename ... Transformers>
+  void pipeline(aspide::text_in_container & container, Transformers && ... transform_ops) const;
+#endif 
 
 //  /**
 //  \brief Invoke \ref md_pipeline coming from another context
@@ -400,8 +435,100 @@ constexpr bool supports_divide_conquer<parallel_execution_dist_task>() { return 
 constexpr bool supports_pipeline<parallel_execution_dist_task>() { return true; }
 */
 
+#ifdef GRPPI_DCEX
 template <typename Scheduler>
-template <typename Generator, typename ... Transformers>
+template <typename ... Transformers>
+void parallel_execution_dist_task<Scheduler>::pipeline(
+		aspide::text_in_container & container, Transformers && ... transform_ops) const
+{
+  using namespace std;
+  using output_type = pair<std::string,long>;
+  long order = 0;
+  // Local container
+  if(container.type == 0 ) {
+     scheduler_->register_sequential_task([&container, this, &order](task_type &t) -> void
+      {
+         auto iterator = container.begin_f();
+	 // Obtain files in the container
+	 while(iterator != container.end_f()){
+             auto file = *(iterator);
+	     auto file_iter = file.begin();
+	     // Obtain each string part of the file
+	     while(file_iter != file.end()){
+                 auto value = scheduler_->set(make_pair(*file_iter, order));
+		 //Creates a task for each data item
+                 task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, std::vector<long>{scheduler_->get_node_id()}, false, value};
+                 scheduler_->set_task(next_task,true);
+		 order++;
+		 ++file_iter;
+
+	     }
+	     ++iterator;
+	 }
+	 scheduler_->consume_token();
+
+      }, true);
+   
+   }
+   // TODO: parallel filesystems, hope they may work in the same way for any underlaying filesystem
+   else{
+      scheduler_->register_sequential_task([&container, this, &order](task_type &t) -> void
+      {
+        int num_files = container.size();
+        auto file_iter = container.begin_f();
+	for(int  i = 0; i<num_files; i++){
+            auto file = *(file_iter);
+	    // Those are the machines that have access to the file. 
+	    std::array<std::string,3> data_loc= file.get_data_location(); 
+	    // Transform to node ids 
+	    // Compare with machine list (scheduler_->get_machine_nodes(std::array<std::string,3>)))
+	    // 
+            auto value = scheduler_->set(make_pair(i, order));
+            task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
+		                std::vector<long>{scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, value};
+            scheduler_->set_task(next_task,true);
+            ++file_iter;
+	    order++;
+	}
+	scheduler_->consume_token();
+      }, true);
+
+      scheduler_->register_parallel_stage([&container, this](task_type &t) -> void
+      {
+         //TODO: We probably need to modify the order information for ordering items inside a file
+         long order = 0;
+
+         auto item = scheduler_->template get<pair<int,long>>(t.get_data_location());
+	 auto curr_file = container.begin_f() + item.first;
+	 auto file = *(curr_file);
+	 auto file_iter = file.begin();
+	 while(file_iter != file.end()) {
+             auto value = scheduler_->set(make_pair(*file_iter, order));
+	     //Creates a task for each data item
+             task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
+		                std::vector<long>{scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, value};
+             scheduler_->set_task(next_task,true);
+	     order++;
+	     ++file_iter;
+              
+	 }
+	 scheduler_->consume_token();
+      }, true);
+       COUT<<"NOT SUPPORTED"<<std::endl;
+
+       return;
+   }
+   do_pipeline<output_type>(false, forward<Transformers>(transform_ops)...);
+
+}
+#endif
+
+template <typename Scheduler>
+template <typename Generator, typename ... Transformers
+#ifdef GRPPI_DCEX
+	  , requires_not_container<Generator>
+#endif
+	  >
 void parallel_execution_dist_task<Scheduler>::pipeline(
     Generator && generate_op, 
     Transformers && ... transform_ops) const
@@ -410,7 +537,7 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
   using result_type = decay_t<typename result_of<Generator()>::type>;
   using output_type = pair<typename result_type::value_type,long>;
 
-  //COUT << "pipeline: generator" << std::endl;
+  COUT << "pipeline: generator" << std::endl;
   long order=0;
   COUT << "GENERATOR: is_farm = 0" << std::endl;
 

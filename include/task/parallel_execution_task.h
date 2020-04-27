@@ -1194,7 +1194,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(Inqueue & input_queue, Tran
       std::shared_ptr<mpmc_queue<output_type>> & output_queue) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
  
   using output_item_value_type = typename output_type::first_type::value_type;
   (void) scheduler.register_parallel_stage([this, input_queue, output_queue, &transform_op](task_type t){
@@ -1217,7 +1217,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::element_type::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1275,7 +1275,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(Queue & input_queue,
     std::forward<OtherTransformers>(other_ops)...);
 
   /*using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1314,7 +1314,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename Queue::element_type::value_type;
   using input_item_value_type = typename input_item_type::first_type::value_type;
@@ -1343,7 +1343,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
   
   using input_item_type = typename Queue::element_type::value_type;
 
@@ -1375,7 +1375,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using output_item_value_type = optional<decay_t<Identity>>;
   using output_item_type = pair<output_item_value_type,long>;
@@ -1415,7 +1415,7 @@ void parallel_execution_task<Scheduler>::do_pipeline(
     OtherTransformers && ... other_transform_ops) const
 {
   using namespace std;
-  using namespace experimental;
+  //using namespace experimental;
 
   using input_item_type = typename decay_t<typename Queue::element_type>::value_type;
 
