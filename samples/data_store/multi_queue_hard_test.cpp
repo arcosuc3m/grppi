@@ -21,21 +21,21 @@ int main ()
   
   std::cout << "prueba.empty(10) = " << prueba.empty(10) << std::endl;
   
-  prueba.push(10, 11);
-  prueba.push(30, 31);
-  prueba.push(50, 51);
+  prueba.push(10, 11, false);
+  prueba.push(30, 31, false);
+  prueba.push(50, 51, false);
 
   std::cout << "prueba push (10,11) - (30,31) - (50,51)" << std::endl;
 
-  prueba.push(10, 12);
-  prueba.push(30, 32);
-  prueba.push(50, 52);
+  prueba.push(10, 12, false);
+  prueba.push(30, 32, false);
+  prueba.push(50, 52, false);
 
   std::cout << "prueba push (10,12) - (30,32) - (50,52)" << std::endl;
 
-  prueba.push(10, 13);
-  prueba.push(30, 33);
-  prueba.push(50, 53);
+  prueba.push(10, 13, false);
+  prueba.push(30, 33, false);
+  prueba.push(50, 53, false);
 
   std::cout << "prueba push (10,13) - (30,33) - (50,53)" << std::endl;
 
@@ -108,7 +108,7 @@ int main ()
     int num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
-  prueba.push(30, 34);
+  prueba.push(30, 34, false);
   std::cout << "prueba push (30,34)" << std::endl;
 
   while (! prueba.empty()) {
@@ -117,7 +117,7 @@ int main ()
   }
 
   for (int i=10; i<20; i++) {
-    prueba.push(10, i);
+    prueba.push(10, i, false);
     std::cout << "prueba push (10, "<< i << ") " << std::endl;
     prueba.empty();
   }
@@ -128,12 +128,12 @@ int main ()
   }
 
   for (int i=10; i<20; i++) {
-    prueba.push(10, i);
+    prueba.push(10, i, false);
     std::cout << "prueba push (10, "<< i << ") " << std::endl;
   }
 
   prueba.empty();
-  prueba.push(30, 31);
+  prueba.push(30, 31, false);
   std::cout << "prueba push (30, 31) " << std::endl;
 
   while (! prueba.empty()) {
