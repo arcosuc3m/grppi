@@ -32,7 +32,9 @@
 #include "../common/mpmc_queue.h"
 
 #undef COUT
-#define COUT if (0) std::cout
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 namespace grppi{
 
@@ -78,9 +80,9 @@ class multi_queue_hard{
 
     Creates a multi_queue_hard with the default queue elements of a certain size.
     */
-    multi_queue_hard(int size): queue_size_{size}, label_queue_size_{size * 2}, total_used_{0}, total_strict_{0}, total_valid_{0}, total_occupy_{0}, queues_{}, label_queue_{label_queue_size_}, used_{}, strict_{}, valid_{}
+    multi_queue_hard(long size): queue_size_{size}, label_queue_size_{size * 2}, total_used_{0}, total_strict_{0}, total_valid_{0}, total_occupy_{0}, queues_{}, label_queue_{(int)label_queue_size_}, used_{}, strict_{}, valid_{}
     {
-      COUT << "multi_queue_hard::multi_queue_hard  queue_size_ = " << queue_size_ << std::endl;
+      COUT << "multi_queue_hard::multi_queue_hard  queue_size_ = " << queue_size_ << ENDL;
     };
 
     /**
@@ -90,7 +92,7 @@ class multi_queue_hard{
     */
     void registry (TLabel queue_label) {
     try {
-      COUT << "multi_queue_hard::registry  queue_size_ = " << queue_size_ << std::endl;
+      COUT << "multi_queue_hard::registry  queue_size_ = " << queue_size_ << ENDL;
       queues_.emplace(queue_label,queue_size_);
       used_.emplace(queue_label,0);
       strict_.emplace(queue_label,0);
@@ -135,7 +137,7 @@ class multi_queue_hard{
     Check if the whole multy queue is empty.
     */
     bool empty_all () {
-      COUT << "multi_queue_hard::empty_all total_occupy_ = " << total_occupy_ << std::endl;
+      COUT << "multi_queue_hard::empty_all total_occupy_ = " << total_occupy_ << ENDL;
       return total_occupy_ <= 0;
     }
 
@@ -145,19 +147,19 @@ class multi_queue_hard{
     Check if the whole multy queue is empty of non strict elements.
     */
     bool empty () {
-      COUT << "multi_queue_hard::empty total_occupy_ = " << total_occupy_ << ", total_strict_ = " << total_strict_ << std::endl;
+      COUT << "multi_queue_hard::empty total_occupy_ = " << total_occupy_ << ", total_strict_ = " << total_strict_ << ENDL;
       return total_occupy_-total_strict_ <= 0;
     }
 
 
     /**
-    \brief return the number of elements int eh whole queue.
+    \brief return the number of elements in the whole queue.
     \return number of elements on the whole queue.
 
     return the number of elements in the whole queue.
     */
-    int count () {
-      COUT << "multi_queue_hard::count total_occupy_ = " << total_occupy_ << std::endl;
+    long count () {
+      COUT << "multi_queue_hard::count total_occupy_ = " << total_occupy_ << ENDL;
       return total_occupy_;
     }
 
@@ -221,7 +223,7 @@ class multi_queue_hard{
     void push(std::vector<TLabel> list_labels, TElem elem, bool strict_label)
     {
     try {
-      COUT << "multi_queue_hard::push begin \n";
+      COUT << "multi_queue_hard::push begin" << ENDL;
       if ( ((total_occupy_+total_used_)-total_strict_) >= label_queue_size_) {
         clean_label_queue();
       }
@@ -234,7 +236,7 @@ class multi_queue_hard{
       auto elem = std::get<1>(packed->value());
       auto strict_label = std::get<2>(packed->value());
 
-      COUT << "multi_queue_hard::push elem =  << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", list_labels[0] = " << list_labels[0] << std::endl;
+      COUT << "multi_queue_hard::push elem =  << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", list_labels[0] = " << list_labels[0] << ENDL;
       }
       auto prime_label = *(list_labels.begin());
       for (auto it=list_labels.begin(); it!=list_labels.end(); it++) {
@@ -250,7 +252,7 @@ class multi_queue_hard{
         label_queue_.push(prime_label);
       }
       total_occupy_++;
-      COUT << "multi_queue_hard::push end \n";
+      COUT << "multi_queue_hard::push end" << ENDL;
       return;
     } catch(const std::exception &e) {
       std::cerr << "multi_queue_hard::push() ERROR: " << e.what() << std::endl;
@@ -266,12 +268,12 @@ class multi_queue_hard{
     TElem pop()
     {
     try {
-      COUT << "multi_queue_hard::pop begin \n";
+      COUT << "multi_queue_hard::pop begin" << ENDL;
       // check there are valid elements in any queue
       assert (!empty());
       auto label = label_queue_.pop();
       while (used_[label] > 0) {
-        COUT << "multi_queue_hard::pop label used take another\n";
+        COUT << "multi_queue_hard::pop label used take another" << ENDL;
         used_[label]--;
         total_used_--;
         label = label_queue_.pop();
@@ -279,9 +281,9 @@ class multi_queue_hard{
       total_occupy_--;
       auto packed = queues_.at(label).pop();
       while ( (!*packed) || (std::get<2>(packed->value())) ) {
-        COUT << "multi_queue_hard::pop() not valid get another\n";
+        COUT << "multi_queue_hard::pop() not valid get another" << ENDL;
         if (*packed) { // is an strict_label element
-          COUT << "multi_queue_hard::pop() strict_label element, push it back\n";
+          COUT << "multi_queue_hard::pop() strict_label element, push it back" << ENDL;
           queues_.at(label).push(packed);
         }
         packed = queues_.at(label).pop();
@@ -290,7 +292,7 @@ class multi_queue_hard{
       auto elem = std::get<1>(packed->value());
       auto strict_label = std::get<2>(packed->value());
       (*packed) = {};   // reset optional
-      COUT << "multi_queue_hard::pop elem = << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", list_labels[0] = " << list_labels[0] << std::endl;
+      COUT << "multi_queue_hard::pop elem = << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", list_labels[0] = " << list_labels[0] << ENDL;
 
       assert (!strict_label);
       for (auto it=list_labels.begin(); it!=list_labels.end(); it++) {
@@ -311,12 +313,12 @@ class multi_queue_hard{
     TElem pop(TLabel queue_label)
     {
     try {
-      COUT << "multi_queue_hard::pop(label) begin \n";
+      COUT << "multi_queue_hard::pop(label) begin" << ENDL;
       // check there are valid elements in the queue
       assert (!empty(queue_label));
       auto packed = queues_.at(queue_label).pop();
       while (!*packed)  {
-        COUT << "multi_queue_hard::pop(label) not valid get another\n";
+        COUT << "multi_queue_hard::pop(label) not valid get another" << ENDL;
         packed = queues_.at(queue_label).pop();
       }
       auto list_labels = std::get<0>(packed->value());
@@ -324,7 +326,7 @@ class multi_queue_hard{
       auto strict_label = std::get<2>(packed->value());
       (*packed) = {};   // reset optional
       auto prime_label = *(list_labels.begin());
-      COUT << "multi_queue_hard::pop elem = << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", prime_label = " << prime_label << std::endl;
+      COUT << "multi_queue_hard::pop elem = << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", prime_label = " << prime_label << ENDL;
 
       for (auto it=list_labels.begin(); it!=list_labels.end(); it++) {
         if (strict_label) {
@@ -339,7 +341,7 @@ class multi_queue_hard{
         total_used_++;
       }
       total_occupy_--;
-      COUT << "multi_queue_hard::pop(label) end \n";
+      COUT << "multi_queue_hard::pop(label) end" << ENDL;
       return elem;
     } catch(const std::exception &e) {
       std::cerr << "multi_queue_hard::pop(label) ERROR: " << e.what() << std::endl;
@@ -348,19 +350,19 @@ class multi_queue_hard{
     }
 
   private:
-    int queue_size_{0};
-    int label_queue_size_{0};
-    int total_used_{0};
-    int total_strict_{0};
-    int total_valid_{0};
-    int total_occupy_{0};
+    long queue_size_{0};
+    long label_queue_size_{0};
+    long total_used_{0};
+    long total_strict_{0};
+    long total_valid_{0};
+    long total_occupy_{0};
     std::map<TLabel, locked_mpmc_queue <
         std::shared_ptr <std::experimental::optional <
         std::tuple <std::vector<TLabel>, TElem, bool> >> >> queues_;
     locked_mpmc_queue<TLabel> label_queue_;
-    std::map<TLabel,int> used_;
-    std::map<TLabel,int> strict_;
-    std::map<TLabel,int> valid_;
+    std::map<TLabel,long> used_;
+    std::map<TLabel,long> strict_;
+    std::map<TLabel,long> valid_;
 
 
     /**
@@ -380,21 +382,26 @@ class multi_queue_hard{
     */
     void clean_label_queue()
     {
-      //COUT << "clean_label_queue: begin " << std::endl;
-      //COUT << "total_occupy_ = " << total_occupy_ << std::endl;
-      //COUT << "total_used_ = " << total_used_ << std::endl;
-      for (int i=0; i<total_occupy_; i++) {
+      COUT << "multi_queue::clean_label_queue: begin " << ENDL;
+      COUT << "multi_queue::clean_label_queue: total_occupy_ = " << total_occupy_ << ENDL;
+      COUT << "multi_queue::clean_label_queue: total_used_ = " << total_used_ << ENDL;
+      COUT << "multi_queue::clean_label_queue: total_strict_ = " << total_strict_ << ENDL;
+      long total_elem = (total_occupy_ + total_used_) - total_strict_;
+      for (long i=0; i<total_elem; i++) {
         auto label = label_queue_.pop();
         if (used_[label] > 0) {
             used_[label]--;
             total_used_--;
+            COUT << "multi_queue::clean_label_queue: label_queue_:  INVALID(" << i << ")" << ENDL;
         } else {
+            COUT << "multi_queue::clean_label_queue: label_queue_:  VALID(" << i << ")" << ENDL;
             label_queue_.push(label);
         }
       }
-      //COUT << "clean_label_queue: end " << std::endl;
-      //COUT << "total_occupy_ = " << total_occupy_ << std::endl;
-      //COUT << "total_used_ = " << total_used_ << std::endl;
+      COUT << "multi_queue::clean_label_queue:: end " << ENDL;
+      COUT << "multi_queue::clean_label_queue: total_occupy_ = " << total_occupy_ << ENDL;
+      COUT << "multi_queue::clean_label_queue: total_used_ = " << total_used_ << ENDL;
+      COUT << "multi_queue::clean_label_queue: total_strict_ = " << total_strict_ << ENDL;
     }
 };
 

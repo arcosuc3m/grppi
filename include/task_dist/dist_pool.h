@@ -27,7 +27,9 @@
 #include <memory>
 
 #undef COUT
-#define COUT if (0) std::cout
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 namespace grppi{
 
@@ -39,39 +41,31 @@ class dist_pool
 
     //dist_pool() = delete;
  
-    void init (Scheduler * sched, int pool_size)
+    void init (Scheduler * sched, long pool_size)
     {
       scheduler = sched;
-      COUT << "dist_pool::dist_pool pool_size = " << pool_size << std::endl;
+      COUT << "dist_pool::dist_pool pool_size = " << pool_size << ENDL;
       for (auto i=0; i<pool_size; i++){
          pool_threads.emplace_back(std::thread(
               [this, i](){
                 try {
-                {std::ostringstream ss;
-                ss << "dist_pool::dist_pool (" << i << "): thread begin" << std::endl;
-                COUT << ss.str();}
+                COUT << "dist_pool::dist_pool (" << i << "): thread begin" << ENDL;
                 auto t = task_type{};
                 while(1){
                   t = scheduler->get_task(t);
                   if( t == task_type{})
                     break;
-                  {std::ostringstream ss;
-                  ss << "dist_pool::dist_pool (" << i << "): exec begin: task = (" << t.get_id()
-                     << ", " << t.get_task_id() << ")" << std::endl;
-                  COUT << ss.str();}
+                  COUT << "dist_pool::dist_pool (" << i << "): exec begin: task = (" << t.get_id()
+                     << ", " << t.get_task_id() << ")" << ENDL;
                   
                   scheduler->functions[t.get_id()](t);
                   
-                  {std::ostringstream ss;
-                  ss << "dist_pool::dist_pool (" << i << "): exec end: task = (" << t.get_id()
-                     << ", " << t.get_task_id() << ")" << std::endl;
-                  COUT << ss.str();}
+                  COUT << "dist_pool::dist_pool (" << i << "): exec end: task = (" << t.get_id()
+                     << ", " << t.get_task_id() << ")" << ENDL;
                 }
-                {std::ostringstream ss;
-                ss << "dist_pool::dist_pool (" << i << "): thread end " << std::endl;
-                COUT << ss.str();}
+                COUT << "dist_pool::dist_pool (" << i << "): thread end " << ENDL;
                 } catch(const std::exception &e) {
-                  std::cerr << "dist_pool - pool_threads" << e.what() << '\n';
+                  std::cerr << "dist_pool - pool_threads " << e.what() << '\n';
                 }
               }
          ));
@@ -84,13 +78,13 @@ class dist_pool
 
     void __attribute__ ((noinline)) finalize_pool()
     {
-       COUT << "dist_pool::finalize_pool BEGIN \n";
+       COUT << "dist_pool::finalize_pool BEGIN" << ENDL;
 
-       for(unsigned int i=0; i < pool_threads.size(); i++){
+       for(long i=0; i < pool_threads.size(); i++){
           pool_threads[i].join();
        }
        pool_threads.clear();
-      COUT << "dist_pool::finalize_pool END \n";
+      COUT << "dist_pool::finalize_pool END" << ENDL;
 
     }
 

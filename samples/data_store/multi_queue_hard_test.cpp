@@ -6,9 +6,9 @@
 
 int main ()
 {
-  std::set<int> conjunto2{10,50};
+  std::set<long> conjunto2{10,50};
 
-  grppi::multi_queue_hard<int,int> prueba{10};
+  grppi::multi_queue_hard<long,long> prueba{10};
 
   std::cout << "prueba is a multi_queue" << std::endl;
 
@@ -47,15 +47,15 @@ int main ()
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   
-  for (int i=0; i<3; i++) {
-    int num = prueba.pop(10);
+  for (long i=0; i<3; i++) {
+    long num = prueba.pop(10);
     std::cout << "prueba pop(10) is " << num << std::endl;
   }
 
@@ -63,27 +63,27 @@ int main ()
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   
-  for (int i=0; i<3; i++) {
-    int num = prueba.pop();
+  for (long i=0; i<3; i++) {
+    long num = prueba.pop();
     std::cout << "prueba pop is " << num << std::endl;
   }
 
   while (! prueba.empty(50)) {
-    int num = prueba.pop(50);
+    long num = prueba.pop(50);
     std::cout << "prueba pop (50)  is " << num << std::endl;
   }
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
@@ -91,43 +91,43 @@ int main ()
   }
   
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
   prueba.push(30, 34, false);
   std::cout << "prueba push (30,34)" << std::endl;
 
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
-  for (int i=10; i<20; i++) {
+  for (long i=10; i<20; i++) {
     prueba.push(10, i, false);
     std::cout << "prueba push (10, "<< i << ") " << std::endl;
     prueba.empty();
   }
-  for (int i=10; i<20; i++) {
-    int num = prueba.pop(10);
+  for (long i=10; i<20; i++) {
+    long num = prueba.pop(10);
     std::cout << "prueba pop (10) is " << num << std::endl;
     prueba.empty();
   }
 
-  for (int i=10; i<20; i++) {
+  for (long i=10; i<20; i++) {
     prueba.push(10, i, false);
     std::cout << "prueba push (10, "<< i << ") " << std::endl;
   }
@@ -137,34 +137,34 @@ int main ()
   std::cout << "prueba push (30, 31) " << std::endl;
 
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
   std::cout << "prueba CLEAR ALL LABELS"<< std::endl;
-  {std::vector<int> aux_labels = {10,30,50};
+  {std::vector<long> aux_labels = {10,30,50};
   for (auto const& lab : aux_labels) {
     while (! prueba.empty(lab)) {
-      int num = prueba.pop(lab);
+      long num = prueba.pop(lab);
       std::cout << "prueba pop(" << lab << ")  is " << num << std::endl;
     }
   }}
   
-  prueba.push(std::vector<int>{10}, 11, false);
-  prueba.push(std::vector<int>{30}, 31, true);
-  prueba.push(std::vector<int>{50}, 51, false);
+  prueba.push(std::vector<long>{10}, 11, false);
+  prueba.push(std::vector<long>{30}, 31, true);
+  prueba.push(std::vector<long>{50}, 51, false);
 
   std::cout << "prueba push (10,11,false) - (30,31,true) - (50,51,false)" << std::endl;
 
-  prueba.push(std::vector<int>{10}, 12, true);
-  prueba.push(std::vector<int>{30}, 32, false);
-  prueba.push(std::vector<int>{50}, 52, true);
+  prueba.push(std::vector<long>{10}, 12, true);
+  prueba.push(std::vector<long>{30}, 32, false);
+  prueba.push(std::vector<long>{50}, 52, true);
 
   std::cout << "prueba push (10,12,true) - (30,32,false) - (50,52,true)" << std::endl;
 
-  prueba.push(std::vector<int>{10}, 13, false);
-  prueba.push(std::vector<int>{30}, 33, true);
-  prueba.push(std::vector<int>{50}, 53, false);
+  prueba.push(std::vector<long>{10}, 13, false);
+  prueba.push(std::vector<long>{30}, 33, true);
+  prueba.push(std::vector<long>{50}, 53, false);
   
   std::cout << "prueba push (10,13,false) - (30,33,true) - (50,53,false)" << std::endl;
 
@@ -175,15 +175,15 @@ int main ()
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   
-  for (int i=0; i<3; i++) {
-    int num = prueba.pop(10);
+  for (long i=0; i<3; i++) {
+    long num = prueba.pop(10);
     std::cout << "prueba pop(10) is " << num << std::endl;
   }
 
@@ -191,27 +191,27 @@ int main ()
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   
-  for (int i=0; i<3; i++) {
-    int num = prueba.pop();
+  for (long i=0; i<3; i++) {
+    long num = prueba.pop();
     std::cout << "prueba pop is " << num << std::endl;
   }
 
   while (! prueba.empty(50)) {
-    int num = prueba.pop(50);
+    long num = prueba.pop(50);
     std::cout << "prueba pop (50)  is " << num << std::endl;
   }
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
@@ -219,21 +219,21 @@ int main ()
   }
   
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
   std::cout << "prueba.empty() = " << prueba.empty() << std::endl;
@@ -249,21 +249,21 @@ int main ()
   std::cout << "prueba.count() = " << prueba.count() << std::endl;
 
 
-  prueba.push(std::vector<int>{50}, 52, true);
+  prueba.push(std::vector<long>{50}, 52, true);
 
   std::cout << "prueba push (50,52,true) " << std::endl;
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
@@ -280,29 +280,29 @@ int main ()
   std::cout << "prueba.count() = " << prueba.count() << std::endl;
 
   std::cout << "prueba CLEAR ALL LABELS"<< std::endl;
-  {std::vector<int> aux_labels = {10,30,50};
+  {std::vector<long> aux_labels = {10,30,50};
   for (auto const& lab : aux_labels) {
     while (! prueba.empty(lab)) {
-      int num = prueba.pop(lab);
+      long num = prueba.pop(lab);
       std::cout << "prueba pop(" << lab << ")  is " << num << std::endl;
     }
   }}
   
-  prueba.push(std::vector<int>{10}, 11, false);
-  prueba.push(std::vector<int>{30}, 31, true);
-  prueba.push(std::vector<int>{10,50}, 51, false);
+  prueba.push(std::vector<long>{10}, 11, false);
+  prueba.push(std::vector<long>{30}, 31, true);
+  prueba.push(std::vector<long>{10,50}, 51, false);
 
   std::cout << "prueba push (10,11,false) - (30,31,true) - (10-50,51,false)" << std::endl;
 
-  prueba.push(std::vector<int>{10}, 12, true);
-  prueba.push(std::vector<int>{30}, 32, false);
-  prueba.push(std::vector<int>{10,50}, 52, true);
+  prueba.push(std::vector<long>{10}, 12, true);
+  prueba.push(std::vector<long>{30}, 32, false);
+  prueba.push(std::vector<long>{10,50}, 52, true);
 
   std::cout << "prueba push (10,12,true) - (30,32,false) - (10-50,52,true)" << std::endl;
 
-  prueba.push(std::vector<int>{10}, 13, false);
-  prueba.push(std::vector<int>{30}, 33, true);
-  prueba.push(std::vector<int>{10,50}, 53, false);
+  prueba.push(std::vector<long>{10}, 13, false);
+  prueba.push(std::vector<long>{30}, 33, true);
+  prueba.push(std::vector<long>{10,50}, 53, false);
 
   std::cout << "prueba push (10,13,false) - (30,33,true) - (10-50,53,false)" << std::endl;
 
@@ -313,15 +313,15 @@ int main ()
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   
-  for (int i=0; i<3; i++) {
-    int num = prueba.pop(10);
+  for (long i=0; i<3; i++) {
+    long num = prueba.pop(10);
     std::cout << "prueba pop(10) is " << num << std::endl;
   }
 
@@ -329,27 +329,27 @@ int main ()
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   
-  for (int i=0; i<3; i++) {
-    int num = prueba.pop();
+  for (long i=0; i<3; i++) {
+    long num = prueba.pop();
     std::cout << "prueba pop is " << num << std::endl;
   }
 
   while (! prueba.empty(50)) {
-    int num = prueba.pop(50);
+    long num = prueba.pop(50);
     std::cout << "prueba pop (50)  is " << num << std::endl;
   }
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
@@ -357,21 +357,21 @@ int main ()
   }
   
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
   std::cout << "prueba.empty() = " << prueba.empty() << std::endl;
@@ -387,21 +387,21 @@ int main ()
   std::cout << "prueba.count() = " << prueba.count() << std::endl;
 
 
-  prueba.push(std::vector<int>{50}, 54, true);
+  prueba.push(std::vector<long>{50}, 54, true);
 
   std::cout << "prueba push (50,54,true) " << std::endl;
 
   {
     std::cout << "prueba.loaded_set {10, 50}" << std::endl;
     auto conjunto = prueba.loaded_set(conjunto2);
-    for (int i=0; i<60; i=i+10) {
+    for (long i=0; i<60; i=i+10) {
         if (conjunto.find(i) != conjunto.end()) {
             std::cout << "prueba.loaded_set " << i << " is found" << std::endl;
         }
     }
   }
   while (! prueba.empty()) {
-    int num = prueba.pop();
+    long num = prueba.pop();
     std::cout << "prueba pop  is " << num << std::endl;
   }
 
@@ -418,10 +418,10 @@ int main ()
   std::cout << "prueba.count() = " << prueba.count() << std::endl;
 
   std::cout << "prueba CLEAR ALL LABELS"<< std::endl;
-  {std::vector<int> aux_labels = {10,30,50};
+  {std::vector<long> aux_labels = {10,30,50};
   for (auto const& lab : aux_labels) {
     while (! prueba.empty(lab)) {
-      int num = prueba.pop(lab);
+      long num = prueba.pop(lab);
       std::cout << "prueba pop(" << lab << ")  is " << num << std::endl;
     }
   }}

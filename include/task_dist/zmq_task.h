@@ -31,7 +31,9 @@
 #include "zmq_data_reference.h"
 
 #undef COUT
-#define COUT if (0) std::cout
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 namespace grppi{
 
@@ -42,17 +44,18 @@ namespace grppi{
 
   This type is used as an example of a task type.
 */
-
 class zmq_task{
   public:
+    // Type alias for data reference.
+    using data_ref_type = zmq_data_reference;
 
     /**
     \brief Construct an empty task.
 
     Creates a task with the end function and task ids.
     */
-    zmq_task(): function_id_{-1}, task_id_{-1}, order_{-1}, local_ids_{}, is_hard_{false}, data_location_{-1,-1} {
-    COUT << "CREATE TASK: (-1,-1,-1,0,false,-1,-1)" << std::endl;
+    zmq_task(): function_id_{-1}, task_id_{-1}, order_{-1}, local_ids_{}, is_hard_{false}, data_location_{} {
+    COUT << "CREATE TASK: (-1,-1,-1,0,false,-1,-1)" << ENDL;
     };
 
     
@@ -67,12 +70,10 @@ class zmq_task{
     \param local_ids list of node ids for local execution
     \param is_hard flag:can only execute on local nodes
     */
-    zmq_task(int f_id, long t_id, long order,
+    zmq_task(long f_id, long t_id, long order,
              std::vector<long> local_ids, bool is_hard):
-      function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{-1,-1} {
-      //{std::ostringstream foo;
-      // foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << order_ << "," << local_ids_.size() << "," << is_hard_ << "," <<  ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
-      // COUT << foo.str();}
+      function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{} {
+      COUT << "CREATE TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << "," << local_ids_.size() << "," << is_hard_ << "," <<  data_location_.size() << ")" << ENDL;
 
     }
     
@@ -88,33 +89,31 @@ class zmq_task{
     \param is_hard flag:can only execute on local nodes
     \param data_location data location reference
     */
-    zmq_task(int f_id, long t_id, long order,
+    zmq_task(long f_id, long t_id, long order,
                  std::vector<long> local_ids, bool is_hard,
-                 zmq_data_reference ref):
+                 std::vector<data_ref_type> ref):
       function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{ref} {
-      //{std::ostringstream foo;
-      // foo << "CREATE TASK: ("<< f_id << ","<< t_id << "," << order_ << "," << local_ids_.size() << "," << is_hard_ << "," <<  ref.get_id() <<"," << ref.get_pos() << ")" << std::endl;
-      // COUT << foo.str();}
+      COUT << "CREATE TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << "," << local_ids_.size() << "," << is_hard_ << "," <<  data_location_.size() << "," <<  data_location_[0].get_id() << "," << data_location_[0].get_pos() << ")" << ENDL;
 
       }
 
     inline bool operator==(const zmq_task& rhs) const {
-      //COUT << "zmq_task::operator== \n";
+      COUT << "zmq_task::operator==" << ENDL;
       return task_id_ == rhs.task_id_;
     }
 
     inline bool operator!=(const zmq_task& rhs) const {
-      //COUT << "zmq_task::operator!= \n";
+      COUT << "zmq_task::operator!=" << ENDL;
       return task_id_ != rhs.task_id_;
     } 
 
     inline bool operator>(const zmq_task& rhs) const {
-      //COUT << "zmq_task::operator> \n";
+      COUT << "zmq_task::operator>" << ENDL;
       return task_id_ > rhs.task_id_;
     }
 
     inline bool operator<(const zmq_task& rhs) const {
-      //COUT << "zmq_task::operator< \n";
+      COUT << "zmq_task::operator<" << ENDL;
       return task_id_ < rhs.task_id_;
     }
     
@@ -123,7 +122,7 @@ class zmq_task{
     
     \return  id of the task function
     */
-    int get_id() const
+    long get_id() const
     {
       return function_id_;
     }
@@ -133,27 +132,25 @@ class zmq_task{
 
     \return  task id.
     */
-    int get_task_id() const
+    long get_task_id() const
     {
       return task_id_;
     }
     
     /**
     \brief Return the input data location of the task.
-
     \return  input data location of the task.
     */
-    zmq_data_reference get_data_location()
+    std::vector<data_ref_type> get_data_location()
     {
       return data_location_;
     }
 
     /**
     \brief Store the input data location of the task.
-
     \param loc input data location of the task.
     */
-    void set_data_location(zmq_data_reference loc)
+    void set_data_location(std::vector<data_ref_type> loc)
     {
       data_location_ = loc;
     }
@@ -219,24 +216,55 @@ class zmq_task{
     }
 
     /**
+    \brief Return the before dependencies of the task.
+    \return before dependencies of the task.
+    */
+    std::set<long> get_before_dep()
+    {
+      return before_dep_;
+    }
+
+    /**
+    \brief Store the before dependencies of the task.
+    \param dep before dependencies of the task.
+    */
+    void set_before_dep(std::set<long> dep)
+    {
+      before_dep_ = dep;
+    }
+
+    /**
+    \brief Return the after dependencies of the task.
+    \return after dependencies of the task.
+    */
+    std::set<long> get_after_dep()
+    {
+      return after_dep_;
+    }
+
+    /**
+    \brief Store the after dependencies of the task.
+    \param dep after dependencies of the task.
+    */
+    void set_after_dep(std::set<long> dep)
+    {
+      after_dep_ = dep;
+    }
+
+    /**
     \brief Construct a task from the serialize string.
 
     Construct a task from the serialize string.
     \param str_data serialize string data
     \param str_size serialize string size
     */
-    void set_serialized_string(char * str_data, int str_size)
+    void set_serialized_string(char * str_data, long str_size)
     {
       boost::iostreams::basic_array_source<char> device(str_data, str_size);
       boost::iostreams::stream<boost::iostreams::basic_array_source<char> > is(device);
       boost::archive::binary_iarchive ia(is);
       try {
-        ia >> function_id_;
-        ia >> task_id_;
-        ia >> order_;
-        ia >> local_ids_;
-        ia >> is_hard_;
-        ia >> data_location_;
+        ia >> (*this);
       } catch (...) {
         throw std::runtime_error("Type not serializable");
       }
@@ -255,12 +283,7 @@ class zmq_task{
       boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > os(inserter);
       boost::archive::binary_oarchive oa(os);
       try {
-        oa << function_id_;
-        oa << task_id_;
-        oa << order_;
-        oa << local_ids_;
-        oa << is_hard_;
-        oa << data_location_;
+        oa << (*this);
         os.flush();
       } catch (...) {
         throw std::runtime_error("Type not serializable");
@@ -271,12 +294,14 @@ class zmq_task{
 
 
   private:
-    int function_id_;
+    long function_id_;
     long task_id_;
     long order_;
     std::vector<long> local_ids_;
     bool is_hard_;
-    zmq_data_reference data_location_;
+    std::vector<data_ref_type> data_location_;
+    std::set<long> before_dep_;
+    std::set<long> after_dep_;
 
     friend class boost::serialization::access;
 
@@ -284,7 +309,7 @@ class zmq_task{
     // & operator is defined similar to <<.  Likewise, when the class Archive
     // is a type of input archive the & operator is defined similar to >>.
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
+    void serialize(Archive & ar, const unsigned long version)
     {
         if (version >= 0) {
           ar & function_id_;
@@ -293,6 +318,8 @@ class zmq_task{
           ar & local_ids_;
           ar & is_hard_;
           ar & data_location_;
+          ar & before_dep_;
+          ar & after_dep_;
         }
     }
 };

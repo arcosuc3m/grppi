@@ -11,9 +11,9 @@
 
 void thread_func(std::string machine) {
   grppi::zmq_port_service port_service(machine, 5570, false);
-  int port=0;
-  for (int i=0; i<2; i++) {
-    for (int j=4; j<8; j++) {
+  long port=0;
+  for (long i=0; i<2; i++) {
+    for (long j=4; j<8; j++) {
       try {
           port_service.set(i,j,port);
           std::cout << "set: machine_id=" << i << " key=" << j << " port=" << port << std::endl;
@@ -28,11 +28,11 @@ void thread_func(std::string machine) {
   }
   return;
 }
-int test_recv_local(grppi::zmq_port_service &port_service)
+long test_recv_local(grppi::zmq_port_service &port_service)
 {
-  int port;
-  for (int i=0; i<2; i++) {
-    for (int j=4; j<8; j++) {
+  long port;
+  for (long i=0; i<2; i++) {
+    for (long j=4; j<8; j++) {
       try {
           port = port_service.get(i,j,true);
           std::cout << "get: machine_id=" << i << " key=" << j << " port=" << port << std::endl;
@@ -50,12 +50,12 @@ int test_recv_local(grppi::zmq_port_service &port_service)
 }
 
 
-int test_local(grppi::zmq_port_service &port_service) {
+long test_local(grppi::zmq_port_service &port_service) {
 
   // test local storage
-  int port=0;
-  for (int i=0; i<2; i++) {
-    for (int j=0; j<4; j++) {
+  long port=0;
+  for (long i=0; i<2; i++) {
+    for (long j=0; j<4; j++) {
       try {
           port_service.set(i,j,port);
           std::cout << "set: machine_id=" << i << " key=" << j << " port=" << port << std::endl;
@@ -70,8 +70,8 @@ int test_local(grppi::zmq_port_service &port_service) {
 
   std::cout << std::endl << "------------------" << std::endl << std::endl;
 
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<5; j++) {
+  for (long i=0; i<3; i++) {
+    for (long j=0; j<5; j++) {
       try {
           port = port_service.get(i,j,false);
           std::cout << "get: machine_id=" << i << " key=" << j << " port=" << port << std::endl;
@@ -96,14 +96,14 @@ int main (int argc, char *argv[])
       std::cout << "Usage: " << argv[0] << " id machine [...]" << std::endl;
       return -1;
   }
-  int id = atoi(argv[1]);
-  for (int i=2; i<argc; i++) {
+  long id = atoi(argv[1]);
+  for (long i=2; i<argc; i++) {
       machines.emplace_back(argv[i]);
   }
-  int numTokens = 10;
+  long numTokens = 10;
     
   std::cout << "Number of machines: " << machines.size() << std::endl;
-  for (int i=0; i<(int)machines.size(); i++) {
+  for (long i=0; i<(long)machines.size(); i++) {
       std::cout << "Machines " << i << ": " << machines[i] << std::endl;
   }
   std::cout << "This machine: " << id << " -> " << machines[id] << std::endl;

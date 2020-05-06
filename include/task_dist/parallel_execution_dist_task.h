@@ -59,15 +59,17 @@ template <typename T>
 constexpr bool is_not_container = !is_aspide_container<T>;
 
 template <typename T>
-using requires_container = std::enable_if_t<is_aspide_container<T>, int>;
+using requires_container = std::enable_if_t<is_aspide_container<T>, long>;
 
 template <typename T>
-using requires_not_container = std::enable_if_t<is_not_container<T>, int>;
+using requires_not_container = std::enable_if_t<is_not_container<T>, long>;
 
 #endif
 
 #undef COUT
-#define COUT if (1) std::cout
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 //#define DEBUG
 
@@ -85,6 +87,7 @@ public:
   // Alias type for the scheduler and the task type
   using scheduler_type = Scheduler;
   using task_type = typename Scheduler::task_type;
+  using data_ref_type = typename Scheduler::data_ref_type;
 
 //  /**
 //  \brief Default construct a task parallel execution policy.
@@ -124,7 +127,7 @@ public:
     ordering_{config_.ordering()},
     scheduler_{std::move(scheduler)}
   {
-    //COUT<<"parallel_execution_dist_task: ordering_ = " << ordering_ << std::endl;
+    //COUT <<"parallel_execution_dist_task: ordering_ = " << ordering_ << ENDL;
   }
 
   parallel_execution_dist_task(std::unique_ptr<Scheduler> scheduler,
@@ -160,6 +163,28 @@ public:
   */
   bool is_ordered() const noexcept { return ordering_; }
 
+//#ifdef DEBUG
+  /**
+  \brief Invoke \ref md_divide-conquer.
+  \tparam Input Type used for the input problem.
+  \tparam Divider Callable type for the divider operation.
+  \tparam Predicate Callable type for the stop condition predicate.
+  \tparam Solver Callable type for the solver operation.
+  \tparam Combiner Callable type for the combiner operation.
+  \param ex Sequential execution policy object.
+  \param input Input problem to be solved.
+  \param divider_op Divider operation.
+  \param predicate_op Predicate operation.
+  \param solver_op Solver operation.
+  \param combine_op Combiner operation.
+  */
+  template <typename Input, typename Divider, typename Predicate, typename Solver, typename Combiner>
+  auto divide_conquer(Input && input,
+                      Divider && divide_op,
+                      Predicate && predicate_op,
+                      Solver && solve_op,
+                      Combiner && combine_op) const;
+//#endif
   
   /**
   \brief Invoke \ref md_pipeline.
@@ -435,6 +460,198 @@ constexpr bool supports_divide_conquer<parallel_execution_dist_task>() { return 
 constexpr bool supports_pipeline<parallel_execution_dist_task>() { return true; }
 */
 
+//#ifdef DEBUG
+
+template <typename Scheduler>
+template <typename Input, typename Divider,typename Predicate, typename Solver, typename Combiner>
+auto parallel_execution_dist_task<Scheduler>::divide_conquer(
+    Input && input,
+    Divider && divide_op,
+    Predicate && predicate_op,
+    Solver && solve_op,
+    Combiner && combine_op) const
+{
+  constexpr sequential_execution seq;
+  using result_type =
+    std::decay_t<typename std::result_of<Solver(Input)>::type>;
+  using input_type = std::decay_t<Input>;
+  using data_type = std::pair < input_type, result_type >;
+
+  COUT << "parallel_execution_dist_task::DIVIDE_CONQUER" << ENDL;
+
+  // init divide task identifier
+  long init_divide_id = 0;
+  // normal divide task identifier
+  long normal_divide_id = 0;
+  // Merge task identifier
+  long merger_id = 0;
+  // Ending task identifier
+  long ending_id = 0;
+
+  auto merge_function =
+  [&combine_op,this](task_type &task)
+  {
+    auto task_before_dep = task.get_before_dep();
+    auto it = task_before_dep.begin();
+    COUT <<"parallel_execution_dist_task::divide_conquer:MERGE(" << task.get_task_id() << "): BEGIN: taskid=" << task.get_task_id() << " dep={" << *(it++) << ", " << *(it) << "}" << ENDL;
+    auto task_data_loc = task.get_data_location();
+    // get final task output data as initial value
+    auto data = scheduler_->template get<data_type>(task_data_loc[0]);
+    // combine all partial output data from the tasks this was dependant
+    for (long i=1; i<task_data_loc.size(); i++) {
+      COUT<<"parallel_execution_dist_task::divide_conquer:MERGE(" << task.get_task_id() << "): iter=" << i << ENDL;
+      // get partial data
+      auto input = scheduler_->template get_release<data_type>(task_data_loc[i]);
+      // combine partial data with final data
+      data.second = combine_op(data.second, input.second);
+    }
+    COUT<<"parallel_execution_dist_task::divide_conquer:MERGE(" << task.get_task_id() << "): final result=" << data.second << ENDL;
+    
+    // store final output data
+    scheduler_->set(data,task_data_loc[0]);
+    
+    // finish this branch and free the tokens of the PREVIOUS data locs
+    // but DO NOT FREE the resulting data loc that would be used latter
+    scheduler_->finish_task(task, (task_data_loc.size()-1));
+    
+    COUT<<"parallel_execution_dist_task::divide_conquer:MERGE(" << task.get_task_id() << "): END" << ENDL;
+    return;
+  };
+
+  auto normal_divide_function =
+  [&divide_op, &predicate_op, &solve_op, &combine_op, &seq, &merger_id, &normal_divide_id, this](task_type &task)
+  {
+    COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): BEGIN: taskid=" << task.get_task_id() <<
+        " after_dep count = " << task.get_after_dep().size() << " after_dep (0) = " << *(task.get_after_dep().begin()) <<
+        " before_dep count = " << task.get_before_dep().size() << " before_dep (0) = " << *(task.get_before_dep().begin()) << ENDL;
+    // get" in/out data for this problem
+    auto task_data_loc = task.get_data_location();
+    auto data = scheduler_->template get<data_type>(task_data_loc[0]);
+    // check if this problem is a simple one
+    if( predicate_op(data.first) ) {
+      COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): SIMPLE CASE: input = " << data.first << ENDL;
+      // solve the simple problem
+      data.second = solve_op(data.first);
+      // save output data on the allocated data loc
+      scheduler_->set(data,task_data_loc[0]);
+    
+      // finish this branch but DO NOT FREE the token (data loc will be used)
+      scheduler_->finish_task(task, 0);
+    
+      COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): SIMPLE CASE: END" << ENDL;
+      return;
+    }
+    // obtain all the direct subproblems
+    auto subproblems = divide_op(data.first);
+    // if there are tokens for all subproblems -> allocate them
+    if( false == scheduler_->allocate_tokens(subproblems.size()) ) {
+      COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): SEQUENCIAL CASE: input = " << data.first << ENDL;
+      // if not enough tokens solve the problem sequentally
+      data.second = seq.divide_conquer(data.first,
+             std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
+      std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op) );
+      // save output data on the allocated data loc
+      scheduler_->set(data,task_data_loc[0]);
+
+      // finish this branch but DO NOT FREE the token (data loc will be used)
+      scheduler_->finish_task(task, 0);
+
+      COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): SEQUENCIAL CASE: END" << ENDL;
+      return;
+    }
+    COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): PARALLEL CASE: input = " << data.first << ENDL;
+
+    // create merger task and its auxiliar data loc vector and dependency set
+    task_type merger_task{merger_id, task.get_task_id(), task.get_order(),
+                          task.get_local_ids(), task.get_is_hard()};
+    merger_task.set_after_dep(task.get_after_dep());
+    auto merger_data_loc = task.get_data_location();
+    std::set<long> merger_task_before_dep;
+    
+    // create a new task for each subproblem
+    for( unsigned long i = 0; i < subproblems.size(); i++){
+      //Store data in data manager
+      //auto ref = scheduler_->set(std::make_pair(subproblems[i], result_type{}));
+      auto ref = scheduler_->set(data_type{subproblems[i], result_type{}});
+      // create new task for subproblem
+      task_type new_task {normal_divide_id, scheduler_->get_task_id(), task.get_order(), {scheduler_->get_node_id()}, false, {ref}};
+      std::set<long> aux_set{};
+      aux_set.insert(merger_task.get_task_id());
+      new_task.set_after_dep(aux_set);
+      COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): new task: taskid=" << new_task.get_task_id()  << " after_dep={" << *(new_task.get_after_dep().begin()) << "}" << ENDL;
+      // update merge task with the new dependency and data loc
+      merger_task_before_dep.insert(new_task.get_task_id());
+      merger_data_loc.push_back(ref);
+      //Launch the task
+      scheduler_->set_task(new_task,false);
+    }
+    // finish and send merge task with its data locs and dependency set
+    {std::string aux_str;
+    for (auto it=merger_task_before_dep.begin(); it!=merger_task_before_dep.end();it++) {
+        aux_str+=std::to_string(*it);
+        aux_str+=",";
+    }
+    COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): merger task: taskid=" << merger_task.get_task_id()  << " dep={" << aux_str << "}" << ENDL;}
+    merger_task.set_data_location(merger_data_loc);
+    merger_task.set_before_dep(merger_task_before_dep);
+    scheduler_->set_task(merger_task,false);
+    COUT<<"parallel_execution_dist_task::divide_conquer:DIVIDE(" << task.get_task_id() << "): PARALLEL CASE: END" << ENDL;
+    return;
+  };
+
+  auto init_divide_function = [&normal_divide_function, &ending_id, input, this](task_type &task)
+  {
+    COUT<<"parallel_execution_dist_task::divide_conquer:INITIAL(" << task.get_task_id() << "): BEGIN: taskid=" << task.get_task_id()  << ENDL;
+    // store initial input on the local data server
+    //auto ref = scheduler_->set(std::make_pair(input,result_type{}));
+    auto ref = scheduler_->set(data_type{input,result_type{}});
+    
+    // update task with input storing information
+    task.set_data_location({ref});
+    task.set_local_ids({scheduler_->get_node_id()});
+    task.set_is_hard(false);
+    
+    // create ending task
+    task_type end_task {ending_id, scheduler_->get_task_id(), task.get_order(), {scheduler_->get_node_id()}, false, {ref}};
+
+    // set before task dependency of initial task in ending task
+    end_task.set_before_dep({task.get_task_id()});
+    // set end task dependency on initial task
+    task.set_after_dep({end_task.get_task_id()});
+
+    //Launch the ending task
+    scheduler_->set_task(end_task,true);
+    
+    COUT<<"parallel_execution_dist_task::divide_conquer:INITIAL(" << task.get_task_id() << "): Launched ending task(" << end_task.get_task_id() << ")" << ENDL;
+
+    // solve the task problem
+    normal_divide_function(task);
+    COUT<<"parallel_execution_dist_task::divide_conquer:INITIAL(" << task.get_task_id() << "): END" << ENDL;
+    return;
+  };
+
+  auto ending_function = [this](task_type &task)
+  {
+    COUT<<"parallel_execution_dist_task::divide_conquer:ENDING(" << task.get_task_id() << "): BEGIN: taskid=" << task.get_task_id()  << ENDL;
+        // finish task free this token and the previous one
+        scheduler_->finish_task(task,2);
+    COUT<<"parallel_execution_dist_task::divide_conquer:ENDING(" << task.get_task_id() << "): END" << ENDL;
+    return;
+  };
+
+  init_divide_id = scheduler_->register_parallel_task(std::move(init_divide_function), true);
+  normal_divide_id = scheduler_->register_parallel_task(std::move(normal_divide_function), true);
+  merger_id = scheduler_->register_parallel_task(std::move(merge_function), false);
+  ending_id = scheduler_->register_parallel_task(std::move(ending_function), false);
+
+  auto task = scheduler_->run();
+  COUT<<"parallel_execution_dist_task::divide_conquer: run DONE: taskid=" << task.get_task_id() << ENDL;
+
+  auto result = scheduler_->template get_release_all<data_type>(task.get_data_location()[0]);
+  return result.second;
+}
+//#endif
+
 #ifdef GRPPI_DCEX
 template <typename Scheduler>
 template <typename ... Transformers>
@@ -457,7 +674,7 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 	     while(file_iter != file.end()){
                  auto value = scheduler_->set(make_pair(*file_iter, order));
 		 //Creates a task for each data item
-                 task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, std::vector<long>{scheduler_->get_node_id()}, false, value};
+                 task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {value}};
                  scheduler_->set_task(next_task,true);
 		 order++;
 		 ++file_iter;
@@ -465,8 +682,8 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 	     }
 	     ++iterator;
 	 }
-	 scheduler_->consume_token();
-
+	 scheduler_->finish_task(t);
+ 
       }, true);
    
    }
@@ -474,9 +691,9 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
    else{
       scheduler_->register_sequential_task([&container, this, &order](task_type &t) -> void
       {
-        int num_files = container.size();
+        long num_files = container.size();
         auto file_iter = container.begin_f();
-	for(int  i = 0; i<num_files; i++){
+	for(long  i = 0; i<num_files; i++){
             auto file = *(file_iter);
 	    // Those are the machines that have access to the file. 
 	    std::array<std::string,3> data_loc= file.get_data_location(); 
@@ -485,36 +702,35 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 	    // 
             auto value = scheduler_->set(make_pair(i, order));
             task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
-		                std::vector<long>{scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, value};
+		                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
             scheduler_->set_task(next_task,true);
             ++file_iter;
 	    order++;
 	}
-	scheduler_->consume_token();
+	scheduler_->finish_task(t);
       }, true);
 
-      scheduler_->register_parallel_stage([&container, this](task_type &t) -> void
+      scheduler_->register_parallel_task([&container, this](task_type &t) -> void
       {
          //TODO: We probably need to modify the order information for ordering items inside a file
-         long order = 0;
+        long order = 0;
 
-         auto item = scheduler_->template get<pair<int,long>>(t.get_data_location());
-	 auto curr_file = container.begin_f() + item.first;
-	 auto file = *(curr_file);
-	 auto file_iter = file.begin();
-	 while(file_iter != file.end()) {
+        auto item = scheduler_->template get_release<pair<long,long>>(t.get_data_location()[0]);
+	    auto curr_file = container.begin_f() + item.first;
+	    auto file = *(curr_file);
+	    auto file_iter = file.begin();
+	    while(file_iter != file.end()) {
              auto value = scheduler_->set(make_pair(*file_iter, order));
-	     //Creates a task for each data item
+	         //Creates a task for each data item
              task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
-		                std::vector<long>{scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, value};
+		                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
              scheduler_->set_task(next_task,true);
-	     order++;
-	     ++file_iter;
-              
-	 }
-	 scheduler_->consume_token();
+	        order++;
+	        ++file_iter;
+	    }
+	    scheduler_->finish_task(t);
       }, true);
-       COUT<<"NOT SUPPORTED"<<std::endl;
+       COUT<<"parallel_execution_dist_task::pipeline(container...): NOT SUPPORTED"<<ENDL;
 
        return;
    }
@@ -537,15 +753,12 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
   using result_type = decay_t<typename result_of<Generator()>::type>;
   using output_type = pair<typename result_type::value_type,long>;
 
-  COUT << "pipeline: generator" << std::endl;
   long order=0;
-  COUT << "GENERATOR: is_farm = 0" << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(GENERATOR): is_farm = 0" << ENDL;
 
   std::function<void(task_type&)> task_func([&generate_op, this, &order](task_type &t) -> void
   {
-     {std::ostringstream foo;
-     foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-     COUT << foo.str();}
+     COUT << "parallel_execution_dist_task::pipeline(GENERATOR): task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
 #ifdef DEBUG
      std::vector<task_type> conf_tasks;
      auto item{generate_op(conf_tasks)};
@@ -553,33 +766,27 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
      auto item{generate_op()};
 #endif
      if(item){
-       //COUT << "task: generator set begin" << std::endl;
        auto ref = scheduler_->set(make_pair(*item, order));
-       //COUT << "task: generator set end" << std::endl;
-       //{std::ostringstream foo;
-       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id()+1 <<"," << order << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-       //COUT << foo.str();}
+       //COUT << "parallel_execution_dist_task::pipeline(GENERATOR): task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id()+1 <<"," << order << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 #ifdef DEBUG
-       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), ref};
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), {ref}};
 #else
-       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, std::vector<long>{scheduler_->get_node_id()}, false, ref};
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {ref}};
 #endif
        scheduler_->set_task(next_task,false);
        
        // increase order
        order++;
-       //{std::ostringstream foo;
-       //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id() << ","<< order << "], ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-       //COUT << foo.str();}
+       //COUT << "parallel_execution_dist_task::pipeline(GENERATOR): task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id() << ","<< order << "], ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
 #ifdef DEBUG
        task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, conf_tasks[0].get_local_ids(), conf_tasks[0].get_is_hard()};
 #else
-       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, std::vector<long>{scheduler_->get_node_id()}, false};
+       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false};
 #endif
        scheduler_->set_task(gen_task,true);
      } else {
-       //COUT << "task: generator item = false" << std::endl;
-       scheduler_->consume_token();
+       //COUT << "parallel_execution_dist_task::pipeline(GENERATOR): task: generator item = false" << ENDL;
+       scheduler_->finish_task(t);
      }
   });
   scheduler_->register_sequential_task(std::move(task_func), true);
@@ -597,15 +804,13 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
 
   using namespace std;
   //TODO: Need to reimplement ordering
-  COUT << "CONSUMER: is_farm = "<< is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(...CONSUMER): is_farm = "<< is_farm << ENDL;
   std::function<void(task_type&)> task_func([&consume_op, this](task_type t) -> void
   {
-     {std::ostringstream foo;
-     foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-     COUT << foo.str();}
-     auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+     COUT << "parallel_execution_dist_task::pipeline(...CONSUMER): task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+     auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
      consume_op(item.first);
-     scheduler_->consume_token();
+     scheduler_->finish_task(t);
   });
   scheduler_->register_sequential_task(std::move(task_func), false);
   scheduler_->run();
@@ -627,14 +832,12 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
       decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
   using output_item_type = pair<transform_result_type,long>;
 
-  COUT << "NO PATTERN: is_farm = "<< is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): is_farm = "<< is_farm << ENDL;
 
   std::function<void(task_type&)> task_func([this,&transform_op](task_type t) -> void
   {
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    COUT << foo.str();}
-    auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+    COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+    auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
 #ifdef DEBUG
      std::vector<task_type> conf_tasks;
      auto out = transform_op(item.first, conf_tasks);
@@ -642,19 +845,17 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
      auto out = transform_op(item.first);
 #endif
     auto ref = scheduler_->set(make_pair(out,item.second));
-    //{std::ostringstream foo;
-    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-    //COUT << foo.str();}
+    //COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 #ifdef DEBUG
-    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), ref};
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), {ref}};
 #else
-    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
 #endif
     scheduler_->set_task(next_task,false);
   });
   
   if (is_farm) {
-    scheduler_->register_parallel_stage(std::move(task_func),false);
+    scheduler_->register_parallel_task(std::move(task_func),false);
   } else {
     scheduler_->register_sequential_task(std::move(task_func), false);
   }
@@ -674,14 +875,12 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(bool is_farm, Transfor
     return;
   }
   
-  COUT << "NO PATTERN END: is_farm = "<< is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN END.): is_farm = "<< is_farm << ENDL;
   
   std::function<void(task_type&)> task_func([this, &transform_op](task_type t) -> void
   {
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_end, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    COUT << foo.str();}
-    auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+    COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN END.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_end, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+    auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
 #ifdef DEBUG
     std::vector<task_type> conf_tasks;
     auto out = transform_op(item.first, conf_tasks);
@@ -689,19 +888,17 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(bool is_farm, Transfor
     auto out = transform_op(item.first);
 #endif
     auto ref = scheduler_->set(make_pair(out,item.second));
-    //{std::ostringstream foo;
-    //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-    //COUT << foo.str();}
+    //COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN END.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_farm, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 #ifdef DEBUG
-    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), ref};
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), {ref}};
 #else
-    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
 #endif
     scheduler_->set_task(next_task,false);
   });
 
   if (is_farm) {
-    scheduler_->register_parallel_stage(std::move(task_func),false);
+    scheduler_->register_parallel_task(std::move(task_func),false);
   } else {
     scheduler_->register_sequential_task(std::move(task_func), false);
   }
@@ -717,17 +914,15 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace std;
   
   
-  COUT << "FARM CONSUMER: is_farm = " << is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(...FARM CONSUMER): is_farm = " << is_farm << ENDL;
   std::function<void(task_type&)> task_func([this,&farm_obj](task_type t) -> void
   {
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    COUT << foo.str();}
-    auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+    COUT << "parallel_execution_dist_task::pipeline(...FARM CONSUMER): task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+    auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
     farm_obj(item.first);
-    scheduler_->consume_token();
+    scheduler_->finish_task(t);
   });
-  scheduler_->register_parallel_stage(std::move(task_func),false);
+  scheduler_->register_parallel_task(std::move(task_func),false);
   scheduler_->run();
 
 }
@@ -749,7 +944,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using output_type = typename stage_return_type<input_item_value_type, FarmTransformer>::type;
   using output_item_type = pair <output_type, long> ;
 
-  //COUT << "FARM" << std::endl;
+  //COUT << "FARM" << ENDL;
   do_pipeline<InputItemType>(true, farm_obj.transformer(),true);
   do_pipeline<output_item_type>(is_farm, forward<OtherTransformers>(other_transform_ops)... );
 }
@@ -766,29 +961,23 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace std;
   using namespace experimental;
 
-  COUT << "FILTER: is_farm = "<< is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(.FILTER.): is_farm = "<< is_farm << ENDL;
   std::function<void(task_type&)> task_func([&filter_obj, this](task_type &t) -> void
   {
-      {std::ostringstream foo;
-      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-      COUT << foo.str();}
-      auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+      COUT << "parallel_execution_dist_task::pipeline(.FILTER.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+      auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
       if (filter_obj(item.first)) {
         auto ref = scheduler_->set(item);
-        //{std::ostringstream foo;
-        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-        //COUT << foo.str();}
-        task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+        //COUT << "parallel_execution_dist_task::pipeline(.FILTER.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
+        task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
         scheduler_->set_task(next_task,false);
       } else {
-        //{std::ostringstream foo;
-        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter is consumed" << std::endl;
-        //COUT << foo.str();}
-        scheduler_->consume_token();
+        //COUT << "parallel_execution_dist_task::pipeline(.FILTER.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter is consumed" << ENDL;
+        scheduler_->finish_task(t);
       }
   });
   if (is_farm) {
-    scheduler_->register_parallel_stage(std::move(task_func),false);
+    scheduler_->register_parallel_task(std::move(task_func),false);
   } else {
     scheduler_->register_sequential_task(std::move(task_func), false);
   }
@@ -813,26 +1002,22 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
 
   // Review if it can be transformed into parallel task
   // Transform into atomic if used as a parallel task
-  long int order = 0;
+  long long order = 0;
 
-  COUT << "REDUCE: is_farm = "<< is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): is_farm = "<< is_farm << ENDL;
   std::function<void(task_type&)> task_func([&reduce_obj, this, &order](task_type t) -> void
   {
-    {std::ostringstream foo;
-    foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-    COUT << foo.str();}
-    auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+    COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+    auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
     reduce_obj.add_item(std::forward<Identity>(item.first));
     if(reduce_obj.reduction_needed()) {
       constexpr sequential_execution seq;
       auto red = reduce_obj.reduce_window(seq);
       auto ref = scheduler_->set(make_pair(red, order++));
-      //{std::ostringstream foo;
-      //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-      //COUT << foo.str();}
-      scheduler_->set_task(task_type{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref},false);
+      //COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
+      scheduler_->set_task(task_type{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}},false);
     } else{
-      scheduler_->consume_token();
+      scheduler_->finish_task(t);
     }
   });
   scheduler_->register_sequential_task(std::move(task_func), false);
@@ -853,34 +1038,28 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace std;
   using namespace experimental;
 
-  COUT << "ITERATION: is_farm = "<< is_farm << std::endl;
+  COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): is_farm = "<< is_farm << ENDL;
   std::function<void(task_type&)> task_func([&iteration_obj, this](task_type t) -> void
   {
-      {std::ostringstream foo;
-      foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location().get_id() << "," << t.get_data_location().get_pos() << ")" << std::endl;
-      COUT << foo.str();}
-      auto item = scheduler_->template get<InputItemType>(t.get_data_location());
+      COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+      auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
       auto value = iteration_obj.transform(item.first);
       auto new_item = InputItemType{value,item.second};
       if (iteration_obj.predicate(value)) {
         auto ref = scheduler_->set(new_item);
-        //{std::ostringstream foo;
-        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-        //COUT << foo.str();}
-        task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), std::vector<long>{scheduler_->get_node_id()}, false, ref};
+        //COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
+        task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
         scheduler_->set_task(next_task,false);
       }
       else {
         auto ref = scheduler_->set(new_item);
-        t.set_data_location(ref);
-        //{std::ostringstream foo;
-        //foo << "task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id() <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-        //COUT << foo.str();}
+        t.set_data_location({ref});
+        //COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id() <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
         scheduler_->set_task(t,false);
       }
   });
   if (is_farm) {
-    scheduler_->register_parallel_stage(std::move(task_func),false);
+    scheduler_->register_parallel_task(std::move(task_func),false);
   } else {
     scheduler_->register_sequential_task(std::move(task_func), false);
   }
@@ -908,7 +1087,7 @@ template <typename InputItemType, typename ... Transformers,
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
     bool is_farm, Pipeline<Transformers...> && pipeline_obj) const
 {
-  //COUT << "PIPELINE 1" << std::endl;
+  //COUT << "parallel_execution_dist_task::pipeline(.PIPELINE 1.)" << ENDL;
   do_pipeline_nested<InputItemType>(
       is_farm, pipeline_obj.transformers(),
       std::make_index_sequence<sizeof...(Transformers)>());
@@ -923,7 +1102,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
     bool is_farm, Pipeline<Transformers...> && pipeline_obj,
     OtherTransformers && ... other_transform_ops) const
 {
-  //COUT << "PIPELINE 1-1" << std::endl;
+  //COUT << "parallel_execution_dist_task::pipeline(.PIPELINE 1-1.)" << ENDL;
   do_pipeline_nested<InputItemType>(
       is_farm, std::tuple_cat(pipeline_obj.transformers(),
           std::forward_as_tuple(other_transform_ops...)),
@@ -937,7 +1116,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline_nested(
     bool is_farm, std::tuple<Transformers...> && transform_ops,
     std::index_sequence<I...>) const
 {
-  //COUT << "PIPELINE 2" << std::endl;
+  //COUT << "parallel_execution_dist_task::pipeline(.PIPELINE 2.)" << ENDL;
   do_pipeline<InputItemType>(is_farm, std::forward<Transformers>(std::get<I>(transform_ops))...);
 }
 

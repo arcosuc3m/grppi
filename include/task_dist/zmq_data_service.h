@@ -44,7 +44,9 @@
 #include "zmq_data_reference.h"
 
 #undef COUT
-#define COUT if (0) std::cout
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 namespace grppi{
 
@@ -53,9 +55,10 @@ namespace grppi{
 \brief Data service support types.
 @{
 */
-
 class zmq_data_service {
 public:
+  
+  using data_ref_type = zmq_data_reference;
    
   // no copy constructors
   zmq_data_service(const zmq_data_service&) =delete;
@@ -65,7 +68,7 @@ public:
   \brief Data Service contructor interface. Also creates one data server per node.
   \param numTokens num. of maximum elements to store
   */
-  zmq_data_service(int numTokens) :
+  zmq_data_service(long numTokens) :
     //machines_(1,default_machine_),
     machines_{ {0,"localhost"} },
     id_(default_id_),
@@ -73,7 +76,7 @@ public:
     numTokens_(numTokens),
     port_service_()
   {
-      COUT << "zmq_data_service: " << machines_[0] << std::endl;
+      COUT << "zmq_data_service::zmq_data_service " << machines_[0] << ENDL;
       init_data_service ();
   }
 
@@ -87,8 +90,8 @@ public:
   \param port_service service to store and retrive comunication ports.
   \param numTokens num. of maximum elements to store
   */
-  zmq_data_service(std::map<int, std::string> machines, int id,
-              std::shared_ptr<zmq_port_service> port_service, int numTokens) :
+  zmq_data_service(std::map<long, std::string> machines, long id,
+              std::shared_ptr<zmq_port_service> port_service, long numTokens) :
     machines_(machines.begin(), machines.end()),
     id_(id),
     dataServer_port_(port_service->new_port()),
@@ -99,7 +102,7 @@ public:
   }
 
 
-  zmq_data_service(std::map<int, std::string> machines, int id,
+  zmq_data_service(std::map<long, std::string> machines, long id,
               std::shared_ptr<zmq_port_service> port_service) :
     zmq_data_service (machines, id, port_service, default_numTokens_) {}
 
@@ -111,33 +114,35 @@ public:
   */
   ~zmq_data_service()
   {
-    COUT << "~zmq_data_service begin" << std::endl;
+    COUT << "zmq_data_service::~zmq_data_service begin" << ENDL;
     if (isServer_) {
-        COUT << "join proxy_thread_" << std::endl;
+        COUT << "join proxy_thread_" << ENDL;
         servers_.at(id_).send(endCmd.data(), endCmd.size(), 0);
         server_thread_.join();
     }
     servers_.clear();
     localServer_.clear();
-    COUT << "~zmq_data_service end" << std::endl;
+    COUT << "zmq_data_service::~zmq_data_service end" << ENDL;
   }
 
   /**
   \brief Get the data element from the server and position
   referenced in the ref param.
   \tparam T Element type for the data element.
-  \param ref zmq_data_reference of the server and position for tha data.
+  \param ref data_ref_type of the server and position for tha data.
+  \param release flag to release the data after getting it.
+  \param release_count number of release accesses before actually releasing it.
   */
   template <class T>
-  T get (zmq_data_reference ref)
+  T get (data_ref_type ref, bool release=false, long release_count=1)
   {
     mutex.lock();
-    int send_id = ref.get_id();
-    COUT << "get send id:" << send_id << std::endl;
+    long send_id = ref.get_id();
+    COUT << "get send id:" << send_id << ENDL;
 
     // send the command tag
     servers_.at(send_id).send(getCmd.data(), getCmd.size(), ZMQ_SNDMORE);
-    COUT << "get send cmd GET" << std::endl;
+    COUT << "get send cmd GET" << ENDL;
 
     
     // serialize obj into an std::string
@@ -149,18 +154,21 @@ public:
     oa << ref;
     os.flush();
     
-    // send the reference (server_id,pos)
-    servers_.at(send_id).send(serial_str.data(), serial_str.length());
-    COUT << "get send ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+    // send the reference (server_id,pos), release flag and release count
+    servers_.at(send_id).send(serial_str.data(), serial_str.length(), ZMQ_SNDMORE);
+    servers_.at(send_id).send((bool *)(&release), sizeof(release), ZMQ_SNDMORE);
+    servers_.at(send_id).send((long *)(&release_count), sizeof(release_count));
+    COUT << "zmq_data_service::get send ref: (" << ref.get_id() << "," << ref.get_pos() << "), release: " << release << ", release_count: " << release_count << ENDL;
 
     // receive the data
     zmq::message_t message;
     servers_.at(send_id).recv(&message);
-    COUT << "get rec data: size=" << message.size() << std::endl;
+    COUT << "zmq_data_service::get rec data: size=" << message.size() << ENDL;
 
     if (message.size() == 0) {
-        COUT << "Error Item not found" << std::endl;
-        throw std::runtime_error("Item not found");
+        COUT << "zmq_data_service::get Error Item not found" << ENDL;
+        mutex.unlock();
+        throw std::runtime_error("zmq_data_service::get Item not found");
     }
     
     // wrap buffer inside a stream and deserialize serial_str into obj
@@ -172,7 +180,8 @@ public:
     try {
       ia >> item;
     } catch (...) {
-        throw std::runtime_error("Incorrect Type");
+        mutex.unlock();
+        throw std::runtime_error("zmq_data_service::get Incorrect Type");
     }
 
     mutex.unlock();
@@ -180,20 +189,23 @@ public:
   }
 
   /**
-  \brief Get the data element from the server and position
-  referenced in the ref param.
+  \brief Set the data element to a server and position
+  returned in the ref param.
   \tparam T Element type for the data element.
-  \param elem element to store at the data server.
-  \param ref zmq_data_reference of the server and position for tha data.
+  \param item element to store at the data server.
+  \param ref_in referenceof a booked server and position (default choose the first free one).
+  \return final reference for the used server and position.
   */
   template <class T>
-  zmq_data_reference set(T item)
+  data_ref_type set(T item, data_ref_type ref_in = data_ref_type{})
   {
-    mutex.lock();
-    COUT << "set send id:" << server_id_ << std::endl;
-    // send the command tag
-    servers_.at(server_id_).send(setCmd.data(), setCmd.size(), ZMQ_SNDMORE);
-    COUT << "set send cmd SET" << std::endl;
+
+    // if ref_in is valid  uses it server, if not uses local server
+    long send_id = server_id_;
+    if (ref_in != data_ref_type{}) {
+        send_id = ref_in.get_id();
+    }
+    COUT << "zmq_data_service::set send id:" << send_id << ENDL;
 
     // serialize obj into an std::string
     std::string serial_str;
@@ -205,31 +217,46 @@ public:
         oa << item;
         os.flush();
     } catch (...) {
-        throw std::runtime_error("Type not serializable");
+        throw std::runtime_error("zmq_data_service::set Type not serializable");
     }
 
+    // lock the access for other threads
+    mutex.lock();
+
+    // send the command tag
+    servers_.at(send_id).send(setCmd.data(), setCmd.size(), ZMQ_SNDMORE);
+    COUT << "zmq_data_service::set send cmd SET" << ENDL;
+
+    // send the data reference even if it is null
+    std::string ref_in_string = ref_in.get_serialized_string();
+    servers_.at(send_id).send((char *)(ref_in_string.data()), ref_in_string.size(), ZMQ_SNDMORE);
+    COUT << "zmq_data_service::set send data reference: size=" << ref_in_string.length() << ENDL;
+
     // send the data
-    servers_.at(server_id_).send(serial_str.data(), serial_str.length());
-    COUT << "set send data: size=" << serial_str.length() << std::endl;
+    servers_.at(send_id).send(serial_str.data(), serial_str.length());
+    COUT << "zmq_data_service::set send data: size=" << serial_str.length() << ENDL;
 
     // receive the reference (server_id,pos)
     zmq::message_t message;
-    servers_.at(server_id_).recv(&message);
+    servers_.at(send_id).recv(&message);
 
-    // wrap buffer inside a stream and deserialize serial_str into obj
-    boost::iostreams::basic_array_source<char> device((char *)message.data(), message.size());
-    boost::iostreams::stream<boost::iostreams::basic_array_source<char> > is(device);
-    boost::archive::binary_iarchive ia(is);
+    if (message.size() == 0) {
+        COUT << "zmq_data_service::set ERROR: does not return a data ref" << ENDL;
+        mutex.unlock();
+        throw std::runtime_error("zmq_data_service::set Does not return a data ref");
+    }
 
-    zmq_data_reference ref;
-    ia >> ref;
-    COUT << "set recv ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-    if (ref.get_pos() == -1) {
-        std::cerr << "Error full data storage" << std::endl;
-        throw std::runtime_error("Full Data Storage");
+    data_ref_type ref_out{};
+    ref_out.set_serialized_string((char *)message.data(),message.size());
+    COUT << "zmq_data_service::set recv ref: (" << ref_out.get_id() << "," << ref_out.get_pos() << ")" << ENDL;
+
+    if (ref_out == data_ref_type{}) {
+        std::cerr << "zmq_data_service::set Error full data storage" << std::endl;
+        mutex.unlock();
+        throw std::runtime_error("zmq_data_service::set Full Data Storage");
     }
     mutex.unlock();
-    return ref;
+    return ref_out;
   }
 
 private:
@@ -237,11 +264,11 @@ private:
     /// default local machine
     //constexpr static char default_machine_[] = "localhost";
     /// default machine id
-    constexpr static int default_id_ = 0;
+    constexpr static long default_id_ = 0;
     /// default number of tokens
-    constexpr static int default_numTokens_ = 100;
+    constexpr static long default_numTokens_ = 100;
     /// default data server port
-    constexpr static int default_dataServer_port_ = 0;
+    constexpr static long default_dataServer_port_ = 0;
 
     /// intra-process pattern
     const std::vector<std::string> inprocPattern {"inproc://zmq_data_service_", ""};
@@ -261,21 +288,21 @@ private:
     const std::string endCmd{"END"};
 
 
-  std::map<int, std::string> machines_;
-  int id_;
-  int dataServer_port_ = 0;
-  int numTokens_ = 100;
-  std::map<std::string, int> machinesMap_;
-  std::map<int, zmq::socket_t> servers_;
+  std::map<long, std::string> machines_;
+  long id_;
+  long dataServer_port_ = 0;
+  long numTokens_ = 100;
+  std::map<std::string, long> machinesMap_;
+  std::map<long, zmq::socket_t> servers_;
   std::vector<zmq::socket_t> localServer_;
-  int numLocalServers_ = 0;
+  long numLocalServers_ = 0;
   zmq::context_t context_;
   bool isServer_ = false;
-  int server_id_ = -1;
+  long server_id_ = -1;
   /// Proxy server address
   std::thread server_thread_;
-  std::vector<std::pair<bool,std::vector<unsigned char>>> data_;
-  boost::circular_buffer<int> emptyList_;
+  std::vector<std::tuple<bool, long, std::vector<unsigned char>>> data_;
+  boost::circular_buffer<long> emptyList_;
   std::shared_ptr<zmq_port_service> port_service_;
   // lock for get and set operations
   std::mutex mutex;
@@ -285,17 +312,17 @@ private:
   */
   void init_data_service ()
   {
-    COUT << "zmq_data_service 1" << std::endl;
+    COUT << "zmq_data_service::init_data_service BEGIN" << ENDL;
     try {
     // set data array
     data_.resize(numTokens_);
 
     // init empty list
     emptyList_.set_capacity(numTokens_);
-    for (int i=0; i<numTokens_; i++) {
+    for (long i=0; i<numTokens_; i++) {
        emptyList_.push_back(i);
     }
-    COUT << "zmq_data_service 2" << std::endl;
+    COUT << "zmq_data_service::init_data_service init done" << ENDL;
 
     // set zmq context
     context_ = zmq::context_t(1);
@@ -303,68 +330,65 @@ private:
     bool isRequiredIPC = false;
     bool isRequiredTCP = false;
     // set map of unique machines
-    //for (int i=0; i<(int)machines_.size(); i++) {
+    //for (long i=0; i<(long)machines_.size(); i++) {
     for (const auto& elem : machines_) {
       try {
-      int i = elem.first;
+      long i = elem.first;
       if (0 == machinesMap_.count(machines_[i])) {
         machinesMap_[machines_[i]] = i;
         if (i == id_) {
           isServer_ = true; // set true if is a server
           server_id_ = id_;
-          COUT << "uno: " << i << std::endl;
+          COUT << "zmq_data_service::init_data_service current process: " << i << ENDL;
         } else if (machines_[i] == machines_[id_]) {
           server_id_ = i;
-          COUT << "dos: " << i << std::endl;
+          COUT << "zmq_data_service::init_data_service same machine than current: " << i << ENDL;
         } else {
           isRequiredTCP = true;
-          COUT << "tres: " << i << std::endl;
+          COUT << "zmq_data_service::init_data_service remote machine 1: " << i << ENDL;
         }
       } else if (machines_[i] == machines_[id_]) {
           isRequiredIPC = true;
-          COUT << "cuatro: " << i << std::endl;
+          COUT << "zmq_data_service::init_data_service: remote machine 2" << i << ENDL;
       }
       } catch(const std::exception &e) {
-        std::cerr << "zmq_data_service:init_data_service - for (const auto& elem : machines_) {} " << e.what() << '\n';
+        std::cerr << "zmq_data_service:init_data_service - for (const auto& elem : machines_) {} " << e.what() << std::endl;
       }
     }
-    for (int i=0; i<(int)machines_.size(); i++) {
-        COUT << "machines_[" << i << "]: " << machines_[i] << std::endl;
+    for (long i=0; i<(long)machines_.size(); i++) {
+        COUT << "zmq_data_service::init_data_service machines_[" << i << "]: " << machines_[i] << ENDL;
     }
     for (auto it=machinesMap_.begin(); it!=machinesMap_.end(); it++) {
-        COUT << "machinesMap_[" << it->first << "]: " << it->second << std::endl;
+        COUT << "zmq_data_service::init_data_service machinesMap_[" << it->first << "]: " << it->second << ENDL;
     }
-    COUT << "isRequiredIPC: " << isRequiredIPC << std::endl;
-    COUT << "isRequiredTCP: " << isRequiredTCP << std::endl;
-    COUT << "isServer_: " << isServer_ << std::endl;
-    COUT << "zmq_data_service 3" << std::endl;
+    COUT << "zmq_data_service::init_data_service isRequiredIPC: " << isRequiredIPC << ", isRequiredTCP: " << isRequiredTCP << ", isServer_: " << isServer_ << ENDL;
 
     // set the server socket and thread (if needed)
     if (isServer_) {
       try {
-        int pos=0;
-        for (int i=0; i<3; i++) {
+        long pos=0;
+        for (long i=0; i<3; i++) {
           if (i == 0) {
             // inproc server socket binded
             std::ostringstream ss;
             ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
-            COUT << "zmq_data_service 3.1: " << ss.str() << std::endl;
+            COUT << "zmq_data_service::init_data_service inproc bind url: " << ss.str() << ENDL;
             localServer_.emplace_back(context_,ZMQ_REP);
             localServer_[pos].bind(ss.str());
             numLocalServers_++;
             pos++;
-            COUT << "zmq_data_service 3.1 end" << std::endl;
+            COUT << "zmq_data_service::init_data_service inproc bind end" << ENDL;
           } else if ( (i == 1) && (isRequiredIPC) ) {
             // ipc server socket binded
             try {
               std::ostringstream ss;
               ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
-              COUT << "zmq_data_service 3.2: " << ss.str() << std::endl;
+              COUT << "zmq_data_service::init_data_service ipc bind url: " << ss.str() << ENDL;
               localServer_.emplace_back(context_,ZMQ_REP);
               localServer_[pos].bind(ss.str());
               numLocalServers_++;
               pos++;
-              COUT << "zmq_data_service 3.2 end" << std::endl;
+              COUT << "zmq_data_service::init_data_service inproc bind end" << ENDL;
             } catch (std::exception& e) {
               // if not supported erase and enable TCP
               try {
@@ -377,38 +401,38 @@ private:
             // inproc server socket binded
             std::ostringstream ss;
             ss << tcpBindPattern[0];
-            COUT << "zmq_data_service 3.3: " << ss.str() << std::endl;
+            COUT << "zmq_data_service::init_data_service tcp bind url: " << ss.str() << ENDL;
             localServer_.emplace_back(context_,ZMQ_REP);
             localServer_[pos].bind(ss.str());
             size_t size = 256;
             char buf[256];
-            COUT << "zmq_data_service 3.3: getsockopt" << std::endl;
+            COUT << "zmq_data_service::init_data_service tcp bind getsockopt" << ENDL;
             localServer_[pos].getsockopt(ZMQ_LAST_ENDPOINT,buf,&size);
             std::string address(buf);
             std::string delimiter = ":";
-            int pos = address.find(delimiter, address.find(delimiter)+1)+1;
+            long pos = address.find(delimiter, address.find(delimiter)+1)+1;
             std::string srtPort = address.substr(pos); // token is "scott"
-            COUT << "zmq_data_service 3.3: " << srtPort << std::endl;
+            COUT << "zmq_data_service::init_data_service tcp bind port" << srtPort << ENDL;
 
-            int port = atoi(srtPort.c_str());
-            COUT << "zmq_data_service 3.3: " << address << " (" << id_ << "," << dataServer_port_ << "," << port << ")" << std::endl;
+            long port = atoi(srtPort.c_str());
+            COUT << "zmq_data_service::init_data_service tcp bind data: " << address << " (" << id_ << "," << dataServer_port_ << "," << port << ")" << ENDL;
             port_service_->set(id_,dataServer_port_,port);
             numLocalServers_++;
             pos++;
-            COUT << "zmq_data_service 3.3 end" << std::endl;
+            COUT << "zmq_data_service::init_data_service tcp bind end" << ENDL;
           }
         }
-        COUT << "zmq_data_service 4" << std::endl;
+        COUT << "zmq_data_service::init_data_service end binding sockets" << ENDL;
 
         // server thread launched
         server_thread_ = std::thread(&zmq_data_service::server_func, this);
-        COUT << "zmq_data_service 5" << std::endl;
+        COUT << "zmq_data_service::init_data_service launched data server" << ENDL;
       } catch(const std::exception &e) {
-        std::cerr << "zmq_data_service:init_data_service - if (isServer_){} " << e.what() << '\n';
+        std::cerr << "zmq_data_service:init_data_service - if (isServer_){} " << e.what() << std::endl;
       }
 
     }
-    COUT << "zmq_data_service 6" << std::endl;
+    COUT << "zmq_data_service::init_data_service connect sockets begin" << ENDL;
 
     // set the vector of client sockets
     for (const auto& elem : machinesMap_) {
@@ -419,37 +443,37 @@ private:
       if (elem.second == id_) { /* same machine and process */
         std::ostringstream ss;
         ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
-        COUT << "zmq_data_service 6.3: " << elem.second << ": " << ss.str() << std::endl;
+        COUT << "zmq_data_service::init_data_service inproc connect: " << elem.second << ": " << ss.str() << ENDL;
         servers_.at(elem.second).connect(ss.str());
       } else if (elem.first == machines_[id_]) {
         try {
           std::ostringstream ss;
           ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
-          COUT << "zmq_data_service 6.3: " << elem.second << ": " << ss.str() << std::endl;
+          COUT << "zmq_data_service::init_data_service ipc connect: " << elem.second << ": " << ss.str() << ENDL;
           servers_.at(elem.second).connect(ss.str());
         } catch (std::exception& e) {  // if ipc sockets are not supported, change to TCP
-          int port = port_service_->get(elem.second,dataServer_port_,true);
-          COUT << "zmq_data_service 6.3: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << std::endl;
+          long port = port_service_->get(elem.second,dataServer_port_,true);
+          COUT << "zmq_data_service::init_data_service tcp connect 1: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << ENDL;
           std::ostringstream ss;
           ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
-          COUT << "zmq_data_service 6.3: " << ss.str() << std::endl;
+          COUT << "zmq_data_service::init_data_service tcp connect 1 data: " << ss.str() << ENDL;
           servers_.at(elem.second).connect(ss.str());
         }
       } else {
-        int port = port_service_->get(elem.second,dataServer_port_,true);
-        COUT << "zmq_data_service 6.3: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << std::endl;
+        long port = port_service_->get(elem.second,dataServer_port_,true);
+        COUT << "zmq_data_servic::init_data_service tcp connect 2: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << ENDL;
         std::ostringstream ss;
         ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
-        COUT << "zmq_data_service 6.3: " << ss.str() << std::endl;
+        COUT << "zmq_data_service::init_data_service tcp connect 2: " << ss.str() << ENDL;
         servers_.at(elem.second).connect(ss.str());
       }
       } catch(const std::exception &e) {
-      std::cerr << "zmq_data_service:init_data_service - for (const auto& elem : machinesMap_) {}" << e.what() << '\n';
+      std::cerr << "zmq_data_service:init_data_service - for (const auto& elem : machinesMap_) {}" << e.what() << std::endl;
       }
     }
-    COUT << "zmq_data_service end" << std::endl;
+    COUT << "zmq_data_service::init_data_service END" << ENDL;
     } catch(const std::exception &e) {
-      std::cerr << "zmq_data_service:init_data_service" << e.what() << '\n';
+      std::cerr << "zmq_data_service:init_data_service" << e.what() << std::endl;
     }
   }
 
@@ -459,30 +483,30 @@ private:
   void server_func ()
   {
     
-    COUT << "server_func begin" << std::endl;
+    COUT << "zmq_data_service::server_func begin" << ENDL;
     //  Initialize poll set
     std::vector<zmq::pollitem_t> items;
     items.resize(numLocalServers_);
-    for (int i=0; i<numLocalServers_; i++) {
+    for (long i=0; i<numLocalServers_; i++) {
       items[i] = zmq::pollitem_t{(void *)localServer_[i], 0, ZMQ_POLLIN, 0 };
       //items[i].socket = (void *)localServer_[i];
       //items[i].fd = 0;
       //items[i].events = ZMQ_POLLIN;
       //items[i].revents = 0;
-      COUT << "server_func poll: " << i << std::endl;
+      COUT << "zmq_data_service::server_func poll: " << i << ENDL;
     };
 
     while (1) {
-      int next=0;
+      long next=0;
       
-      COUT << "server_func waitting for polling" << std::endl;
+      COUT << "zmq_data_service::server_func waitting for polling" << ENDL;
       //wait until next connection
       //zmq::poll (&items [0], numLocalServers_, -1);
       zmq::poll (items.data(), numLocalServers_, -1);
-      for (int i=0; i<numLocalServers_; i++) {
+      for (long i=0; i<numLocalServers_; i++) {
         if (items [i].revents & ZMQ_POLLIN) {
             next=i;
-            COUT << "server_func wakeup socket: " << next << std::endl;
+            COUT << "zmq_data_service::server_func wakeup socket: " << next << ENDL;
             break;
         }
       }
@@ -494,24 +518,40 @@ private:
       // set command
       if ( (msg.size() == setCmd.size()) &&
            (0 == std::memcmp(msg.data(),static_cast<const void*>(setCmd.data()),setCmd.size())) ) {
-        COUT << "server_func SET" << std::endl;
+        COUT << "zmq_data_service::server_func SET" << ENDL;
         
-        // get next empty slot, recv item and copy it back
-        int slot = -1; // ERROR by default;
+        // get data reference even if it is null
         localServer_[next].recv(&msg);
-        if (false == emptyList_.empty()) {
+        data_ref_type old_ref{};
+        old_ref.set_serialized_string((char *)msg.data(),msg.size());
+        assert (old_ref != data_ref_type{});  //??? TEMP
+        
+        // check old ref or get next empty slot
+        long slot = -1; // ERROR by default;
+        if ( (old_ref != data_ref_type{}) &&
+             (true == std::get<0>(data_[old_ref.get_pos()])) ) {
+            slot = old_ref.get_pos();
+        } else if (false == emptyList_.empty()) {
           slot = emptyList_.front();
           emptyList_.pop_front();
-          COUT << "server_func recv data: size = " << msg.size() << std::endl;
-          data_[slot].first=true;
-          data_[slot].second.resize(msg.size());
-          std::memcpy(data_[slot].second.data(), msg.data(), msg.size());
-          COUT << "server_func data stored: size = " << data_[slot].second.size() << " slot = " << slot << std::endl;
-        } else {
-          COUT << "server_func data NOT stored (FULL STORAGE)" << std::endl;
+          COUT << "zmq_data_service::server_func recv data: size = " << msg.size() << ENDL;
         }
-        // create zmq_data_reference, serialize and send back
-        zmq_data_reference ref(id_,slot);
+        // recv item and copy it back
+        localServer_[next].recv(&msg);
+        if (slot != -1) {
+          std::get<0>(data_[slot])=true;
+          std::get<1>(data_[slot])=0;
+          std::get<2>(data_[slot]).resize(msg.size());
+          std::memcpy(std::get<2>(data_[slot]).data(), msg.data(), msg.size());
+          COUT << "zmq_data_service::server_func data stored: size = " << std::get<2>(data_[slot]).size() << " slot = " << slot << ENDL;
+        } else {
+          COUT << "zmq_data_service::server_func data NOT stored (FULL STORAGE)" << ENDL;
+        }
+        // create data_ref_type, serialize and send back
+        data_ref_type ref{};
+        if (slot != -1) {
+            ref = data_ref_type{id_,slot};
+        }
         std::string serial_str;
         boost::iostreams::back_insert_device<std::string> inserter(serial_str);
         boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > s(inserter);
@@ -521,47 +561,57 @@ private:
         s.flush();
 
         localServer_[next].send(serial_str.data(), serial_str.length());
-        COUT << "server_func send ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
+        COUT << "zmq_data_service::server_func send ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 
       } else if ( (msg.size() == getCmd.size()) &&
            (0 == std::memcmp(msg.data(),static_cast<const void*>(getCmd.data()), getCmd.size())) ) {
-        COUT << "server_func GET" << std::endl;
+        COUT << "zmq_data_service::server_func GET" << ENDL;
         
         // recv and deserialized reference
         localServer_[next].recv(&msg);
-        COUT << "server_func recv ref" << std::endl;
+        COUT << "zmq_data_service::server_func recv ref" << ENDL;
+        data_ref_type ref{};
+        ref.set_serialized_string((char *)msg.data(),msg.size());
+        COUT << "zmq_data_service::server_func decode ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 
-        boost::iostreams::basic_array_source<char> device((char *)msg.data(), msg.size());
-        boost::iostreams::stream<boost::iostreams::basic_array_source<char> > s(device);
-        boost::archive::binary_iarchive ia(s);
-  
-        zmq_data_reference ref;
-        ia >> ref;
-        COUT << "server_func decode ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << std::endl;
-
+        // recv release flag and release count
+        localServer_[next].recv(&msg);
+        bool release_flag = *((bool*) msg.data());
+        localServer_[next].recv(&msg);
+        long release_count = *((long*) msg.data());
         
         //get reference slot, send it and set it as empty
         if ( (id_ == ref.get_id()) && (0 <= ref.get_pos()) &&
-             ((int)data_.size() > ref.get_pos()) && data_[ref.get_pos()].first) {
-          localServer_[next].send(data_[ref.get_pos()].second.data(),
-                                  data_[ref.get_pos()].second.size());
-          data_[ref.get_pos()].first = false;
-          emptyList_.push_back(ref.get_pos());
-          COUT << "server_func send data: size = " << data_[ref.get_pos()].second.size() << " slot = " << ref.get_pos() << std::endl;
+             ((long)data_.size() > ref.get_pos()) && std::get<0>(data_[ref.get_pos()])) {
+          localServer_[next].send(std::get<2>(data_[ref.get_pos()]).data(),
+                                  std::get<2>(data_[ref.get_pos()]).size());
+          // if required, release the data position if the count is complete
+          if (release_flag) {
+            // increase the count
+            std::get<1>(data_[ref.get_pos()])++;
+            COUT << "zmq_data_service::server_func send data: release count increased: slot = " << ref.get_pos() << ", count=(" << std::get<1>(data_[ref.get_pos()]) << ", " << release_count << ")" << ENDL;
+            if (std::get<1>(data_[ref.get_pos()]) >= release_count) {
+              // count is complete -> release
+              std::get<0>(data_[ref.get_pos()]) = false;
+              std::get<1>(data_[ref.get_pos()]) = 0;
+              std::get<2>(data_[ref.get_pos()]) = std::vector<unsigned char>{};
+              emptyList_.push_back(ref.get_pos());
+              COUT << "zmq_data_service::server_func send data: slot released: slot = " << ref.get_pos() << ENDL;
+            }
+          }
+          COUT << "zmq_data_service::server_func send data: size = " << std::get<2>(data_[ref.get_pos()]).size() << " slot = " << ref.get_pos() << ENDL;
         } else {
           localServer_[next].send("", 0);
-          COUT << "server_func: ERROR ref: (" << ref.get_id() << "," << ref.get_pos() << "), ";
-          COUT << "server id: " << id_ << "data range: (" << 0 << "," << data_.size() << ")";
-          COUT << "data_slot_occupied = " << data_[ref.get_pos()].first << std::endl;
+          COUT << "zmq_data_service::server_func: ERROR ref: (" << ref.get_id() << "," << ref.get_pos() << "), " << "server id: " << id_ << "data range: (" << 0 << "," << data_.size() << ")" << "data_slot_occupied = " << std::get<0>(data_[ref.get_pos()]) << ENDL;
         }
       } else if ( (msg.size() == endCmd.size()) &&
            (0 == std::memcmp(msg.data(), static_cast<const void*>(endCmd.data()), endCmd.size())) ) {
-           COUT << "server_func END" << std::endl;
+           COUT << "zmq_data_service::server_func END" << ENDL;
         break;
       }
     }
     // need to release sockets???
-    COUT << "server_func end" << std::endl;
+    COUT << "zmq_data_service::server_func end" << ENDL;
   }
 };
 
