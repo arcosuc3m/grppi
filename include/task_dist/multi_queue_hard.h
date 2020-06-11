@@ -210,9 +210,10 @@ class multi_queue_hard{
     
     Push a new non-strict element for a certain labe l.
     */
-    void push(TLabel queue_label, TElem elem, bool strict_label)
+    template <typename TElem_FW>
+    void push(TLabel queue_label, TElem_FW && elem, bool strict_label)
     {
-      return push(std::vector<TLabel>{queue_label}, elem, strict_label);
+      return push(std::vector<TLabel>{queue_label}, std::forward<TElem_FW>(elem), strict_label);
     }
     
     /**
@@ -220,7 +221,8 @@ class multi_queue_hard{
     
     Push a new element for a certain label (strict or non strict).
     */
-    void push(std::vector<TLabel> list_labels, TElem elem, bool strict_label)
+    template <typename TElem_FW>
+    void push(std::vector<TLabel> list_labels, TElem_FW && elem, bool strict_label)
     {
     try {
       COUT << "multi_queue_hard::push begin" << ENDL;
@@ -229,18 +231,18 @@ class multi_queue_hard{
       }
       using packed_type = std::experimental::optional<std::tuple <std::vector<TLabel>, TElem, bool>>;
       auto packed = std::make_shared<packed_type>(
-                    std::make_tuple(list_labels, elem, strict_label) );
+                    std::make_tuple(list_labels, std::forward<TElem_FW>(elem), strict_label) );
 
       {
       auto list_labels = std::get<0>(packed->value());
-      auto elem = std::get<1>(packed->value());
+      //auto elem = std::get<1>(packed->value());
       auto strict_label = std::get<2>(packed->value());
 
       COUT << "multi_queue_hard::push elem =  << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", list_labels[0] = " << list_labels[0] << ENDL;
       }
       auto prime_label = *(list_labels.begin());
       for (auto it=list_labels.begin(); it!=list_labels.end(); it++) {
-        queues_.at(*it).push(packed);
+        queues_.at(*it).push(std::move(packed));
         if (strict_label) {
           strict_[*it]++;
         }
@@ -284,12 +286,12 @@ class multi_queue_hard{
         COUT << "multi_queue_hard::pop() not valid get another" << ENDL;
         if (*packed) { // is an strict_label element
           COUT << "multi_queue_hard::pop() strict_label element, push it back" << ENDL;
-          queues_.at(label).push(packed);
+          queues_.at(label).push(std::move(packed));
         }
         packed = queues_.at(label).pop();
       }
       auto list_labels = std::get<0>(packed->value());
-      auto elem = std::get<1>(packed->value());
+      auto elem = std::move(std::get<1>(packed->value()));
       auto strict_label = std::get<2>(packed->value());
       (*packed) = {};   // reset optional
       COUT << "multi_queue_hard::pop elem = << elem << , strict_label = " << strict_label << ", list_labels.size() = " << list_labels.size() << ", list_labels[0] = " << list_labels[0] << ENDL;
@@ -322,7 +324,7 @@ class multi_queue_hard{
         packed = queues_.at(queue_label).pop();
       }
       auto list_labels = std::get<0>(packed->value());
-      auto elem = std::get<1>(packed->value());
+      auto elem = std::move(std::get<1>(packed->value()));
       auto strict_label = std::get<2>(packed->value());
       (*packed) = {};   // reset optional
       auto prime_label = *(list_labels.begin());

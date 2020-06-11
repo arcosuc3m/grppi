@@ -22,6 +22,9 @@
 #include <boost/archive/binary_oarchive.hpp>
 //#pragma GCC diagnostic pop
 
+#include "zmq_serialization.h"
+
+
 #undef COUT
 #define COUT if (0) {std::ostringstream foo;foo
 #undef ENDL
@@ -40,9 +43,9 @@ class zmq_data_reference
 {
 
 public:
-    zmq_data_reference(): server_id_{-1}, pos_{-1} {}
+    zmq_data_reference(): server_id_{-1}, pos_{-1}, ref_serialized_{}, is_ref_serialized_{false} {}
     zmq_data_reference(long server_id, long pos) :
-        server_id_(server_id), pos_(pos)
+        server_id_(server_id), pos_(pos), ref_serialized_{}, is_ref_serialized_{false}
     {}
     long get_id() {return server_id_;}
     long get_pos() {return pos_;}
@@ -58,49 +61,92 @@ public:
     }
 
     /**
-    \brief Construct a data reference from the serialize string.
+    \brief Construct a data reference from the serialize vector.
 
-    Construct a data reference from the serialize string.
-    \param str_data serialize string data
-    \param str_size serialize string size
+    Construct a data reference from the serialize vector.
+    \param data serialize data
+    \param size serialize size
     */
-    void set_serialized_string(char * str_data, long str_size)
+    void set_serialized(char * data, long size)
     {
-      boost::iostreams::basic_array_source<char> device(str_data, str_size);
-      boost::iostreams::stream<boost::iostreams::basic_array_source<char> > is(device);
-      boost::archive::binary_iarchive ia(is);
-      try {
-        ia >> (*this);
-      } catch (...) {
-        throw std::runtime_error("Type not serializable");
-      }
+      (*this) = internal::deserialize<zmq_data_reference>(data,size);
     }
     
     /**
-    \brief Get the serialize string for the data reference.
+    \brief Get the serialize vector for the data reference.
     
-    Get the serialize string for the data reference.
-    \return data reference serialize string
+    Get the serialize vector for the data reference.
+    \return data reference serialize vectoir
     */
-    std::string get_serialized_string()
+    std::vector<char> get_serialized()
     {
-      std::string serial_str;
-      boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-      boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > os(inserter);
-      boost::archive::binary_oarchive oa(os);
-      try {
-        oa << (*this);
-        os.flush();
-      } catch (...) {
-        throw std::runtime_error("Type not serializable");
+      return internal::serialize((*this));
+    }
+
+    /**
+    \brief Send a data reference over a ZMQ socket.
+
+    Send a data reference over a ZMQ socket.
+    \param socket zmq socket
+    \param flags sending flags (ZMQ_SNDMORE,ZMQ_NOBLOCK)
+    */
+    void send(zmq::socket_t &socket, int flags = 0)
+    {
+      // if not done, serialize task
+      if (false == is_ref_serialized_) {
+        COUT << " zmq_data_reference::send perform serialization" << ENDL;
+        ref_serialized_ = get_serialized();
+        is_ref_serialized_= true;
       }
-      return serial_str;
+      // send data size to prepare memory
+      auto size = ref_serialized_.size();
+      long ret = socket.send((void *)&size, sizeof(size), (flags|ZMQ_SNDMORE) );
+      COUT << " zmq_data_reference::send send_size: ret=" << ret << ", sizeof(size)=" << sizeof(size) << ", size=" << size << ENDL;
+      // send serialized data
+      ret = socket.send(ref_serialized_.data(),ref_serialized_.size(), flags);
+      COUT << " zmq_data_reference::send send_data: ret=" << ret << ", size=" << size << ENDL;
+
+    }
+
+
+    /**
+    \brief Receive a data reference over a ZMQ socket.
+
+    Receive a data reference over a ZMQ socket.
+    \param socket zmq socket
+    \param flags sending flags (ZMQ_NOBLOCK)
+    */
+    void recv(zmq::socket_t &socket, int flags = 0)
+    {
+      // receive data size and prepare memory
+      auto size = ref_serialized_.size();
+      long ret = socket.recv((void *)&size, sizeof(size), flags);
+      COUT << " zmq_data_reference::recv recv_size: ret=" << ret << ", sizeof(size)=" << sizeof(size) << ", size=" << size << ENDL;
+
+      if (ret != sizeof(size)) {
+        throw std::runtime_error("zmq_data_reference::recv zmq_data_reference size recv error");
+      }
+      ref_serialized_.resize(size);
+      // receive serialized data
+      ret = socket.recv(ref_serialized_.data(),ref_serialized_.size(), flags);
+      COUT << " zmq_data_reference::recv recv_data: ret=" << ret << ", size=" << size << ENDL;
+      if (ret != size) {
+        throw std::runtime_error("zmq_data_reference::recv zmq_data_reference recv error");
+      }
+      //deserialize task
+      auto aux_serial = std::move(ref_serialized_);
+      set_serialized(aux_serial.data(), aux_serial.size());
+      is_ref_serialized_= true;
+      ref_serialized_ = std::move(aux_serial);
     }
 
 private:
     long server_id_;
     long pos_;
 
+    bool is_ref_serialized_=false;
+    std::vector<char> ref_serialized_;
+    
     friend class boost::serialization::access;
     // When the class Archive corresponds to an output archive, the
     // & operator is defined similar to <<.  Likewise, when the class Archive

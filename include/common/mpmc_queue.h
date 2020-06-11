@@ -17,10 +17,17 @@
 #define GRPPI_COMMON_MPMC_QUEUE_H
 
 
+#include <iostream>
+#include <sstream>
 #include <memory>
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+
+#undef COUT
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 namespace grppi{
 
@@ -309,6 +316,7 @@ T locked_mpmc_queue<T>::pop() noexcept(std::is_nothrow_move_constructible<T>::va
 template <typename T>
 void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assignable<T>::value) 
 {
+  COUT << "locked_mpmc_queue::push MOVE" << ENDL;
   {
     std::unique_lock<std::mutex> lk(mut_);
 //    std::cout<<"[PUSH] pread " <<pread_ << " pwrite " <<pwrite_<<std::endl;
@@ -322,6 +330,7 @@ void locked_mpmc_queue<T>::push(T && item) noexcept(std::is_nothrow_move_assigna
 template <typename T>
 void locked_mpmc_queue<T>::push(T const & item) noexcept(std::is_nothrow_copy_assignable<T>::value) 
 {
+  COUT << "locked_mpmc_queue::push COPY" << ENDL;
   {
     std::unique_lock<std::mutex> lk(mut_);
     full_.wait(lk, [this] { return pwrite_ < (pread_ + size_); });

@@ -195,7 +195,8 @@ class multi_queue{
     
     Push a new element for a certain label.
     */
-    void push(TLabel queue_label, TElem elem)
+    template <typename TElem_FW>
+    void push(TLabel queue_label, TElem_FW && elem)
     {
     try {
       COUT << "multi_queue::push() begin" << ENDL;
@@ -203,7 +204,7 @@ class multi_queue{
         clean_label_queue();
       }
       COUT << "multi_queue::push() push queues_" << ENDL;
-      queues_.at(queue_label).push(elem);
+      queues_.at(queue_label).push(std::forward<TElem_FW>(elem));
       COUT << "multi_queue::push() push label_queue_" << ENDL;
       label_queue_.push(queue_label);
       total_occupy_++;

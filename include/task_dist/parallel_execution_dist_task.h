@@ -508,8 +508,8 @@ auto parallel_execution_dist_task<Scheduler>::divide_conquer(
     COUT<<"parallel_execution_dist_task::divide_conquer:MERGE(" << task.get_task_id() << "): final result=" << data.second << ENDL;
     
     // store final output data
-    scheduler_->set(data,task_data_loc[0]);
-    
+    scheduler_->set(std::move(data),task_data_loc[0]);
+
     // finish this branch and free the tokens of the PREVIOUS data locs
     // but DO NOT FREE the resulting data loc that would be used latter
     scheduler_->finish_task(task, (task_data_loc.size()-1));
@@ -533,7 +533,7 @@ auto parallel_execution_dist_task<Scheduler>::divide_conquer(
       // solve the simple problem
       data.second = solve_op(data.first);
       // save output data on the allocated data loc
-      scheduler_->set(data,task_data_loc[0]);
+      scheduler_->set(std::move(data),task_data_loc[0]);
     
       // finish this branch but DO NOT FREE the token (data loc will be used)
       scheduler_->finish_task(task, 0);
@@ -551,7 +551,7 @@ auto parallel_execution_dist_task<Scheduler>::divide_conquer(
              std::forward<Divider>(divide_op), std::forward<Predicate>(predicate_op),
       std::forward<Solver>(solve_op), std::forward<Combiner>(combine_op) );
       // save output data on the allocated data loc
-      scheduler_->set(data,task_data_loc[0]);
+      scheduler_->set(std::move(data),task_data_loc[0]);
 
       // finish this branch but DO NOT FREE the token (data loc will be used)
       scheduler_->finish_task(task, 0);
@@ -805,7 +805,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace std;
   //TODO: Need to reimplement ordering
   COUT << "parallel_execution_dist_task::pipeline(...CONSUMER): is_farm = "<< is_farm << ENDL;
-  std::function<void(task_type&)> task_func([&consume_op, this](task_type t) -> void
+  std::function<void(task_type&)> task_func([&consume_op, this](task_type &t) -> void
   {
      COUT << "parallel_execution_dist_task::pipeline(...CONSUMER): task["<< t.get_id() << ","<< t.get_task_id()<< "]: consumer, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
      auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
@@ -834,7 +834,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
 
   COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): is_farm = "<< is_farm << ENDL;
 
-  std::function<void(task_type&)> task_func([this,&transform_op](task_type t) -> void
+  std::function<void(task_type&)> task_func([this,&transform_op](task_type &t) -> void
   {
     COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
     auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
@@ -877,7 +877,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(bool is_farm, Transfor
   
   COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN END.): is_farm = "<< is_farm << ENDL;
   
-  std::function<void(task_type&)> task_func([this, &transform_op](task_type t) -> void
+  std::function<void(task_type&)> task_func([this, &transform_op](task_type &t) -> void
   {
     COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN END.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern_end, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
     auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
@@ -915,7 +915,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   
   
   COUT << "parallel_execution_dist_task::pipeline(...FARM CONSUMER): is_farm = " << is_farm << ENDL;
-  std::function<void(task_type&)> task_func([this,&farm_obj](task_type t) -> void
+  std::function<void(task_type&)> task_func([this,&farm_obj](task_type &t) -> void
   {
     COUT << "parallel_execution_dist_task::pipeline(...FARM CONSUMER): task["<< t.get_id() << ","<< t.get_task_id()<< "]: farm consumer, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
     auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
@@ -967,7 +967,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
       COUT << "parallel_execution_dist_task::pipeline(.FILTER.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
       auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
       if (filter_obj(item.first)) {
-        auto ref = scheduler_->set(item);
+        auto ref = scheduler_->set(std::move(item));
         //COUT << "parallel_execution_dist_task::pipeline(.FILTER.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: filter, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
         task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
         scheduler_->set_task(next_task,false);
@@ -1002,10 +1002,11 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
 
   // Review if it can be transformed into parallel task
   // Transform into atomic if used as a parallel task
-  long long order = 0;
+  //long long order = 0; ERROR: different type than before
+  long order = 0;
 
   COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): is_farm = "<< is_farm << ENDL;
-  std::function<void(task_type&)> task_func([&reduce_obj, this, &order](task_type t) -> void
+  std::function<void(task_type&)> task_func([&reduce_obj, this, &order](task_type &t) -> void
   {
     COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
     auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
@@ -1039,20 +1040,20 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace experimental;
 
   COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): is_farm = "<< is_farm << ENDL;
-  std::function<void(task_type&)> task_func([&iteration_obj, this](task_type t) -> void
+  std::function<void(task_type&)> task_func([&iteration_obj, this](task_type &t) -> void
   {
       COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
       auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
       auto value = iteration_obj.transform(item.first);
       auto new_item = InputItemType{value,item.second};
       if (iteration_obj.predicate(value)) {
-        auto ref = scheduler_->set(new_item);
+        auto ref = scheduler_->set(std::move(new_item));
         //COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
         task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
         scheduler_->set_task(next_task,false);
       }
       else {
-        auto ref = scheduler_->set(new_item);
+        auto ref = scheduler_->set(std::move(new_item));
         t.set_data_location({ref});
         //COUT << "parallel_execution_dist_task::pipeline(.ITERATION.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: iteration, launch task[" << t.get_id() <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
         scheduler_->set_task(t,false);

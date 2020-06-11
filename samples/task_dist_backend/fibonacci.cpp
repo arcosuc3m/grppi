@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#undef NDEBUG
 // Standard library
 #include <iostream>
 #include <vector>
@@ -42,9 +43,9 @@ int main(int argc, char **argv) {
  
   std::cout << "node_id = " << id << ", server_id = " << server_id << std::endl;
 
-  std::map<long, std::string> machines{{0, "127.0.0.1"}};
+  //std::map<long, std::string> machines{{0, "127.0.0.1"}};
   //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "127.0.0.1"}};
-  //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
+  std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
   //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "172.16.83.183"}};
   auto port_serv = std::make_shared<zmq_port_service> (machines[0], 5570, is_server);
   std::cout << "port_service_->new_port() : " << port_serv->new_port() << std::endl;

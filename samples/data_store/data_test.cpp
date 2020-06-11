@@ -8,6 +8,7 @@
 
 #include "task_dist/zmq_port_service.h"
 #include "task_dist/zmq_data_service.h"
+#include <boost/serialization/vector.hpp>
 
 
 long test_local (grppi::zmq_data_service & data_service, long numTokens)
@@ -18,11 +19,13 @@ long test_local (grppi::zmq_data_service & data_service, long numTokens)
   for (long i=0; i<numTokens+1; i++) {
     try {
        if (i % 2 == 0) {
-        ref.emplace_back(data_service.set(i));
+        ref.emplace_back(data_service.set(std::move(i)));
         std::cout << "test_local: store " << std::to_string(i);
       } else {
-        ref.emplace_back(data_service.set("val" + std::to_string(i)));
-        std::cout << "test_local: store " << "val" + std::to_string(i);
+        std::vector<unsigned char> aux_vec{'v','a','l',('0'+(unsigned char)i)};
+        void * ptr = (void *)(aux_vec.data());
+        ref.emplace_back(data_service.set(std::move(aux_vec)));
+        std::cout << "test_local: store " << "val" + std::to_string(i) << ", ptr:" << ptr;
       }
       std::cout << " (" << ref[i].get_id() << "," << ref[i].get_pos() << ")" << std::endl;
     } catch (std::runtime_error &e) {
@@ -39,8 +42,9 @@ long test_local (grppi::zmq_data_service & data_service, long numTokens)
         long aux = data_service.get<long>(ref[i],true);
         std::cout << "test_local: 1: ref<long> = " << aux << std::endl;
       } else {
-        std::string aux = data_service.get<std::string>(ref[i],true);
-        std::cout << "test_local: ref<string> = " << aux << std::endl;
+        std::vector<unsigned char> aux = data_service.get<std::vector<unsigned char>>(ref[i],true);
+        void * ptr = (void *)(aux.data());
+        std::cout << "test_local: ref<string> = " << (char *)(aux.data()) << ", ptr:" << ptr << std::endl;
       }
     } catch (std::runtime_error &e) {
       std::cout << "test_local: RunTime error: " << e.what() << std::endl;
@@ -52,7 +56,7 @@ long test_local (grppi::zmq_data_service & data_service, long numTokens)
   try {
     std::cout << "test_local: initial set" << std::endl;
     std::string old_str{"HELLO"};
-    grppi::zmq_data_reference old_ref = data_service.set(old_str);
+    grppi::zmq_data_reference old_ref = data_service.set(std::move(old_str));
     std::cout << "test_local: set<string>: " << old_str << std::endl;
     std::string new_str = data_service.get<std::string>(old_ref,false);
     std::cout << "test_local: get<string,false>: " << new_str << std::endl;
@@ -60,7 +64,7 @@ long test_local (grppi::zmq_data_service & data_service, long numTokens)
 
     std::cout << "test_local: already allocated set" << std::endl;
     long old_num{10};
-    grppi::zmq_data_reference new_ref = data_service.set(old_num, old_ref);
+    grppi::zmq_data_reference new_ref = data_service.set(std::move(old_num), old_ref);
     std::cout << "test_local: set<long>: " << old_num << std::endl;
     std::cout << "test_local: (new_ref == old_ref): " << (new_ref == old_ref) << std::endl;
     long new_num = data_service.get<long>(old_ref,false);
@@ -81,7 +85,7 @@ long test_local (grppi::zmq_data_service & data_service, long numTokens)
   
   try {
     std::string old_str{"HELLO"};
-    grppi::zmq_data_reference old_ref = data_service.set(old_str);
+    grppi::zmq_data_reference old_ref = data_service.set(std::move(old_str));
     std::cout << "test_local: set<string>: " << old_str << std::endl;
 
     std::string new_str = data_service.get<std::string>(old_ref,false,2);
@@ -162,7 +166,7 @@ long test_remote_2 (grppi::zmq_data_service & data_service, long numTokens, long
     try {
       std::cout << "test_remote_2: initial set" << std::endl;
       std::string old_str{"HELLO"};
-      grppi::zmq_data_reference old_ref = data_service.set(old_str);
+      grppi::zmq_data_reference old_ref = data_service.set(std::move(old_str));
       std::cout << "test_remote_2: set<string>: " << old_str << std::endl;
       std::string new_str = data_service.get<std::string>(old_ref,false);
       std::cout << "test_remote_2: get<string,false>: " << new_str << std::endl;
@@ -177,7 +181,7 @@ long test_remote_2 (grppi::zmq_data_service & data_service, long numTokens, long
     
     try {
       std::string old_str{"HELLO"};
-      grppi::zmq_data_reference old_ref = data_service.set(old_str);
+      grppi::zmq_data_reference old_ref = data_service.set(std::move(old_str));
       std::cout << "test_remote_2: set<string>: " << old_str << std::endl;
 
       std::string new_str = data_service.get<std::string>(old_ref,false,2);
@@ -197,7 +201,7 @@ long test_remote_2 (grppi::zmq_data_service & data_service, long numTokens, long
       std::cout << "test_remote_2: get<string,false>: " << new_str << std::endl;
       std::cout << "test_remote_2: already allocated set" << std::endl;
       long old_num{10};
-      grppi::zmq_data_reference new_ref = data_service.set(old_num, old_ref);
+      grppi::zmq_data_reference new_ref = data_service.set(std::move(old_num), old_ref);
       std::cout << "test_remote_2: set<long>: " << old_num << std::endl;
       std::cout << "test_remote_2: (new_ref == old_ref): " << (new_ref == old_ref) << std::endl;
       long new_num = data_service.get<long>(old_ref,false);

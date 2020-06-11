@@ -15,8 +15,8 @@
  */
 #ifndef GRPPI_ZMQ_SCHEDULER_H
 #define GRPPI_ZMQ_SCHEDULER_H
-#include <new>
 
+#include <new>
 #include <vector>
 #include <map>
 #include <memory>
@@ -239,7 +239,7 @@ class zmq_scheduler{
    \param task new task to be launched.
    \param new_token new task needs a new token or not.
    */
-   void set_task(task_type task, bool new_token)
+   void set_task(const task_type & task, bool new_token)
    {
      try {
        COUT << "zmq_scheduler:set_task BEGIN" << ENDL;
@@ -261,8 +261,7 @@ class zmq_scheduler{
        COUT << "zmq_scheduler:set_task requestSock_ B" << ENDL;
        requestSock_->send((long *)(&id_), sizeof(id_), ZMQ_SNDMORE);
        COUT << "zmq_scheduler:set_task requestSock_ C" << ENDL;
-       std::string task_string = task.get_serialized_string();
-       requestSock_->send((char *)(task_string.data()), task_string.size(), ZMQ_SNDMORE);
+       task.send(*requestSock_,ZMQ_SNDMORE);
        COUT << "zmq_scheduler:set_task requestSock_ D" << ENDL;
        requestSock_->send((long *)(&new_token_int), sizeof(new_token_int));
 
@@ -284,6 +283,7 @@ class zmq_scheduler{
 
      } catch(const std::exception &e) {
        std::cerr << "zmq_scheduler:set_task" << e.what() << std::endl;;
+       std::throw_with_nested( std::runtime_error("zmq_scheduler:set_task"));
      }
    }
    
@@ -295,7 +295,7 @@ class zmq_scheduler{
    \param old_task old task that have been executed.
    \return new task to be run
    */
-   task_type get_task(task_type old_task)
+   task_type get_task(const task_type & old_task)
    {
      try {
        COUT << "zmq_scheduler:get_task BEGIN" << ENDL;
@@ -313,24 +313,15 @@ class zmq_scheduler{
        //auto old_task_id = old_task.get_task_id();
        requestSock_->send(getTaskCmd.data(), getTaskCmd.size(), ZMQ_SNDMORE);
        requestSock_->send((long *)(&id_), sizeof(id_), ZMQ_SNDMORE);
-       std::string task_string = old_task.get_serialized_string();
-       requestSock_->send((char *)(task_string.data()), task_string.size());
+       old_task.send(*requestSock_);
        
        COUT << "zmq_scheduler::get_task SENT: id_: "
           << id_ << ", old_task: (" << old_task.get_id()
           << ", " << old_task.get_task_id() << ")" << ENDL;
        
        // receive the data
-       zmq::message_t message;
-       requestSock_->recv(&message);
-       COUT << "zmq_scheduler::get_task: size=" << message.size() << ENDL;
-
-       if (message.size() == 0) {
-          COUT << "Error: get task does not return a TASK" << ENDL;
-          throw std::runtime_error("ERROR: get task does not return a TASK");
-       }
        task_type new_task{};
-       new_task.set_serialized_string((char *)message.data(),message.size());
+       new_task.recv(*requestSock_);
 
        COUT << "zmq_scheduler:get_task END " << ENDL;
        return (new_task);
@@ -347,7 +338,7 @@ class zmq_scheduler{
    \param old_task old task that have been executed.
    \param num_tokens number of tokens to free (default=1).
    */
-   void finish_task(task_type old_task, long num_tokens=1)
+   void finish_task(const task_type & old_task, long num_tokens=1)
    {
      try {
        COUT << "zmq_scheduler:finish_task BEGIN " << ENDL;
@@ -364,8 +355,7 @@ class zmq_scheduler{
 
        requestSock_->send(finishTaskCmd.data(), finishTaskCmd.size(), ZMQ_SNDMORE);
        COUT << "zmq_scheduler:finish_task SENT" << ENDL;
-       std::string task_string = old_task.get_serialized_string();
-       requestSock_->send((char *)(task_string.data()), task_string.size(), ZMQ_SNDMORE);
+       old_task.send(*requestSock_,ZMQ_SNDMORE);
        requestSock_->send((long *)(&num_tokens), sizeof(num_tokens));
 
        COUT << "zmq_scheduler::finish_task SENT: num_tokens: "
@@ -384,6 +374,7 @@ class zmq_scheduler{
        COUT << "zmq_scheduler: finish_task END" << ENDL;
      } catch(const std::exception &e) {
        std::cerr << "zmq_scheduler:finish_task" << e.what() << std::endl;
+       std::throw_with_nested( std::runtime_error("zmq_scheduler:finish_task "));
      }
    }
 
@@ -435,15 +426,8 @@ class zmq_scheduler{
        }
 
        // receive the data
-       zmq::message_t message;
-       requestSock_->recv(&message);
-       COUT << "zmq_scheduler::run: size=" << message.size() << ENDL;
-       if (message.size() == 0) {
-          COUT << "Error: run does not return a TASK" << ENDL;
-          throw std::runtime_error("ERROR: run does not return a TASK");
-       }
        task_type new_task{};
-       new_task.set_serialized_string((char *)message.data(),message.size());
+       new_task.recv(*requestSock_);
        
        COUT << "zmq_scheduler::run last_task: (" << new_task.get_id()
           << ", " << new_task.get_task_id()
@@ -482,8 +466,7 @@ class zmq_scheduler{
        requestSock_->send(tskEndCmd.data(), tskEndCmd.size(), ZMQ_SNDMORE);
        requestSock_->send((long *)(&id_), sizeof(id_));
        
-       COUT << "zmq_scheduler::end SENT: id_: "
-          << id_  << ENDL;
+       COUT << "zmq_scheduler::end SENT: id_: " << id_  << ENDL;
        
        // receive the data
        zmq::message_t message;
@@ -497,6 +480,7 @@ class zmq_scheduler{
        COUT << "zmq_scheduler:end END" << ENDL;
      } catch(const std::exception &e) {
        std::cerr << "zmq_scheduler:end" << e.what() << std::endl;
+       std::throw_with_nested( std::runtime_error("zmq_scheduler:end "));
      }
    }
    
@@ -527,21 +511,18 @@ class zmq_scheduler{
           << num_tokens  << ENDL;
        
         // receive the data
-       zmq::message_t message;
-       requestSock_->recv(&message);
-       COUT << "zmq_scheduler::allocate_tokens: size=" << message.size() << ENDL;
-       if (message.size() == 0) {
+       bool result = false;
+       long ret = requestSock_->recv((void *)&result, sizeof(result));
+       if (ret != sizeof(result)) {
           COUT << "Error: allocate_tokens does not return the result state" << ENDL;
           throw std::runtime_error("ERROR: run does not return the result state");
        }
-       bool result = *((bool*) message.data());
-       
-       COUT << "zmq_scheduler::allocate_tokens result=" << result << ENDL;
-
+       COUT << "zmq_scheduler::allocate_tokens: size=" << ret << ", result=" << result << ENDL;
        COUT << "zmq_scheduler:allocate_tokens END" << ENDL;
        return result;
      } catch(const std::exception &e) {
        std::cerr << "zmq_scheduler:allocate_tokens" << e.what() << std::endl;
+       std::throw_with_nested( std::runtime_error("zmq_scheduler:allocate_tokens "));
        return false;
      }
    }
@@ -554,9 +535,9 @@ class zmq_scheduler{
   \param ref data_ref_type of the server and position for that data (if the ref param its not occupied it gets a new free reference on the same server), if it is null it gets a free one on the local server).
   */
   template <class T>
-  data_ref_type set(T item, data_ref_type ref = data_ref_type{})
+  data_ref_type set(T &&item, data_ref_type ref = data_ref_type{})
   {
-      return data_service_->set(item, ref);
+      return data_service_->set(std::forward<T>(item), ref);
   }
 
   /**
@@ -877,7 +858,7 @@ class zmq_scheduler_thread{
     \param sched pointer to the scheduler object
     \param task Task to be inserted
     */
-    void push_seq (zmq_scheduler<task_type> * sched, task_type task)
+    void push_seq (zmq_scheduler<task_type> * sched, task_type && task)
     {
     try {
       COUT << "zmq_scheduler_thread::push_seq: BEGIN" << ENDL;
@@ -914,16 +895,18 @@ class zmq_scheduler_thread{
           seq_tasks_.emplace(std::piecewise_construct,
                              std::forward_as_tuple(seq_servers_[task.get_id()]),
                              std::forward_as_tuple(sched->max_tokens_));
+          COUT << "zmq_scheduler_thread::push_seq: create server queue " << seq_servers_[task.get_id()] << ENDL;
         }
         // if task is not registered in its multi_queue, register it
         if (!seq_tasks_.find(seq_servers_[task.get_id()])->
                              second.is_registered(task.get_id())) {
           seq_tasks_.find(seq_servers_[task.get_id()])->second.registry(task.get_id());
+              COUT << "zmq_scheduler_thread::push_seq: register task " << task.get_id() << " on server " << seq_servers_[task.get_id()] <<  ENDL;
         }
       }
       // push task onto the multi_queue of the corresponding server
       COUT << "zmq_scheduler_thread::push_seq: push: " << task.get_id() << ENDL;
-      seq_tasks_.find(seq_servers_[task.get_id()])->second.push(task.get_id(), task);
+      seq_tasks_.find(seq_servers_[task.get_id()])->second.push(task.get_id(), std::move(task));
       COUT << "zmq_scheduler_thread::push_seq: END" << ENDL;
     } catch(const std::exception &e) {
       std::cerr << "zmq_scheduler_thread::push_seq: ERROR: " << e.what() << std::endl;
@@ -935,20 +918,20 @@ class zmq_scheduler_thread{
     \param sched pointer to the scheduler object
     \param task Task to be inserted
     */
-    void insert_task (zmq_scheduler<task_type> * sched, task_type task)
+    void insert_task (zmq_scheduler<task_type> * sched, task_type && task)
     {
       // if new task is sequential, insert it on the corresponding server's queue
       if (seq_servers_.find(task.get_id()) != seq_servers_.end()) {
-        push_seq (sched, task);
+        push_seq (sched, std::move(task));
         COUT << "zmq_scheduler_thread::insert_task: NEW TASK SEQ" << ENDL;
 
       // if new task could create new tokens, insert on new_token_parallel_queue
       } else if (set_new_tok_tasks_.find(task.get_id())!=set_new_tok_tasks_.end()) {
-        new_tok_par_tasks_.push(task.get_local_ids(), task, task.get_is_hard());
+        new_tok_par_tasks_.push(task.get_local_ids(), std::move(task), task.get_is_hard());
         COUT << "zmq_scheduler_thread::insert_task: NEW TASK NEW_TOKEN" << ENDL;
       // else insert on old_token_parallel_queue
       } else {
-        old_tok_par_tasks_.push(task.get_local_ids(), task, task.get_is_hard());
+        old_tok_par_tasks_.push(task.get_local_ids(), std::move(task), task.get_is_hard());
         COUT << "zmq_scheduler_thread::insert_task: NEW TASK OLD_TOKEN" << ENDL;
       }
     }
@@ -974,7 +957,6 @@ class zmq_scheduler_thread{
           // receive client id
           COUT << "zmq_scheduler_thread::server_func sched->replySock_->recv begin" << ENDL;
           sched->replySock_->recv(&msg);
-          //std::string client_id((char *)msg.data(), msg.size());
           client_id = std::string((char *)msg.data(), msg.size());
           COUT << "zmq_scheduler_thread::server_func sched->replySock_->recv client_id" << ENDL;
 
@@ -982,16 +964,14 @@ class zmq_scheduler_thread{
           sched->replySock_->recv(&msg);
         
           if (msg.size() != 0) {
-            std::string pru((const char* )msg.data(), (size_t) msg.size());
-            COUT << "zmq_scheduler_thread::server_func ERROR frame zero: " << pru << "| size: " << msg.size() << ENDL;
-            //throw std::runtime_error ("Error frame zero");
+            COUT << "zmq_scheduler_thread::server_func ERROR frame zero: " << (char *)msg.data() << "| size: " << msg.size() << ENDL;
+            throw std::runtime_error ("Error frame zero");
           }
-          std::string pru((const char* )msg.data(), (size_t) msg.size());
-          COUT << "zmq_scheduler_thread:: CMD: " << pru << "| size: " << msg.size() << ENDL;
 
           // recv command
           sched->replySock_->recv(&msg);
-            
+          COUT << "zmq_scheduler_thread:: CMD: " << (char *)msg.data() << "| size: " << msg.size() << ENDL;
+
           // end task command
           if ( (msg.size() == sched->tskEndCmd.size()) &&
                (0 == std::memcmp(msg.data(),
@@ -1217,11 +1197,11 @@ class zmq_scheduler_thread{
           if (seq_servers_.find(0) != seq_servers_.end()) {
 
             //run initial seq task (0) on its corresp. server
-            push_seq (sched, task_seq);
+            push_seq (sched, std::move(task_seq));
             COUT << "zmq_scheduler_thread::srv_run_cmd INIT SEQ = " << ENDL;
           } else {
             // run initial task on first server
-            new_tok_par_tasks_.push(task_seq.get_local_ids(), task_seq, task_seq.get_is_hard());
+            new_tok_par_tasks_.push(task_seq.get_local_ids(), std::move(task_seq), task_seq.get_is_hard());
             COUT << "zmq_scheduler_thread::srv_run_cmd INIT PAR = " << ENDL;
           }
           assert(tokens_==0);
@@ -1245,25 +1225,27 @@ class zmq_scheduler_thread{
         
         // recv server_id and task_id
         zmq::message_t msg;
+
         sched->replySock_->recv(&msg);
         long server_id = *((long*) msg.data());
-        sched->replySock_->recv(&msg);
+
         task_type old_task{};
-        old_task.set_serialized_string((char *)msg.data(),msg.size());
-        
-        // if the executed task is not null, save it as last executed task
-        if (old_task != task_type{}) {
-            last_exec_task_ = old_task;
-        }
-        
+        old_task.recv(*(sched->replySock_));
+          
         COUT << "zmq_scheduler_thread::srv_get_cmd: server_id: "
                   << server_id << ", old_task: (" << old_task.get_id()
                   << ", " << old_task.get_task_id() << ")" << ENDL;
+
         // if a sequential task ended, enable it
         if ( (old_task.get_id() >= 0) &&
              (seq_servers_.find(old_task.get_id()) != seq_servers_.end() ) ) {
           set_enabled_.insert(old_task.get_id());
           COUT << "zmq_scheduler_thread::srv_get_cmd: seq task ended" << ENDL;
+        }
+
+        // if the executed task is not null, save it as last executed task
+        if (old_task != task_type{}) {
+            last_exec_task_ = std::move(old_task);
         }
 
         // push task request to be served latter
@@ -1289,13 +1271,15 @@ class zmq_scheduler_thread{
           
         // recv server_id, task and new_token
         zmq::message_t msg;
+
         sched->replySock_->recv(&msg);
         COUT << "zmq_scheduler_thread::srv_set_cmd  recv_ B" << ENDL;
         long server_id = *((long*) msg.data());
-        sched->replySock_->recv(&msg);
-        COUT << "zmq_scheduler_thread::srv_set_cmd  recv_ C" << ENDL;
+
         task_type task{};
-        task.set_serialized_string((char *)msg.data(),msg.size());
+        task.recv(*(sched->replySock_));
+        COUT << "zmq_scheduler_thread::srv_set_cmd  recv_ C" << ENDL;
+
         sched->replySock_->recv(&msg);
         COUT << "zmq_scheduler_thread::srv_set_cmd  recv_ D" << ENDL;
         bool new_token = ( *((long*) msg.data()) > 0 );
@@ -1309,7 +1293,7 @@ class zmq_scheduler_thread{
         if (new_token) {
           if (tokens_ >= sched->max_tokens_) {
             // if tokens can't be increased block the server until they can
-            blocked_servers_.push(make_tuple(client_id,task));
+            blocked_servers_.push(make_tuple(client_id,std::move(task)));
             total_blocked_servers_++;
 
             COUT << "zmq_scheduler_thread::srv_set_cmd: total_blocked_servers_" << total_blocked_servers_ << ENDL;
@@ -1329,21 +1313,19 @@ class zmq_scheduler_thread{
         }
         
         
-        //std::map<long,std::tuple<task_type,std::set<long>>> dep_tasks_;
-
         // if task requires dependencies store it on dependable task list
         auto before_dep = task.get_before_dep();
         if (! before_dep.empty()) {
           // insert task on depedent task list (it shouldn't exist)
-          assert(dep_tasks_.find(task) == dep_tasks_.end());
+          assert(dep_tasks_.find(task.get_task_id()) == dep_tasks_.end());
           dep_tasks_.emplace(std::piecewise_construct,
                              std::forward_as_tuple(task.get_task_id()),
-                             std::forward_as_tuple(                              make_pair(task,before_dep)));
+                             std::forward_as_tuple(                              make_pair(std::move(task),before_dep)));
           COUT << "zmq_scheduler_thread::srv_set_cmd Inserted dependant task: task.get_task_id() = " << task.get_task_id() << ENDL;
         } else {
           // insert task in its corresponding queue.
           COUT << "zmq_scheduler_thread::srv_set_cmd: check and insert task" << ENDL;
-          insert_task (sched, task);
+          insert_task (sched, std::move(task));
         }
         // send back an ACK
         sched->replySock_->send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
@@ -1370,11 +1352,13 @@ class zmq_scheduler_thread{
         
         // recv server_id and task_id
         zmq::message_t msg;
-        sched->replySock_->recv(&msg);
+        
         task_type old_task{};
-        old_task.set_serialized_string((char *)msg.data(),msg.size());
+        old_task.recv(*(sched->replySock_));
+
         sched->replySock_->recv(&msg);
         long num_free_tokens = *((long*) msg.data());
+
         COUT << "zmq_scheduler_thread::srv_finish_task_cmd: task = " << old_task.get_task_id() << " has consume " <<  num_free_tokens << " tokens" << ENDL;
 
         //check if old task has after dependancies
@@ -1397,7 +1381,7 @@ class zmq_scheduler_thread{
                 COUT << "zmq_scheduler_thread::srv_finish_task_cmd: task = " << it_task->second.first.get_task_id() << " ready to execute" << ENDL;
 
                 // insert block task into the corresponding queues
-                insert_task (sched, it_task->second.first);
+                insert_task (sched, std::move(it_task->second.first));
                 
                 // erase task from dependency map
                 dep_tasks_.erase(it_task);
@@ -1422,7 +1406,7 @@ class zmq_scheduler_thread{
           COUT << "zmq_scheduler_thread::srv_finish_task_cmd: total_blocked_servers_" << total_blocked_servers_ << ENDL;
 
           // insert block task into the corresponding queues
-          insert_task (sched, blk_task);
+          insert_task (sched, std::move(blk_task));
 
           // send back an ACK to the blocked server
           sched->replySock_->send(blk_client_id.data(),
@@ -1507,8 +1491,7 @@ class zmq_scheduler_thread{
             sched->replySock_->send(client_id.data(),
                                     client_id.size(), ZMQ_SNDMORE);
             sched->replySock_->send("", 0, ZMQ_SNDMORE);
-            std::string task_string = last_exec_task_.get_serialized_string();
-            sched->replySock_->send((char *)(task_string.data()), task_string.size());
+            last_exec_task_.send(*(sched->replySock_));
             COUT << "zmq_scheduler_thread::finish_execution SENT RUN ACK "<< ENDL;
           }
 
@@ -1543,8 +1526,7 @@ class zmq_scheduler_thread{
                                     client_id.size(), ZMQ_SNDMORE);
             sched->replySock_->send("", 0, ZMQ_SNDMORE);
             task_type task{}; // default/empty task
-            std::string task_string = task.get_serialized_string();
-            sched->replySock_->send((char *)(task_string.data()), task_string.size());
+            task.send(*(sched->replySock_));
               
             // decrease running threads.
             // If all done wake up all end replies and end sched. thread
@@ -1599,9 +1581,11 @@ class zmq_scheduler_thread{
         auto it=set_req_servers.begin();
         while (it!=set_req_servers.end()) {
 
-          //if requesting aerver do not have sequential task, end iteraction
+          //if req server do not have seq. task subqueue, go to next server
           if (seq_tasks_.find(*it) == seq_tasks_.end()) {
-            break;
+            COUT << "zmq_scheduler_thread::exec_seq_task seq server do not have any seq task asigned: " << *it << " server" << ENDL;
+            it++;
+            continue;
           }
 
           COUT << "zmq_scheduler_thread::exec_seq_task try " << *it << " server" << ENDL;
@@ -1665,7 +1649,7 @@ class zmq_scheduler_thread{
             // if an index have been found
             if (! search_end) {
               // get the task, the request and reply it
-              auto task = seq_tasks_.find(*it)->second.pop(index);
+              task_type task = seq_tasks_.find(*it)->second.pop(index);
               auto client_id = requests_.pop(*it);
             
               COUT   << "zmq_scheduler_thread::exec_seq_task: id_: "
@@ -1674,8 +1658,7 @@ class zmq_scheduler_thread{
 
               sched->replySock_->send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
               sched->replySock_->send("", 0, ZMQ_SNDMORE);
-              std::string task_string = task.get_serialized_string();
-              sched->replySock_->send((char *)(task_string.data()), task_string.size());
+              task.send(*(sched->replySock_));
 
               COUT << "zmq_scheduler_thread::exec_seq_task: SENT GET TASK ACK: task: (" << task.get_id() << ", " << task.get_task_id() << ")" << ENDL;
               
@@ -1747,8 +1730,7 @@ class zmq_scheduler_thread{
               auto client_id = requests_.pop(*it);
               sched->replySock_->send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
               sched->replySock_->send("", 0, ZMQ_SNDMORE);
-              std::string task_string = task.get_serialized_string();
-              sched->replySock_->send((char *)(task_string.data()), task_string.size());
+              task.send(*(sched->replySock_));
 
               COUT << "zmq_scheduler_thread::exec_par_task_same_server: SENT GET TASK ACK: task: (" << task.get_id() << ", " << task.get_task_id() << ")" << ENDL;
 
@@ -1808,8 +1790,7 @@ class zmq_scheduler_thread{
           auto client_id = requests_.pop();
           sched->replySock_->send(client_id.data(), client_id.size(), ZMQ_SNDMORE);
           sched->replySock_->send("", 0, ZMQ_SNDMORE);
-          std::string task_string = task.get_serialized_string();
-          sched->replySock_->send((char *)(task_string.data()), task_string.size());
+          task.send(*(sched->replySock_));
 
           COUT << "zmq_scheduler_thread::exec_par_task_diff_server: SENT GET TASK ACK: task: (" << task.get_id() << ", " << task.get_task_id() << ")" << ENDL;
         }

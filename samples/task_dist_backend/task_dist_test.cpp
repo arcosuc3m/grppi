@@ -1,3 +1,5 @@
+#undef NDEBUG
+
 #include <iostream>
 #include <vector>
 #include <numeric>
@@ -15,6 +17,10 @@
 #include "task_dist/zmq_port_service.h"
 #include "task_dist/zmq_task.h"
 
+#undef COUT
+#define COUT if (0) {std::ostringstream foo;foo
+#undef ENDL
+#define ENDL std::endl;std::cout << foo.str();}
 
 using namespace grppi;
 
@@ -45,9 +51,9 @@ int main(int argc, char *argv[]){
  
   std::cout << "node_id = " << id << ", server_id = " << server_id << std::endl;
 
-  std::map<long, std::string> machines{{0, "127.0.0.1"}};
+  //std::map<long, std::string> machines{{0, "127.0.0.1"}};
   //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "127.0.0.1"}};
-  //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
+  std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
   //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "172.16.83.183"}};
   auto port_serv = std::make_shared<zmq_port_service> (machines[0], 5570, is_server);
   std::cout << "port_service_->new_port() : " << port_serv->new_port() << std::endl;
@@ -72,13 +78,20 @@ int main(int argc, char *argv[]){
     },*/
     container,
     grppi::farm(4,[](std::string s,std::vector<zmq_task> &task = global_tasks){
+        COUT<<"---COPY TASKS 0: BEGIN---"<<ENDL;
         task.push_back(conf_tasks[0]);
         task.push_back(conf_tasks[1]);
-             return stoi(s);
-	    }),
+        COUT<<"---COPY TASKS 0: END---"<<ENDL;
+        std::ostringstream ss;
+        ss << "--------------- stage 0: farm --------------" << std::endl;
+        std::cout << ss.str();
+        return stoi(s);
+    }),
     [](long val, std::vector<zmq_task> &task = global_tasks){
+        COUT<<"---COPY TASKS 1: BEGIN---"<<ENDL;
         task.push_back(conf_tasks[1]);
         task.push_back(conf_tasks[2]);
+        COUT<<"---COPY TASKS 1: END---"<<ENDL;
         std::ostringstream ss;
         ss << "--------------- stage 1: pipeline_middle_1 val*2 = (" << val << ", " << (val*2  == 0) <<  ") ---------------" << std::endl;
         std::cout << ss.str();
@@ -86,16 +99,20 @@ int main(int argc, char *argv[]){
     },
     grppi::farm(4,
       [](long val, std::vector<zmq_task> &task = global_tasks){
+        COUT<<"---COPY TASKS 2: BEGIN---"<<ENDL;
         task.push_back(conf_tasks[2]);
         task.push_back(conf_tasks[3]);
+        COUT<<"---COPY TASKS 2: END---"<<ENDL;
         std::ostringstream ss;
         ss << "--------------- stage 2: pipeline_middle_2 val/2 = (" << val << ", " << (val/2  == 0) <<  ") ---------------" << std::endl;
         std::cout << ss.str();
         return val/2 == 0;
     }),
     grppi::discard([](long val, std::vector<zmq_task> &task = global_tasks){
+        COUT<<"---COPY TASKS 3: BEGIN---"<<ENDL;
         task.push_back(conf_tasks[3]);
         task.push_back(conf_tasks[4]);
+        COUT<<"---COPY TASKS 3: END---"<<ENDL;
         std::ostringstream ss;
         ss << "--------------- stage 3: discard val%2 = (" << val << ", " << (val%2  == 0) <<  ") ---------------" << std::endl;
         std::cout << ss.str();
@@ -104,24 +121,30 @@ int main(int argc, char *argv[]){
     grppi::farm(4,
       grppi::pipeline(
         [](long val, std::vector<zmq_task> &task = global_tasks) {
+            COUT<<"---COPY TASKS 4: BEGIN---"<<ENDL;
             task.push_back(conf_tasks[4]);
             task.push_back(conf_tasks[5]);
+            COUT<<"---COPY TASKS 4: END---"<<ENDL;
             std::ostringstream ss;
             ss << "--------------- stage 4: farm_pipeline_init val * 2 = (" << val * 2 << ") ---------------" << std::endl;
             std::cout << ss.str();
             return val * 2;
         },
         [](long val, std::vector<zmq_task> &task = global_tasks) {
+            COUT<<"---COPY TASKS 5: BEGIN---"<<ENDL;
             task.push_back(conf_tasks[5]);
             task.push_back(conf_tasks[6]);
+            COUT<<"---COPY TASKS 5: END---"<<ENDL;
             std::ostringstream ss;
             ss << "--------------- stage 5: farm_pipeline_middle val * 4 = (" << val * 4 << ") ---------------" << std::endl;
             std::cout << ss.str();
             return val * 4;
         },
         [](long val, std::vector<zmq_task> &task = global_tasks) {
+            COUT<<"---COPY TASKS 6: BEGIN---"<<ENDL;
             task.push_back(conf_tasks[6]);
             task.push_back(conf_tasks[7]);
+            COUT<<"---COPY TASKS 6: END---"<<ENDL;
             std::ostringstream ss;
             ss << "--------------- stage 6: farm_pipeline_end val / 2 = (" << val / 2 << ") ---------------" << std::endl;
             std::cout << ss.str();
@@ -130,16 +153,20 @@ int main(int argc, char *argv[]){
       )
     ),
     grppi::reduce(2,1,0,[](long a, long b, std::vector<zmq_task> &task = global_tasks) {
+        COUT<<"---COPY TASKS 7: BEGIN---"<<ENDL;
         task.push_back(conf_tasks[7]);
         task.push_back(conf_tasks[8]);
+        COUT<<"---COPY TASKS 7: END---"<<ENDL;
         std::ostringstream ss;
         ss << "--------------- stage 7: reduce a + b  = (" << a << " + " << b << " = " << a + b << ") ---------------" << std::endl;
         std::cout << ss.str();
         return a+b;
     }),
     grppi::repeat_until([](long val, std::vector<zmq_task> &task = global_tasks) {
+        COUT<<"---COPY TASKS 8.1: BEGIN---"<<ENDL;
         task.push_back(conf_tasks[8]);
         task.push_back(conf_tasks[9]);
+        COUT<<"---COPY TASKS 8.1: END---"<<ENDL;
         std::ostringstream ss;
         ss << "--------------- stage 8.1: repeat val * 2 = (" << val * 2 << ") ---------------" << std::endl;
         std::cout << ss.str();

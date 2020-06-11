@@ -17,6 +17,8 @@
 #ifndef GRPPI_ZMQ_DATA_SERVICE_H
 #define GRPPI_ZMQ_DATA_SERVICE_H
 
+#include <cassert>
+#include <exception>
 #include <iostream>
 #include <cstdint>
 #include <cstring>
@@ -28,20 +30,20 @@
 #include <cstdlib>
 #include <memory>
 #include <mutex>
+#include <utility>
+#include <atomic>
+#include <typeinfo>
 
 #include <zmq.hpp>
 
 //#pragma GCC diagnostic warning "-Wparentheses"
+#include <boost/any.hpp>
 #include <boost/circular_buffer.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/device/array.hpp>
-#include <boost/iostreams/stream.hpp>
 //#pragma GCC diagnostic pop
 
 #include "zmq_port_service.h"
 #include "zmq_data_reference.h"
+#include "zmq_serialization.h"
 
 #undef COUT
 #define COUT if (0) {std::ostringstream foo;foo
@@ -117,7 +119,7 @@ public:
     COUT << "zmq_data_service::~zmq_data_service begin" << ENDL;
     if (isServer_) {
         COUT << "join proxy_thread_" << ENDL;
-        servers_.at(id_).send(endCmd.data(), endCmd.size(), 0);
+        servers_.at(id_).first.send(endCmd.data(), endCmd.size(), 0);
         server_thread_.join();
     }
     servers_.clear();
@@ -136,55 +138,96 @@ public:
   template <class T>
   T get (data_ref_type ref, bool release=false, long release_count=1)
   {
-    mutex.lock();
     long send_id = ref.get_id();
     COUT << "get send id:" << send_id << ENDL;
 
+    // lock access to this socket
+    servers_.at(send_id).second.second.lock();
+
     // send the command tag
-    servers_.at(send_id).send(getCmd.data(), getCmd.size(), ZMQ_SNDMORE);
+    servers_.at(send_id).first.send(getCmd.data(), getCmd.size(), ZMQ_SNDMORE);
     COUT << "get send cmd GET" << ENDL;
 
-    
-    // serialize obj into an std::string
-    std::string serial_str;
-    boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-    boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > os(inserter);
-    boost::archive::binary_oarchive oa(os);
-
-    oa << ref;
-    os.flush();
-    
     // send the reference (server_id,pos), release flag and release count
-    servers_.at(send_id).send(serial_str.data(), serial_str.length(), ZMQ_SNDMORE);
-    servers_.at(send_id).send((bool *)(&release), sizeof(release), ZMQ_SNDMORE);
-    servers_.at(send_id).send((long *)(&release_count), sizeof(release_count));
+    ref.send(servers_.at(send_id).first, ZMQ_SNDMORE);
+    servers_.at(send_id).first.send((bool *)(&release), sizeof(release), ZMQ_SNDMORE);
+    servers_.at(send_id).first.send((long *)(&release_count), sizeof(release_count));
     COUT << "zmq_data_service::get send ref: (" << ref.get_id() << "," << ref.get_pos() << "), release: " << release << ", release_count: " << release_count << ENDL;
 
     // receive the data
     zmq::message_t message;
-    servers_.at(send_id).recv(&message);
+    servers_.at(send_id).first.recv(&message);
     COUT << "zmq_data_service::get rec data: size=" << message.size() << ENDL;
 
     if (message.size() == 0) {
+        // unlock access to this socket
+        servers_.at(send_id).second.second.unlock();
         COUT << "zmq_data_service::get Error Item not found" << ENDL;
-        mutex.unlock();
         throw std::runtime_error("zmq_data_service::get Item not found");
     }
-    
-    // wrap buffer inside a stream and deserialize serial_str into obj
-    boost::iostreams::basic_array_source<char> device((char *)message.data(), message.size());
-    boost::iostreams::stream<boost::iostreams::basic_array_source<char> > is(device);
-    boost::archive::binary_iarchive ia(is);
+
+    // receive erase flag
+    bool erase_local = *((bool*) message.data());
+    // receive local flag
+    servers_.at(send_id).first.recv(&message);
+    bool recv_local = *((bool*) message.data());
+    assert (recv_local == servers_.at(send_id).second.first);
+    COUT << "zmq_data_service::get erase_local=" << erase_local << ", recv_local=" << recv_local << ENDL;
+
+    // receive data (remote or pointer to local)
+    servers_.at(send_id).first.recv(&message);
+    COUT << "zmq_data_service::get data received message.size()=" << message.size() << ENDL;
 
     T item;
-    try {
-      ia >> item;
-    } catch (...) {
-        mutex.unlock();
-        throw std::runtime_error("zmq_data_service::get Incorrect Type");
-    }
+    // if local data get local pointer
+    if (true == recv_local) {
+      // get pointer to local data slot
+      shared_data_type *data = *((shared_data_type**) message.data());
+      COUT << "zmq_data_service::get boost::any type=" <<  data << ENDL;//std::get<2>(*data).type().name() << ", type=" << typeid(item).name() << ENDL;
 
-    mutex.unlock();
+      try {
+        if (std::get<2>(*data).empty()) {
+          // wrap buffer inside a stream and deserialize serial_str into obj
+          item = internal::template deserialize<T>((char *)std::get<1>(*data).data(), std::get<1>(*data).size());
+        } else {
+          auto ptr_item = boost::any_cast<std::shared_ptr<T>>(std::get<2>(*data));
+          COUT << "zmq_data_service::get ptr_item=" << typeid(ptr_item).name() << ENDL;
+
+          //move if data is to be erase
+          if ( true == erase_local ) {
+            // move data to item and clear any store
+            item = std::move(*ptr_item);
+            //data->second.reset();
+          } else {
+            // copy data to item
+            item = *ptr_item;
+          }
+        }
+        // release atomic_flag get on the server
+        std::get<0>(*data).clear();
+      } catch (...) {
+        // release atomic_flag get on the server
+        std::get<0>(*data).clear();
+        // unlock access to this socket
+        servers_.at(send_id).second.second.unlock();
+        COUT << "zmq_data_service::get Exception Incorrect Type" << ENDL;
+        std::throw_with_nested( std::runtime_error("zmq_data_service::get Incorrect Type"));
+      }
+    } else {
+      try {
+        // wrap buffer inside a stream and deserialize serial_str into obj
+        item = internal::template deserialize<T>((char *)message.data(), message.size());
+        COUT << "zmq_data_service::get deserialize item" << ENDL;
+
+      } catch (...) {
+        // unlock access to this socket
+        servers_.at(send_id).second.second.unlock();
+        COUT << "zmq_data_service::get Exception Incorrect Type" << ENDL;
+        std::throw_with_nested( std::runtime_error("zmq_data_service::get Incorrect Type"));
+      }
+    }
+    // unlock access to this socket
+    servers_.at(send_id).second.second.unlock();
     return item;
   }
 
@@ -197,7 +240,7 @@ public:
   \return final reference for the used server and position.
   */
   template <class T>
-  data_ref_type set(T item, data_ref_type ref_in = data_ref_type{})
+  data_ref_type set(T &&item, data_ref_type ref_in = data_ref_type{})
   {
 
     // if ref_in is valid  uses it server, if not uses local server
@@ -207,59 +250,92 @@ public:
     }
     COUT << "zmq_data_service::set send id:" << send_id << ENDL;
 
-    // serialize obj into an std::string
-    std::string serial_str;
-    boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-    boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > os(inserter);
-    boost::archive::binary_oarchive oa(os);
-
-    try {
-        oa << item;
-        os.flush();
-    } catch (...) {
-        throw std::runtime_error("zmq_data_service::set Type not serializable");
+    // serialize obj into an std::string only if it is not local
+    std::vector<char> serial_vec;
+    if (false == servers_.at(send_id).second.first) {
+      try {
+          serial_vec = internal::serialize(item);
+      } catch (...) {
+          COUT << "zmq_data_service::set Exception Type not serializable" << ENDL;
+          std::throw_with_nested( std::runtime_error("zmq_data_service::set Type not serializable"));
+      }
     }
-
-    // lock the access for other threads
-    mutex.lock();
+    // lock access to this socket
+    servers_.at(send_id).second.second.lock();
 
     // send the command tag
-    servers_.at(send_id).send(setCmd.data(), setCmd.size(), ZMQ_SNDMORE);
+    servers_.at(send_id).first.send(setCmd.data(), setCmd.size(), ZMQ_SNDMORE);
     COUT << "zmq_data_service::set send cmd SET" << ENDL;
 
     // send the data reference even if it is null
-    std::string ref_in_string = ref_in.get_serialized_string();
-    servers_.at(send_id).send((char *)(ref_in_string.data()), ref_in_string.size(), ZMQ_SNDMORE);
-    COUT << "zmq_data_service::set send data reference: size=" << ref_in_string.length() << ENDL;
-
-    // send the data
-    servers_.at(send_id).send(serial_str.data(), serial_str.length());
-    COUT << "zmq_data_service::set send data: size=" << serial_str.length() << ENDL;
-
+    ref_in.send(servers_.at(send_id).first, ZMQ_SNDMORE);
+    COUT << "zmq_data_service::set send data reference: ref: (" << ref_in.get_id() << "," << ref_in.get_pos() << ")" << ENDL;
+    
+    if (false == servers_.at(send_id).second.first) {
+        // send local flag and data if it is NOT local data
+        servers_.at(send_id).first.send((bool *)(&(servers_.at(send_id).second.first)), sizeof(bool), ZMQ_SNDMORE);
+        servers_.at(send_id).first.send(serial_vec.data(), serial_vec.size());
+        COUT << "zmq_data_service::set send data: size=" << serial_vec.size() << ", is_local=" << servers_.at(send_id).second.first <<ENDL;
+    } else {
+        // send only the local flag if it is local
+        servers_.at(send_id).first.send((bool *)(&(servers_.at(send_id).second.first)), sizeof(bool));
+        COUT << "zmq_data_service::set send data: is_local=" << servers_.at(send_id).second.first <<ENDL;
+    }
+   
     // receive the reference (server_id,pos)
+    data_ref_type ref_out{};
+    try {
+      ref_out.recv(servers_.at(send_id).first);
+    } catch(...) {
+      COUT << "zmq_data_service::set ERROR: does not return a data ref" << ENDL;
+      servers_.at(send_id).second.second.unlock();
+      std::throw_with_nested(std::runtime_error("zmq_data_service::set does not return a data ref"));
+    }
+    // get local_flag
     zmq::message_t message;
-    servers_.at(send_id).recv(&message);
-
-    if (message.size() == 0) {
-        COUT << "zmq_data_service::set ERROR: does not return a data ref" << ENDL;
-        mutex.unlock();
-        throw std::runtime_error("zmq_data_service::set Does not return a data ref");
+    servers_.at(send_id).first.recv(&message);
+    bool recv_local = *((bool*) message.data());
+    assert (recv_local == servers_.at(send_id).second.first);
+    COUT << "zmq_data_service::set recv ref: (" << ref_out.get_id() << "," << ref_out.get_pos() << "). local_flag = " << recv_local << ENDL;
+    // if local data get local pointer
+    shared_data_type *data = nullptr;
+    if (true == recv_local) {
+        servers_.at(send_id).first.recv(&message);
+        data = *((shared_data_type**) message.data());
+        COUT << "zmq_data_service::set recv shared_data_ptr=" << data << ENDL;
     }
 
-    data_ref_type ref_out{};
-    ref_out.set_serialized_string((char *)message.data(),message.size());
-    COUT << "zmq_data_service::set recv ref: (" << ref_out.get_id() << "," << ref_out.get_pos() << ")" << ENDL;
-
+    // check if ref is null -< error
     if (ref_out == data_ref_type{}) {
-        std::cerr << "zmq_data_service::set Error full data storage" << std::endl;
-        mutex.unlock();
+        // unlock access to this socket
+        servers_.at(send_id).second.second.unlock();
+        COUT << "zmq_data_service::set Error full data storage" << ENDL;
         throw std::runtime_error("zmq_data_service::set Full Data Storage");
     }
-    mutex.unlock();
+    
+    // if local, move the item to the server
+    if (true == recv_local) {
+      // set local data by moving it, clean serialized data
+      assert (data != nullptr);
+      std::get<1>(*data) = std::vector<char>{};
+      std::get<2>(*data) = std::make_shared<T>(std::forward<T>(item));
+      // set serialize function
+      std::get<3>(*data) = internal::serialize_any_ptr<T>;
+      // free data->first that must be gotten with test_and_set()) from the server;
+      std::get<0>(*data).clear();
+      COUT << "zmq_data_service::set recv shared_data_ptr atomic clear" << ENDL;
+    }
+    // unlock access to this socket
+    servers_.at(send_id).second.second.unlock();
     return ref_out;
   }
 
 private:
+    //using shared_data_type = std::pair<std::atomic_flag,boost::any>;
+    using shared_data_type = std::tuple<std::atomic_flag,
+                                    std::vector<char>,
+                                    boost::any,
+                                    std::function<std::vector<char>(boost::any)>>;
 
     /// default local machine
     //constexpr static char default_machine_[] = "localhost";
@@ -293,19 +369,21 @@ private:
   long dataServer_port_ = 0;
   long numTokens_ = 100;
   std::map<std::string, long> machinesMap_;
-  std::map<long, zmq::socket_t> servers_;
-  std::vector<zmq::socket_t> localServer_;
+  // list of socket / (local_flag / mutex) for each and all servers
+  std::map<long, std::pair<zmq::socket_t, std::pair<bool, std::mutex>>> servers_;
+  std::vector<std::pair<bool,zmq::socket_t>> localServer_;
   long numLocalServers_ = 0;
   zmq::context_t context_;
   bool isServer_ = false;
   long server_id_ = -1;
   /// Proxy server address
   std::thread server_thread_;
-  std::vector<std::tuple<bool, long, std::vector<unsigned char>>> data_;
+  // data vector (used_flag, clean_counter,
+  //              [atomic_flag, serial_data, local_data, serialize_func]) )
+  std::vector<std::tuple<bool, long,
+                        std::unique_ptr<shared_data_type>>> data_;
   boost::circular_buffer<long> emptyList_;
   std::shared_ptr<zmq_port_service> port_service_;
-  // lock for get and set operations
-  std::mutex mutex;
 
   /**
   \brief init_data_service function to init the data service.
@@ -316,6 +394,11 @@ private:
     try {
     // set data array
     data_.resize(numTokens_);
+    // init atomic flags to clear
+    for (auto it=data_.begin(); it!=data_.end(); it++) {
+      std::get<2>(*it) = std::make_unique<shared_data_type>();
+      std::get<1>(*(std::get<2>(*it))).clear();
+    }
 
     // init empty list
     emptyList_.set_capacity(numTokens_);
@@ -373,8 +456,10 @@ private:
             std::ostringstream ss;
             ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
             COUT << "zmq_data_service::init_data_service inproc bind url: " << ss.str() << ENDL;
-            localServer_.emplace_back(context_,ZMQ_REP);
-            localServer_[pos].bind(ss.str());
+            localServer_.emplace_back(std::piecewise_construct,
+                                      std::forward_as_tuple(true),
+                                      std::forward_as_tuple(context_,ZMQ_REP));
+            localServer_[pos].second.bind(ss.str());
             numLocalServers_++;
             pos++;
             COUT << "zmq_data_service::init_data_service inproc bind end" << ENDL;
@@ -384,8 +469,10 @@ private:
               std::ostringstream ss;
               ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
               COUT << "zmq_data_service::init_data_service ipc bind url: " << ss.str() << ENDL;
-              localServer_.emplace_back(context_,ZMQ_REP);
-              localServer_[pos].bind(ss.str());
+              localServer_.emplace_back(std::piecewise_construct,
+                                        std::forward_as_tuple(false),
+                                        std::forward_as_tuple(context_,ZMQ_REP));
+              localServer_[pos].second.bind(ss.str());
               numLocalServers_++;
               pos++;
               COUT << "zmq_data_service::init_data_service inproc bind end" << ENDL;
@@ -398,16 +485,18 @@ private:
               isRequiredTCP = true;
             }
           } else if ( (i == 2) && (isRequiredTCP) ) {
-            // inproc server socket binded
+            // tcp server socket binded
             std::ostringstream ss;
             ss << tcpBindPattern[0];
             COUT << "zmq_data_service::init_data_service tcp bind url: " << ss.str() << ENDL;
-            localServer_.emplace_back(context_,ZMQ_REP);
-            localServer_[pos].bind(ss.str());
+            localServer_.emplace_back(std::piecewise_construct,
+                                      std::forward_as_tuple(false),
+                                      std::forward_as_tuple(context_,ZMQ_REP));
+            localServer_[pos].second.bind(ss.str());
             size_t size = 256;
             char buf[256];
             COUT << "zmq_data_service::init_data_service tcp bind getsockopt" << ENDL;
-            localServer_[pos].getsockopt(ZMQ_LAST_ENDPOINT,buf,&size);
+            localServer_[pos].second.getsockopt(ZMQ_LAST_ENDPOINT,buf,&size);
             std::string address(buf);
             std::string delimiter = ":";
             long pos = address.find(delimiter, address.find(delimiter)+1)+1;
@@ -439,25 +528,37 @@ private:
       try {
       servers_.emplace(std::piecewise_construct,
                        std::forward_as_tuple(elem.second),
-                       std::forward_as_tuple(context_,ZMQ_REQ));
+                       std::forward_as_tuple(
+                            std::piecewise_construct,
+                            std::forward_as_tuple(context_,ZMQ_REQ),
+                            std::forward_as_tuple(
+                                 std::piecewise_construct,
+                                 std::forward_as_tuple(false),
+                                 std::forward_as_tuple() ) ) );
       if (elem.second == id_) { /* same machine and process */
         std::ostringstream ss;
         ss << inprocPattern[0] << dataServer_port_ << inprocPattern[1];
         COUT << "zmq_data_service::init_data_service inproc connect: " << elem.second << ": " << ss.str() << ENDL;
-        servers_.at(elem.second).connect(ss.str());
+        //connect and set local flag -> true
+        servers_.at(elem.second).first.connect(ss.str());
+        servers_.at(elem.second).second.first = true;
       } else if (elem.first == machines_[id_]) {
         try {
           std::ostringstream ss;
           ss << ipcPattern[0] << dataServer_port_ << ipcPattern[1];
           COUT << "zmq_data_service::init_data_service ipc connect: " << elem.second << ": " << ss.str() << ENDL;
-          servers_.at(elem.second).connect(ss.str());
+          //connect and set local flag -> false
+          servers_.at(elem.second).first.connect(ss.str());
+          servers_.at(elem.second).second.first = false;
         } catch (std::exception& e) {  // if ipc sockets are not supported, change to TCP
           long port = port_service_->get(elem.second,dataServer_port_,true);
           COUT << "zmq_data_service::init_data_service tcp connect 1: (" << elem.second << "," << dataServer_port_ << "," << port << ")" << ENDL;
           std::ostringstream ss;
           ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
           COUT << "zmq_data_service::init_data_service tcp connect 1 data: " << ss.str() << ENDL;
-          servers_.at(elem.second).connect(ss.str());
+          //connect and set local flag -> false
+          servers_.at(elem.second).first.connect(ss.str());
+          servers_.at(elem.second).second.first = false;
         }
       } else {
         long port = port_service_->get(elem.second,dataServer_port_,true);
@@ -465,7 +566,9 @@ private:
         std::ostringstream ss;
         ss << tcpConnectPattern[0] << elem.first << tcpConnectPattern[1] << port;
         COUT << "zmq_data_service::init_data_service tcp connect 2: " << ss.str() << ENDL;
-        servers_.at(elem.second).connect(ss.str());
+        //connect and set local flag -> false
+        servers_.at(elem.second).first.connect(ss.str());
+        servers_.at(elem.second).second.first = false;
       }
       } catch(const std::exception &e) {
       std::cerr << "zmq_data_service:init_data_service - for (const auto& elem : machinesMap_) {}" << e.what() << std::endl;
@@ -488,8 +591,8 @@ private:
     std::vector<zmq::pollitem_t> items;
     items.resize(numLocalServers_);
     for (long i=0; i<numLocalServers_; i++) {
-      items[i] = zmq::pollitem_t{(void *)localServer_[i], 0, ZMQ_POLLIN, 0 };
-      //items[i].socket = (void *)localServer_[i];
+      items[i] = zmq::pollitem_t{(void *)(localServer_[i].second), 0, ZMQ_POLLIN, 0 };
+      //items[i].socket = (void *)(localServer_[i].second);
       //items[i].fd = 0;
       //items[i].events = ZMQ_POLLIN;
       //items[i].revents = 0;
@@ -506,14 +609,14 @@ private:
       for (long i=0; i<numLocalServers_; i++) {
         if (items [i].revents & ZMQ_POLLIN) {
             next=i;
-            COUT << "zmq_data_service::server_func wakeup socket: " << next << ENDL;
+            COUT << "zmq_data_service::server_func wakeup socket: " << next << ", recv_local = " << localServer_[next].first << ENDL;
             break;
         }
       }
       
       // recv command
       zmq::message_t msg;
-      localServer_[next].recv(&msg);
+      localServer_[next].second.recv(&msg);
 
       // set command
       if ( (msg.size() == setCmd.size()) &&
@@ -521,10 +624,8 @@ private:
         COUT << "zmq_data_service::server_func SET" << ENDL;
         
         // get data reference even if it is null
-        localServer_[next].recv(&msg);
         data_ref_type old_ref{};
-        old_ref.set_serialized_string((char *)msg.data(),msg.size());
-        assert (old_ref != data_ref_type{});  //??? TEMP
+        old_ref.recv(localServer_[next].second);
         
         // check old ref or get next empty slot
         long slot = -1; // ERROR by default;
@@ -536,31 +637,73 @@ private:
           emptyList_.pop_front();
           COUT << "zmq_data_service::server_func recv data: size = " << msg.size() << ENDL;
         }
-        // recv item and copy it back
-        localServer_[next].recv(&msg);
+        
+        // receive local_flag
+        localServer_[next].second.recv(&msg);
+        bool recv_local = *((bool*) msg.data());
+        assert (localServer_[next].first == recv_local);
+        COUT << "zmq_data_service::server_func recv_local=" << recv_local << ENDL;
+
+        // receive serialize data if not local
+        if (false == recv_local) {
+          // recv item and copy it back
+          localServer_[next].second.recv(&msg);
+          COUT << "zmq_data_service::server_func recv serialized item size=" << msg.size() << ENDL;
+        }
+        
+        COUT << "zmq_data_service::server_func recv get slot=" << slot << ENDL;
+
+        // fill slot, create data_ref_type, and data pointer
+        data_ref_type ref{};
+        shared_data_type *shared_data_ptr = nullptr;
         if (slot != -1) {
+          ref = data_ref_type{id_,slot};
           std::get<0>(data_[slot])=true;
           std::get<1>(data_[slot])=0;
-          std::get<2>(data_[slot]).resize(msg.size());
-          std::memcpy(std::get<2>(data_[slot]).data(), msg.data(), msg.size());
-          COUT << "zmq_data_service::server_func data stored: size = " << std::get<2>(data_[slot]).size() << " slot = " << slot << ENDL;
+          // get data pointer
+          shared_data_ptr = std::get<2>(data_[slot]).get();
+          // store data if remote
+          if (false == recv_local) {
+            while(std::get<0>(*shared_data_ptr).test_and_set());
+            // copy serialized data
+            std::get<1>(*shared_data_ptr).resize(msg.size());
+            std::memcpy(std::get<1>(*shared_data_ptr).data(), msg.data(), msg.size());
+            // clean local data and serialize function
+            std::get<2>(*shared_data_ptr) = boost::any{};
+            std::get<3>(*shared_data_ptr) = nullptr;
+            COUT << "zmq_data_service::server_func data stored: size = " << std::get<1>(*shared_data_ptr).size() << " slot = " << slot << ENDL;
+            std::get<0>(*shared_data_ptr).clear();
+          }
         } else {
           COUT << "zmq_data_service::server_func data NOT stored (FULL STORAGE)" << ENDL;
         }
-        // create data_ref_type, serialize and send back
-        data_ref_type ref{};
-        if (slot != -1) {
-            ref = data_ref_type{id_,slot};
+        
+        COUT << "zmq_data_service::server_func send set response" << ENDL;
+
+        // serialize ref nd send back
+        ref.send(localServer_[next].second, ZMQ_SNDMORE);
+        COUT << "zmq_data_service::server_func send ref=(" << ref.get_id() << ", " << ref.get_pos() << ")" << ENDL;
+        
+        if (true == recv_local) {
+          // send local_flag
+          localServer_[next].second.send((bool *) &recv_local, sizeof(recv_local),ZMQ_SNDMORE);
+          COUT << "zmq_data_service::server_func send recv_local=" << recv_local << ENDL;
+          if (slot == -1) {
+            // if no entry free send nullptr else
+            shared_data_ptr = nullptr;
+            localServer_[next].second.send((shared_data_type **) &shared_data_ptr, sizeof(shared_data_type *));
+          } else {
+            // wait until collect the atomic flag
+            while(std::get<0>(*shared_data_ptr).test_and_set());
+            // send shared data pointer
+            localServer_[next].second.send((shared_data_type **) &shared_data_ptr, sizeof(shared_data_type *));
+          }
+        COUT << "zmq_data_service::server_func send shared_data_ptr=" << shared_data_ptr << ENDL;
+        } else {
+          // send local_flag
+          localServer_[next].second.send((bool *) &recv_local, sizeof(recv_local));
+          COUT << "zmq_data_service::server_func send recv_local=" << recv_local << ENDL;
         }
-        std::string serial_str;
-        boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-        boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > s(inserter);
-        boost::archive::binary_oarchive oa(s);
-
-        oa << ref;
-        s.flush();
-
-        localServer_[next].send(serial_str.data(), serial_str.length());
         COUT << "zmq_data_service::server_func send ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 
       } else if ( (msg.size() == getCmd.size()) &&
@@ -568,40 +711,84 @@ private:
         COUT << "zmq_data_service::server_func GET" << ENDL;
         
         // recv and deserialized reference
-        localServer_[next].recv(&msg);
-        COUT << "zmq_data_service::server_func recv ref" << ENDL;
         data_ref_type ref{};
-        ref.set_serialized_string((char *)msg.data(),msg.size());
+        ref.recv(localServer_[next].second);
         COUT << "zmq_data_service::server_func decode ref: (" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 
         // recv release flag and release count
-        localServer_[next].recv(&msg);
+        localServer_[next].second.recv(&msg);
         bool release_flag = *((bool*) msg.data());
-        localServer_[next].recv(&msg);
+        localServer_[next].second.recv(&msg);
         long release_count = *((long*) msg.data());
-        
+
+        COUT << "zmq_data_service::server_func release_flag = " << release_flag << ",  release_count = " << release_count << ENDL;
+
         //get reference slot, send it and set it as empty
         if ( (id_ == ref.get_id()) && (0 <= ref.get_pos()) &&
              ((long)data_.size() > ref.get_pos()) && std::get<0>(data_[ref.get_pos()])) {
-          localServer_[next].send(std::get<2>(data_[ref.get_pos()]).data(),
-                                  std::get<2>(data_[ref.get_pos()]).size());
-          // if required, release the data position if the count is complete
+
+          // check if is required to release the data position because the count is complete
+          bool erase_flag = false;
           if (release_flag) {
             // increase the count
             std::get<1>(data_[ref.get_pos()])++;
             COUT << "zmq_data_service::server_func send data: release count increased: slot = " << ref.get_pos() << ", count=(" << std::get<1>(data_[ref.get_pos()]) << ", " << release_count << ")" << ENDL;
             if (std::get<1>(data_[ref.get_pos()]) >= release_count) {
-              // count is complete -> release
-              std::get<0>(data_[ref.get_pos()]) = false;
-              std::get<1>(data_[ref.get_pos()]) = 0;
-              std::get<2>(data_[ref.get_pos()]) = std::vector<unsigned char>{};
-              emptyList_.push_back(ref.get_pos());
-              COUT << "zmq_data_service::server_func send data: slot released: slot = " << ref.get_pos() << ENDL;
+              erase_flag = true;
             }
           }
-          COUT << "zmq_data_service::server_func send data: size = " << std::get<2>(data_[ref.get_pos()]).size() << " slot = " << ref.get_pos() << ENDL;
+          // send erase flag
+          localServer_[next].second.send((bool *) &erase_flag, sizeof(erase_flag),ZMQ_SNDMORE);
+
+          // send local_flag
+          bool recv_local = localServer_[next].first;
+          localServer_[next].second.send((bool *) &recv_local, sizeof(recv_local),ZMQ_SNDMORE);
+          COUT << "zmq_data_service::server_func send recv_local = " << recv_local << ", localServer_[" << next << "].first = " << localServer_[next].first << ENDL;
+
+          // get shared data pointer
+          shared_data_type *shared_data_ptr = std::get<2>(data_[ref.get_pos()]).get();
+
+          // check if local or remnote
+          if (true == recv_local) {
+            // wait until collect the atomic flag
+            while(std::get<0>(*shared_data_ptr).test_and_set());
+            // send shared data pointer
+            localServer_[next].second.send((shared_data_type **) &shared_data_ptr, sizeof(shared_data_type *));
+            COUT << "zmq_data_service::server_func send data: shared_data_ptr = " << shared_data_ptr << ENDL;
+          } else {
+            // wait until collect the atomic flag
+            while(std::get<0>(*shared_data_ptr).test_and_set());
+            // if seial string is empty, serialize the local object
+            if (std::get<1>(*shared_data_ptr).size() == 0) {
+              std::get<1>(*shared_data_ptr) = std::get<3>(*shared_data_ptr)(std::get<2>(*shared_data_ptr));
+            }
+            // send remote data
+            localServer_[next].second.send(std::get<1>(*shared_data_ptr).data(),
+                                           std::get<1>(*shared_data_ptr).size());
+            COUT << "zmq_data_service::server_func send data: size = " << std   ::get<1>(*shared_data_ptr).size() << " slot = " << ref.get_pos() << ENDL;
+            // atomic flag
+            std::get<0>(*shared_data_ptr).clear();
+
+          }
+          
+          // if requiered relase the slot
+          if (true == erase_flag) {
+            // count is complete -> release
+            std::get<0>(data_[ref.get_pos()]) = false;
+            std::get<1>(data_[ref.get_pos()]) = 0;
+            // wait until collect the atomic flag
+            while(std::get<0>(*shared_data_ptr).test_and_set());
+            std::get<1>(*shared_data_ptr) = std::vector<char>{};
+            std::get<2>(*shared_data_ptr) = boost::any{};
+            std::get<3>(*shared_data_ptr) = nullptr;
+            // clear atomic flag
+            std::get<0>(*shared_data_ptr).clear();
+            // put entry on empty list
+            emptyList_.push_back(ref.get_pos());
+            COUT << "zmq_data_service::server_func send data: slot released: slot = " << ref.get_pos() << ENDL;
+          }
         } else {
-          localServer_[next].send("", 0);
+          localServer_[next].second.send("", 0);
           COUT << "zmq_data_service::server_func: ERROR ref: (" << ref.get_id() << "," << ref.get_pos() << "), " << "server id: " << id_ << "data range: (" << 0 << "," << data_.size() << ")" << "data_slot_occupied = " << std::get<0>(data_[ref.get_pos()]) << ENDL;
         }
       } else if ( (msg.size() == endCmd.size()) &&

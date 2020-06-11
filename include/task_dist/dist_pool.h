@@ -57,9 +57,7 @@ class dist_pool
                     break;
                   COUT << "dist_pool::dist_pool (" << i << "): exec begin: task = (" << t.get_id()
                      << ", " << t.get_task_id() << ")" << ENDL;
-                  
                   scheduler->functions[t.get_id()](t);
-                  
                   COUT << "dist_pool::dist_pool (" << i << "): exec end: task = (" << t.get_id()
                      << ", " << t.get_task_id() << ")" << ENDL;
                 }

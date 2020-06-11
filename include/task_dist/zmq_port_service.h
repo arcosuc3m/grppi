@@ -29,6 +29,7 @@
 #include <utility>
 #include <memory>
 #include <sstream>
+#include <exception>
 
 #include <zmq.hpp>
 
@@ -191,8 +192,8 @@ public:
     COUT << "zmq_port_service::get rec data: size=" << message.size() << ENDL;
 
     if (message.size() == 0) {
-        COUT << "Error Item not found" << ENDL;
-        throw std::runtime_error("Item not found");
+        COUT << "zmq_port_service::get Error Item not found" << ENDL;
+        throw std::runtime_error("zmq_port_service::get: Item not found");
     }
     
     // wrap buffer inside a stream and deserialize serial_str into obj
@@ -204,8 +205,8 @@ public:
     try {
       ia >> item;
     } catch (...) {
-        std::cerr << "Error Incorrect Type" << std::endl;
-        throw std::runtime_error("Incorrect Type");
+        COUT << "zmq_port_service::get Error Incorrect Type" << ENDL;
+        std::throw_with_nested( std::runtime_error("zmq_port_service::get: Incorrect Type"));
     }
 
     return item;
@@ -246,8 +247,8 @@ public:
         oa << port;
         os.flush();
     } catch (...) {
-        std::cerr << "Error Type not serializable" << std::endl;
-        throw std::runtime_error("Type not serializable");
+        COUT << "zmq_port_service::set Error Type not serializable" << ENDL;
+        std::throw_with_nested( std::runtime_error("zmq_port_service::set  Type not serializable"));
     }
 
     // send the data
@@ -261,8 +262,8 @@ public:
 
    
     if (message.size() != 0) {
-        COUT << "Error full data storage" << ENDL;
-        throw std::runtime_error("Full Data Storage");
+        COUT << "zmq_port_service::set Error full data storage" << ENDL;
+        throw std::runtime_error("zmq_port_service::set: Full Data Storage");
     }
     return;
   }
