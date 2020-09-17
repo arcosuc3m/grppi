@@ -46,8 +46,9 @@
 #ifdef GRPPI_DCEX
 
 #include "text_in_container.hpp"
+#include "output_container.hpp"
 
-
+/*
 template <typename T>
 static constexpr bool is_text_container = std::is_same<std::decay_t<T>, aspide::text_in_container>::value;
 
@@ -63,11 +64,41 @@ using requires_container = std::enable_if_t<is_aspide_container<T>, long>;
 
 template <typename T>
 using requires_not_container = std::enable_if_t<is_not_container<T>, long>;
+*/
+
+template <typename T>
+static constexpr bool is_text_container = std::is_same<std::decay_t<T>, aspide::text_in_container>::value;
+
+template <typename T>
+static constexpr bool is_output_container = std::is_same<std::decay_t<T>, aspide::output_container>::value;
+
+template <typename T>
+constexpr bool is_aspide_container =
+   is_text_container<T> ||
+   is_output_container<T>;
+
+template <typename T>
+constexpr bool is_not_container = !is_aspide_container<T>;
+
+template <typename T>
+constexpr bool is_no_pattern_container = !is_aspide_container<T> && !grppi::is_pattern<T>;
+
+template <typename T>
+using requires_container = std::enable_if_t<is_aspide_container<T>, int>;
+
+template <typename T>
+using requires_not_container = std::enable_if_t<is_not_container<T>, int>;
+
+template <typename T>
+using requires_no_pattern_container = std::enable_if_t<is_no_pattern_container<T>, int>;
+
+
+
 
 #endif
 
 #undef COUT
-#define COUT if (0) {std::ostringstream foo;foo
+#define COUT if (1) {std::ostringstream foo;foo
 #undef ENDL
 #define ENDL std::endl;std::cout << foo.str();}
 
@@ -226,13 +257,79 @@ public:
 
 private:
 
+  #ifdef GRPPI_DCEX
+
   template <typename InputItemType, typename Consumer,
-            requires_no_pattern<Consumer> = 0>
+            requires_no_pattern<Consumer> = 0 ,
+            requires_container<Consumer> = 0 >
+  void do_pipeline(bool is_farm, Consumer && consume_op) const{
+     std::cout<<"SHOULD NEVER REACH HERE!"<<std::endl;
+  }
+
+  template <typename InputItemType, typename Consumer,typename Container,
+            requires_no_pattern<Consumer> = 0 ,
+            requires_container<Container> = 0 >
+  void do_pipeline(bool is_farm, Consumer && consume_op, std::vector<Container> & cont) const{
+     std::cout<<"SHOULD NEVER REACH HERE!"<<std::endl;
+  }
+
+ template <typename InputItemType, typename Container,
+          requires_container<Container> = 0>
+  void do_pipeline(
+          bool is_farm, Container & base_cont,  std::vector<Container> & container) const;
+
+  template <typename Transformer, typename ... Transformers,
+           requires_not_container<Transformer> = 0>
+  std::vector<aspide::output_container> obtain_output_containers(aspide::text_in_container & container,
+          Transformer && t , Transformers && ... transform_ops) const
+  {
+          return obtain_output_containers(container, std::forward<Transformers>(transform_ops)...);
+  }
+
+  // TODO: This shoulbidbe modified for looking for the first occurrence of a container and intantiate the number of files requires by the pattern composition for intermediate stages and to determine the cardinality of the final outpùt container (right now only 1 to 1 input files per output)
+  std::vector<aspide::output_container> obtain_output_containers(aspide::text_in_container & container, aspide::output_container & out) const{
+      std::vector<aspide::output_container> file_flushers;
+      // TODO: work with the paths to generate the names
+      for(int i = 0; i < container.size(); i++){
+	  auto file_name = 
+		  container.get_uri().string();
+          //std::string file_name ="file://home/david/Aspide/grppi/build/samples/task_dist_backend/outdir/";
+          file_name+=std::to_string(i);
+          file_flushers.emplace_back( std::move(aspide::output_container(file_name)));
+          std::cout<<"OPENING NEW FILE " << file_name <<std::endl;
+          if((*(file_flushers.end()-1)).newFile()) std::cout<<"OPENDED FILE"<<std::endl;
+      }
+      return file_flushers;
+
+  }
+
+
+  std::vector<aspide::output_container> obtain_output_containers(aspide::text_in_container & container) const {
+     return {};
+  }
+
+#endif
+
+
+
+  template <typename InputItemType, typename Consumer,
+#ifdef GRPPI_DCEX
+           requires_no_pattern_container<Consumer> = 0
+#else
+           requires_no_pattern<Consumer> = 0
+#endif
+	   >
   void do_pipeline(bool is_farm, Consumer && consume_op) const;
 
   template <typename InputItemType, typename Transformer,
             typename ... OtherTransformers,
-            requires_no_pattern<Transformer> = 0>
+#ifdef GRPPI_DCEX
+           requires_no_pattern_container<Transformer> = 0
+#else
+           requires_no_pattern<Transformer> = 0
+#endif
+          >
+
   void do_pipeline(bool is_farm, Transformer && transform_op,
       OtherTransformers && ... other_ops) const;
     
@@ -659,8 +756,8 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 		aspide::text_in_container & container, Transformers && ... transform_ops) const
 {
   using namespace std;
-  using output_type = pair<std::string,long>;
-  long order = 0;
+  using output_type = pair<std::string,std::vector<long>>;
+  std::vector<long> order = {0,0,-1};
   // Local container
   if(container.type == 0 ) {
      scheduler_->register_sequential_task([&container, this, &order](task_type &t) -> void
@@ -673,13 +770,15 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 	     // Obtain each string part of the file
 	     while(file_iter != file.end()){
                  auto value = scheduler_->set(make_pair(*file_iter, order));
+	     COUT<<"READ "<<*file_iter<<ENDL;
 		 //Creates a task for each data item
                  task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {value}};
                  scheduler_->set_task(next_task,true);
-		 order++;
+		 order[1]++;
 		 ++file_iter;
 
 	     }
+             order[0]++;
 	     ++iterator;
 	 }
 	 scheduler_->finish_task(t);
@@ -705,7 +804,7 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 		                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
             scheduler_->set_task(next_task,true);
             ++file_iter;
-	    order++;
+	    order[0]++;
 	}
 	scheduler_->finish_task(t);
       }, true);
@@ -713,19 +812,19 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
       scheduler_->register_parallel_task([&container, this](task_type &t) -> void
       {
          //TODO: We probably need to modify the order information for ordering items inside a file
-        long order = 0;
-
+        auto order = t.get_order();
         auto item = scheduler_->template get_release<pair<long,long>>(t.get_data_location()[0]);
 	    auto curr_file = container.begin_f() + item.first;
 	    auto file = *(curr_file);
 	    auto file_iter = file.begin();
 	    while(file_iter != file.end()) {
              auto value = scheduler_->set(make_pair(*file_iter, order));
+	     COUT<<"READ "<<*file_iter<<ENDL;
 	         //Creates a task for each data item
              task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
 		                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
              scheduler_->set_task(next_task,true);
-	        order++;
+	        order[1]++;
 	        ++file_iter;
 	    }
 	    scheduler_->finish_task(t);
@@ -734,7 +833,15 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 
        return;
    }
-   do_pipeline<output_type>(false, forward<Transformers>(transform_ops)...);
+
+   
+   auto out_containers = obtain_output_containers(container, forward<Transformers>(transform_ops)...);
+
+   if(out_containers.size()>0)
+      do_pipeline<output_type>(false, forward<Transformers>(transform_ops)..., out_containers);
+   else do_pipeline<output_type>(false, forward<Transformers>(transform_ops)...);
+      
+//   do_pipeline<output_type>(false, forward<Transformers>(transform_ops)...);
 
 }
 #endif
@@ -751,9 +858,9 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 {
   using namespace std;
   using result_type = decay_t<typename result_of<Generator()>::type>;
-  using output_type = pair<typename result_type::value_type,long>;
+  using output_type = pair<typename result_type::value_type,std::vector<long>>;
 
-  long order=0;
+  std::vector<long> order={0,-1,-1};
   COUT << "parallel_execution_dist_task::pipeline(GENERATOR): is_farm = 0" << ENDL;
 
   std::function<void(task_type&)> task_func([&generate_op, this, &order](task_type &t) -> void
@@ -766,22 +873,22 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
      auto item{generate_op()};
 #endif
      if(item){
-       auto ref = scheduler_->set(make_pair(*item, order));
+       auto ref = scheduler_->set(make_pair(*item, order[0]));
        //COUT << "parallel_execution_dist_task::pipeline(GENERATOR): task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id()+1 <<"," << order << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
 #ifdef DEBUG
-       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), {ref}};
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order[0], conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), {ref}};
 #else
-       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {ref}};
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order[0], {scheduler_->get_node_id()}, false, {ref}};
 #endif
        scheduler_->set_task(next_task,false);
        
        // increase order
-       order++;
+       order[0]++;
        //COUT << "parallel_execution_dist_task::pipeline(GENERATOR): task["<< t.get_id() << ","<< t.get_task_id()<< "]: generator, launch task[" << t.get_id() << ","<< order << "], ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
 #ifdef DEBUG
-       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, conf_tasks[0].get_local_ids(), conf_tasks[0].get_is_hard()};
+       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order[0], conf_tasks[0].get_local_ids(), conf_tasks[0].get_is_hard()};
 #else
-       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false};
+       task_type gen_task{t.get_id(), scheduler_->get_task_id(), order[0], {scheduler_->get_node_id()}, false};
 #endif
        scheduler_->set_task(gen_task,true);
      } else {
@@ -795,9 +902,44 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
 }
 
 // PRIVATE MEMBERS
+
+
+#ifdef GRPPI_DCEX
+template <typename Scheduler>
+template <typename InputItemType, typename Container,
+          requires_container<Container>>
+void parallel_execution_dist_task<Scheduler>::do_pipeline(
+      bool is_farm, Container & base_cont,  std::vector<Container> & container) const
+{
+   std::function<void(task_type&)> task_func([&container, this](task_type t) -> void
+   {
+     auto item = scheduler_->template get_release<InputItemType>(t.get_data_location()[0]);
+     auto order = t.get_order();
+     std::cout<<"writing in file " << order[0] << "\"" <<item.first << "\""<<std::endl;
+
+     container[order[0]].get_flusher().write(item.first.data(), (int64_t) item.first.size());
+     //TODO: solve a problem - ask pablo : we need to conver data items into char * by serializing probably
+     // Right now i assume that the result is a string and we can get the data and size 
+
+     scheduler_->finish_task(t);
+   });
+
+
+  scheduler_->register_sequential_task(std::move(task_func), false);
+  scheduler_->run();
+}
+
+#endif
+
+
 template <typename Scheduler>
 template <typename InputItemType, typename Consumer,
-          requires_no_pattern<Consumer>>
+#ifdef GRPPI_DCEX
+          requires_no_pattern_container<Consumer>
+#else
+          requires_no_pattern<Consumer>
+#endif
+          >
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
     bool is_farm, Consumer && consume_op) const
 {
@@ -819,7 +961,12 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
 template <typename Scheduler>
 template <typename InputItemType, typename Transformer,
           typename ... OtherTransformers,
-          requires_no_pattern<Transformer>>
+#ifdef GRPPI_DCEX
+          requires_no_pattern_container<Transformer>
+#else
+          requires_no_pattern<Transformer>
+#endif
+          >
 void parallel_execution_dist_task<Scheduler>::do_pipeline(
     bool is_farm, Transformer && transform_op,
     OtherTransformers && ... other_transform_ops) const
@@ -830,7 +977,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using input_item_value_type = typename InputItemType::first_type;
   using transform_result_type = 
       decay_t<typename result_of<Transformer(input_item_value_type)>::type>;
-  using output_item_type = pair<transform_result_type,long>;
+  using output_item_type = pair<transform_result_type,std::vector<long>>;
 
   COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): is_farm = "<< is_farm << ENDL;
 
@@ -942,7 +1089,7 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using input_item_value_type = typename InputItemType::first_type;
 
   using output_type = typename stage_return_type<input_item_value_type, FarmTransformer>::type;
-  using output_item_type = pair <output_type, long> ;
+  using output_item_type = pair <output_type, std::vector<long>> ;
 
   //COUT << "FARM" << ENDL;
   do_pipeline<InputItemType>(true, farm_obj.transformer(),true);
@@ -998,12 +1145,12 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
   using namespace experimental;
 
   using output_item_value_type = decay_t<Identity>;
-  using output_item_type = pair<output_item_value_type,long>;
+  using output_item_type = pair<output_item_value_type,std::vector<long>>;
 
   // Review if it can be transformed into parallel task
   // Transform into atomic if used as a parallel task
   //long long order = 0; ERROR: different type than before
-  long order = 0;
+  std::vector<long> order = {0,0,0};
 
   COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): is_farm = "<< is_farm << ENDL;
   std::function<void(task_type&)> task_func([&reduce_obj, this, &order](task_type &t) -> void
@@ -1014,7 +1161,8 @@ void parallel_execution_dist_task<Scheduler>::do_pipeline(
     if(reduce_obj.reduction_needed()) {
       constexpr sequential_execution seq;
       auto red = reduce_obj.reduce_window(seq);
-      auto ref = scheduler_->set(make_pair(red, order++));
+      auto ref = scheduler_->set(make_pair(red, order));
+      order[0]++;
       //COUT << "parallel_execution_dist_task::pipeline(.REDUCE.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: reduce, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
       scheduler_->set_task(task_type{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}},false);
     } else{

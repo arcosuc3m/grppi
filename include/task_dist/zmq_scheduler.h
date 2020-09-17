@@ -1192,7 +1192,7 @@ class zmq_scheduler_thread{
 
           COUT << "zmq_scheduler_thread::srv_run_cmd servers_ids_.size() = " << servers_ids_.size() << ENDL;
             
-          task_type task_seq = task_type{0,0,0,std::vector<long>{servers_ids_[0]},false};
+          task_type task_seq = task_type{0,0,{0,0,0},std::vector<long>{servers_ids_[0]},false};
           COUT << "zmq_scheduler_thread::srv_run_cmd created init task = {0,0,0,{" << servers_ids_[0] << "},false}" << ENDL;
           if (seq_servers_.find(0) != seq_servers_.end()) {
 

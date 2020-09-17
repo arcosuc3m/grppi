@@ -57,7 +57,7 @@ class zmq_task{
 
     Creates a task with the end function and task ids.
     */
-    zmq_task(): function_id_{-1}, task_id_{-1}, order_{-1}, local_ids_{}, is_hard_{false}, data_location_{}, task_serialized_{}, is_task_serialized_{false} {
+    zmq_task(): function_id_{-1}, task_id_{-1}, order_{-1,-1,-1}, local_ids_{}, is_hard_{false}, data_location_{}, task_serialized_{}, is_task_serialized_{false} {
     COUT << "TASK: (-1,-1,-1) (0,false,-1,-1) CREATED" << ENDL;
     };
 
@@ -73,10 +73,10 @@ class zmq_task{
     \param local_ids list of node ids for local execution
     \param is_hard flag:can only execute on local nodes
     */
-    zmq_task(long f_id, long t_id, long order,
+    zmq_task(long f_id, long t_id, std::vector<long> order,
              std::vector<long> local_ids, bool is_hard):
       function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{}, task_serialized_{}, is_task_serialized_{false} {
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << local_ids_.size() << "," <<  local_ids_.data() << "," << is_hard_ << "," <<  data_location_.size() << ") CREATED" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << local_ids_.size() << "," <<  local_ids_.data() << "," << is_hard_ << "," <<  data_location_.size() << ") CREATED" << ENDL;
 
     }
     
@@ -92,11 +92,11 @@ class zmq_task{
     \param is_hard flag:can only execute on local nodes
     \param data_location data location reference
     */
-    zmq_task(long f_id, long t_id, long order,
+    zmq_task(long f_id, long t_id, std::vector<long> order,
                  std::vector<long> local_ids, bool is_hard,
                  std::vector<data_ref_type> ref):
       function_id_{f_id}, task_id_{t_id}, order_{order}, local_ids_{local_ids}, is_hard_{is_hard}, data_location_{ref}, task_serialized_{}, is_task_serialized_{false} {
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << local_ids_.size() << "," <<  local_ids_.data() << "," << is_hard_ << "," <<  data_location_.size() << "," <<  data_location_[0].get_id() << "," << data_location_[0].get_pos() << ") CREATED" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << local_ids_.size() << "," <<  local_ids_.data() << "," << is_hard_ << "," <<  data_location_.size() << "," <<  data_location_[0].get_id() << "," << data_location_[0].get_pos() << ") CREATED" << ENDL;
       }
 //#define __DEBUG__
 #ifdef __DEBUG__
@@ -111,7 +111,7 @@ class zmq_task{
         after_dep_{task.after_dep_},
         is_task_serialized_{task.is_task_serialized_},
         task_serialized_{task.task_serialized_} {
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") COPIED" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") COPIED" << ENDL;
     }
 
     zmq_task(zmq_task && task) :
@@ -125,7 +125,7 @@ class zmq_task{
         after_dep_{std::move(task.after_dep_)},
         is_task_serialized_{std::move(task.is_task_serialized_)},
         task_serialized_{std::move(task.task_serialized_)} {
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") MOVED" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") MOVED" << ENDL;
     }
 
     zmq_task& operator = (const zmq_task & task) {
@@ -139,7 +139,7 @@ class zmq_task{
         after_dep_ = task.after_dep_;
         is_task_serialized_ = task.is_task_serialized_;
         task_serialized_ = task.task_serialized_;
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") COPY ASSIG." << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") COPY ASSIG." << ENDL;
       return *this;
     }
 
@@ -154,7 +154,7 @@ class zmq_task{
         after_dep_ = std::move(task.after_dep_);
         is_task_serialized_ = std::move(task.is_task_serialized_);
         task_serialized_ = std::move(task.task_serialized_);
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") MOVE ASSIG." << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << task.local_ids_.data() << "," << local_ids_.data() << ") MOVE ASSIG." << ENDL;
       return *this;
     }
 #endif
@@ -224,7 +224,7 @@ class zmq_task{
 
     \return  order number of the task
     */
-    long get_order() const
+    std::vector<long> get_order() const
     {
       return order_;
     }
@@ -234,7 +234,7 @@ class zmq_task{
 
     \param order order number of the task
     */
-    void set_order(long order)
+    void set_order(std::vector<long> order)
     {
       order_ = order;
       //reset serialized data
@@ -261,7 +261,7 @@ class zmq_task{
       local_ids_ = local_ids;
       //reset serialized data
       is_task_serialized_= false;
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << local_ids_.size() << "," <<  local_ids_.data() << ") LOCAL_IDS SET" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << local_ids_.size() << "," <<  local_ids_.data() << ") LOCAL_IDS SET" << ENDL;
 
     }
 
@@ -372,7 +372,7 @@ class zmq_task{
       // send serialized data
       ret = socket.send(task_serialized_.data(),task_serialized_.size(), flags);
       COUT << " zmq_task::send send_data: ret=" << ret << ", size=" << size << ENDL;
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << local_ids_.size() << "," <<  local_ids_.data() << ") SENT" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << local_ids_.size() << "," <<  local_ids_.data() << ") SENT" << ENDL;
 
     }
 
@@ -406,7 +406,7 @@ class zmq_task{
       set_serialized(aux_serial.data(), aux_serial.size());
       is_task_serialized_= true;
       task_serialized_ = std::move(aux_serial);
-      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_ << ") (" << local_ids_.size() << "," <<  local_ids_.data() << ") RECEIVED" << ENDL;
+      COUT << "TASK: ("<< function_id_ << ","<< task_id_ << "," << order_[0] << ") (" << local_ids_.size() << "," <<  local_ids_.data() << ") RECEIVED" << ENDL;
 
     }
 
@@ -414,7 +414,7 @@ class zmq_task{
   private:
     long function_id_;
     long task_id_;
-    long order_;
+    std::vector<long> order_;
     std::vector<long> local_ids_;
     bool is_hard_;
     std::vector<data_ref_type> data_location_;

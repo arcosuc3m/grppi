@@ -25,17 +25,18 @@
 using namespace grppi;
 
 // data for scheduler debugging
+std::vector<long> aux = {0,0,0};
 std::vector<zmq_task> conf_tasks {
-        {0,0,0,std::vector<long>{0}, true}, // generator (seq 0)
-        {1,0,0,std::vector<long>{0,1}, true}, // pipeline-middle-1   (seq 1)
-        {2,0,0,std::vector<long>{0,1}, true}, // farm (par)
-        {3,0,0,std::vector<long>{0}, true}, // filter  (NODEBUG) (seq 0)
-        {4,0,0,std::vector<long>{0}, false}, // farm-pipeline-init (par) (UNCH)
-        {5,0,0,std::vector<long>{0}, true}, // farm-pipeline-middle (par)
-        {6,0,0,std::vector<long>{1}, true}, // farm-pipeline-end (par)
-        {7,0,0,std::vector<long>{0}, true}, // steam-reduce (seq 1) (NODEBUG+1)
-        {8,0,0,std::vector<long>{0}, false}, // iterator  (seq 0)(NODEBUG+1)(UNCH)
-        {9,0,0,std::vector<long>{0}, false}}; // consumer (seq 1) (UNCH)
+        {0,0,aux,std::vector<long>{0}, true}, // generator (seq 0)
+        {1,0,aux,std::vector<long>{0,1}, true}, // pipeline-middle-1   (seq 1)
+        {2,0,aux,std::vector<long>{0,1}, true}, // farm (par)
+        {3,0,aux,std::vector<long>{0}, true}, // filter  (NODEBUG) (seq 0)
+        {4,0,aux,std::vector<long>{0}, false}, // farm-pipeline-init (par) (UNCH)
+        {5,0,aux,std::vector<long>{0}, true}, // farm-pipeline-middle (par)
+        {6,0,aux,std::vector<long>{1}, true}, // farm-pipeline-end (par)
+        {7,0,aux,std::vector<long>{0}, true}, // steam-reduce (seq 1) (NODEBUG+1)
+        {8,0,aux,std::vector<long>{0}, false}, // iterator  (seq 0)(NODEBUG+1)(UNCH)
+        {9,0,aux,std::vector<long>{0}, false}}; // consumer (seq 1) (UNCH)
 
 std::vector<zmq_task> global_tasks;
 
@@ -51,19 +52,34 @@ int main(int argc, char *argv[]){
  
   std::cout << "node_id = " << id << ", server_id = " << server_id << std::endl;
 
-  //std::map<long, std::string> machines{{0, "127.0.0.1"}};
+  std::map<long, std::string> machines{{0, "127.0.0.1"}};
   //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "127.0.0.1"}};
-  std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
+ // std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "192.168.1.37"}};
   //std::map<long, std::string> machines{{0, "127.0.0.1"},{1, "172.16.83.183"}};
   auto port_serv = std::make_shared<zmq_port_service> (machines[0], 5570, is_server);
   std::cout << "port_service_->new_port() : " << port_serv->new_port() << std::endl;
   auto sched = std::make_unique<zmq_scheduler<zmq_task>>(machines, id,
                                                         port_serv, 100, server_id, 2);
   parallel_execution_dist_task<zmq_scheduler<zmq_task>> exec{std::move(sched)};
+  aspide::text_in_container container("file://home/david/Aspide/grppi/build/samples/task_dist_backend/dir",'\n');
 
-  aspide::text_in_container container("file:/./datos",'\n');
+//  aspide::text_in_container container("file:/./datos",'\n');
   //return 0;
-  std::cout<<"---PIPELINE---"<<std::endl;
+ 
+  aspide::output_container out("file://home/david/Aspide/grppi/build/sample/task_dist_backend/outdir/");
+  grppi::pipeline(exec,
+                  container,
+                  [](std::string s){
+                     std::cout<<s<<std::endl;
+                     return s;
+                  }
+		  ,
+                  out
+		  );
+
+  std::cout<<"FINISHED"<<std::endl; 
+
+ std::cout<<"---PIPELINE---"<<std::endl;
   long val = 0;
   grppi::pipeline(exec,
 /*    [&val]()-> std::experimental::optional<long> {
@@ -182,8 +198,6 @@ int main(int argc, char *argv[]){
       std::cout << ss.str();
     }
   );
-
-  std::cout<<"FINISHED"<<std::endl; 
 
 }
 

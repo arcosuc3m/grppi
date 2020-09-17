@@ -159,6 +159,8 @@ include_directories(${ZMQ_INCLUDE_DIR} )
 #This should be configured properly for the supported filesystems 
 option( ASPIDE_CONTAINERS_ENABLE "Aspide containers" OFF )
 message( STATUS "ASPIDE CONTAINERS: " ${ASPIDE_CONTAINERS_ENABLE} )
+option( ASPIDE_IMSS_ENABLE "IMSS Aspide containers" OFF )
+option( ASPIDE_HDFS_ENABLE "HDFS Aspide containers" OFF )
 if( ASPIDE_CONTAINERS_ENABLE )
   include_directories("../containers/include/filesystems" )
   include_directories("../containers/include/generic" )
@@ -166,7 +168,26 @@ if( ASPIDE_CONTAINERS_ENABLE )
   add_library(localfs STATIC "../containers/src/text_in_container_local.cpp" 
   	              "../containers/src/file_local.cpp"
                       "../containers/src/block_local.cpp"
+		      "../containers/src/output_container.cpp"
+                      "../containers/src/local_flusher.cpp"
                )		      
+
+  if(ASPIDE_IMSS_ENABLE)
+    find_package(Java REQUIRED)
+    find_package(JNI REQUIRED)
+    include(UseJava)
+    include_directories("../containers/vendors/lib-imss/include")
+    link_directories("../containers/vendors/lib-imss/lib")
+    include_directories(${JNI_INCLUDE_DIRS})
+    add_definitions(-DASPIDE_SUPPORT_IMSS)
+  endif(ASPIDE_IMSS_ENABLE)
+
+  if(ASPIDE_HDFS_ENABLE)
+    include_directories("../containers/vendors/lib-hdfs/include")
+    include_directories("../containers/vendors/lib-hdfs/lib")
+    add_definitions(-DASPIDE_SUPPORT_HDFS)
+  endif(ASPIDE_HDFS_ENABLE)
+
   target_include_directories(localfs PUBLIC "../containers/include/filesystems"  "../containers/include/generic") 
   link_libraries(localfs "stdc++fs")
   add_definitions(-DGRPPI_DCEX)
