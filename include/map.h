@@ -32,6 +32,15 @@ namespace grppi {
 @{
 */
 
+#ifdef GRPPI_DCEX
+template<typename Execution, typename In, typename Out,
+	typename Transfomer>
+void map(const Execution &ex, In & in, Out & out, Transfomer transform_op){
+  ex.map(in,out,transform_op);
+}
+#endif
+
+
 /**
 \brief Invoke \ref md_map on a data sequence.
 \tparam Execution Execution policy type.

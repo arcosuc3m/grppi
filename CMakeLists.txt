@@ -162,34 +162,35 @@ message( STATUS "ASPIDE CONTAINERS: " ${ASPIDE_CONTAINERS_ENABLE} )
 option( ASPIDE_IMSS_ENABLE "IMSS Aspide containers" OFF )
 option( ASPIDE_HDFS_ENABLE "HDFS Aspide containers" OFF )
 if( ASPIDE_CONTAINERS_ENABLE )
-  include_directories("../containers/include/filesystems" )
-  include_directories("../containers/include/generic" )
+	set(ASPIDE_DATAMODEL_PATH "../../aspide_datamodel/")
+  include_directories("${ASPIDE_DATAMODEL_PATH}/include/filesystems" )
+  include_directories("${ASPIDE_DATAMODEL_PATH}/include/generic" )
   #Add only the files for the supported file systems
-  add_library(localfs STATIC "../containers/src/text_in_container_local.cpp" 
-  	              "../containers/src/file_local.cpp"
-                      "../containers/src/block_local.cpp"
-		      "../containers/src/output_container.cpp"
-                      "../containers/src/local_flusher.cpp"
+  add_library(localfs STATIC "${ASPIDE_DATAMODEL_PATH}src/text_in_container_local.cpp" 
+	  "${ASPIDE_DATAMODEL_PATH}src/file_local.cpp"
+	  "${ASPIDE_DATAMODEL_PATH}src/block_local.cpp"
+	  "${ASPIDE_DATAMODEL_PATH}src/output_container.cpp"
+	  "${ASPIDE_DATAMODEL_PATH}src/local_flusher.cpp"
                )		      
 
   if(ASPIDE_IMSS_ENABLE)
     find_package(Java REQUIRED)
     find_package(JNI REQUIRED)
     include(UseJava)
-    include_directories("../containers/vendors/lib-imss/include")
-    link_directories("../containers/vendors/lib-imss/lib")
+    include_directories("${ASPIDE_DATAMODEL_PATH}/vendors/lib-imss/include")
+    link_directories("${ASPIDE_DATAMODEL_PATH}/vendors/lib-imss/lib")
     include_directories(${JNI_INCLUDE_DIRS})
     add_definitions(-DASPIDE_SUPPORT_IMSS)
   endif(ASPIDE_IMSS_ENABLE)
 
   if(ASPIDE_HDFS_ENABLE)
-    include_directories("../containers/vendors/lib-hdfs/include")
-    include_directories("../containers/vendors/lib-hdfs/lib")
+	  include_directories("${ASPIDE_DATAMODEL_PATH}/vendors/lib-hdfs/include")
+	  include_directories("${ASPIDE_DATAMODEL_PATH}/vendors/lib-hdfs/lib")
     add_definitions(-DASPIDE_SUPPORT_HDFS)
   endif(ASPIDE_HDFS_ENABLE)
 
-  target_include_directories(localfs PUBLIC "../containers/include/filesystems"  "../containers/include/generic") 
-  link_libraries(localfs "stdc++fs")
+  target_include_directories(localfs PUBLIC "${ASPIDE_DATAMODEL_PATH}/include/filesystems"  "${ASPIDE_DATAMODEL_PATH}/include/generic") 
+  link_libraries(localfs "stdc++fs" "apr-1" "aprutil-1" "log4cxx")
   add_definitions(-DGRPPI_DCEX)
 endif( ASPIDE_CONTAINERS_ENABLE )
 

@@ -67,6 +67,10 @@ int main(int argc, char *argv[]){
   //return 0;
  
   aspide::output_container out("file://home/david/Aspide/grppi/build/sample/task_dist_backend/outdir/");
+
+  grppi::map(exec, container, out, [](std::string s){ return s;});
+
+
   grppi::pipeline(exec,
                   container,
                   [](std::string s){
