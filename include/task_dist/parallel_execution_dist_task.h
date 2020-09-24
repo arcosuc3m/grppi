@@ -47,6 +47,7 @@
 
 #include "text_in_container.hpp"
 #include "output_container.hpp"
+#include "binary_container.hpp"
 
 /*
 template <typename T>
@@ -240,6 +241,9 @@ public:
 
   template <typename Transformer>
   void map(aspide::text_in_container &in, aspide::output_container &out, Transformer transform_op) const;
+
+  template <typename Transformer>
+  void map(aspide::binary_container &in, aspide::output_container &out, Transformer transform_op) const;
 #endif 
 
 //  /**
@@ -312,6 +316,87 @@ private:
   std::vector<aspide::output_container> obtain_output_containers(aspide::text_in_container & container) const {
      return {};
   }
+
+
+void register_text_read_function(aspide::text_in_container &in, std::vector<long> & order) const
+{
+  using namespace std;
+  using output_type = pair<std::string,std::vector<long>>;
+  // Local container
+  if(in.type == 0 ) {
+     scheduler_->register_sequential_task([&in, this, &order](task_type &t) -> void
+      {
+         auto iterator = in.begin_f();
+         // Obtain files in the container
+         while(iterator != in.end_f()){
+             auto file = *(iterator);
+             auto file_iter = file.begin();
+             // Obtain each string part of the file
+             while(file_iter != file.end()){
+                 auto value = scheduler_->set(make_pair(*file_iter, order));
+             COUT<<"READ "<<*file_iter<<ENDL;
+                 //Creates a task for each data item
+                 task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {value}};
+                 scheduler_->set_task(next_task,true);
+                 order[1]++;
+                 ++file_iter;
+
+             }
+             order[0]++;
+             ++iterator;
+         }
+         scheduler_->finish_task(t);
+
+      }, true);
+
+   }
+     // TODO: parallel filesystems, hope they may work in the same way for any underlaying filesystem
+   else{
+      scheduler_->register_sequential_task([&in, this, &order](task_type &t) -> void
+      {
+        long num_files = in.size();
+        auto file_iter = in.begin_f();
+        for(long  i = 0; i<num_files; i++){
+            auto file = *(file_iter);
+            // Those are the machines that have access to the file.
+            std::array<std::string,3> data_loc= file.get_data_location();
+            // Transform to node ids
+            // Compare with machine list (scheduler_->get_machine_nodes(std::array<std::string,3>)))
+            //
+            auto value = scheduler_->set(make_pair(i, order));
+            task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order,
+                                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
+            scheduler_->set_task(next_task,true);
+            ++file_iter;
+            order[0]++;
+        }
+        scheduler_->finish_task(t);
+      }, true);
+      scheduler_->register_parallel_task([&in, this](task_type &t) -> void
+      {
+         //TODO: We probably need to modify the order information for ordering items inside a file
+        auto order = t.get_order();
+        auto item = scheduler_->template get_release<pair<long,long>>(t.get_data_location()[0]);
+            auto curr_file = in.begin_f() + item.first;
+            auto file = *(curr_file);
+            auto file_iter = file.begin();
+            while(file_iter != file.end()) {
+             auto value = scheduler_->set(make_pair(*file_iter, order));
+             COUT<<"READ "<<*file_iter<<ENDL;
+                 //Creates a task for each data item
+             task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order,
+                                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
+             scheduler_->set_task(next_task,true);
+                order[1]++;
+                ++file_iter;
+            }
+            scheduler_->finish_task(t);
+      }, false);
+      COUT<<"parallel_execution_dist_task::pipeline(container...): NOT SUPPORTED"<<ENDL;
+    }
+}
+
+
 
 #endif
 
@@ -565,89 +650,48 @@ constexpr bool supports_pipeline<parallel_execution_dist_task>() { return true; 
 //#ifdef DEBUG
 
 #ifdef GRPPI_DCEX
+/*
+template <typename Scheduler>
+template <typename Transformer>
+void parallel_execution_dist_task<Scheduler>::reduce(aspide::text_in_container &in, aspide::output_container &out, Transformer transform_op) const
+{
+
+}
+*/
+
+template <typename Scheduler>
+template <typename Transformer>
+void parallel_execution_dist_task<Scheduler>::map(aspide::binary_container &in, aspide::output_container &out, Transformer transform_op) const
+{
+   //Read_FILE
+/*   auto file_it  = in.begin_f();
+   while(file_it != in.end_f()){
+     auto curr_file = *cont_it;
+     auto curr_file_it = curr_file.begin();
+     //This reads a block? There is no item type
+     while(curr_file_it != curr_file.end()){
+        
+     }
+   }
+*/
+   //TODO: not implemented.
+ 
+
+
+}
+
+
+
 template <typename Scheduler>
 template <typename Transformer>
 void parallel_execution_dist_task<Scheduler>::map(aspide::text_in_container &in, aspide::output_container &out, Transformer transform_op) const
 {
-    using namespace std;
+  using namespace std;
   using output_type = pair<std::string,std::vector<long>>;
   std::vector<long> order = {0,0,-1};
-  // Local container
-  if(in.type == 0 ) {
-     scheduler_->register_sequential_task([&in, this, &order](task_type &t) -> void
-      {
-         auto iterator = in.begin_f();
-         // Obtain files in the container
-         while(iterator != in.end_f()){
-             auto file = *(iterator);
-             auto file_iter = file.begin();
-             // Obtain each string part of the file
-             while(file_iter != file.end()){
-                 auto value = scheduler_->set(make_pair(*file_iter, order));
-             COUT<<"READ "<<*file_iter<<ENDL;
-                 //Creates a task for each data item
-                 task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {value}};
-                 scheduler_->set_task(next_task,true);
-                 order[1]++;
-                 ++file_iter;
-
-             }
-             order[0]++;
-             ++iterator;
-         }
-         scheduler_->finish_task(t);
-
-      }, true);
-
-   }
-
-     // TODO: parallel filesystems, hope they may work in the same way for any underlaying filesystem
-   else{
-      scheduler_->register_sequential_task([&in, this, &order](task_type &t) -> void
-      {
-        long num_files = in.size();
-        auto file_iter = in.begin_f();
-        for(long  i = 0; i<num_files; i++){
-            auto file = *(file_iter);
-            // Those are the machines that have access to the file.
-            std::array<std::string,3> data_loc= file.get_data_location();
-            // Transform to node ids
-            // Compare with machine list (scheduler_->get_machine_nodes(std::array<std::string,3>)))
-            //
-            auto value = scheduler_->set(make_pair(i, order));
-            task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order,
-                                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
-            scheduler_->set_task(next_task,true);
-            ++file_iter;
-            order[0]++;
-        }
-        scheduler_->finish_task(t);
-      }, true);
-
-      scheduler_->register_parallel_task([&in, this](task_type &t) -> void
-      {
-         //TODO: We probably need to modify the order information for ordering items inside a file
-        auto order = t.get_order();
-        auto item = scheduler_->template get_release<pair<long,long>>(t.get_data_location()[0]);
-            auto curr_file = in.begin_f() + item.first;
-            auto file = *(curr_file);
-            auto file_iter = file.begin();
-            while(file_iter != file.end()) {
-             auto value = scheduler_->set(make_pair(*file_iter, order));
-             COUT<<"READ "<<*file_iter<<ENDL;
-                 //Creates a task for each data item
-             task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order,
-                                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
-             scheduler_->set_task(next_task,true);
-                order[1]++;
-                ++file_iter;
-            }
-            scheduler_->finish_task(t);
-      }, false);
-      COUT<<"parallel_execution_dist_task::pipeline(container...): NOT SUPPORTED"<<ENDL;
-    }
+  register_text_read_function(in,order);
     
-    scheduler_->register_parallel_task([this,&transform_op](task_type &t) -> void
+  scheduler_->register_parallel_task([this,&transform_op](task_type &t) -> void
   {
     COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
     auto item = scheduler_->template get_release<std::pair<std::string,std::vector<long>>>(t.get_data_location()[0]);
@@ -887,82 +931,7 @@ void parallel_execution_dist_task<Scheduler>::pipeline(
   using namespace std;
   using output_type = pair<std::string,std::vector<long>>;
   std::vector<long> order = {0,0,-1};
-  // Local container
-  if(container.type == 0 ) {
-     scheduler_->register_sequential_task([&container, this, &order](task_type &t) -> void
-      {
-         auto iterator = container.begin_f();
-	 // Obtain files in the container
-	 while(iterator != container.end_f()){
-             auto file = *(iterator);
-	     auto file_iter = file.begin();
-	     // Obtain each string part of the file
-	     while(file_iter != file.end()){
-                 auto value = scheduler_->set(make_pair(*file_iter, order));
-	     COUT<<"READ "<<*file_iter<<ENDL;
-		 //Creates a task for each data item
-                 task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false, {value}};
-                 scheduler_->set_task(next_task,true);
-		 order[1]++;
-		 ++file_iter;
-
-	     }
-             order[0]++;
-	     ++iterator;
-	 }
-	 scheduler_->finish_task(t);
- 
-      }, true);
-   
-   }
-   // TODO: parallel filesystems, hope they may work in the same way for any underlaying filesystem
-   else{
-      scheduler_->register_sequential_task([&container, this, &order](task_type &t) -> void
-      {
-        long num_files = container.size();
-        auto file_iter = container.begin_f();
-	for(long  i = 0; i<num_files; i++){
-            auto file = *(file_iter);
-	    // Those are the machines that have access to the file. 
-	    std::array<std::string,3> data_loc= file.get_data_location(); 
-	    // Transform to node ids 
-	    // Compare with machine list (scheduler_->get_machine_nodes(std::array<std::string,3>)))
-	    // 
-            auto value = scheduler_->set(make_pair(i, order));
-            task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
-		                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
-            scheduler_->set_task(next_task,true);
-            ++file_iter;
-	    order[0]++;
-	}
-	scheduler_->finish_task(t);
-      }, true);
-
-      scheduler_->register_parallel_task([&container, this](task_type &t) -> void
-      {
-         //TODO: We probably need to modify the order information for ordering items inside a file
-        auto order = t.get_order();
-        auto item = scheduler_->template get_release<pair<long,long>>(t.get_data_location()[0]);
-	    auto curr_file = container.begin_f() + item.first;
-	    auto file = *(curr_file);
-	    auto file_iter = file.begin();
-	    while(file_iter != file.end()) {
-             auto value = scheduler_->set(make_pair(*file_iter, order));
-	     COUT<<"READ "<<*file_iter<<ENDL;
-	         //Creates a task for each data item
-             task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, 
-		                {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
-             scheduler_->set_task(next_task,true);
-	        order[1]++;
-	        ++file_iter;
-	    }
-	    scheduler_->finish_task(t);
-      }, true);
-       COUT<<"parallel_execution_dist_task::pipeline(container...): NOT SUPPORTED"<<ENDL;
-
-       return;
-   }
-
+  register_text_read_function(container,order);
    
    auto out_containers = obtain_output_containers(container, forward<Transformers>(transform_ops)...);
 
