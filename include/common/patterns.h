@@ -26,6 +26,8 @@
 #include "reduce_pattern.h"
 #include "iteration_pattern.h"
 #include "context.h"
+#include "format_writer.hpp"
+
 
 namespace grppi{
 

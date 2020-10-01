@@ -32,6 +32,17 @@ namespace grppi {
 @{
 */
 
+#ifdef GRPPI_DCEX
+template<typename Execution, typename In, typename Out,
+	typename Transformer, typename Combiner>
+void map_reduce(const Execution & ex, In & in, Out & out,
+		Transformer && transform_op, Combiner && combine_op){
+  ex.map_reduce(in,out,transform_op,combine_op);
+}
+
+#endif
+
+
 /**
 \brief Invoke \ref md_map-reduce on a data sequence.
 \tparam Execution Execution type.

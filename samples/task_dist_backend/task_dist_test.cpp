@@ -16,7 +16,7 @@
 #include "grppi.h"
 #include "task_dist/zmq_port_service.h"
 #include "task_dist/zmq_task.h"
-
+#include <boost/serialization/map.hpp>
 #undef COUT
 #define COUT if (0) {std::ostringstream foo;foo
 #undef ENDL
@@ -70,6 +70,33 @@ int main(int argc, char *argv[]){
 
 //  grppi::map(exec, container, out, [](std::string s){ return s;});
 
+  format_writer f(out,
+    [](std::map<std::string,int> item ) -> std::string{
+       std::ostringstream s;
+       for (auto & w : item) {
+          s << w.first<< " "<<w.second<<std::endl;
+       }
+       return s.str();
+    }
+		  
+  );
+//  binary_reader<type>(in, type_size);
+
+  grppi::map_reduce(exec,container,f,
+		  [](std::string s)-> std::map<std::string,int>
+		  { 
+                      return {{s,1}};
+		  },
+		  [](std::map<std::string,int> &lhs,
+		      std::map<std::string,int> &rhs)
+		  {
+                     for (auto & w : rhs) {
+                       lhs[w.first]+= w.second;
+                     }
+                     return lhs;
+		  });
+
+  return 0;
 
   grppi::pipeline(exec,
                   container,

@@ -244,6 +244,11 @@ public:
 
   template <typename Transformer>
   void map(aspide::binary_container &in, aspide::output_container &out, Transformer transform_op) const;
+
+  template <typename Formatter, typename Transformer, typename Combiner>
+  void map_reduce(aspide::text_in_container &in, format_writer<aspide::output_container,Formatter> &out, Transformer transform_op, Combiner && combine_op) const;
+
+
 #endif 
 
 //  /**
@@ -387,11 +392,11 @@ void register_text_read_function(aspide::text_in_container &in, std::vector<long
              task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order,
                                 {scheduler_->get_node_id()}/*TODO*/, false /*TODO: HARD OR SOFT*/, {value}};
              scheduler_->set_task(next_task,true);
-                order[1]++;
+	     order[1]++;
                 ++file_iter;
             }
             scheduler_->finish_task(t);
-      }, false);
+      }, true);
       COUT<<"parallel_execution_dist_task::pipeline(container...): NOT SUPPORTED"<<ENDL;
     }
 }
@@ -659,6 +664,106 @@ void parallel_execution_dist_task<Scheduler>::reduce(aspide::text_in_container &
 }
 */
 
+
+template <typename Scheduler>
+template <typename Formatter,typename Transformer, typename Combiner>
+void parallel_execution_dist_task<Scheduler>::map_reduce(aspide::text_in_container &in, format_writer<aspide::output_container, Formatter> &out, Transformer transform_op, Combiner && combine_op) const
+{
+  using namespace std;
+  using output_type = pair<std::string,std::vector<long>>;
+  std::vector<long> order = {0,0,-1};
+  register_text_read_function(in,order);
+  
+  //Map function
+  scheduler_->register_parallel_task([this,&transform_op](task_type &t) -> void
+  {
+    COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
+    auto item = scheduler_->template get_release<std::pair<std::string,std::vector<long>>>(t.get_data_location()[0]);
+#ifdef DEBUG
+     std::vector<task_type> conf_tasks;
+     auto out = transform_op(item.first, conf_tasks);
+#else
+     auto out = transform_op(item.first);
+#endif
+    auto ref = scheduler_->set(make_pair(out,item.second));
+    //COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, launch task[" << t.get_id()+1 <<"," << t.get_task_id() << "] ref=(" << ref.get_id() << "," << ref.get_pos() << ")" << ENDL;
+#ifdef DEBUG
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), conf_tasks[1].get_local_ids(), conf_tasks[1].get_is_hard(), {ref}};
+#else
+    task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
+#endif
+    scheduler_->set_task(next_task,false);
+  },false);
+
+  using result_type =
+    std::decay_t<typename std::result_of<Transformer(std::string)>::type>;
+  // Node-local reduction
+  std::atomic_flag node_protection = ATOMIC_FLAG_INIT;
+  // This should be a vector using a result per file and can be extended to have a local copy per thread
+  result_type local_result{}; 
+  
+  scheduler_->register_parallel_task([this,&combine_op, &local_result,&node_protection](task_type t)
+  {
+     std::cout<<"LOCAL REDUCE"<<std::endl;
+     auto item = scheduler_->template get_release<std::pair<result_type,std::vector<long>>>(t.get_data_location()[0]);
+     while(node_protection.test_and_set());
+     local_result = combine_op(local_result, item.first);     
+     node_protection.clear();
+     scheduler_->finish_task(t);
+  }, false);
+
+  scheduler_->run(); 
+
+  // Global reduction
+  result_type global_result{}; 
+  bool has_result = false;
+  scheduler_->register_sequential_task([this](task_type t){
+        std::cout<<"we need a run without insterting the task 0" <<std::endl;
+	scheduler_->finish_task(t);
+  },false);
+
+  scheduler_->register_sequential_task([this,&combine_op, &global_result,&has_result](task_type t)
+  {
+     has_result = true;
+     std::cout<<"FINAL REDUCE"<<std::endl;
+     auto item = scheduler_->template get_release<std::pair<result_type, std::vector<long>>>(t.get_data_location()[0]);
+     std::cout<< "GOT THE DATA"<<std::endl;
+     for (const auto & w : item.first) {
+	    std::cout << w.first << " : " << w.second << std::endl;
+     }
+
+     global_result = combine_op(global_result, item.first);   
+     scheduler_->finish_task(t);
+     std::cout<< "FINISHED TASK" <<std::endl;
+  }, false);
+
+  std::cout<<"THIS SHOULD BE DONE ONLY ONCE" <<std::endl;
+  std::vector<long> node_order{scheduler_->get_node_id(),0,0};
+
+  auto ref = scheduler_->set(make_pair(local_result,node_order));
+
+  task_type next_task{1, scheduler_->get_task_id(), {scheduler_->get_node_id()}, {scheduler_->get_node_id()}, false, {ref}};
+
+  scheduler_->set_task(next_task,true);
+  
+  std::cout<<"RUNNING REDUCTION" <<std::endl;
+
+  //This run provokes a segmentation fault - caused by a data race?
+  scheduler_->run();
+  
+  std::cout<<"FINISHED MAP-REDUCE"<<std::endl;
+  if(has_result){
+    std::cout<< " Write result" <<std::endl;
+    std::cout<<out(global_result)<<std::endl;
+//	    std::cout << w.first << " : " << w.second << std::endl;
+  }
+
+
+
+}
+
+
+
 template <typename Scheduler>
 template <typename Transformer>
 void parallel_execution_dist_task<Scheduler>::map(aspide::binary_container &in, aspide::output_container &out, Transformer transform_op) const
@@ -675,8 +780,6 @@ void parallel_execution_dist_task<Scheduler>::map(aspide::binary_container &in, 
    }
 */
    //TODO: not implemented.
- 
-
 
 }
 
@@ -726,7 +829,7 @@ void parallel_execution_dist_task<Scheduler>::map(aspide::text_in_container &in,
      scheduler_->finish_task(t);
   });
 
-    
+  scheduler_->run();
 
 }
 #endif

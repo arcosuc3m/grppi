@@ -1204,8 +1204,12 @@ class zmq_scheduler_thread{
             new_tok_par_tasks_.push(task_seq.get_local_ids(), std::move(task_seq), task_seq.get_is_hard());
             COUT << "zmq_scheduler_thread::srv_run_cmd INIT PAR = " << ENDL;
           }
-          assert(tokens_==0);
-          tokens_=1;
+
+	  //--------------------------------------------
+	  // This is not true for the map-reduce
+          //assert(tokens_==0);
+          tokens_+=1;
+	  //-------------------------------------------
           COUT << "zmq_scheduler_thread::end_cmd_srv END" << ENDL;
         }
       } catch(const std::exception &e) {
