@@ -1208,7 +1208,7 @@ class zmq_scheduler_thread{
 	  //--------------------------------------------
 	  // This is not true for the map-reduce
           //assert(tokens_==0);
-          tokens_+=1;
+          tokens_+=1; 
 	  //-------------------------------------------
           COUT << "zmq_scheduler_thread::end_cmd_srv END" << ENDL;
         }

@@ -27,6 +27,7 @@
 #include "iteration_pattern.h"
 #include "context.h"
 #include "format_writer.hpp"
+#include "binary_reader.hpp"
 
 
 namespace grppi{

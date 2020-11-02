@@ -162,7 +162,8 @@ message( STATUS "ASPIDE CONTAINERS: " ${ASPIDE_CONTAINERS_ENABLE} )
 option( ASPIDE_IMSS_ENABLE "IMSS Aspide containers" OFF )
 option( ASPIDE_HDFS_ENABLE "HDFS Aspide containers" OFF )
 if( ASPIDE_CONTAINERS_ENABLE )
-	set(ASPIDE_DATAMODEL_PATH "../../containers/")
+#set(ASPIDE_DATAMODEL_PATH "../../containers/")
+  set(ASPIDE_DATAMODEL_PATH "../../aspide_datamodel/")
   include_directories("${ASPIDE_DATAMODEL_PATH}/include/filesystems" )
   include_directories("${ASPIDE_DATAMODEL_PATH}/include/generic" )
   #Add only the files for the supported file systems
@@ -171,6 +172,8 @@ if( ASPIDE_CONTAINERS_ENABLE )
 	  "${ASPIDE_DATAMODEL_PATH}src/block_local.cpp"
 	  "${ASPIDE_DATAMODEL_PATH}src/output_container.cpp"
 	  "${ASPIDE_DATAMODEL_PATH}src/local_flusher.cpp"
+	  "${ASPIDE_DATAMODEL_PATH}src/binary_container_local.cpp"
+	  "${ASPIDE_DATAMODEL_PATH}src/binary_file_local.cpp"
                )		      
 
   if(ASPIDE_IMSS_ENABLE)

@@ -242,8 +242,8 @@ public:
   template <typename Transformer>
   void map(aspide::text_in_container &in, aspide::output_container &out, Transformer transform_op) const;
 
-  template <typename Transformer>
-  void map(aspide::binary_container &in, aspide::output_container &out, Transformer transform_op) const;
+  template <typename Transformer, typename ItemType, typename Deserializer, typename Formatter>
+  void map(binary_reader_t<ItemType, aspide::binary_container,Deserializer> &binr, format_writer<aspide::output_container,Formatter> &out, Transformer transform_op) const;
 
   template <typename Formatter, typename Transformer, typename Combiner>
   void map_reduce(aspide::text_in_container &in, format_writer<aspide::output_container,Formatter> &out, Transformer transform_op, Combiner && combine_op) const;
@@ -316,6 +316,23 @@ private:
       return file_flushers;
 
   }
+
+  std::vector<aspide::output_container> obtain_output_containers(aspide::binary_container & container, aspide::output_container & out) const{
+      std::vector<aspide::output_container> file_flushers;
+      // TODO: work with the paths to generate the names
+      for(int i = 0; i < container.size(); i++){
+	  auto file_name = 
+		  container.get_uri().string();
+          //std::string file_name ="file://home/david/Aspide/grppi/build/samples/task_dist_backend/outdir/";
+          file_name+=std::to_string(i);
+          file_flushers.emplace_back( std::move(aspide::output_container(file_name)));
+          std::cout<<"OPENING NEW FILE " << file_name <<std::endl;
+          if((*(file_flushers.end()-1)).newFile()) std::cout<<"OPENDED FILE"<<std::endl;
+      }
+      return file_flushers;
+
+  }
+
 
 
   std::vector<aspide::output_container> obtain_output_containers(aspide::text_in_container & container) const {
@@ -673,7 +690,12 @@ void parallel_execution_dist_task<Scheduler>::map_reduce(aspide::text_in_contain
   using output_type = pair<std::string,std::vector<long>>;
   std::vector<long> order = {0,0,-1};
   register_text_read_function(in,order);
+  auto& outc = out.get_output();
+  std::cout<<"Obtain output containers" << std::endl; 
+  auto container = obtain_output_containers(in,outc);
   
+
+
   //Map function
   scheduler_->register_parallel_task([this,&transform_op](task_type &t) -> void
   {
@@ -700,14 +722,16 @@ void parallel_execution_dist_task<Scheduler>::map_reduce(aspide::text_in_contain
   // Node-local reduction
   std::atomic_flag node_protection = ATOMIC_FLAG_INIT;
   // This should be a vector using a result per file and can be extended to have a local copy per thread
-  result_type local_result{}; 
-  
+  std::vector<result_type> local_result{container.size(),result_type{}}; 
+ 
+  // TODO: Modify to parallel-sequential by order 
   scheduler_->register_parallel_task([this,&combine_op, &local_result,&node_protection](task_type t)
   {
      std::cout<<"LOCAL REDUCE"<<std::endl;
+     auto order = t.get_order();
      auto item = scheduler_->template get_release<std::pair<result_type,std::vector<long>>>(t.get_data_location()[0]);
      while(node_protection.test_and_set());
-     local_result = combine_op(local_result, item.first);     
+     local_result[order[0]] = combine_op(local_result[order[0]], item.first);     
      node_protection.clear();
      scheduler_->finish_task(t);
   }, false);
@@ -715,47 +739,66 @@ void parallel_execution_dist_task<Scheduler>::map_reduce(aspide::text_in_contain
   scheduler_->run(); 
 
   // Global reduction
-  result_type global_result{}; 
-  bool has_result = false;
+  std::vector<result_type> global_result{container.size(),result_type{}}; 
+  std::vector<bool> has_result(container.size(), {false});
   scheduler_->register_sequential_task([this](task_type t){
         std::cout<<"we need a run without insterting the task 0" <<std::endl;
 	scheduler_->finish_task(t);
   },false);
 
+  // TODO: modify this function to reduce each global on a different node
   scheduler_->register_sequential_task([this,&combine_op, &global_result,&has_result](task_type t)
   {
-     has_result = true;
+     auto order = t.get_order();
+     has_result[order[0]] = true;
      std::cout<<"FINAL REDUCE"<<std::endl;
-     auto item = scheduler_->template get_release<std::pair<result_type, std::vector<long>>>(t.get_data_location()[0]);
+     auto item = scheduler_->template get_release<std::pair<std::vector<result_type>, std::vector<long>>>(t.get_data_location()[0]);
+     //auto item = scheduler_->template get_release<std::pair<result_type, std::vector<long>>>(t.get_data_location()[0]);
      std::cout<< "GOT THE DATA"<<std::endl;
-     for (const auto & w : item.first) {
+     //global_result[order[0]]= combine_op(global_result[order[0]],item.first);
+     //TODO: Remove this loop as soon as the problem registering tasks out of the task generator is solved
+     for (  int i = 0; i< global_result.size();i++){
+       std::cout<<"Global result :"<<i<<std::endl;
+       has_result[i] = true;
+       global_result[i]= combine_op(global_result[i],item.first[i]);
+       for (const auto & w : global_result[i]) {
 	    std::cout << w.first << " : " << w.second << std::endl;
-     }
-
-     global_result = combine_op(global_result, item.first);   
-     scheduler_->finish_task(t);
-     std::cout<< "FINISHED TASK" <<std::endl;
+       }
+    }
+    std::cout<< "FINISHED TASK" <<std::endl;
+    scheduler_->finish_task(t);
   }, false);
 
-  std::cout<<"THIS SHOULD BE DONE ONLY ONCE" <<std::endl;
-  std::vector<long> node_order{scheduler_->get_node_id(),0,0};
 
+  // TODO: Instead of introducing the whole vector, introduce each of the local result
+  // separatedly and register a task to reduce each of them by order. Right now everything is reduced on the same node.
+  std::vector<long> node_order{scheduler_->get_node_id(),0,0};
   auto ref = scheduler_->set(make_pair(local_result,node_order));
 
-  task_type next_task{1, scheduler_->get_task_id(), {scheduler_->get_node_id()}, {scheduler_->get_node_id()}, false, {ref}};
+  //for(int i=0;i<global_result.size();i++){
+     //std::vector<long> node_order{i,scheduler_->get_node_id(),0};
+     //auto ref = scheduler_->set(make_pair(local_result[i], node_order));
 
-  scheduler_->set_task(next_task,true);
-  
+     task_type next_task{1, scheduler_->get_task_id(), {scheduler_->get_node_id()}, {scheduler_->get_node_id()}, false, {ref}};
+
+     scheduler_->set_task(next_task,true);
+  //}
+
   std::cout<<"RUNNING REDUCTION" <<std::endl;
 
-  //This run provokes a segmentation fault - caused by a data race?
+  //Token numbers are broken.
   scheduler_->run();
   
   std::cout<<"FINISHED MAP-REDUCE"<<std::endl;
-  if(has_result){
-    std::cout<< " Write result" <<std::endl;
-    std::cout<<out(global_result)<<std::endl;
+  for ( int i= 0; i< global_result.size(); i++){
+    std::cout<<"Reduce for file :"<<i<<std::endl;
+    if(has_result[i]){
+      std::cout<< " Write result" <<std::endl;
+      auto formatted_data = out(global_result[i]);
+      std::cout<<formatted_data<<std::endl;
+      container[i].get_flusher().write(formatted_data.data(), (int64_t) formatted_data.size()); 
 //	    std::cout << w.first << " : " << w.second << std::endl;
+    }
   }
 
 
@@ -765,22 +808,104 @@ void parallel_execution_dist_task<Scheduler>::map_reduce(aspide::text_in_contain
 
 
 template <typename Scheduler>
-template <typename Transformer>
-void parallel_execution_dist_task<Scheduler>::map(aspide::binary_container &in, aspide::output_container &out, Transformer transform_op) const
-{
-   //Read_FILE
-/*   auto file_it  = in.begin_f();
-   while(file_it != in.end_f()){
-     auto curr_file = *cont_it;
-     auto curr_file_it = curr_file.begin();
-     //This reads a block? There is no item type
-     while(curr_file_it != curr_file.end()){
-        
-     }
-   }
-*/
+template <typename Transformer, typename ItemType, typename Deserializer, typename Formatter>
+void parallel_execution_dist_task<Scheduler>::map(binary_reader_t<ItemType, aspide::binary_container,Deserializer> &binr, format_writer<aspide::output_container,Formatter> &out,
+    Transformer transform_op) const{
    //TODO: not implemented.
+   //Pseudocode for reading a binary file when the binary reader becomes available
+  
+   std::vector<long> order {0,0,0};
+   std::cout<<"Register initial task"<<std::endl; 
+   scheduler_->register_sequential_task([this,&binr,&order](task_type t){
+	auto& container = binr.get_input();
+	std::cout<<"Current file : "<<order[0]<<std::endl;
+	auto file_it =  container.begin_f() + order[0];
+	int blocks_file = (*file_it).size()/binr.get_block_size();
+	if((*file_it).size()%binr.get_block_size()!=0) blocks_file++;
+        int chunk_num = blocks_file/binr.get_chunk_blocks();
+        if(blocks_file%binr.get_chunk_blocks() != 0) chunk_num+=1;
+        std::cout<<"file "<<order[0]<<"has "<<chunk_num<<" chunks"<<std::endl;
+	// Create a task for each chunk in the file
+        for(int i = 0; i< chunk_num; i++){
+            task_type next_task{t.get_id()+1, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false};
+            scheduler_->set_task(next_task,true);
+            order[1]++;
+        }
+	order[1]=0;
+	++file_it;
+	// If there are more files, relaunch the first task
+	if(file_it != container.end_f()) {
+            order[0]++;
+	    // Can be created a task without data reference? 
+            task_type next_task{0, scheduler_->get_task_id(), order, {scheduler_->get_node_id()}, false};
+            scheduler_->set_task(next_task,false);
+	}else{
+            scheduler_->finish_task(t);
+	}
+   },true);
 
+
+
+
+   std::cout<<"Register map task"<<std::endl; 
+   using result_type =
+    std::decay_t<typename std::result_of<Transformer(ItemType)>::type>;
+   // This function should be parallel by order on local filesystem
+   scheduler_->register_parallel_task([this,&binr,&transform_op](task_type t){
+   //    // This part can be moved to a different task to segregate reading from computing 
+   //       (tbh i think that the first transformation function over a chunk should be applied directly in this task to minimize overhead from the scheduler)
+       auto order = t.get_order();
+       // Obtain the iterator for the data chunk corresponding to the input task
+       std::cout << "empieza tarea 1" <<std::endl;
+       auto& c = binr.get_input();
+       auto file_it = c.begin_f() + order[0];
+       // We need operator +(int)  to move the file pointer to the corresponding block
+       //auto curr_file_it = (*file_it).begin() + (order[1]*binr.get_chunk_blocks());
+       auto curr_file_it = (*file_it).begin();
+       char buffer [binr.get_block_size()* binr.get_chunk_blocks()];
+       std::cout<<"reads from file"<<std::endl; 
+      // Reads the data corresponding to a chunk of data
+      // TODO: Review what happens on the last data chunk.
+       for(int i = 0; i <  binr.get_chunk_blocks() && curr_file_it != (*file_it).end(); i++){
+          std::cout<<"READ SOMETHING"<<std::endl;
+          memcpy(&buffer[i*binr.get_block_size()], (*curr_file_it).get_raw(), binr.get_block_size());
+          ++curr_file_it;  
+       }
+       std::cout<<"ends reading"<<std::endl;
+       // We obtain a vector containg the items contained in a given chunk of data blocks
+       auto data_vector = binr(buffer);
+       std::cout<<"We have some data "<<data_vector.size();
+       std::vector<result_type> result(data_vector.size());
+       for(int i= 0; i<data_vector.size(); i++) {
+	       result [i] = transform_op(data_vector[i]) ;
+       }
+       auto ref = scheduler_->set(make_pair(result,t.get_order()));
+       task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
+       std::cout<<"Acaba tarea 1 de file "<<order[0]<<std::endl;
+       scheduler_->set_task(next_task,false);
+   },false);
+
+   
+   std::cout<<"Get in and out"<<std::endl; 
+   auto& in = binr.get_input();
+   auto& outc = out.get_output();
+   std::cout<<"Obtain output containers" << std::endl; 
+   auto container = obtain_output_containers(in,outc);
+   std::cout<<"Created output container flushers" << std::endl; 
+   // Write the result - using one thread per result file or store each part on a different output file to increase parallelism
+   scheduler_->register_sequential_task([this,&container,&out](task_type t){
+       auto item = scheduler_->template get_release<std::pair<std::vector<result_type>,std::vector<long>>>(t.get_data_location()[0]);
+       auto order = t.get_order();
+       std::cout<<"Write file"<<std::endl;
+       for(auto& w : item.first){
+         std::string formatted_out = out(w);
+         container[order[0]].get_flusher().write(formatted_out.data(), (int64_t) formatted_out.size()); 
+       } 
+       scheduler_->finish_task(t);
+    }, false);
+   //
+  scheduler_->run();
+  std::cout<<"End pattern"<<std::endl;
 }
 
 

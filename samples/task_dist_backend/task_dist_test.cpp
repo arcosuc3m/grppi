@@ -69,19 +69,38 @@ int main(int argc, char *argv[]){
   aspide::output_container out("file://home/david/Aspide/grppi/build/sample/task_dist_backend/outdir/");
 
 //  grppi::map(exec, container, out, [](std::string s){ return s;});
+  //Testing binary reader
+  aspide::binary_container binc("file://home/david/Aspide/grppi/build/samples/task_dist_backend/dir");
+
+  std::cout<< "Crea bineary reader" <<std::endl;
+  auto binr = binary_reader<int>(binc,[](char * a){
+		  int value = a[0];
+		  return value;
+		  }, 4);
 
   format_writer f(out,
     [](std::map<std::string,int> item ) -> std::string{
        std::ostringstream s;
        for (auto & w : item) {
-          s << w.first<< " "<<w.second<<std::endl;
+          s << w.first<<" "<<w.second<<std::endl;
        }
        return s.str();
-    }
-		  
+    }    
   );
-//  binary_reader<type>(in, type_size);
 
+
+  format_writer fint(out,
+    [](int item ) -> std::string{
+       std::ostringstream s;
+       s << item <<std::endl;
+       return s.str();
+    }    
+  );
+  std::cout<< "Entra al map" <<std::endl;
+  grppi::map(exec, binr, fint, [](int i){ return i+2;});
+  std::cout << "SALE del MAP"<<std::endl;
+//  binary_reader<type>(in, type_size);
+//  return 0;
   grppi::map_reduce(exec,container,f,
 		  [](std::string s)-> std::map<std::string,int>
 		  { 

@@ -18,7 +18,7 @@ class format_writer
             return formatter_(std::forward<I>(item));
 	}
 
-	Container get_output(){ return output_container_;}
+	Container& get_output(){ return output_container_;}
 
    private:
        Formatter formatter_;
