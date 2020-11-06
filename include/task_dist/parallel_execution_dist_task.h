@@ -306,9 +306,8 @@ private:
       // TODO: work with the paths to generate the names
       for(int i = 0; i < container.size(); i++){
 	  auto file_name = 
-		  container.get_uri().string();
-          //std::string file_name ="file://home/david/Aspide/grppi/build/samples/task_dist_backend/outdir/";
-          file_name+=std::to_string(i);
+		  out.get_uri().string();
+          file_name+="/"+std::to_string(i);
           file_flushers.emplace_back( std::move(aspide::output_container(file_name)));
           std::cout<<"OPENING NEW FILE " << file_name <<std::endl;
           if((*(file_flushers.end()-1)).newFile()) std::cout<<"OPENDED FILE"<<std::endl;
@@ -797,7 +796,6 @@ void parallel_execution_dist_task<Scheduler>::map_reduce(aspide::text_in_contain
       auto formatted_data = out(global_result[i]);
       std::cout<<formatted_data<<std::endl;
       container[i].get_flusher().write(formatted_data.data(), (int64_t) formatted_data.size()); 
-//	    std::cout << w.first << " : " << w.second << std::endl;
     }
   }
 
@@ -818,8 +816,8 @@ void parallel_execution_dist_task<Scheduler>::map(binary_reader_t<ItemType, aspi
    std::cout<<"Register initial task"<<std::endl; 
    scheduler_->register_sequential_task([this,&binr,&order](task_type t){
 	auto& container = binr.get_input();
-	std::cout<<"Current file : "<<order[0]<<std::endl;
 	auto file_it =  container.begin_f() + order[0];
+	std::cout<<"Current file : "<<order[0]<< "with size: "<<(*file_it).size()<<std::endl;
 	int blocks_file = (*file_it).size()/binr.get_block_size();
 	if((*file_it).size()%binr.get_block_size()!=0) blocks_file++;
         int chunk_num = blocks_file/binr.get_chunk_blocks();
@@ -918,7 +916,7 @@ void parallel_execution_dist_task<Scheduler>::map(aspide::text_in_container &in,
   using output_type = pair<std::string,std::vector<long>>;
   std::vector<long> order = {0,0,-1};
   register_text_read_function(in,order);
-    
+  std::cout<<"Running map patter"<<std::endl; 
   scheduler_->register_parallel_task([this,&transform_op](task_type &t) -> void
   {
     COUT << "parallel_execution_dist_task::pipeline(.NO PATTERN.): task["<< t.get_id() << ","<< t.get_task_id()<< "]: no_pattern, ref=(" << t.get_data_location()[0].get_id() << "," << t.get_data_location()[0].get_pos() << ")" << ENDL;
@@ -937,7 +935,7 @@ void parallel_execution_dist_task<Scheduler>::map(aspide::text_in_container &in,
     task_type next_task{t.get_id()+1, scheduler_->get_task_id(), t.get_order(), {scheduler_->get_node_id()}, false, {ref}};
 #endif
     scheduler_->set_task(next_task,false);
-  },true);
+  },false);
 
   auto container = obtain_output_containers(in,out);
 
@@ -953,6 +951,8 @@ void parallel_execution_dist_task<Scheduler>::map(aspide::text_in_container &in,
 
      scheduler_->finish_task(t);
   });
+  
+  scheduler_->register_sequential_task(std::move(task_func), false);
 
   scheduler_->run();
 

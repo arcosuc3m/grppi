@@ -16,29 +16,12 @@
 #include_directories("${ZMQ_INCLUDE_DIR}")
 #message( ${ZMQ_INCLUDE_DIR} )
 
-add_subdirectory(map)
-add_subdirectory(map-reduce)
-
-add_executable(task_dist_test task_dist_test.cpp )
-target_include_directories(task_dist_test PUBLIC
+add_executable(count-words count-words.cpp )
+target_include_directories(count-words PUBLIC
   ${ZMQ_INCLUDE_DIR}
   ${BOOST_INCLUDEDIR}
 )
-target_link_libraries(task_dist_test 
+target_link_libraries(count-words
   ${ZMQ_LIBRARY}
   ${Boost_LIBRARIES})
 
-
-add_executable(fibonacci fibonacci.cpp )
-
-target_include_directories(fibonacci PUBLIC
-  ${ZMQ_INCLUDE_DIR}
-  ${BOOST_INCLUDEDIR}
-)
-
-target_link_libraries(fibonacci 
-  ${ZMQ_LIBRARY}
-  ${Boost_LIBRARIES})
-
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/datos 
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
