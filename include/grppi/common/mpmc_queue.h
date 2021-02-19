@@ -21,6 +21,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <iostream>
 
 namespace grppi{
 
@@ -312,6 +313,15 @@ enum class queue_mode {
   /// Mutex based synchronization.
   blocking 
 };
+
+inline std::ostream & operator<<(std::ostream & os, queue_mode qm) {
+  switch (qm) {
+    case queue_mode::lockfree: return os << "queue_mode::lockfree";
+    case queue_mode::blocking: return os << "queue_mode::blocking";
+    default:
+      return os << "unknown queue_mode";
+  }
+}
 
 /**
 \brief A multiple producer multiple consumer queue.
