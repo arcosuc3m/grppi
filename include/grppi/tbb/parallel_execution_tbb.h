@@ -686,7 +686,7 @@ void parallel_execution_tbb::pipeline(
   using output_type = grppi::optional<output_value_type>;
 
   auto generator = tbb::make_filter<void, output_type>(
-    tbb::filter::serial_in_order, 
+    tbb::filter_mode::serial_in_order,
     [&](tbb::flow_control & fc) -> output_type {
       auto item =  generate_op();
       if (item) {
@@ -831,7 +831,7 @@ auto parallel_execution_tbb::make_filter(
   using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, void>( 
-      tbb::filter::serial_in_order, 
+      tbb::filter_mode::serial_in_order,
       [=](input_type item) {
           if (item) transform_op(*item);
       });
@@ -858,7 +858,7 @@ auto parallel_execution_tbb::make_filter(
 
   return 
       tbb::make_filter<input_type, output_type>(
-          tbb::filter::serial_in_order, 
+          tbb::filter_mode::serial_in_order,
           [=](input_type item) -> output_type {
               if (item) return transform_op(*item);
               else return {};
@@ -880,7 +880,7 @@ auto parallel_execution_tbb::make_filter(
   using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, void>(
-      tbb::filter::parallel,
+      tbb::filter_mode::parallel,
       [=](input_type item) {
         if (item) farm_obj(*item);
       });
@@ -906,7 +906,7 @@ auto parallel_execution_tbb::make_filter(
   using output_type = grppi::optional<output_value_type>;
 
   return tbb::make_filter<input_type, output_type>(
-      tbb::filter::parallel,
+      tbb::filter_mode::parallel,
       [&](input_type item) -> output_type {
         if (item) return farm_obj(*item);
         else return {};
@@ -928,7 +928,7 @@ auto parallel_execution_tbb::make_filter(
   using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, void>(
-      tbb::filter::parallel,
+      tbb::filter_mode::parallel,
       [=](input_type item) {
         if (item) filter_obj(*item);
       });
@@ -950,7 +950,7 @@ auto parallel_execution_tbb::make_filter(
   using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, input_type>(
-      tbb::filter::parallel,
+      tbb::filter_mode::parallel,
       [&](input_type item) -> input_type {
         if (item && filter_obj(*item)) return item;
         else return {};
@@ -974,7 +974,7 @@ auto parallel_execution_tbb::make_filter(
   using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, input_type>(
-      tbb::filter::serial,
+      tbb::filter_mode::serial_out_of_order,
       [&, it=std::vector<input_value_type>()](input_type item) -> input_type {
         if (!item) return {};
         reduce_obj.add_item(std::forward<Identity>(*item));
@@ -1004,7 +1004,7 @@ auto parallel_execution_tbb::make_filter(
   using input_type = grppi::optional<input_value_type>;
 
   return tbb::make_filter<input_type, input_type>(
-      tbb::filter::serial,
+      tbb::filter_mode::serial_out_of_order,
       [&](input_type item) -> input_type {
         if (!item) return {};
         do {

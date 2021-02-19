@@ -76,7 +76,7 @@ endif( TBB_FOUND )
 
 message( STATUS "TBB: " ${GRPPI_TBB_ENABLE} )
 if( GRPPI_TBB_ENABLE )
-  include_directories(${TBB_INCLUDE_DIRS} )
+  link_libraries(TBB::tbb)
   add_definitions(-DGRPPI_TBB)
 endif( GRPPI_TBB_ENABLE )
 
