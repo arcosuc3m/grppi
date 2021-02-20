@@ -1,7 +1,7 @@
 language: cpp
 sudo: true
 dist: focal
-compiler: gcc
+compiler: g++-10
 os: linux
 
 
@@ -10,22 +10,22 @@ env:
     - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
     - CMAKE_VERSION="3.16.0"
     - GTEST_VERSION="1.10"
+    - GCC_VERSION=10
+    - BUILD_TYPE=Release
+    - CPPSTD=17
+
+addons: 
+  apt:
+    sources:
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    packages:
+      - gcc-10
+      - g++-10
 
 cache:
   directories:
     - ${DEPS_DIR}/cmake-${CMAKE_VERSION}
 
-matrix:
-  include:
-    # GCC supported versions gcc10
-    - env: GCC_VERSION=10 BUILD_TYPE=Debug CPPSTD=17
-      os: linux
-      addons: &gcc10
-        apt:
-          sources:
-            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-          packages:
-            - g++-10
 
 #    - env: GCC_VERSION=10 BUILD_TYPE=Release CPPSTD=17
 #      os: linux
@@ -84,15 +84,18 @@ before_install:
     fi
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
   - if [ -n "$CLANG_VERSION" ]; then export CXX="clang++-${CLANG_VERSION}" CC="clang-${CLANG_VERSION}"; fi
+  - mkdir -p ${DEPS_DIR}/gtest
+  - set +e; cd ${DEPS_DIR}; set -e; git clone https://github.com/google/googletest.git
   - which $CXX & $CXX --version
 
 install:
   - mkdir -p build
-  - mkdir -p build/gtest-${GTEST_VERSION}/$BUILD_TYPE
-  - set +e; cd build/gtest-${GTEST_VERSION}/$BUILD_TYPE; set -e; pwd
-  - cmake ${DEPS_DIR}/gtest-${GTEST_VERSION} -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
+  - mkdir -p build/gtest/$BUILD_TYPE
+  - set +e; cd build/gtest/$BUILD_TYPE; set -e; pwd
+  - cmake ${DEPS_DIR}/googletest -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - make -j 2
   - make install
+  - mkdir -p ${TRAVIS_BUILD_DIR}/build
   - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD -DGRPPI_TBB_ENABLE=OFF -DGRPPI_FF_ENABLE=OFF
   - cat CMakeFiles/CMakeError.log || true

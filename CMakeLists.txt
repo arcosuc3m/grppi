@@ -18,7 +18,7 @@ endif ()
 if (CMAKE_CXX_STANDARD LESS 17)
   message(FATAL_ERROR "Minimum standard is C++17")
 endif ()
-set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
 
 add_compile_options(-Wall -Werror -pedantic -pedantic-errors -Wextra)
@@ -57,7 +57,10 @@ message(STATUS "C++ Compiler is " ${CMAKE_CXX_COMPILER_ID}
 include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/include")
 
 # TBB Library
+if (GRPPI_TBB_ENABLE)
 find_package(TBB)
+endif()
+
 if (TBB_FOUND)
   if (${CMAKE_CXX_STANDARD} STREQUAL 20)
     option(GRPPI_TBB_ENABLE "Require TBB library" OFF)
