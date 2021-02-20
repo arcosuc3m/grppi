@@ -14,22 +14,7 @@ cache:
 
 matrix:
   include:
-    # GCC supported versions gcc9, gcc10
-    - env: GCC_VERSION=9 BUILD_TYPE=Debug CPPSTD=17
-      os: linux
-      addons: &gcc9
-        apt:
-          packages:
-            - g++-9
-            - libtbb-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-
-    - env: GCC_VERSION=9 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *gcc9
-
+    # GCC supported versions gcc10
     - env: GCC_VERSION=10 BUILD_TYPE=Debug CPPSTD=17
       os: linux
       addons: &gcc10
