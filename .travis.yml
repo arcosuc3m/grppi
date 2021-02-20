@@ -24,7 +24,7 @@ matrix:
             - libtbb-dev
             - cmake
           sources:
-            - ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r/test
 
     - env: GCC_VERSION=10 BUILD_TYPE=Release CPPSTD=17
       os: linux
@@ -39,7 +39,7 @@ matrix:
             - libstdc++-10-dev
             - cmake
           sources:
-            - ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r/test
 
 #            - llvm-toolchain-xenial-4.0
 
