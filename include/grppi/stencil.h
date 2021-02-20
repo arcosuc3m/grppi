@@ -49,8 +49,8 @@ sequential execution.
 */
 template <typename Execution, typename InputRange, typename OutputRange, 
           typename StencilTransformer, typename Neighbourhood,
-          meta::requires<range_concept,InputRange> = 0,
-          meta::requires<range_concept,OutputRange> = 0>
+          meta::requires_<range_concept,InputRange> = 0,
+          meta::requires_<range_concept,OutputRange> = 0>
 void stencil(
     const Execution & ex, 
     InputRange && rin, OutputRange && rout,
@@ -81,8 +81,8 @@ sequential execution.
 */
 template <typename Execution, typename ... InputRanges, typename OutputRange,
           typename StencilTransformer, typename Neighbourhood,
-          meta::requires<range_concept,InputRanges...> = 0,
-          meta::requires<range_concept,OutputRange> = 0>
+          meta::requires_<range_concept,InputRanges...> = 0,
+          meta::requires_<range_concept,OutputRange> = 0>
 void stencil(
     const Execution & ex,
     zip_view<InputRanges...> rins, OutputRange && rout,

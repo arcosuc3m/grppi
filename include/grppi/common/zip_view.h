@@ -74,7 +74,7 @@ A view over multiple ranges that keeps references to them.
 \param rs References to ranges values.
 */
   template<typename ... Rs,
-      meta::requires<range_concept, Rs...> = 0> // NOLINT
+      meta::requires_<range_concept, Rs...> = 0> // NOLINT
 
   auto zip(Rs & ... rs)
   {

@@ -77,7 +77,7 @@ If the concept is satisfied has a public typedef type (equal to int), otherwise
 there is no type defined.
 */
 template <template <typename> class C, typename ... Ts>
-using requires = std::enable_if_t<conjunction<C<Ts>...>::value,int>;
+using requires_ = std::enable_if_t<conjunction<C<Ts>...>::value,int>;
 
 }
 

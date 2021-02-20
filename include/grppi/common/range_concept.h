@@ -60,13 +60,13 @@ struct range_concept
   using has_size = meta::is_detected_convertible<std::size_t,size,U>;
 
   /// Requirements for range_concept.
-  using requires = meta::conjunction<
+  using requires_ = meta::conjunction<
       has_begin<T>, 
       has_end<T>,
       has_size<T>>;
 
   /// Boolean value for the range_concept requirements.
-  static constexpr bool value = requires::value;
+  static constexpr bool value = requires_::value;
 };
 
 /**

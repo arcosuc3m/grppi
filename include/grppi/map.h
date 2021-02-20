@@ -47,9 +47,8 @@ namespace grppi {
 */
   template<typename Execution, typename InRange, typename OutRange,
       typename Transformer,
-      meta:: requires<range_concept, InRange> = 0,
-  meta::
-  requires<range_concept, OutRange> = 0>
+      meta::requires_<range_concept, InRange> = 0,
+      meta::requires_<range_concept, OutRange> = 0>
 
   void map(const Execution & ex, InRange && rin, OutRange && rout,
       Transformer transform_op)
@@ -121,8 +120,9 @@ namespace grppi {
 */
   template<typename Execution, typename ... InRanges, typename OutRange,
       typename Transformer,
-      meta:: requires<range_concept, InRanges...> = 0,
-      meta::requires<range_concept, OutRange> = 0>
+      meta::requires_<range_concept, InRanges...> = 0,
+      meta:: requires_<range_concept, OutRange> = 0>
+
   void map(const Execution & ex, zip_view<InRanges...> range_ins,
       OutRange && range_out,
       Transformer transform_op)
