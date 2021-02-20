@@ -1,6 +1,9 @@
 language: cpp
 sudo: true
-dist: xenial
+dist: focal
+compiler: gcc
+os: linux
+
 
 env:
   global:
@@ -19,28 +22,26 @@ matrix:
       os: linux
       addons: &gcc10
         apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
             - g++-10
-            - libtbb-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r/test
 
-    - env: GCC_VERSION=10 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *gcc8
-
-    - env: CLANG_VERSION=11 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: &clang11
-        apt:
-          packages:
-            - clang-11
-            - libstdc++-10-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r/test
-
+#    - env: GCC_VERSION=10 BUILD_TYPE=Release CPPSTD=17
+#      os: linux
+#      addons: *gcc8
+#
+#    - env: CLANG_VERSION=11 BUILD_TYPE=Release CPPSTD=17
+#      os: linux
+#      addons: &clang11
+#        apt:
+#          packages:
+#            - clang-11
+#            - libstdc++-10-dev
+#            - cmake
+#          sources:
+#            - ubuntu-toolchain-r/test
+#
 #            - llvm-toolchain-xenial-4.0
 
 
@@ -59,7 +60,7 @@ matrix:
 
 before_script:
   - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
-  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main'
+  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
   - sudo apt-get update
 
 before_install:
