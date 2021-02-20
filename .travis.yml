@@ -5,8 +5,8 @@ dist: xenial
 env:
   global:
     - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
-    - CMAKE_VERSION="3.10.0"
-    - GTEST_VERSION="1.8"
+    - CMAKE_VERSION="3.16.0"
+    - GTEST_VERSION="1.10"
 
 cache:
   directories:
@@ -14,154 +14,49 @@ cache:
 
 matrix:
   include:
-    # GCC supported versions gcc6, gcc7, gcc8
-    - env: GCC_VERSION=6 BUILD_TYPE=Debug CPPSTD=14
+    # GCC supported versions gcc9, gcc10
+    - env: GCC_VERSION=9 BUILD_TYPE=Debug CPPSTD=17
       os: linux
-      addons: &gcc6
+      addons: &gcc9
         apt:
           packages:
-            - g++-6
+            - g++-9
             - libtbb-dev
             - cmake
           sources:
             - ubuntu-toolchain-r-test
 
-    - env: GCC_VERSION=6 BUILD_TYPE=Release CPPSTD=14
+    - env: GCC_VERSION=9 BUILD_TYPE=Release CPPSTD=17
       os: linux
-      addons: *gcc6
+      addons: *gcc9
 
-    - env: GCC_VERSION=7 BUILD_TYPE=Debug CPPSTD=14
+    - env: GCC_VERSION=10 BUILD_TYPE=Debug CPPSTD=17
       os: linux
-      addons: &gcc7
+      addons: &gcc10
         apt:
           packages:
-            - g++-7
+            - g++-10
             - libtbb-dev
             - cmake
           sources:
             - ubuntu-toolchain-r-test
 
-    - env: GCC_VERSION=7 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: *gcc7
-
-    - env: GCC_VERSION=7 BUILD_TYPE=Debug CPPSTD=17
-      os: linux
-      addons: *gcc7
-
-    - env: GCC_VERSION=7 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *gcc7
-
-    - env: GCC_VERSION=8 BUILD_TYPE=Debug CPPSTD=14
-      os: linux
-      addons: &gcc8
-        apt:
-          packages:
-            - g++-8
-            - libtbb-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-
-    - env: GCC_VERSION=8 BUILD_TYPE=Release CPPSTD=14
+    - env: GCC_VERSION=10 BUILD_TYPE=Release CPPSTD=17
       os: linux
       addons: *gcc8
 
-    - env: GCC_VERSION=8 BUILD_TYPE=Debug CPPSTD=17
+    - env: CLANG_VERSION=11 BUILD_TYPE=Release CPPSTD=17
       os: linux
-      addons: *gcc8
-
-    - env: GCC_VERSION=8 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *gcc8
-
-    - env: CLANG_VERSION=3.9 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: &clang39
+      addons: &clang11
         apt:
           packages:
-            - clang-3.9
-            - libstdc++-6-dev
+            - clang-11
+            - libstdc++-10-dev
             - cmake
           sources:
             - ubuntu-toolchain-r-test
 
-    - env: CLANG_VERSION=4.0 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: &clang40
-        apt:
-          packages:
-            - clang-4.0
-            - libstdc++-6-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-4.0
-
-    - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: &clang50
-        apt:
-          packages:
-            - clang-5.0
-            - libstdc++-7-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-5.0
-
-    - env: CLANG_VERSION=5.0 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *clang50
-
-    - env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: &clang60
-        apt:
-          packages:
-            - clang-6.0
-            - libstdc++-7-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-6.0
-
-    - env: CLANG_VERSION=6.0 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *clang60
-
-    - env: CLANG_VERSION=7 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: &clang7
-        apt:
-          packages:
-            - clang-7
-            - libstdc++-8-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-7
-
-    - env: CLANG_VERSION=7 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *clang7
-
-    - env: CLANG_VERSION=8 BUILD_TYPE=Release CPPSTD=14
-      os: linux
-      addons: &clang8
-        apt:
-          packages:
-            - clang-8
-            - libstdc++-8-dev
-            - cmake
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-8
-
-    - env: CLANG_VERSION=8 BUILD_TYPE=Release CPPSTD=17
-      os: linux
-      addons: *clang8
+#            - llvm-toolchain-xenial-4.0
 
 
     #- env: XCODE_VERSION=9.4 BUILD_TYPE=Release CPPSTD=14
@@ -194,9 +89,9 @@ before_install:
     fi
   - |
     if [ -f ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached ]; then
-      echo "Using chached gtest version ${GTEST_VERSION}."
+      echo "Using cached gtest version ${GTEST_VERSION}."
     else
-      GTEST_URL="https://github.com/google/googletest/archive/release-1.8.0.tar.gz"
+      GTEST_URL="https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
       mkdir -p ${DEPS_DIR}/gtest-${GTEST_VERSION}
       travis_retry wget --no-check-certificate --quiet -O - "${GTEST_URL}" | tar --strip-components=1 -xz -C ${DEPS_DIR}/gtest-${GTEST_VERSION}
       touch ${DEPS_DIR}/gtest-${GTEST_VERSION}/cached
