@@ -38,7 +38,7 @@ decltype(auto) apply_deref_increment(
 \brief Applies a callable object to the values obtained from the iterators in 
 a tuple-like object.
 This function takes callable object `f` and a tuple-like with iterators (e.g.
-the result of `make_tuple(it1, it2, it3)`)
+the result of `std::make_tuple(it1, it2, it3)`)
 
 and performs the action
 
@@ -82,7 +82,7 @@ decltype(auto) apply_increment(
 \brief Applies a callable object to the iterators in a tuple like-object and
 the increments those iterators.
 This function takes callable object `f` and a tuple-like object with iterators (e.g.
-the result of `make_tuple(it1, it2, it3)`)
+the result of `std::make_tuple(it1, it2, it3)`)
 
 and performs the action
 
@@ -122,7 +122,7 @@ decltype(auto) apply_iterators_indexed_impl(F && f, T && t, std::size_t i,
 \brief Applies a callable object to the values obtained from the iterators in a tuple
 by indexing.
 This function takes callable object `f`, a tuple-like with iterators (e.g.
-the result of `make_tuple(it1, it2, it3)`) and an integral index `i`.
+the result of `std::make_tuple(it1, it2, it3)`) and an integral index `i`.
 
 and performs the action
 
@@ -151,7 +151,7 @@ namespace internal {
 
 template <typename T, std::size_t ... I>
 auto iterators_next_impl(T && t, int n, std::index_sequence<I...>) {
-  return make_tuple(
+  return std::make_tuple(
     std::next(std::get<I>(t), n)...
   );
 }

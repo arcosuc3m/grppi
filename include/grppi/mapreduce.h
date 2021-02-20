@@ -17,6 +17,7 @@
 #define GRPPI_MAPREDUCE_H
 
 #include <utility>
+#include <tuple>
 
 #include "grppi/common/zip_view.h"
 #include "grppi/common/execution_traits.h"

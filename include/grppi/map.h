@@ -17,6 +17,7 @@
 #define GRPPI_MAP_H
 
 #include <utility>
+#include <tuple>
 
 #include "grppi/common/zip_view.h"
 #include "grppi/common/execution_traits.h"
@@ -53,7 +54,7 @@ void map(const Execution & ex, InRange && rin, OutRange && rout,
 {
   static_assert(supports_map<Execution>(),
       "map not supported on execution type");
-  ex.map(make_tuple(rin.begin()), rout.begin(),
+  ex.map(std::make_tuple(rin.begin()), rout.begin(),
       rin.size(), transform_op);
 }
 
@@ -103,7 +104,7 @@ void map(const Execution & ex,
 {
   static_assert(supports_map<Execution>(),
       "map not supported on execution type");
-  ex.map(make_tuple(first), first_out,
+  ex.map(std::make_tuple(first), first_out,
       std::distance(first, last), transform_op);
 }
 
@@ -155,7 +156,7 @@ void map(const Execution & ex,
 {
   static_assert(supports_map<Execution>(),
       "map not supported on execution type");
-  ex.map(make_tuple(first), first_out, size, transform_op);
+  ex.map(std::make_tuple(first), first_out, size, transform_op);
 }
 
 
@@ -211,7 +212,7 @@ void map(const Execution & ex,
 {
   static_assert(supports_map<Execution>(),
       "map not supported on execution type");
-  ex.map(make_tuple(first,other_firsts...), first_out,
+  ex.map(std::make_tuple(first,other_firsts...), first_out,
       std::distance(first,last), transform_op);
 }
 
