@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include <atomic>
-#include <numeric>
 
 #include <gtest/gtest.h>
 
@@ -38,7 +37,6 @@ public:
 
   // Vectors
   vector<int> v{};
-  vector<vector<int> > v2{};
 
   // Invocation counter
   std::atomic<int> invocations_init{0};
@@ -225,72 +223,72 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(pipeline_test, executions);
+TYPED_TEST_SUITE(pipeline_test, executions,);
 
-TYPED_TEST(pipeline_test, static_two_stages_empty)
+TYPED_TEST(pipeline_test, static_two_stages_empty) //NOLINT
 {
   this->setup_two_stages_empty();
   this->run_two_stages(this->execution_);
   this->check_two_stages_empty();
 }
 
-TYPED_TEST(pipeline_test, dyn_two_stages_empty)
+TYPED_TEST(pipeline_test, dyn_two_stages_empty) //NOLINT
 {
   this->setup_two_stages_empty();
   this->run_two_stages(this->dyn_execution_);
   this->check_two_stages_empty();
 }
 
-TYPED_TEST(pipeline_test, static_two_stages)
+TYPED_TEST(pipeline_test, static_two_stages) //NOLINT
 {
   this->setup_two_stages();
   this->run_two_stages(this->execution_);
   this->check_two_stages();
 }
 
-TYPED_TEST(pipeline_test, dyn_two_stages)
+TYPED_TEST(pipeline_test, dyn_two_stages) //NOLINT
 {
   this->setup_two_stages();
   this->run_two_stages(this->dyn_execution_);
   this->check_two_stages();
 }
 
-TYPED_TEST(pipeline_test, static_three_stages)
+TYPED_TEST(pipeline_test, static_three_stages) //NOLINT
 {
   this->setup_three_stages();
   this->run_three_stages(this->execution_);
   this->check_three_stages();
 }
 
-TYPED_TEST(pipeline_test, dyn_three_stages)
+TYPED_TEST(pipeline_test, dyn_three_stages) //NOLINT
 {
   this->setup_three_stages();
   this->run_three_stages(this->dyn_execution_);
   this->check_three_stages();
 }
 
-TYPED_TEST(pipeline_test, static_composed_last)
+TYPED_TEST(pipeline_test, static_composed_last) //NOLINT
 {
   this->setup_composed_last();
   this->run_composed_last(this->execution_);
   this->check_composed_last();
 }
 
-TYPED_TEST(pipeline_test, static_composed_piecewise_last)
+TYPED_TEST(pipeline_test, static_composed_piecewise_last) //NOLINT
 {
   this->setup_composed_last();
   this->run_composed_last_piecewise(this->execution_);
   this->check_composed_last();
 }
 
-TYPED_TEST(pipeline_test, static_composed)
+TYPED_TEST(pipeline_test, static_composed) //NOLINT
 {
   this->setup_composed();
   this->run_composed(this->execution_);
   this->check_composed();
 }
 
-TYPED_TEST(pipeline_test, static_composed_piecewise)
+TYPED_TEST(pipeline_test, static_composed_piecewise) //NOLINT
 {
   this->setup_composed();
   this->run_composed_piecewise(this->execution_);

@@ -38,14 +38,14 @@ public:
 
 using types = ::testing::Types<atomic_mpmc_queue<int>, locked_mpmc_queue<int>>;
 
-TYPED_TEST_CASE(mpmc_test, types);
+TYPED_TEST_SUITE(mpmc_test, types);
                 
-TYPED_TEST(mpmc_test, constructor) {
+TYPED_TEST(mpmc_test, constructor) { //NOLINT
   auto q = this->make_queue(10);
   EXPECT_TRUE(q.empty());
 }
 
-TYPED_TEST(mpmc_test, push_pop){
+TYPED_TEST(mpmc_test, push_pop){ //NOLINT
   auto q = this->make_queue(10);
   this->push_value(q);
   EXPECT_FALSE(q.empty());
@@ -55,7 +55,7 @@ TYPED_TEST(mpmc_test, push_pop){
   EXPECT_EQ(1,value);
 }
 
-TYPED_TEST(mpmc_test, concurrent_push_pop){
+TYPED_TEST(mpmc_test, concurrent_push_pop){ //NOLINT
   auto q = this->make_queue(3);
 
   std::vector<std::thread> thrs;
@@ -76,7 +76,7 @@ TYPED_TEST(mpmc_test, concurrent_push_pop){
   EXPECT_TRUE(q.empty());
 }
 
-TYPED_TEST(mpmc_test , concurrent_pop_push){
+TYPED_TEST(mpmc_test , concurrent_pop_push){ //NOLINT
   auto q = this->make_queue(3);
 
   std::vector<std::thread> thrs;

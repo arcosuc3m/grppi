@@ -169,170 +169,170 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(map_reduce_test, executions);
+TYPED_TEST_SUITE(map_reduce_test, executions,);
 
-TYPED_TEST(map_reduce_test, static_single_square_sum)
+TYPED_TEST(map_reduce_test, static_single_square_sum) //NOLINT
 {
   this->setup_single();
   this->output = this->run_square_sum(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, static_single_square_sum_size)
+TYPED_TEST(map_reduce_test, static_single_square_sum_size) //NOLINT
 {
   this->setup_single();
   this->output = this->run_square_sum_size(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, static_single_square_sum_range)
+TYPED_TEST(map_reduce_test, static_single_square_sum_range) //NOLINT
 {
   this->setup_single();
   this->output = this->run_square_sum_range(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_square_sum)
+TYPED_TEST(map_reduce_test, dyn_single_square_sum) //NOLINT
 {
   this->setup_single();
   this->output = this->run_square_sum(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_square_sum_size)
+TYPED_TEST(map_reduce_test, dyn_single_square_sum_size) //NOLINT
 {
   this->setup_single();
   this->output = this->run_square_sum_size(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_square_sum_range)
+TYPED_TEST(map_reduce_test, dyn_single_square_sum_range) //NOLINT
 {
   this->setup_single();
   this->output = this->run_square_sum_range(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(map_reduce_test, static_multiple_square_sum)
+TYPED_TEST(map_reduce_test, static_multiple_square_sum) //NOLINT
 {
   this->setup_multiple();
   this->output = this->run_square_sum(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, static_multiple_square_sum_size)
+TYPED_TEST(map_reduce_test, static_multiple_square_sum_size) //NOLINT
 {
   this->setup_multiple();
   this->output = this->run_square_sum_size(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, static_multiple_square_sum_range)
+TYPED_TEST(map_reduce_test, static_multiple_square_sum_range) //NOLINT
 {
   this->setup_multiple();
   this->output = this->run_square_sum_range(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple_square_sum)
+TYPED_TEST(map_reduce_test, dyn_multiple_square_sum) //NOLINT
 {
   this->setup_multiple();
   this->output = this->run_square_sum(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple_square_sum_size)
+TYPED_TEST(map_reduce_test, dyn_multiple_square_sum_size) //NOLINT
 {
   this->setup_multiple();
   this->output = this->run_square_sum_size(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple_square_sum_range)
+TYPED_TEST(map_reduce_test, dyn_multiple_square_sum_range) //NOLINT
 {
   this->setup_multiple();
   this->output = this->run_square_sum_range(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_iter)
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_iter) //NOLINT
 {
   this->setup_single_scalar_product();
   this->output = this->run_scalar_product_tuple_iter(this->execution_);
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_size)
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_size) //NOLINT
 {
   this->setup_single_scalar_product();
   this->output = this->run_scalar_product_tuple_size(this->execution_);
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_range)
+TYPED_TEST(map_reduce_test, static_single_scalar_product_tuple_range) //NOLINT
 {
   this->setup_single_scalar_product();
   this->output = this->run_scalar_product_tuple_range(this->execution_);
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_iter)
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_iter) //NOLINT
 {
   this->setup_single_scalar_product();
   this->output = this->run_scalar_product_tuple_iter(this->dyn_execution_);
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_size)
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_size) //NOLINT
 {
   this->setup_single_scalar_product();
   this->output = this->run_scalar_product_tuple_size(this->dyn_execution_);
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_range)
+TYPED_TEST(map_reduce_test, dyn_single_scalar_product_tuple_range) //NOLINT
 {
   this->setup_single_scalar_product();
   this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);
   this->check_single_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_iter)
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_iter) //NOLINT
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_iter(this->execution_);
   this->check_multiple_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_size)
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_size) //NOLINT
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_size(this->execution_);
   this->check_multiple_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_range)
+TYPED_TEST(map_reduce_test, static_multiple_scalar_product_tuple_range) //NOLINT
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_range(this->execution_);
   this->check_multiple_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_iter)
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_iter) //NOLINT
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_iter(this->dyn_execution_);
   this->check_multiple_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size)
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size) //NOLINT
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_size(this->dyn_execution_);
   this->check_multiple_scalar_product();
 }
 
-TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size_range)
+TYPED_TEST(map_reduce_test, dyn_multiple_scalar_product_tuple_size_range) //NOLINT
 {
   this->setup_multiple_scalar_product();
   this->output = this->run_scalar_product_tuple_range(this->dyn_execution_);

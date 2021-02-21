@@ -131,17 +131,17 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stream_reduce_test, executions);
+TYPED_TEST_SUITE(stream_reduce_test, executions,);
 
 // Check functionality with empty stream and sink function
-TYPED_TEST(stream_reduce_test, static_empty)
+TYPED_TEST(stream_reduce_test, static_empty) //NOLINT
 { 
   this->setup_empty();
   this->run_reduction_add(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stream_reduce_test, dyn_empty)
+TYPED_TEST(stream_reduce_test, dyn_empty) //NOLINT
 { 
   this->setup_empty();
   this->run_reduction_add(this->dyn_execution_);
@@ -149,28 +149,28 @@ TYPED_TEST(stream_reduce_test, dyn_empty)
 }
 
 // Process single element
-TYPED_TEST(stream_reduce_test, static_single)
+TYPED_TEST(stream_reduce_test, static_single) //NOLINT
 { 
   this->setup_single();
   this->run_reduction_add(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(stream_reduce_test, dyn_single)
+TYPED_TEST(stream_reduce_test, dyn_single) //NOLINT
 { 
   this->setup_single();
   this->run_reduction_add(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(stream_reduce_test, static_multiple)
+TYPED_TEST(stream_reduce_test, static_multiple) //NOLINT
 { 
   this->setup_multiple();
   this->run_reduction_add(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stream_reduce_test, dyn_multiple)
+TYPED_TEST(stream_reduce_test, dyn_multiple) //NOLINT
 { 
   this->setup_multiple();
   this->run_reduction_add(this->dyn_execution_);
@@ -179,14 +179,14 @@ TYPED_TEST(stream_reduce_test, dyn_multiple)
 
 
 // Process multiple elements with changes in the window and offset parameters
-TYPED_TEST(stream_reduce_test, static_window_offset)
+TYPED_TEST(stream_reduce_test, static_window_offset) //NOLINT
 { 
   this->setup_window_offset();
   this->run_reduction_add(this->execution_);
   this->check_window_offset();
 }
 
-TYPED_TEST(stream_reduce_test, dyn_window_offset)
+TYPED_TEST(stream_reduce_test, dyn_window_offset) //NOLINT
 { 
   this->setup_window_offset();
   this->run_reduction_add(this->dyn_execution_);
@@ -194,14 +194,14 @@ TYPED_TEST(stream_reduce_test, dyn_window_offset)
 }
 
 // Process multiple elements with changes in the window and offset parameters
-TYPED_TEST(stream_reduce_test, static_offset_window)
+TYPED_TEST(stream_reduce_test, static_offset_window) //NOLINT
 {
   this->setup_offset_window();
   this->run_reduction_add(this->execution_);
   this->check_offset_window();
 }
 
-TYPED_TEST(stream_reduce_test, dyn_offset_window)
+TYPED_TEST(stream_reduce_test, dyn_offset_window) //NOLINT
 {
   this->setup_offset_window();
   this->run_reduction_add(this->dyn_execution_);
