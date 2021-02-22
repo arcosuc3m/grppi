@@ -851,7 +851,6 @@ void parallel_execution_omp::stream_pool(Population & population,
 {
 
   using namespace std;
-  using namespace experimental;
 
   using selected_type = typename std::result_of<Selection(Population&)>::type;
   using individual_type = typename Population::value_type;
