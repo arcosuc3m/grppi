@@ -96,7 +96,7 @@ public:
 
 };
 
-TYPED_TEST_SUITE(stream_pool_test, executions_noff,);
+TYPED_TEST_SUITE(stream_pool_test, executions_minimal,);
 
 TYPED_TEST(stream_pool_test, static_empty) // NOLINT
 {
