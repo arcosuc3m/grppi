@@ -843,13 +843,16 @@ void parallel_execution_omp::pipeline(
 
 template <typename Population, typename Selection, typename Evolution,
           typename Evaluation, typename Predicate>
-void parallel_execution_omp::stream_pool(Population & population,
-              Selection && selection_op,
-              Evolution && evolve_op,
-              Evaluation && eval_op,
-              Predicate && termination_op) const
+void parallel_execution_omp::stream_pool(
+              [[maybe_unused]] Population & population,
+              [[maybe_unused]] Selection && selection_op,
+              [[maybe_unused]] Evolution && evolve_op,
+              [[maybe_unused]] Evaluation && eval_op,
+              [[maybe_unused]] Predicate && termination_op) const
 {
-
+  std::cerr << "stream_pool currently unimplemented on OpenMP\n";
+  std::abort();
+  /*
   using namespace std;
 
   using selected_type = typename std::result_of<Selection(Population&)>::type;
@@ -921,6 +924,7 @@ void parallel_execution_omp::stream_pool(Population & population,
   #pragma omp taskwait
   }
   }
+  */
 }
 
 // PRIVATE MEMBERS
