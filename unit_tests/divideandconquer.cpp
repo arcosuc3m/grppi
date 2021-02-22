@@ -182,30 +182,30 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(divideconquer_test, executions);
+TYPED_TEST_SUITE(divideconquer_test, executions,);
 
-TYPED_TEST(divideconquer_test, static_empty)
+TYPED_TEST(divideconquer_test, static_empty) //NOLINT
 {
   this->setup_empty();
   this->out = this->run_simple(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(divideconquer_test, dyn_empty)
+TYPED_TEST(divideconquer_test, dyn_empty) //NOLINT
 {
   this->setup_empty();
   this->out = this->run_simple(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(divideconquer_test, static_single)
+TYPED_TEST(divideconquer_test, static_single) //NOLINT
 {
   this->setup_single();
   this->out = this->run_simple(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(divideconquer_test, dyn_single)
+TYPED_TEST(divideconquer_test, dyn_single) //NOLINT
 {
   this->setup_single();
   this->out = this->run_simple(this->dyn_execution_);
@@ -213,21 +213,21 @@ TYPED_TEST(divideconquer_test, dyn_single)
 }
 
 
-TYPED_TEST(divideconquer_test, static_multiple)
+TYPED_TEST(divideconquer_test, static_multiple) //NOLINT
 {
   this->setup_multiple();
   this->out =  this->run_vecsum(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, dyn_multiple)
+TYPED_TEST(divideconquer_test, dyn_multiple) //NOLINT
 {
   this->setup_multiple();
   this->out =  this->run_vecsum(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, static_multiple_single_thread)
+TYPED_TEST(divideconquer_test, static_multiple_single_thread) //NOLINT
 {
   this->setup_multiple();
   this->execution_.set_concurrency_degree(1);
@@ -235,7 +235,7 @@ TYPED_TEST(divideconquer_test, static_multiple_single_thread)
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, static_multiple_five_threads)
+TYPED_TEST(divideconquer_test, static_multiple_five_threads) //NOLINT
 {
   this->setup_multiple();
   this->execution_.set_concurrency_degree(5);
@@ -243,7 +243,7 @@ TYPED_TEST(divideconquer_test, static_multiple_five_threads)
   this->check_multiple();
 }
 
-TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
+TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads) //NOLINT
 {
   this->setup_multiple_triple_div();
   this->execution_.set_concurrency_degree(2);
@@ -252,7 +252,7 @@ TYPED_TEST(divideconquer_test, static_multiple_triple_div_2_threads)
 }
 
 
-TYPED_TEST(divideconquer_test, static_multiple_triple_div_4_threads)
+TYPED_TEST(divideconquer_test, static_multiple_triple_div_4_threads) //NOLINT
 {
   this->setup_multiple_triple_div();
   this->execution_.set_concurrency_degree(4);

@@ -17,6 +17,7 @@
 #define GRPPI_MAPREDUCE_H
 
 #include <utility>
+#include <tuple>
 
 #include "grppi/common/zip_view.h"
 #include "grppi/common/execution_traits.h"
@@ -48,7 +49,7 @@ namespace grppi {
 */
 template <typename Execution, typename InputRange, typename Identity, 
           typename Transformer, typename Combiner,
-          meta::requires<range_concept,InputRange> = 0>
+          meta::requires_<range_concept,InputRange> = 0>
 auto map_reduce(const Execution & ex, 
                 InputRange && rin,
                 Identity && identity, 
@@ -79,7 +80,7 @@ auto map_reduce(const Execution & ex,
 template <typename Execution, 
     typename ... InputRanges,
     typename Identity, typename Transformer, typename Combiner,
-    meta::requires<range_concept,InputRanges ...> = 0>
+    meta::requires_<range_concept,InputRanges ...> = 0>
 auto map_reduce(const Execution & ex,
                 zip_view<InputRanges...> rins,
                 Identity && identity,

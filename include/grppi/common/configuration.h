@@ -34,6 +34,17 @@ enum class execution_backend {
   ff
 };
 
+inline std::ostream & operator<<(std::ostream & os, execution_backend be) {
+  switch (be) {
+    case execution_backend::seq: return os << "seq";
+    case execution_backend::native: return os << "native";
+    case execution_backend::omp: return os << "omp";
+    case execution_backend::tbb: return os << "tbb";
+    case execution_backend::ff: return os << "ff";
+    default: return os << "unknown";
+  }
+}
+
 class environment_option_getter {
 public:
   char const * operator()(char const * var_name) { return std::getenv(var_name); }

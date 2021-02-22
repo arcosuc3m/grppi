@@ -329,100 +329,100 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(farm_pipeline_test, executions);
+TYPED_TEST_SUITE(farm_pipeline_test, executions,); //NOLINT
 
-TYPED_TEST(farm_pipeline_test, static_empty)
+TYPED_TEST(farm_pipeline_test, static_empty) //NOLINT
 {
   this->setup_empty();
   this->run_empty(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_empty)
+TYPED_TEST(farm_pipeline_test, dyn_empty) //NOLINT
 {
   this->setup_empty();
   this->run_empty(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(farm_pipeline_test, static_empty_sink)
+TYPED_TEST(farm_pipeline_test, static_empty_sink) //NOLINT
 {
   this->setup_empty_sink();
   this->run_empty_sink(this->execution_);
   this->check_empty_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_empty_sink)
+TYPED_TEST(farm_pipeline_test, dyn_empty_sink) //NOLINT
 {
   this->setup_empty_sink();
   this->run_empty_sink(this->dyn_execution_);
   this->check_empty_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, static_empty_ary)
+TYPED_TEST(farm_pipeline_test, static_empty_ary) //NOLINT
 {
   this->setup_empty();
   this->run_empty_ary(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_empty_ary)
+TYPED_TEST(farm_pipeline_test, dyn_empty_ary) //NOLINT
 {
   this->setup_empty();
   this->run_empty_ary(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(farm_pipeline_test, static_single_sink)
+TYPED_TEST(farm_pipeline_test, static_single_sink) //NOLINT
 {
   this->setup_single_sink();
   this->run_single_sink(this->execution_);
   this->check_single_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_single_sink)
+TYPED_TEST(farm_pipeline_test, dyn_single_sink) //NOLINT
 {
   this->setup_single_sink();
   this->run_single_sink(this->dyn_execution_);
   this->check_single_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, static_single_ary_sink)
+TYPED_TEST(farm_pipeline_test, static_single_ary_sink) //NOLINT
 {
   this->setup_single_ary_sink();
   this->run_single_ary_sink(this->dyn_execution_);
   this->check_single_ary_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_single_ary_sink)
+TYPED_TEST(farm_pipeline_test, dyn_single_ary_sink) //NOLINT
 {
   this->setup_single_ary_sink();
   this->run_single_ary_sink(this->dyn_execution_);
   this->check_single_ary_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, static_multiple_sink)
+TYPED_TEST(farm_pipeline_test, static_multiple_sink) //NOLINT
 {
   this->setup_multiple_sink();
   this->run_multiple_sink(this->execution_);
   this->check_multiple_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_multiple_sink)
+TYPED_TEST(farm_pipeline_test, dyn_multiple_sink) //NOLINT
 {
   this->setup_multiple_sink();
   this->run_multiple_sink(this->dyn_execution_);
   this->check_multiple_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, static_multiple_ary_sink)
+TYPED_TEST(farm_pipeline_test, static_multiple_ary_sink) //NOLINT
 {
   this->setup_multiple_ary_sink();
   this->run_multiple_ary_sink(this->execution_);
   this->check_multiple_ary_sink();
 }
 
-TYPED_TEST(farm_pipeline_test, dyn_multiple_ary_sink)
+TYPED_TEST(farm_pipeline_test, dyn_multiple_ary_sink) //NOLINT
 {
   this->setup_multiple_ary_sink();
   this->run_multiple_ary_sink(this->dyn_execution_);

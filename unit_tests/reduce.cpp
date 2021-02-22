@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <atomic>
-
 #include <gtest/gtest.h>
 
 #include "grppi/reduce.h"
@@ -79,86 +77,86 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(reduce_test, executions);
+TYPED_TEST_SUITE(reduce_test, executions,);
 
-TYPED_TEST(reduce_test, static_single)
+TYPED_TEST(reduce_test, static_single) //NOLINT
 {
   this->setup_single();
   this->run_unary(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, static_single_size)
+TYPED_TEST(reduce_test, static_single_size) //NOLINT
 {
   this->setup_single();
   this->run_unary_size(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, static_single_range)
+TYPED_TEST(reduce_test, static_single_range) //NOLINT
 {
   this->setup_single();
   this->run_unary_range(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, dyn_single)
+TYPED_TEST(reduce_test, dyn_single) //NOLINT
 {
   this->setup_single();
   this->run_unary(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, dyn_single_size)
+TYPED_TEST(reduce_test, dyn_single_size) //NOLINT
 {
   this->setup_single();
   this->run_unary_size(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, dyn_single_range)
+TYPED_TEST(reduce_test, dyn_single_range) //NOLINT
 {
   this->setup_single();
   this->run_unary_range(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(reduce_test, static_multiple)
+TYPED_TEST(reduce_test, static_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_size(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(reduce_test, static_multiple_size)
+TYPED_TEST(reduce_test, static_multiple_size) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_size(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(reduce_test, static_multiple_range)
+TYPED_TEST(reduce_test, static_multiple_range) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_range(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(reduce_test, dyn_multiple)
+TYPED_TEST(reduce_test, dyn_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_size(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(reduce_test, dyn_multiple_size)
+TYPED_TEST(reduce_test, dyn_multiple_size) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_size(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(reduce_test, dyn_multiple_range)
+TYPED_TEST(reduce_test, dyn_multiple_range) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_range(this->dyn_execution_);

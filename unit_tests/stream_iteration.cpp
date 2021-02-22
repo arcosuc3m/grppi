@@ -149,16 +149,16 @@ public:
   }
 };
 
-TYPED_TEST_CASE(stream_iteration_test, executions);
+TYPED_TEST_SUITE(stream_iteration_test, executions,);
 
-TYPED_TEST(stream_iteration_test, static_no_composed)
+TYPED_TEST(stream_iteration_test, static_no_composed) //NOLINT
 { 
   this->setup_no_composed();
   this->run_nested_iteration(this->execution_);
   this->check_no_composed();
 }
 
-TYPED_TEST(stream_iteration_test, dyn_no_composed)
+TYPED_TEST(stream_iteration_test, dyn_no_composed) //NOLINT
 { 
   this->setup_no_composed();
   this->run_nested_iteration(this->dyn_execution_);
@@ -166,14 +166,14 @@ TYPED_TEST(stream_iteration_test, dyn_no_composed)
 }
 
 /*
-TYPED_TEST(stream_iteration_test, static_composed_pipeline)
+TYPED_TEST(stream_iteration_test, static_composed_pipeline) //NOLINT
 {
   this->setup_composed_pipeline();
   this->run_nested_iteration_pipeline(this->execution_);
   this->check_composed_pipeline();
 }
 
-TYPED_TEST(stream_iteration_test, dyn_composed_pipeline)
+TYPED_TEST(stream_iteration_test, dyn_composed_pipeline) //NOLINT
 {
   this->setup_composed_pipeline();
   this->run_nested_iteration_pipeline(this->dyn_execution_);
@@ -181,7 +181,7 @@ TYPED_TEST(stream_iteration_test, dyn_composed_pipeline)
 
 }
 
-TYPED_TEST(stream_iteration_test, static_composed_farm)
+TYPED_TEST(stream_iteration_test, static_composed_farm) //NOLINT
 {
   this->setup_composed_farm();
   grppi::repeat_until(this->execution_,
@@ -211,7 +211,7 @@ TYPED_TEST(stream_iteration_test, static_composed_farm)
   this->check_composed_farm();
 }
 
-TYPED_TEST(stream_iteration_test, dyn_composed_farm)
+TYPED_TEST(stream_iteration_test, dyn_composed_farm) //NOLINT
 {
   this->setup_composed_farm();
   grppi::repeat_until(this->dyn_execution_,

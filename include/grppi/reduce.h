@@ -46,7 +46,7 @@ on a data sequence with sequential execution.
 \return The result of the reduction.
 */
 template <typename Execution, typename InRange, typename Result, typename Combiner,
-    meta::requires<range_concept,InRange> = 0>
+    meta::requires_<range_concept,InRange> = 0>
 auto reduce(const Execution & ex,
             InRange && rin,
             Result && identity,

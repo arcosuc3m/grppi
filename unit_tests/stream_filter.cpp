@@ -215,9 +215,9 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stream_filter_test, executions);
+TYPED_TEST_SUITE(stream_filter_test, executions,);
 
-TYPED_TEST(stream_filter_test, static_ordered_keep_empty)
+TYPED_TEST(stream_filter_test, static_ordered_keep_empty) //NOLINT
 {
   this->setup_empty();
   this->execution_.enable_ordering();
@@ -225,7 +225,7 @@ TYPED_TEST(stream_filter_test, static_ordered_keep_empty)
   this->check_keep_empty();
 }
 
-TYPED_TEST(stream_filter_test, static_unordered_keep_empty)
+TYPED_TEST(stream_filter_test, static_unordered_keep_empty) //NOLINT
 {
   this->setup_empty();
   this->execution_.disable_ordering();
@@ -233,77 +233,77 @@ TYPED_TEST(stream_filter_test, static_unordered_keep_empty)
   this->check_keep_empty();
 }
 
-TYPED_TEST(stream_filter_test, dyn_keep_empty)
+TYPED_TEST(stream_filter_test, dyn_keep_empty) //NOLINT
 {
   this->setup_empty();
   this->run_keep_empty(this->dyn_execution_);
   this->check_keep_empty();
 }
 
-TYPED_TEST(stream_filter_test, static_discard_empty)
+TYPED_TEST(stream_filter_test, static_discard_empty) //NOLINT
 {
   this->setup_empty();
   this->run_discard_empty(this->execution_);
   this->check_discard_empty();
 }
 
-TYPED_TEST(stream_filter_test, dyn_discard_empty)
+TYPED_TEST(stream_filter_test, dyn_discard_empty) //NOLINT
 {
   this->setup_empty();
   this->run_discard_empty(this->dyn_execution_);
   this->check_discard_empty();
 }
 
-TYPED_TEST(stream_filter_test, static_keep_single)
+TYPED_TEST(stream_filter_test, static_keep_single) //NOLINT
 {
   this->setup_single();
   this->run_keep_single(this->execution_);
   this->check_keep_single();
 }
 
-TYPED_TEST(stream_filter_test, dyn_keep_single)
+TYPED_TEST(stream_filter_test, dyn_keep_single) //NOLINT
 {
   this->setup_single();
   this->run_keep_single(this->dyn_execution_);
   this->check_keep_single();
 }
 
-TYPED_TEST(stream_filter_test, static_discard_single)
+TYPED_TEST(stream_filter_test, static_discard_single) //NOLINT
 {
   this->setup_single();
   this->run_discard_single(this->execution_);
   this->check_discard_single();
 }
 
-TYPED_TEST(stream_filter_test, dyn_discard_single)
+TYPED_TEST(stream_filter_test, dyn_discard_single) //NOLINT
 {
   this->setup_single();
   this->run_discard_single(this->dyn_execution_);
   this->check_discard_single();
 }
 
-TYPED_TEST(stream_filter_test, static_keep_multiple)
+TYPED_TEST(stream_filter_test, static_keep_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_keep_multiple(this->execution_);
   this->check_keep_multiple();
 }
 
-TYPED_TEST(stream_filter_test, dyn_keep_multiple)
+TYPED_TEST(stream_filter_test, dyn_keep_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_keep_multiple(this->dyn_execution_);
   this->check_keep_multiple();
 }
 
-TYPED_TEST(stream_filter_test, static_discard_multiple)
+TYPED_TEST(stream_filter_test, static_discard_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_discard_multiple(this->execution_);
   this->check_discard_multiple();
 }
 
-TYPED_TEST(stream_filter_test, dyn_discard_multiple)
+TYPED_TEST(stream_filter_test, dyn_discard_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_discard_multiple(this->dyn_execution_);

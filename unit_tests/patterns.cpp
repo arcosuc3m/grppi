@@ -25,7 +25,7 @@
 using namespace std;
 using namespace grppi;
 
-TEST(patterns, is_farm)
+TEST(patterns, is_farm) // NOLINT
 {
   auto f = [](int x) { return x; };
   auto pattern = farm(4,f);
@@ -33,7 +33,7 @@ TEST(patterns, is_farm)
   EXPECT_TRUE(is_farm<decltype(pattern)&>);
 }
 
-TEST(patterns, is_filter)
+TEST(patterns, is_filter) // NOLINT
 {
   auto f = [](int x) { return x; };
   auto pattern = keep(f);
@@ -41,7 +41,7 @@ TEST(patterns, is_filter)
   EXPECT_TRUE(is_filter<decltype(pattern)&>);
 }
 
-TEST(patterns, is_pipeline)
+TEST(patterns, is_pipeline) // NOLINT
 {
   auto f = [](int x) { return x; };
   auto g = [](int x) { return x+1; };

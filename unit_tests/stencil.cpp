@@ -277,88 +277,88 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_CASE(stencil_test, executions);
+TYPED_TEST_SUITE(stencil_test, executions,);
 
 // EMPTY
 
-TYPED_TEST(stencil_test, static_empty)
+TYPED_TEST(stencil_test, static_empty) //NOLINT
 {
   this->setup_empty();
   this->run_unary(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, static_empty_size)
+TYPED_TEST(stencil_test, static_empty_size) //NOLINT
 {
   this->setup_empty();
   this->run_unary_size(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, static_empty_range)
+TYPED_TEST(stencil_test, static_empty_range) //NOLINT
 {
   this->setup_empty();
   this->run_unary_range(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, dyn_empty)
+TYPED_TEST(stencil_test, dyn_empty) //NOLINT
 {
   this->setup_empty();
   this->run_unary(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, dyn_empty_size)
+TYPED_TEST(stencil_test, dyn_empty_size) //NOLINT
 {
   this->setup_empty();
   this->run_unary_size(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, dyn_empty_range)
+TYPED_TEST(stencil_test, dyn_empty_range) //NOLINT
 {
   this->setup_empty();
   this->run_unary_range(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stencil_test, static_empty_nary_tuple_iter)
+TYPED_TEST(stencil_test, static_empty_nary_tuple_iter) //NOLINT
 {
   this->setup_empty_nary();
   this->run_nary_tuple_iter(this->execution_);
   this->check_empty_nary();
 }
 
-TYPED_TEST(stencil_test, static_empty_nary_tuple_size)
+TYPED_TEST(stencil_test, static_empty_nary_tuple_size) //NOLINT
 {
   this->setup_empty_nary();
   this->run_nary_tuple_size(this->execution_);
   this->check_empty_nary();
 }
 
-TYPED_TEST(stencil_test, static_empty_nary_tuple_range)
+TYPED_TEST(stencil_test, static_empty_nary_tuple_range) //NOLINT
 {
   this->setup_empty_nary();
   this->run_nary_tuple_range(this->execution_);
   this->check_empty_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_empty_nary_tuple_iter)
+TYPED_TEST(stencil_test, dyn_empty_nary_tuple_iter) //NOLINT
 {
   this->setup_empty_nary();
   this->run_nary_tuple_iter(this->dyn_execution_);
   this->check_empty_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_empty_nary_tuple_size)
+TYPED_TEST(stencil_test, dyn_empty_nary_tuple_size) //NOLINT
 {
   this->setup_empty_nary();
   this->run_nary_tuple_size(this->dyn_execution_);
   this->check_empty_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_empty_nary_tuple_range)
+TYPED_TEST(stencil_test, dyn_empty_nary_tuple_range) //NOLINT
 {
   this->setup_empty_nary();
   this->run_nary_tuple_range(this->dyn_execution_);
@@ -367,84 +367,84 @@ TYPED_TEST(stencil_test, dyn_empty_nary_tuple_range)
 
 // SINGLE
 
-TYPED_TEST(stencil_test, static_single)
+TYPED_TEST(stencil_test, static_single) //NOLINT
 {
   this->setup_single();
   this->run_unary(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, static_single_size)
+TYPED_TEST(stencil_test, static_single_size) //NOLINT
 {
   this->setup_single();
   this->run_unary_size(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, static_single_range)
+TYPED_TEST(stencil_test, static_single_range) //NOLINT
 {
   this->setup_single();
   this->run_unary_range(this->execution_);
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, dyn_single)
+TYPED_TEST(stencil_test, dyn_single) //NOLINT
 {
   this->setup_single();
   this->run_unary(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, dyn_single_size)
+TYPED_TEST(stencil_test, dyn_single_size) //NOLINT
 {
   this->setup_single();
   this->run_unary_size(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, dyn_single_range)
+TYPED_TEST(stencil_test, dyn_single_range) //NOLINT
 {
   this->setup_single();
   this->run_unary_range(this->dyn_execution_);
   this->check_single();
 }
 
-TYPED_TEST(stencil_test, static_single_nary_tuple_iter)
+TYPED_TEST(stencil_test, static_single_nary_tuple_iter) //NOLINT
 {
   this->setup_single_nary();
   this->run_nary_tuple_iter(this->execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, static_single_nary_tuple_size)
+TYPED_TEST(stencil_test, static_single_nary_tuple_size) //NOLINT
 {
   this->setup_single_nary();
   this->run_nary_tuple_size(this->execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, static_single_nary_tuple_range)
+TYPED_TEST(stencil_test, static_single_nary_tuple_range) //NOLINT
 {
   this->setup_single_nary();
   this->run_nary_tuple_range(this->execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_single_nary_tuple_iter)
+TYPED_TEST(stencil_test, dyn_single_nary_tuple_iter) //NOLINT
 {
   this->setup_single_nary();
   this->run_nary_tuple_iter(this->dyn_execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_single_nary_tuple_size)
+TYPED_TEST(stencil_test, dyn_single_nary_tuple_size) //NOLINT
 {
   this->setup_single_nary();
   this->run_nary_tuple_size(this->dyn_execution_);
   this->check_single_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_single_nary_tuple_range)
+TYPED_TEST(stencil_test, dyn_single_nary_tuple_range) //NOLINT
 {
   this->setup_single_nary();
   this->run_nary_tuple_range(this->dyn_execution_);
@@ -453,84 +453,84 @@ TYPED_TEST(stencil_test, dyn_single_nary_tuple_range)
 
 // MULTIPLE
 
-TYPED_TEST(stencil_test, static_multiple)
+TYPED_TEST(stencil_test, static_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_unary(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, static_multiple_size)
+TYPED_TEST(stencil_test, static_multiple_size) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_size(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, static_multiple_range)
+TYPED_TEST(stencil_test, static_multiple_range) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_range(this->execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple)
+TYPED_TEST(stencil_test, dyn_multiple) //NOLINT
 {
   this->setup_multiple();
   this->run_unary(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple_size)
+TYPED_TEST(stencil_test, dyn_multiple_size) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_size(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple_range)
+TYPED_TEST(stencil_test, dyn_multiple_range) //NOLINT
 {
   this->setup_multiple();
   this->run_unary_range(this->dyn_execution_);
   this->check_multiple();
 }
 
-TYPED_TEST(stencil_test, static_multiple_nary_tuple_iter)
+TYPED_TEST(stencil_test, static_multiple_nary_tuple_iter) //NOLINT
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_iter(this->execution_);
   this->check_multiple_nary();
 }
 
-TYPED_TEST(stencil_test, static_multiple_nary_tuple_size)
+TYPED_TEST(stencil_test, static_multiple_nary_tuple_size) //NOLINT
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_size(this->execution_);
   this->check_multiple_nary();
 }
 
-TYPED_TEST(stencil_test, static_multiple_nary_tuple_range)
+TYPED_TEST(stencil_test, static_multiple_nary_tuple_range) //NOLINT
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_range(this->execution_);
   this->check_multiple_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_iter)
+TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_iter) //NOLINT
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_iter(this->dyn_execution_);
   this->check_multiple_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_size)
+TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_size) //NOLINT
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_size(this->dyn_execution_);
   this->check_multiple_nary();
 }
 
-TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_range)
+TYPED_TEST(stencil_test, dyn_multiple_nary_tuple_range) //NOLINT
 {
   this->setup_multiple_nary();
   this->run_nary_tuple_range(this->dyn_execution_);

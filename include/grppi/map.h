@@ -17,6 +17,7 @@
 #define GRPPI_MAP_H
 
 #include <utility>
+#include <tuple>
 
 #include "grppi/common/zip_view.h"
 #include "grppi/common/execution_traits.h"
@@ -28,7 +29,7 @@ namespace grppi {
 \addtogroup data_patterns
 @{
 \defgroup map_pattern Map pattern
-\brief Interface for applyinng the \ref md_map.
+\brief Interface for applying the \ref md_map.
 @{
 */
 
@@ -44,18 +45,66 @@ namespace grppi {
 \param transform_op Transformation operation.
 \pre rin.size() == rout.size()
 */
-template<typename Execution, typename InRange, typename OutRange,
-        typename Transformer,
-        meta::requires<range_concept,InRange> = 0,
-        meta::requires<range_concept,OutRange> = 0>
-void map(const Execution & ex, InRange && rin, OutRange && rout,
-         Transformer transform_op)
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(make_tuple(rin.begin()), rout.begin(),
-      rin.size(), transform_op);
-}
+  template<typename Execution, typename InRange, typename OutRange,
+      typename Transformer,
+      meta::requires_<range_concept, InRange> = 0,
+      meta::requires_<range_concept, OutRange> = 0>
+
+  void map(const Execution & ex, InRange && rin, OutRange && rout,
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(std::make_tuple(rin.begin()), rout.begin(),
+        rin.size(), transform_op);
+  }
+
+  /**
+\brief Invoke \ref md_map on arrays.
+\tparam Execution Execution policy type.
+\tparam T Element type for input array.
+\tparam U Element type for output array.
+\tparam N Size of input and output array.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param array_in Input array.
+\param array_out Output array.
+\param transform_op Transformation operation.
+*/
+  template<typename Execution, typename T, typename U,
+      std::size_t N,
+      typename Transformer>
+  void map(const Execution & ex, T (& array_in)[N], U (& array_out)[N],
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(std::make_tuple(std::begin(array_in)), std::begin(array_out),
+        N, transform_op);
+  }
+
+/**
+\brief Invoke \ref md_map on a data sequence.
+\tparam Execution Execution policy type.
+\tparam InTs Element types for the input arrays.
+\tparam OutTs Element type for the output arrays.
+\tparam Transformer Callable type for the transformation operation.
+\param ex Execution policy object.
+\param a_ins Input arrays packaged in a zip_view_arrays.
+\param a_out Output array.
+\param transform_op Transformation operation.
+*/
+  template<typename Execution, typename ... InTs, typename OutT,
+      std::size_t N,
+      typename Transformer>
+  void map(const Execution & ex, zip_view_arrays<N, InTs...> a_ins,
+      OutT (& a_out)[N],
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(a_ins.begin(), a_out, N, transform_op);
+  }
 
 /**
 \brief Invoke \ref md_map on a data sequence.
@@ -64,23 +113,25 @@ void map(const Execution & ex, InRange && rin, OutRange && rout,
 \tparam OutRange Range type for the output range.
 \tparam Transformer Callable type for the transformation operation.
 \param ex Execution policy object.
-\param rins Input ranges packaged in a std::tuple.
-\param rout Output range.
+\param range_ins Input ranges packaged in a std::tuple.
+\param range_out Output range.
 \param transform_op Transformation operation.
-\pre for all r in rins: r.size() == rout.size()
+\pre for all r in range_ins: r.size() == range_out.size()
 */
-template<typename Execution, typename ... InRanges, typename OutRange,
-        typename Transformer,
-        meta::requires<range_concept, InRanges...> = 0,
-        meta::requires<range_concept,OutRange> = 0>
-void map(const Execution & ex, zip_view<InRanges...> rins, OutRange && rout,
-         Transformer transform_op)
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(rins.begin(), rout.begin(),
-         rout.size(), transform_op);
-}
+  template<typename Execution, typename ... InRanges, typename OutRange,
+      typename Transformer,
+      meta::requires_<range_concept, InRanges...> = 0,
+      meta:: requires_<range_concept, OutRange> = 0>
+
+  void map(const Execution & ex, zip_view<InRanges...> range_ins,
+      OutRange && range_out,
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(range_ins.begin(), range_out.begin(),
+        range_out.size(), transform_op);
+  }
 
 /**
 \brief Invoke \ref md_map on a data sequence.
@@ -93,19 +144,19 @@ void map(const Execution & ex, zip_view<InRanges...> rins, OutRange && rout,
 \param first_out Iterator to first element of the output sequence.
 \param transform_op Transformation operation.
 */
-template <typename Execution, typename InputIt, typename OutputIt, 
-          typename Transformer,
-          requires_iterator<InputIt> = 0,
-          requires_iterator<OutputIt> = 0>
-void map(const Execution & ex,
-         InputIt first, InputIt last, OutputIt first_out, 
-         Transformer transform_op) 
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(make_tuple(first), first_out,
-      std::distance(first, last), transform_op);
-}
+  template<typename Execution, typename InputIt, typename OutputIt,
+      typename Transformer,
+      requires_iterator<InputIt> = 0,
+      requires_iterator<OutputIt> = 0>
+  void map(const Execution & ex,
+      InputIt first, InputIt last, OutputIt first_out,
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(std::make_tuple(first), first_out,
+        std::distance(first, last), transform_op);
+  }
 
 /**
 \brief Invoke \ref md_map on a data sequence.
@@ -119,20 +170,20 @@ void map(const Execution & ex,
 \param first_out Iterator to first element of the output sequence.
 \param transform_op Transformation operation.
 */
-template<typename Execution, typename ...InputIterators, typename InputIt,
-        typename OutputIt, typename Transformer,
-        requires_iterators<InputIterators...> = 0,
-        requires_iterator<InputIt> = 0,
-        requires_iterator<OutputIt> = 0>
-void map(const Execution & ex, std::tuple<InputIterators...> firsts,
-         InputIt last, OutputIt first_out,
-         Transformer transform_op)
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(firsts, first_out,
-      std::distance(std::get<0>(firsts),last), transform_op);
-}
+  template<typename Execution, typename ...InputIterators, typename InputIt,
+      typename OutputIt, typename Transformer,
+      requires_iterators<InputIterators...> = 0,
+      requires_iterator<InputIt> = 0,
+      requires_iterator<OutputIt> = 0>
+  void map(const Execution & ex, std::tuple<InputIterators...> firsts,
+      InputIt last, OutputIt first_out,
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(firsts, first_out,
+        std::distance(std::get<0>(firsts), last), transform_op);
+  }
 
 /**
 \brief Invoke \ref md_map on a data sequence.
@@ -145,19 +196,18 @@ void map(const Execution & ex, std::tuple<InputIterators...> firsts,
 \param first_out Iterator to first element of the output sequence.
 \param transform_op Transformation operation.
 */
-template <typename Execution, typename InputIt, typename OutputIt, 
-          typename Transformer,
-          requires_iterator<InputIt> = 0,
-          requires_iterator<OutputIt> = 0>
-void map(const Execution & ex,
-         InputIt first, std::size_t size, OutputIt first_out, 
-         Transformer transform_op) 
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(make_tuple(first), first_out, size, transform_op);
-}
-
+  template<typename Execution, typename InputIt, typename OutputIt,
+      typename Transformer,
+      requires_iterator<InputIt> = 0,
+      requires_iterator<OutputIt> = 0>
+  void map(const Execution & ex,
+      InputIt first, std::size_t size, OutputIt first_out,
+      Transformer transform_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(std::make_tuple(first), first_out, size, transform_op);
+  }
 
 
 /**
@@ -171,18 +221,18 @@ void map(const Execution & ex,
 \param first_out Iterator to first element of the output sequence.
 \param transform_op Transformation operation.
 */
-template<typename Execution, typename ...InputIterators,
-        typename OutputIt, typename Transformer,
-        requires_iterators<InputIterators...> = 0,
-        requires_iterator<OutputIt> = 0>
-void map(const Execution & ex, std::tuple<InputIterators...> firsts,
-         std::size_t size, OutputIt first_out,
-         Transformer transformer_op)
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(firsts, first_out, size, transformer_op);
-}
+  template<typename Execution, typename ...InputIterators,
+      typename OutputIt, typename Transformer,
+      requires_iterators<InputIterators...> = 0,
+      requires_iterator<OutputIt> = 0>
+  void map(const Execution & ex, std::tuple<InputIterators...> firsts,
+      std::size_t size, OutputIt first_out,
+      Transformer transformer_op)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(firsts, first_out, size, transformer_op);
+  }
 
 /**
 \brief Invoke \ref md_map on a data sequence.
@@ -198,22 +248,22 @@ void map(const Execution & ex, std::tuple<InputIterators...> firsts,
 \param more_firsts Additional iterators with first elements of additional sequences.
 \deprecated For multiple inputs, use tuple or zip versions.
 */
-template <typename Execution, typename InputIt, typename OutputIt, typename Transformer,
-          typename ... OtherInputIts,
-          requires_iterator<InputIt> = 0,
-          requires_iterator<OutputIt> = 0>
-[[deprecated("This version of the interface is deprecated.\n"
-             "For multiple inputs, use a tuple or zip versions.")]]
-void map(const Execution & ex,
-         InputIt first, InputIt last, OutputIt first_out, 
-         Transformer transform_op, 
-         OtherInputIts ... other_firsts) 
-{
-  static_assert(supports_map<Execution>(),
-      "map not supported on execution type");
-  ex.map(make_tuple(first,other_firsts...), first_out,
-      std::distance(first,last), transform_op);
-}
+  template<typename Execution, typename InputIt, typename OutputIt, typename Transformer,
+      typename ... OtherInputIts,
+      requires_iterator<InputIt> = 0,
+      requires_iterator<OutputIt> = 0>
+  [[deprecated("This version of the interface is deprecated.\n"
+  "For multiple inputs, use a tuple or zip versions.")]]
+  void map(const Execution & ex,
+      InputIt first, InputIt last, OutputIt first_out,
+      Transformer transform_op,
+      OtherInputIts ... other_firsts)
+  {
+    static_assert(supports_map<Execution>(),
+        "map not supported on execution type");
+    ex.map(std::make_tuple(first, other_firsts...), first_out,
+        std::distance(first, last), transform_op);
+  }
 
 /**
 @}
