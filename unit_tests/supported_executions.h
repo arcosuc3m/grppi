@@ -75,6 +75,10 @@ using executions_noff = ::testing::Types<
 
 >;
 
+using executions_minimal = ::testing::Types<
+    grppi::sequential_execution,
+    grppi::parallel_execution_native
+    >;
 
 
 #endif
