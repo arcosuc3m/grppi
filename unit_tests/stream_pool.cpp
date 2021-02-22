@@ -37,7 +37,7 @@ public:
 
   // Invocation counter
   std::atomic<int> invocations_sel{0};
-  std::atomic<int> invocations_evol{0};
+  std::atomic<int> invocations_evolution{0};
   std::atomic<int> invocations_eval{0};
   std::atomic<int> invocations_end{0};
 
@@ -50,7 +50,7 @@ public:
 
   void check_problem() {
     EXPECT_LE(5, invocations_sel);
-    EXPECT_LE(5, invocations_evol);
+    EXPECT_LE(5, invocations_evolution);
     EXPECT_LE(5, invocations_eval);
     EXPECT_LE(5, invocations_end);
     EXPECT_EQ(9, out);
@@ -62,7 +62,7 @@ public:
 
   void check_empty() {
     EXPECT_EQ(0, invocations_sel);
-    EXPECT_EQ(0, invocations_evol);
+    EXPECT_EQ(0, invocations_evolution);
     EXPECT_EQ(0, invocations_eval);
     EXPECT_EQ(0, invocations_end);
     EXPECT_EQ(0, out);
@@ -71,14 +71,14 @@ public:
   template <typename E>
   void run_stream_pool(const E & e){
     grppi::stream_pool(e, population,
-      [this] ( auto & population ) {
+      [this] ( auto & current_population ) {
         invocations_sel++;
-        auto individual = population[0];
-        population.erase(population.begin());
+        auto individual = current_population[0];
+        current_population.erase(current_population.begin());
         return individual; 
       },
       [this](auto individual){
-        invocations_evol++;
+        invocations_evolution++;
         return individual;
       },
       [this](auto evolved, auto ){
@@ -96,30 +96,30 @@ public:
 
 };
 
-TYPED_TEST_CASE(stream_pool_test, executions_noff);
+TYPED_TEST_SUITE(stream_pool_test, executions_noff,);
 
-TYPED_TEST(stream_pool_test, static_empty)
+TYPED_TEST(stream_pool_test, static_empty) // NOLINT
 {
   this->setup_empty();
   this->run_stream_pool(this->execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stream_pool_test, dyn_empty)
+TYPED_TEST(stream_pool_test, dyn_empty) //NOLINT
 {
   this->setup_empty();
   this->run_stream_pool(this->dyn_execution_);
   this->check_empty();
 }
 
-TYPED_TEST(stream_pool_test, static_problem)
+TYPED_TEST(stream_pool_test, static_problem) //NOLINT
 {
   this->setup_problem();
   this->run_stream_pool(this->execution_);
   this->check_problem();
 }
 
-TYPED_TEST(stream_pool_test, dyn_problem)
+TYPED_TEST(stream_pool_test, dyn_problem) //NOLINT
 {
   this->setup_problem();
   this->run_stream_pool(this->dyn_execution_);
