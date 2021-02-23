@@ -15,3 +15,4 @@ The API documentation can be found here:
 
 * Version [0.2](0.2/index.html)
 * Version [0.3.1](0.3.1/index.html)
+* Version [0.4](0.4/index.html)

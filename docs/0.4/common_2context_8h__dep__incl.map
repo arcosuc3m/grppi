@@ -1,0 +1,12 @@
+<map id="context.h" name="context.h">
+<area shape="rect" id="node1" title=" " alt="" coords="330,5,406,32"/>
+<area shape="rect" id="node2" href="$patterns_8h.html" title=" " alt="" coords="188,80,268,107"/>
+<area shape="rect" id="node10" href="$context_8h.html" title=" " alt="" coords="478,251,554,278"/>
+<area shape="rect" id="node3" href="$sequential__execution_8h.html" title=" " alt="" coords="316,162,471,189"/>
+<area shape="rect" id="node7" href="$stream__filter_8h.html" title=" " alt="" coords="5,333,109,360"/>
+<area shape="rect" id="node8" href="$stream__reduce_8h.html" title=" " alt="" coords="82,251,201,278"/>
+<area shape="rect" id="node9" href="$parallel__execution__tbb_8h.html" title=" " alt="" coords="165,155,291,196"/>
+<area shape="rect" id="node4" href="$dynamic__execution_8h.html" title=" " alt="" coords="207,333,353,360"/>
+<area shape="rect" id="node6" href="$parallel__execution__omp_8h.html" title=" " alt="" coords="327,244,454,285"/>
+<area shape="rect" id="node5" href="$grppi_8h.html" title=" " alt="" coords="184,408,245,435"/>
+</map>

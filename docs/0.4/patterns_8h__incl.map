@@ -1,0 +1,12 @@
+<map id="patterns.h" name="patterns.h">
+<area shape="rect" id="node1" title=" " alt="" coords="413,5,493,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,80,56,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="412,155,495,181"/>
+<area shape="rect" id="node4" href="$callable__traits_8h.html" title=" " alt="" coords="131,80,245,107"/>
+<area shape="rect" id="node5" href="$farm__pattern_8h.html" title=" " alt="" coords="269,80,376,107"/>
+<area shape="rect" id="node6" href="$filter__pattern_8h.html" title=" " alt="" coords="401,80,506,107"/>
+<area shape="rect" id="node7" href="$pipeline__pattern_8h.html" title=" " alt="" coords="530,80,654,107"/>
+<area shape="rect" id="node8" href="$reduce__pattern_8h.html" title=" " alt="" coords="678,80,797,107"/>
+<area shape="rect" id="node9" href="$iteration__pattern_8h.html" title=" " alt="" coords="821,80,947,107"/>
+<area shape="rect" id="node10" href="$common_2context_8h.html" title=" " alt="" coords="971,80,1047,107"/>
+</map>

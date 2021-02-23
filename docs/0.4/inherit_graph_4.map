@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,111,87,138"/>
+<area shape="rect" id="node2" href="$classgrppi_1_1detail__ff_1_1node__impl_3_01void_00_01_output_00_01_generator_01_4.html" title="Fastflow node for a pipeline generation stage." alt="" coords="135,5,348,47"/>
+<area shape="rect" id="node3" href="$classgrppi_1_1detail__ff_1_1reduce__collector.html" title="Reduce collector." alt="" coords="166,71,317,112"/>
+<area shape="rect" id="node4" href="$classgrppi_1_1detail__ff_1_1reduce__emitter.html" title="Reduce emitter." alt="" coords="153,136,329,177"/>
+<area shape="rect" id="node5" href="$classgrppi_1_1detail__ff_1_1reduce__worker.html" title="Reduce worker." alt="" coords="150,201,333,243"/>
+</map>

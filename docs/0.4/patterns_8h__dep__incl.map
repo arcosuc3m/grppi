@@ -1,0 +1,10 @@
+<map id="patterns.h" name="patterns.h">
+<area shape="rect" id="node1" title=" " alt="" coords="259,5,339,32"/>
+<area shape="rect" id="node2" href="$sequential__execution_8h.html" title=" " alt="" coords="5,87,160,114"/>
+<area shape="rect" id="node6" href="$stream__filter_8h.html" title=" " alt="" coords="272,177,376,203"/>
+<area shape="rect" id="node7" href="$stream__reduce_8h.html" title=" " alt="" coords="354,259,473,285"/>
+<area shape="rect" id="node8" href="$parallel__execution__tbb_8h.html" title=" " alt="" coords="185,80,311,121"/>
+<area shape="rect" id="node3" href="$dynamic__execution_8h.html" title=" " alt="" coords="122,259,267,285"/>
+<area shape="rect" id="node5" href="$parallel__execution__omp_8h.html" title=" " alt="" coords="19,169,146,211"/>
+<area shape="rect" id="node4" href="$grppi_8h.html" title=" " alt="" coords="285,333,347,360"/>
+</map>

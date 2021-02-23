@@ -1,0 +1,4 @@
+<map id="Pipeline pattern" name="Pipeline pattern">
+<area shape="rect" id="node1" title="Interface for applyinng the Pipeline pattern." alt="" coords="185,5,297,31"/>
+<area shape="rect" id="node2" href="$group__stream__patterns.html" title="Patterns for data stream processing." alt="" coords="5,5,137,31"/>
+</map>

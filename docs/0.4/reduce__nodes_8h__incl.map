@@ -1,0 +1,11 @@
+<map id="reduce_nodes.h" name="reduce_nodes.h">
+<area shape="rect" id="node1" title=" " alt="" coords="163,5,278,32"/>
+<area shape="rect" id="node2" href="$fastflow__allocator_8h.html" title=" " alt="" coords="5,80,140,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="19,155,126,181"/>
+<area shape="rect" id="node4" href="$reduce_8h.html" title=" " alt="" coords="215,80,311,107"/>
+<area shape="rect" id="node9" title=" " alt="" coords="336,80,423,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="150,155,203,181"/>
+<area shape="rect" id="node6" href="$iterator__traits_8h.html" title=" " alt="" coords="227,155,390,181"/>
+<area shape="rect" id="node7" href="$execution__traits_8h.html" title=" " alt="" coords="414,155,593,181"/>
+<area shape="rect" id="node8" title=" " alt="" coords="462,229,545,256"/>
+</map>

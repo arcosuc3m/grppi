@@ -1,0 +1,4 @@
+<map id="Map pattern" name="Map pattern">
+<area shape="rect" id="node1" href="$group__data__patterns.html" title="Patterns for data parallel processing." alt="" coords="5,5,152,31"/>
+<area shape="rect" id="node2" title="Interface for applyinng the Map pattern." alt="" coords="200,5,291,31"/>
+</map>

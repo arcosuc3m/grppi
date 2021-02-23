@@ -1,0 +1,13 @@
+<map id="stream_reduce.h" name="stream_reduce.h">
+<area shape="rect" id="node1" title=" " alt="" coords="394,5,513,32"/>
+<area shape="rect" id="node2" href="$patterns_8h.html" title=" " alt="" coords="386,80,521,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,155,56,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="412,229,495,256"/>
+<area shape="rect" id="node5" href="$callable__traits_8h.html" title=" " alt="" coords="131,155,245,181"/>
+<area shape="rect" id="node6" href="$farm__pattern_8h.html" title=" " alt="" coords="269,155,376,181"/>
+<area shape="rect" id="node7" href="$filter__pattern_8h.html" title=" " alt="" coords="401,155,506,181"/>
+<area shape="rect" id="node8" href="$pipeline__pattern_8h.html" title=" " alt="" coords="530,155,654,181"/>
+<area shape="rect" id="node9" href="$reduce__pattern_8h.html" title=" " alt="" coords="678,155,797,181"/>
+<area shape="rect" id="node10" href="$iteration__pattern_8h.html" title=" " alt="" coords="821,155,947,181"/>
+<area shape="rect" id="node11" href="$common_2context_8h.html" title=" " alt="" coords="971,155,1047,181"/>
+</map>

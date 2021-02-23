@@ -1,0 +1,9 @@
+<map id="Streaming patterns" name="Streaming patterns">
+<area shape="rect" id="node1" href="$group__context.html" title="Interface for defining a new Context to run a given function or pattern." alt="" coords="231,5,299,31"/>
+<area shape="rect" id="node2" href="$group__farm__pattern.html" title="Interface for applyinng the Farm pattern." alt="" coords="217,55,313,80"/>
+<area shape="rect" id="node3" href="$group__filter__pattern.html" title="Interface for applyinng the md_stream&#45;filter." alt="" coords="196,104,333,129"/>
+<area shape="rect" id="node4" href="$group__pipeline__pattern.html" title="Interface for applyinng the Pipeline pattern." alt="" coords="209,153,321,179"/>
+<area shape="rect" id="node5" href="$group__stream__iteration__pattern.html" title="Interface for applyinng the md_stream&#45;iteration." alt="" coords="185,203,344,228"/>
+<area shape="rect" id="node6" title="Patterns for data stream processing." alt="" coords="5,129,137,155"/>
+<area shape="rect" id="node7" href="$group__stream__reduce__pattern.html" title="Interface for applying the md_stream&#45;reduce." alt="" coords="189,252,340,277"/>
+</map>
