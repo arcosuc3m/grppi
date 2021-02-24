@@ -57,9 +57,7 @@ message(STATUS "C++ Compiler is " ${CMAKE_CXX_COMPILER_ID}
 include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/include")
 
 # TBB Library
-if (GRPPI_TBB_ENABLE)
 find_package(TBB)
-endif()
 
 if (TBB_FOUND)
   if (${CMAKE_CXX_STANDARD} STREQUAL 20)

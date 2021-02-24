@@ -24,6 +24,9 @@
 #include "../common/patterns.h"
 #include "../common/farm_pattern.h"
 #include "../common/execution_traits.h"
+#include "../common/configuration.h"
+#include "../seq/sequential_execution.h"
+#include "../native/parallel_execution_native.h"
 
 #include <type_traits>
 #include <tuple>
@@ -242,6 +245,7 @@ public:
   \tparam Transformers Callable types for the transformers in the pipeline.
   \param generate_op Generator operation.
   \param transform_ops Transformer operations.
+  \note Uses parallel_execution_native until we fix OneTBB parallel integration.
   */
   template <typename Generator, typename ... Transformers>
   void pipeline(Generator && generate_op, 
@@ -256,11 +260,17 @@ public:
   \param input_queue Input stream communicator.
   \param transform_ops Transformer operations.
   \param output_queue Input stream communicator.
+  \note Uses parallel_execution_native until we fix OneTBB parallel integration.
   */
   template <typename InputType, typename Transformer, typename OutputType>
   void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
                 mpmc_queue<OutputType> & output_queue) const
   {
+    parallel_execution_native native;
+    native.template pipeline(input_queue,
+        std::forward<Transformer>(transform_op), output_queue);
+
+    /*
     ::std::atomic<long> order {0};
     pipeline(
       [&](){
@@ -274,9 +284,8 @@ public:
         order++;
       }
     );
-    output_queue.push(make_pair(typename OutputType::first_type{}, order.load())); 
-    //sequential_execution seq{};
-    //seq.pipeline(input_queue, std::forward<Transformer>(transform_op), output_queue);
+    output_queue.push(make_pair(typename OutputType::first_type{}, order.load()));
+    */
   }
 
 
@@ -707,6 +716,10 @@ void parallel_execution_tbb::pipeline(
     Generator && generate_op, 
     Transformers && ... transform_ops) const
 {
+  parallel_execution_native native;
+  native.pipeline(std::forward<Generator>(generate_op),
+      std::forward<Transformers>(transform_ops)...);
+  /*
   using namespace std;
 
   using result_type = decay_t<typename result_of<Generator()>::type>;
@@ -736,6 +749,7 @@ void parallel_execution_tbb::pipeline(
     generator
     & 
     rest);
+  */
 }
 
 template <typename Population, typename Selection, typename Evolution,
