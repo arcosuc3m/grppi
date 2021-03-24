@@ -92,6 +92,7 @@ install:
   - mkdir -p build/onetbb/$BUILD_TYPE
   - set +e; cd build/onetbb/$BUILD_TYPE; set -e; pwd
   - ls -l
+  - ls ${DEPS_DIR}
   - ls ${DEPS_DIR}/onetbb
   - cmake ${DEPS_DIR}/onetbb -DCMAKE_BUILD_TYPE=Release  -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - mkdir -p ${TRAVIS_BUILD_DIR}/build
