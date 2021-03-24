@@ -26,6 +26,7 @@
 using namespace std;
 using namespace grppi;
 
+
 template <typename T>
 class stream_filter_test : public ::testing::Test {
 public:

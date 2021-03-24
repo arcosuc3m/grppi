@@ -57,7 +57,11 @@ public:
   \brief Return the transformer function.
   \return The transformer function. 
   */
-  Transformer & transformer(){
+  Transformer & transformer() & {
+    return transformer_;
+  }
+
+  Transformer && transformer() && {
     return transformer_;
   }
 

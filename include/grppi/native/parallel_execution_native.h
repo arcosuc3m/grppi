@@ -1327,11 +1327,21 @@ void parallel_execution_native::do_pipeline(
     auto manager = thread_manager();
     auto item{input_queue.pop()};
     while (item.first) {
-      if (filter_obj(*item.first)) {
-        filter_queue.push(item);
+      if (filter_obj.keep()) {
+        if (filter_obj(*item.first)) {
+          filter_queue.push(item);
+        }
+        else {
+          filter_queue.push(make_pair(input_value_type{}, item.second));
+        }
       }
       else {
-        filter_queue.push(make_pair(input_value_type{}, item.second));
+        if (!filter_obj(*item.first)) {
+          filter_queue.push(item);
+        }
+        else {
+          filter_queue.push(make_pair(input_value_type{}, item.second));
+        }
       }
       item = input_queue.pop();
     }

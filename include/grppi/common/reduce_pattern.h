@@ -29,6 +29,9 @@ template <typename Combiner, typename Identity>
 class reduce_t {
 public:
 
+  using input_type = Identity;
+  using result_type = std::invoke_result_t<Combiner,Identity,Identity>;
+
   /**
   \brief Construct a reduction pattern object.
   \param wsize Window size.
@@ -53,6 +56,15 @@ public:
     }
     else {
       items.push_back(std::forward<Identity>(item));
+    }
+  }
+
+  void add_item(const Identity & item) {
+    if (remaining>0) {
+      remaining--;
+    }
+    else {
+      items.push_back(item);
     }
   }
 

@@ -830,7 +830,7 @@ $(function() {
 <div class="line"><a name="l00961"></a><span class="lineno">  961</span>&#160;<span class="keywordtype">void</span> parallel_execution_omp::do_pipeline(Queue &amp; input_queue, Consumer &amp;&amp; consume_op)<span class="keyword"> const</span></div>
 <div class="line"><a name="l00962"></a><span class="lineno">  962</span>&#160;<span class="keyword"></span>{</div>
 <div class="line"><a name="l00963"></a><span class="lineno">  963</span>&#160;  <span class="keyword">using namespace </span>std;</div>
-<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;  <span class="keyword">using</span> input_type = <span class="keyword">typename</span> Queue::value_type;</div>
+<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;  <span class="keyword">using</span> gen_value_type = <span class="keyword">typename</span> Queue::value_type;</div>
 <div class="line"><a name="l00965"></a><span class="lineno">  965</span>&#160; </div>
 <div class="line"><a name="l00966"></a><span class="lineno">  966</span>&#160;  <span class="keywordflow">if</span> (!<a class="code" href="classgrppi_1_1parallel__execution__omp.html#a56aa718f05d304ab46d1262f374fa934">is_ordered</a>()) {</div>
 <div class="line"><a name="l00967"></a><span class="lineno">  967</span>&#160;    <span class="keywordflow">for</span> (;;) {</div>
@@ -841,7 +841,7 @@ $(function() {
 <div class="line"><a name="l00972"></a><span class="lineno">  972</span>&#160;    <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00973"></a><span class="lineno">  973</span>&#160;  }</div>
 <div class="line"><a name="l00974"></a><span class="lineno">  974</span>&#160; </div>
-<div class="line"><a name="l00975"></a><span class="lineno">  975</span>&#160;  vector&lt;input_type&gt; elements;</div>
+<div class="line"><a name="l00975"></a><span class="lineno">  975</span>&#160;  vector&lt;gen_value_type&gt; elements;</div>
 <div class="line"><a name="l00976"></a><span class="lineno">  976</span>&#160;  <span class="keywordtype">long</span> current = 0;</div>
 <div class="line"><a name="l00977"></a><span class="lineno">  977</span>&#160;  <span class="keyword">auto</span> item = input_queue.pop( );</div>
 <div class="line"><a name="l00978"></a><span class="lineno">  978</span>&#160;  <span class="keywordflow">while</span> (item.first) {</div>
@@ -931,8 +931,8 @@ $(function() {
 <div class="line"><a name="l01062"></a><span class="lineno"> 1062</span>&#160;    OtherTransformers &amp;&amp; ... other_ops)<span class="keyword"> const</span></div>
 <div class="line"><a name="l01063"></a><span class="lineno"> 1063</span>&#160;<span class="keyword"></span>{</div>
 <div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;  <span class="keyword">using namespace </span>std;</div>
-<div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;  <span class="keyword">using</span> input_type = <span class="keyword">typename</span> Queue::value_type;</div>
-<div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;  <span class="keyword">using</span> input_value_type = <span class="keyword">typename</span> input_type::first_type::value_type;</div>
+<div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;  <span class="keyword">using</span> gen_value_type = <span class="keyword">typename</span> Queue::value_type;</div>
+<div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;  <span class="keyword">using</span> input_value_type = <span class="keyword">typename</span> gen_value_type::first_type::value_type;</div>
 <div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;  <span class="keyword">using</span> <a class="code" href="namespacegrppi.html#a64dd705d0f32b64d20dba8d5b9cebbbe">result_type</a> = <span class="keyword">typename</span> result_of&lt;Transformer(input_value_type)&gt;::type;</div>
 <div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;  <span class="keyword">using</span> <a class="code" href="namespacegrppi.html#a2c33363c4c49ab510560a0b880d52bfc">output_value_type</a> = experimental::optional&lt;result_type&gt;;</div>
 <div class="line"><a name="l01069"></a><span class="lineno"> 1069</span>&#160;  <span class="keyword">using</span> output_type = pair&lt;output_value_type,long&gt;;</div>
@@ -990,8 +990,8 @@ $(function() {
 <div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;<span class="keyword"></span>{</div>
 <div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;  <span class="keyword">using namespace </span>std;</div>
 <div class="line"><a name="l01123"></a><span class="lineno"> 1123</span>&#160;  <span class="keyword">using namespace </span>experimental;</div>
-<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;  <span class="keyword">using</span> input_type = <span class="keyword">typename</span> Queue::value_type;</div>
-<div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;  <span class="keyword">using</span> input_value_type = <span class="keyword">typename</span> input_type::first_type::value_type;</div>
+<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;  <span class="keyword">using</span> gen_value_type = <span class="keyword">typename</span> Queue::value_type;</div>
+<div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;  <span class="keyword">using</span> input_value_type = <span class="keyword">typename</span> gen_value_type::first_type::value_type;</div>
 <div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160; </div>
 <div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;  <span class="keyword">using</span> <a class="code" href="namespacegrppi.html#a64dd705d0f32b64d20dba8d5b9cebbbe">result_type</a> = <span class="keyword">typename</span> <a class="code" href="structgrppi_1_1stage__return__type.html#a6b47b45a7d7664ac97fee040c220eea2">stage_return_type&lt;input_value_type, FarmTransformer&gt;::type</a>;</div>
 <div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;  <span class="keyword">using</span> output_optional_type = optional&lt;result_type&gt;;</div>
@@ -1012,7 +1012,7 @@ $(function() {
 <div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;      <span class="keywordflow">if</span> (done_threads == ntask){</div>
 <div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;        output_queue.push(make_pair(output_optional_type{}, -1));</div>
 <div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;      }<span class="keywordflow">else</span>{</div>
-<div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;        input_queue.push(input_type{});</div>
+<div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;        input_queue.push(gen_value_type{});</div>
 <div class="line"><a name="l01147"></a><span class="lineno"> 1147</span>&#160;      }</div>
 <div class="line"><a name="l01148"></a><span class="lineno"> 1148</span>&#160;    }              </div>
 <div class="line"><a name="l01149"></a><span class="lineno"> 1149</span>&#160;  }</div>
@@ -1040,9 +1040,9 @@ $(function() {
 <div class="line"><a name="l01171"></a><span class="lineno"> 1171</span>&#160;    OtherTransformers &amp;&amp; ... other_transform_ops)<span class="keyword"> const</span></div>
 <div class="line"><a name="l01172"></a><span class="lineno"> 1172</span>&#160;<span class="keyword"></span>{</div>
 <div class="line"><a name="l01173"></a><span class="lineno"> 1173</span>&#160;  <span class="keyword">using namespace </span>std;</div>
-<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;  <span class="keyword">using</span> input_type = <span class="keyword">typename</span> Queue::value_type;</div>
-<div class="line"><a name="l01175"></a><span class="lineno"> 1175</span>&#160;  <span class="keyword">using</span> input_value_type = <span class="keyword">typename</span> input_type::first_type;</div>
-<div class="line"><a name="l01176"></a><span class="lineno"> 1176</span>&#160;  <span class="keyword">auto</span> filter_queue = make_queue&lt;input_type&gt;();</div>
+<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;  <span class="keyword">using</span> gen_value_type = <span class="keyword">typename</span> Queue::value_type;</div>
+<div class="line"><a name="l01175"></a><span class="lineno"> 1175</span>&#160;  <span class="keyword">using</span> input_value_type = <span class="keyword">typename</span> gen_value_type::first_type;</div>
+<div class="line"><a name="l01176"></a><span class="lineno"> 1176</span>&#160;  <span class="keyword">auto</span> filter_queue = make_queue&lt;gen_value_type&gt;();</div>
 <div class="line"><a name="l01177"></a><span class="lineno"> 1177</span>&#160; </div>
 <div class="line"><a name="l01178"></a><span class="lineno"> 1178</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classgrppi_1_1parallel__execution__omp.html#a56aa718f05d304ab46d1262f374fa934">is_ordered</a>()) {</div>
 <div class="line"><a name="l01179"></a><span class="lineno"> 1179</span>&#160;    <span class="keyword">auto</span> filter_task = [&amp;]() {</div>
@@ -1062,11 +1062,11 @@ $(function() {
 <div class="line"><a name="l01193"></a><span class="lineno"> 1193</span>&#160;    };</div>
 <div class="line"><a name="l01194"></a><span class="lineno"> 1194</span>&#160; </div>
 <div class="line"><a name="l01195"></a><span class="lineno"> 1195</span>&#160;    decltype(<span class="keyword">auto</span>) output_queue =</div>
-<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;      <a class="code" href="classgrppi_1_1parallel__execution__omp.html#a2c787b95a5917ddf26e381649ea21403">get_output_queue</a>&lt;input_type&gt;(other_transform_ops...);</div>
+<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;      <a class="code" href="classgrppi_1_1parallel__execution__omp.html#a2c787b95a5917ddf26e381649ea21403">get_output_queue</a>&lt;gen_value_type&gt;(other_transform_ops...);</div>
 <div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160; </div>
 <div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160; </div>
 <div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;    auto reorder_task = [&amp;]() {</div>
-<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;      vector&lt;input_type&gt; elements;</div>
+<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;      vector&lt;gen_value_type&gt; elements;</div>
 <div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;      <span class="keywordtype">int</span> current = 0;</div>
 <div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;      <span class="keywordtype">long</span> order = 0;</div>
 <div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;      <span class="keyword">auto</span> item = filter_queue.pop();</div>

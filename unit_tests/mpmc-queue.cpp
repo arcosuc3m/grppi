@@ -38,7 +38,7 @@ public:
 
 using types = ::testing::Types<atomic_mpmc_queue<int>, locked_mpmc_queue<int>>;
 
-TYPED_TEST_SUITE(mpmc_test, types);
+TYPED_TEST_SUITE(mpmc_test, types,);
                 
 TYPED_TEST(mpmc_test, constructor) { //NOLINT
   auto q = this->make_queue(10);

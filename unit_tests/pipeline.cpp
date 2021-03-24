@@ -90,7 +90,7 @@ public:
         if (++i<=max) return i;
         else return {}; 
       },
-      [this](int x) {
+      [this](int x) -> int {
         invocations_intermediate++;
         return x*2;
       },

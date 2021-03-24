@@ -38,11 +38,11 @@ that satisfy the predicate.
 \param ex Execution policy object.
 \param predicate_op Predicate callable object.
 */
-template <typename Predicate>
-auto keep(Predicate && predicate_op)
-{
-  return filter_t<Predicate>{std::forward<Predicate>(predicate_op)};
-}
+  template<typename Predicate>
+  auto keep(Predicate && predicate_op)
+  {
+    return filter_t<Predicate>{std::forward<Predicate>(predicate_op), true};
+  }
 
 /**
 \brief Invoke \ref md_stream-filter on a data stream
@@ -54,11 +54,11 @@ that satisfy the predicate.
 \param ex Execution policy object.
 \param predicate_op Predicate callable object.
 */
-template <typename Predicate>
-auto discard(Predicate && predicate_op)
-{
-  return keep([&](auto val) { return !predicate_op(val); });
-}
+  template<typename Predicate>
+  auto discard(Predicate && predicate_op)
+  {
+    return filter_t<Predicate>{std::forward<Predicate>(predicate_op), false};
+  }
 
 /**
 @}

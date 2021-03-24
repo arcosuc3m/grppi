@@ -17,6 +17,7 @@
 #define GRPPI_COMMON_FILTER_PATTERN_H
 
 #include <type_traits>
+#include "meta.h"
 
 namespace grppi {
 
@@ -29,12 +30,16 @@ template <typename Predicate>
 class filter_t {
 public:
 
+  using predicate_type = Predicate;
+  using input_type = meta::input_type<Predicate>;
+
   /**
   \brief Constructs a filter with a predicate.
   \param p Predicate for the filter.
   */
-  filter_t(Predicate && p) noexcept :
-    predicate_{p}
+  filter_t(Predicate && p, bool keep) noexcept :
+    predicate_{p},
+    keep_{keep}
   {}
 
   /**
@@ -45,8 +50,11 @@ public:
     return predicate_(std::forward<I>(item));
   }
 
+  bool keep() const { return keep_; }
+
 private:
   Predicate predicate_;
+  bool keep_;
 };
 
 namespace internal {

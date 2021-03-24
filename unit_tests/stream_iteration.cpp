@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "grppi/pipeline.h"
+#include "grppi/farm.h"
 #include "grppi/stream_iteration.h"
 #include "grppi/dyn/dynamic_execution.h"
 

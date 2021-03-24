@@ -17,6 +17,7 @@
 #define GRPPI_COMMON_ITERATION_PATTERN_H
 
 #include <type_traits>
+#include "meta.h"
 
 namespace grppi {
 
@@ -28,6 +29,9 @@ Represents a iteration that can be used as a stage on a pipeline.
 template <typename Transformer, typename Predicate>
 class iteration_t {
 public:
+
+  using input_type = meta::input_type<Transformer>;
+  using output_type = meta::output_type<Transformer>;
 
   /**
   \brief Constructs a iteration with a predicate.

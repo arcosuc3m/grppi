@@ -25,13 +25,14 @@
 #include "../common/farm_pattern.h"
 #include "../common/execution_traits.h"
 #include "../common/configuration.h"
+#include "../common/meta.h"
 #include "../seq/sequential_execution.h"
 #include "../native/parallel_execution_native.h"
 
 #include <type_traits>
 #include <tuple>
 
-#include <tbb/tbb.h>
+#include <oneapi/tbb.h>
 
 namespace grppi {
 
@@ -79,7 +80,8 @@ namespace grppi {
     /**
     \brief Get number of grppi threads.
     */
-    [[nodiscard]] int concurrency_degree() const noexcept { return concurrency_degree_; }
+    [[nodiscard]] int
+    concurrency_degree() const noexcept { return concurrency_degree_; }
 
     /**
     \brief Enable ordering.
@@ -112,7 +114,7 @@ namespace grppi {
     set_queue_attributes(). The value is returned via move semantics.
     */
     template<typename T>
-    mpmc_queue <T> make_queue() const
+    mpmc_queue<T> make_queue() const
     {
       return {queue_size_, queue_mode_};
     }
@@ -266,7 +268,6 @@ namespace grppi {
     \param output_queue Input stream communicator.
     \note Uses parallel_execution_native until we fix OneTBB parallel integration.
     */
-    /*
     template <typename InputType, typename Transformer, typename OutputType>
     void pipeline(mpmc_queue<InputType> & input_queue, Transformer && transform_op,
                   mpmc_queue<OutputType> & output_queue) const
@@ -292,7 +293,6 @@ namespace grppi {
       output_queue.push(make_pair(typename OutputType::first_type{}, order.load()));
 
     }
-    */
 
     /**
     \brief Invoke \ref md_stream_pool.
@@ -334,13 +334,18 @@ namespace grppi {
 
     /*
     template<typename Input, typename Transformer,
-        requires_no_pattern <Transformer> = 0>
-    auto make_filter(Transformer && transform_op) const;
+        requires_no_pattern <Transformer> >
+    auto make_pipeline_nodes(oneapi::tbb::flow::graph & g,
+        Transformer && transform_op) const;
 
     template<typename Input, typename Transformer, typename ... OtherTransformers,
-        requires_no_pattern <Transformer> = 0>
-    auto make_filter(Transformer && transform_op,
+        requires_no_pattern <Transformer> >
+    auto make_pipeline_nodes(
+        oneapi::tbb::flow::graph & g,
+        Transformer && transform_op,
         OtherTransformers && ... other_transform_ops) const;
+        */
+    /*
 
     template<typename Input, typename FarmTransformer,
         template<typename> class Farm,
@@ -354,15 +359,19 @@ namespace grppi {
         template<typename> class Farm,
         requires_farm <Farm<FarmTransformer>> = 0>
     auto make_filter(Farm<FarmTransformer> && farm_obj) const;
-
+*/
+    /*
     template<typename Input, typename Execution, typename Transformer,
         template<typename, typename> class Context,
         typename ... OtherTransformers,
         requires_context <Context<Execution, Transformer>> = 0>
-    auto make_filter(Context<Execution, Transformer> && context_op,
+    auto make_pipeline_nodes(
+        oneapi::tbb::flow::graph & g,
+        Context<Execution, Transformer> && context_op,
         OtherTransformers && ... other_ops) const
     {
-      return this->template make_filter<Input>(
+      return this->template make_pipeline_nodes<Input>(
+          g,
           std::forward<Transformer>(context_op.transformer()),
           std::forward<OtherTransformers>(other_ops)...);
     }
@@ -371,14 +380,19 @@ namespace grppi {
         template<typename, typename> class Context,
         typename ... OtherTransformers,
         requires_context <Context<Execution, Transformer>> = 0>
-    auto make_filter(Context<Execution, Transformer> & context_op,
+    auto make_pipeline_nodes(
+        oneapi::tbb::flow::graph & g,
+        Context<Execution, Transformer> & context_op,
         OtherTransformers && ... other_ops) const
     {
-      return this->template make_filter<Input>(std::move(context_op),
+      return this->template make_pipeline_nodes<Input>(
+          g,
+          std::move(context_op),
           std::forward<OtherTransformers>(other_ops)...);
     }
+     */
 
-
+/*
     template<typename Input, typename FarmTransformer,
         template<typename> class Farm,
         typename ... OtherTransformers,
@@ -723,46 +737,217 @@ namespace grppi {
         std::forward<Combiner>(combine_op), num_threads);
   }
 
+  namespace detail {
+
+
+    template<typename T>
+    using get_t = decltype(std::get<0>(std::declval<T>()));
+
+    template<typename T>
+    constexpr bool has_get_v = std::experimental::is_detected_v<get_t, T>;
+
+    template<typename T>
+    decltype(auto) get_first(T && t)
+    {
+      if constexpr (has_get_v<T>) {
+        return get_first(std::get<0>(std::forward<T>(t)));
+      }
+      else {
+        return t;
+      }
+    }
+
+    template<typename T>
+    decltype(auto) get_last(T && t)
+    {
+      if constexpr (has_get_v<T>) {
+        constexpr std::size_t idx =
+            std::tuple_size_v<std::remove_reference_t<T>>;
+        return get_last(std::get<idx - 1>(std::forward<T>(t)));
+      }
+      else {
+        return t;
+      }
+    }
+
+    template<std::size_t I, std::size_t N, typename T>
+    void link_pipe_stages(T && t)
+    {
+      if constexpr (I < N) {
+        oneapi::tbb::flow::make_edge(
+            *get_last(std::get<I - 1>(std::forward<T>(t))),
+            *get_first(std::get<I>(std::forward<T>(t))));
+        link_pipe_stages<I + 1, N>(std::forward<T>(t));
+      }
+    }
+
+    template<typename F,
+        requires_no_pattern<F> = 0>
+    auto make_node(oneapi::tbb::flow::graph & g, int cardinality, F && f)
+    {
+      using namespace oneapi::tbb::flow;
+      using input_type = meta::input_type<F>;
+      using output_type = meta::output_type<F>;
+      if constexpr (std::is_void_v<output_type>) {
+        auto node = std::make_unique<function_node<input_type>>(
+            g, cardinality, [&](auto x) { return f(x); }
+        );
+        return node;
+      }
+      else {
+        auto node = std::make_unique<function_node<input_type,
+            output_type>>(
+            g, cardinality, std::forward<F>(f));
+        return node;
+      }
+    }
+
+    template<typename F, std::size_t ... N>
+    auto make_pipeline_node(oneapi::tbb::flow::graph & g,
+        int cardinality, F && f,
+        std::index_sequence<N...>)
+    {
+      std::tuple pipe{make_node(g, cardinality, std::get<N>(f)) ...};
+      return pipe;
+    }
+
+    template<typename F,
+        requires_pipeline<F> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        int cardinality, F && f)
+    {
+      constexpr std::size_t pipe_size = std::remove_reference_t<F>::size();
+      auto pipe = make_pipeline_node(g, cardinality,
+          std::forward<F>(f).transformers(),
+          std::make_index_sequence<pipe_size>{});
+      link_pipe_stages<1, pipe_size>(pipe);
+      return pipe;
+    }
+
+    template<typename F,
+        requires_farm<F> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        [[maybe_unused]] int cardinality,
+        F && f)
+    {
+      return make_node(g, f.cardinality(), std::forward<F>(f).transformer());
+    }
+
+    template<typename P,
+        requires_filter<P> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        int cardinality,
+        P && pred)
+    {
+      using namespace oneapi::tbb::flow;
+      using input_type = typename P::input_type;
+      using node_type = multifunction_node<input_type, std::tuple<input_type>>;
+      using ports_type = typename node_type::output_ports_type;
+      auto node = std::make_unique<node_type>(g, cardinality,
+          [&](const input_type & item, ports_type & ports) {
+            if (pred.keep()) {
+              if (std::forward<P>(pred)(item)) {
+                std::get<0>(ports).try_put(item);
+              }
+            }
+            else {
+              if (!std::forward<P>(pred)(item)) {
+                std::get<0>(ports).try_put(item);
+              }
+            }
+          }
+      );
+      return node;
+    }
+
+    template<typename R,
+        requires_reduce<R> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        int cardinality,
+        R && red)
+    {
+      using namespace oneapi::tbb::flow;
+      using input_type = typename R::input_type;
+      using node_type = multifunction_node<input_type, std::tuple<input_type>>;
+      using ports_type = typename node_type::output_ports_type;
+
+      auto node = std::make_unique<node_type>(g, cardinality,
+          [&](const input_type & item, ports_type & ports) {
+        red.add_item(item);
+        if (red.reduction_needed()) {
+          constexpr sequential_execution seq;
+          std::get<0>(ports).try_put(red.reduce_window(seq));
+        }
+      });
+      return node;
+    }
+
+    template<typename I,
+        requires_iteration<I> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        int cardinality,
+        I && iter)
+    {
+      using namespace oneapi::tbb::flow;
+      using input_type = typename I::input_type;
+      using output_type = typename I::output_type;
+      using node_type = function_node<input_type, output_type>;
+
+      auto node = std::make_unique<node_type>(g, cardinality,
+          [&](const input_type & item) {
+            auto x = item;
+            do {
+              x = iter.transform(x);
+            } while (!iter.predicate(x));
+            return x;
+          });
+      return node;
+
+    }
+
+    template<typename I, typename T, std::size_t ... N>
+    auto pipeline_impl(oneapi::tbb::flow::graph & g,
+        T && t,
+        std::index_sequence<N...> seq)
+    {
+      auto r = std::tuple{make_node(g, 1, std::get<N>(std::forward<T>(t))) ...};
+      if constexpr (sizeof...(N) > 1) {
+        link_pipe_stages<1, seq.size()>(r);
+      }
+      return r;
+    }
+
+  }
+
 
   template<typename Generator, typename ... Transformers>
   void parallel_execution_tbb::pipeline(
       Generator && generate_op,
       Transformers && ... transform_ops) const
   {
-    parallel_execution_native native;
-    native.pipeline(std::forward<Generator>(generate_op),
-        std::forward<Transformers>(transform_ops)...);
-    /*
-    using namespace std;
+    auto pipe_graph = std::make_unique<oneapi::tbb::flow::graph>();
 
-    using result_type = decay_t<typename result_of<Generator()>::type>;
-    using output_value_type = typename result_type::value_type;
-    using output_type = grppi::optional<output_value_type>;
+    using gen_type = std::invoke_result_t<Generator>;
+    using gen_value_type = typename gen_type::value_type;
+    auto first =
+        std::make_unique<oneapi::tbb::flow::input_node<gen_value_type>>(
+            *pipe_graph, [&](oneapi::tbb::flow_control & fc) {
+              auto r = generate_op();
+              if (!r) { fc.stop(); }
+              return *r;
+            }
+        );
 
-    auto generator = tbb::make_filter<void, output_type>(
-      tbb::filter_mode::serial_in_order,
-      [&](tbb::flow_control & fc) -> output_type {
-        auto item =  generate_op();
-        if (item) {
-          return *item;
-        }
-        else {
-          fc.stop();
-          return {};
-        }
-      }
-    );
+    auto p = detail::pipeline_impl<gen_value_type>(
+        *pipe_graph,
+        std::tuple{std::forward<Transformers>(transform_ops)...},
+        std::make_index_sequence<sizeof...(Transformers)>{});
 
-    auto rest =
-      this->template make_filter<output_value_type>(forward<Transformers>(transform_ops)...);
+    oneapi::tbb::flow::make_edge(*first, *detail::get_first(p));
 
+    first->activate();
 
-    tbb::task_group_context context;
-    tbb::parallel_pipeline(tokens(),
-      generator
-      &
-      rest);
-    */
+    pipe_graph->wait_for_all();
   }
 
   template<typename Population, typename Selection, typename Evolution,
@@ -782,7 +967,7 @@ namespace grppi {
     using selected_op_type = optional<selected_type>;
     using individual_op_type = optional<individual_type>;
 
-    if (population.size() == 0) return;
+    if (population.size() == 0) { return; }
 
     auto selected_queue = make_queue<selected_op_type>();
     auto output_queue = make_queue<individual_op_type>();
@@ -816,7 +1001,7 @@ namespace grppi {
 
     g.run([&]() {
       for (;;) {
-        if (end) break;
+        if (end) { break; }
         while (lock.test_and_set());
 
         if (population.size() != 0) {
@@ -967,55 +1152,61 @@ namespace grppi {
         std::forward<subresult_type>(out), std::forward<Combiner>(combine_op));
   }
 
-/*
-template <typename Input, typename Transformer,
-          requires_no_pattern<Transformer>>
-auto parallel_execution_tbb::make_filter(
-    Transformer && transform_op) const
-{
-  using namespace std;
+  /*
+  template<typename Input, typename Transformer,
+      requires_no_pattern <Transformer>>
+  auto parallel_execution_tbb::make_pipeline_nodes(
+      oneapi::tbb::flow::graph & g,
+      Transformer && transform_op) const
+  {
+    using namespace std;
 
-  using input_value_type = Input; 
-  using input_type = grppi::optional<input_value_type>;
+    using input_value_type = Input;
+    using input_type = grppi::optional<input_value_type>;
 
-  return tbb::make_filter<input_type, void>( 
-      tbb::filter_mode::serial_in_order,
-      [=](input_type item) {
-          if (item) transform_op(*item);
-      });
-}
+    return oneapi::tbb::flow::function_node < input_type, void > (
+        g,
+            oneapi::tbb::flow::unlimited,
+            [=](input_type item) {
+              if (item) { transform_op(*item); }
+            });
+  }
 
-template <typename Input, typename Transformer, typename ... OtherTransformers,
-          requires_no_pattern<Transformer>>
-auto parallel_execution_tbb::make_filter(
-    Transformer && transform_op,
-    OtherTransformers && ... other_transform_ops) const
-{
-  using namespace std;
+  template<typename Input, typename Transformer, typename ... OtherTransformers,
+      requires_no_pattern <Transformer>>
+  auto parallel_execution_tbb::make_pipeline_nodes(
+      oneapi::tbb::flow::graph & g,
+      Transformer && transform_op,
+      OtherTransformers && ... other_transform_ops) const
+  {
+    using namespace std;
 
-  using input_value_type = Input; 
-  static_assert(!is_void<input_value_type>::value, 
-      "Transformer must take non-void argument");
-  using input_type = grppi::optional<input_value_type>;
-  using output_value_type = 
+    using input_value_type = Input;
+    static_assert(!is_void<input_value_type>::value,
+        "Transformer must take non-void argument");
+    using input_type = grppi::optional<input_value_type>;
+    using output_value_type =
     decay_t<typename result_of<Transformer(input_value_type)>::type>;
-  static_assert(!is_void<output_value_type>::value,
-      "Transformer must return a non-void result");
-  using output_type = grppi::optional<output_value_type>;
+    static_assert(!is_void<output_value_type>::value,
+        "Transformer must return a non-void result");
+    using output_type = grppi::optional<output_value_type>;
 
+    auto first = oneapi::tbb::flow::function_node < input_type, output_type>{
+      g, oneapi::tbb::flow::unlimited,
+          [=](input_type item) {
+            if (item) { transform_op(*item); }
+          }
+    };
 
-  return 
-      tbb::make_filter<input_type, output_type>(
-          tbb::filter_mode::serial_in_order,
-          [=](input_type item) -> output_type {
-              if (item) return transform_op(*item);
-              else return {};
-          })
-    &
-      this->template make_filter<output_value_type>(
-          std::forward<OtherTransformers>(other_transform_ops)...);
-}
+    auto rest = this->template make_pipeline_nodes<output_type> (g,
+        std::forward<OtherTransformers>(other_transform_ops)...);
 
+    oneapi::tbb::flow::make_edge(first, rest);
+    return first;
+  }
+   */
+
+/*
 template <typename Input, typename FarmTransformer,
           template <typename> class Farm,
           requires_farm<Farm<FarmTransformer>>>

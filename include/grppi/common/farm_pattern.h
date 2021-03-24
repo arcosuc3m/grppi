@@ -52,9 +52,14 @@ public:
   \brief Return the transformer function stored in the farm pattern.
   \return The transformer function. 
   */
-  Transformer & transformer(){
+  Transformer & transformer() & noexcept {
     return transformer_;
   }
+
+  auto && transformer() && noexcept {
+    return transformer_;
+  }
+
   /**
   \brief Invokes the transformer of the farm over a data item.
   */

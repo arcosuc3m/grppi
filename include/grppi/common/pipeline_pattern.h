@@ -82,9 +82,19 @@ public:
     return std::get<I>(transformers_);
   }
 
-  auto transformers() const noexcept {
+  auto transformers() const & noexcept {
     return transformers_;
   }
+
+  auto && transformers() && noexcept {
+    return transformers_;
+  }
+
+  constexpr static std::size_t size() {
+    return sizeof...(Transformers);
+  }
+
+  static constexpr std::size_t sizex = sizeof...(Transformers);
 
 private:
   std::tuple<Transformers...> transformers_;

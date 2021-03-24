@@ -140,8 +140,8 @@ $(function() {
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;      requires_no_pattern&lt;Transformer&gt; = 0&gt;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keyword">auto</span> add_stages(Transformer &amp;&amp;stage) </div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">using</span> input_type = std::decay_t&lt;Input&gt;;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">using</span> node_type = node_impl&lt;input_type,void,Transformer&gt;;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">using</span> gen_value_type = std::decay_t&lt;Input&gt;;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">using</span> node_type = node_impl&lt;gen_value_type,void,Transformer&gt;;</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keyword">auto</span> p_stage = std::make_unique&lt;node_type&gt;(std::forward&lt;Transformer&gt;(stage));</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    add_node(std::move(p_stage));</div>

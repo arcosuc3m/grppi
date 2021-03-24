@@ -26,6 +26,7 @@
 using namespace std;
 using namespace grppi;
 
+
 template <typename T>
 class context_test : public ::testing::Test {
 public:
@@ -691,8 +692,8 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_SUITE(context_test, executions,);
-
+TYPED_TEST_SUITE(context_test, executions_notbb,);
+/*
 TYPED_TEST(context_test, static_three_stages_farm_seq) // NOLINT
 {
   this->setup_three_stages();
@@ -800,12 +801,14 @@ TYPED_TEST(context_test, static_composed_pipeline_omp) //NOLINT
 #endif
 
 #ifdef GRPPI_TBB
+
 TYPED_TEST(context_test, static_composed_pipeline_tbb) //NOLINT
 {
   this->setup_composed();
   this->run_composed_pipeline_with_tbb(this->execution_);
   this->check_composed();
 }
+
 #endif
 
 #ifdef GRPPI_FF
@@ -932,5 +935,5 @@ TYPED_TEST(context_test, static_double_composed_pipeline_FF_seq) //NOLINT
   this->check_double_composed();
 }
 #endif
-
+*/
 
