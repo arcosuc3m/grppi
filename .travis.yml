@@ -87,8 +87,10 @@ install:
   - cmake ${DEPS_DIR}/googletest -DBUILD_GMOCK=OFF -DBUILD_GTEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - make -j 2
   - make install
+  - set +e; cd ${TRAVIS_BUILD_DIR}; set -e; pwd
   - mkdir -p build/onetbb/$BUILD_TYPE
   - set +e; cd build/onetbb/$BUILD_TYPE; set -e; pwd
+  - cmake ${DEPS_DIR}/onetbb -DCMAKE_BUILD_TYPE=Release  -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - mkdir -p ${TRAVIS_BUILD_DIR}/build
   - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD -DGRPPI_TBB_ENABLE=OFF -DGRPPI_FF_ENABLE=OFF
