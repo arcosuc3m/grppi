@@ -74,11 +74,16 @@ before_install:
     fi
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
   - if [ -n "$CLANG_VERSION" ]; then export CXX="clang++-${CLANG_VERSION}" CC="clang-${CLANG_VERSION}"; fi
+  - echo ${DEPS_DIR}
+  - pwd
+  - ls
+  - ls ${DEPS_DIR}
   - set +e; cd ${DEPS_DIR}; set -e; git clone https://github.com/google/googletest.git
   - set +e; cd ${DEPS_DIR}; set -e; git clone https://github.com/oneapi-src/oneTBB.git
   - which $CXX & $CXX --version
 
 install:
+  - pwd
   - mkdir -p build
   - mkdir -p build/gtest/$BUILD_TYPE
   - set +e; cd build/gtest/$BUILD_TYPE; set -e; pwd
@@ -92,7 +97,7 @@ install:
   - ls -l
   - ls ${DEPS_DIR}
   - ls ${DEPS_DIR}/oneTBB
-  - cmake ${DEPS_DIR}/oneTBB -DCMAKE_BUILD_TYPE=Release - -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
+  - cmake ${DEPS_DIR}/oneTBB -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD
   - mkdir -p ${TRAVIS_BUILD_DIR}/build
   - set +e; cd ${TRAVIS_BUILD_DIR}/build; set -e; pwd
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/external -DCMAKE_CXX_STANDARD=$CPPSTD -DGRPPI_TBB_ENABLE=OFF -DGRPPI_FF_ENABLE=OFF
