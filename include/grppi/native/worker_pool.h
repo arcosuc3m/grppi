@@ -17,6 +17,7 @@
 #define GRPPI_NATIVE_WORKER_POOL_H
 
 #include <thread>
+#include <vector>
 
 namespace grppi {
 
