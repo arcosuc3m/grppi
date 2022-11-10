@@ -128,8 +128,11 @@ there is no type defined.
   template<typename Ret, typename F, typename Arg, typename... Rest>
   Arg input_type_t(Ret(F::*) (Arg, Rest...) const);
 
-  template <typename F>
+  template <typename F, class = std::enable_if_t<!std::is_pointer<F>::value>>
   decltype(input_type_t(&F::operator())) input_type_l(F);
+
+  template <typename F, class = std::enable_if_t<std::is_pointer<F>::value>>
+  decltype(input_type_t(std::declval<F>())) input_type_l(F);
 
   template <typename F>
   using input_type = decltype(input_type_l(std::declval<F>()));
