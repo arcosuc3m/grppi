@@ -164,7 +164,7 @@ public:
 };
 
 // Test for execution policies defined in supported_executions.h
-TYPED_TEST_SUITE(divideconquer_legacy_test, executions_noff,);
+TYPED_TEST_SUITE(divideconquer_legacy_test, executions,);
 
 TYPED_TEST(divideconquer_legacy_test, static_empty) //NOLINT
 {

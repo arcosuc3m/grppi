@@ -20,7 +20,6 @@
 #include "../native/parallel_execution_native.h"
 #include "../tbb/parallel_execution_tbb.h"
 #include "../omp/parallel_execution_omp.h"
-#include "../ff/parallel_execution_ff.h"
 #include "../common/configuration.h"
 
 #include <memory>
@@ -45,9 +44,6 @@ public:
         break;
       case execution_backend::tbb:
         execution_ = make_execution<parallel_execution_tbb>();
-        break;
-      case execution_backend::ff:
-        execution_ = make_execution<parallel_execution_ff>();
         break;
     }
   }
@@ -324,22 +320,7 @@ GRPPI_TRY_PATTERN(parallel_execution_tbb,PATTERN,__VA_ARGS__)
 #define GRPPI_TRY_PATTERN_TBB(PATTERN,...)
 #endif
 
-#ifdef GRPPI_FF
-#define GRPPI_TRY_PATTERN_FF(PATTERN,...) \
-GRPPI_TRY_PATTERN(parallel_execution_ff,PATTERN,__VA_ARGS__)
-#else
-#define GRPPI_TRY_PATTERN_FF(PATTERN,...)
-#endif
-
 #define GRPPI_TRY_PATTERN_ALL(...) \
-GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
-GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
-GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
-GRPPI_TRY_PATTERN_TBB(__VA_ARGS__) \
-GRPPI_TRY_PATTERN_FF(__VA_ARGS__) \
-GRPPI_PATTERN_NOT_IMPLEMENTED(__VA_ARGS__)\
-
-#define GRPPI_TRY_PATTERN_ALL_NOFF(...) \
 GRPPI_TRY_PATTERN(sequential_execution, __VA_ARGS__) \
 GRPPI_TRY_PATTERN(parallel_execution_native, __VA_ARGS__) \
 GRPPI_TRY_PATTERN_OMP(__VA_ARGS__) \
@@ -403,7 +384,7 @@ auto dynamic_execution::divide_conquer(
     Solver && solve_op, 
     Combiner && combine_op) const
 {
-  GRPPI_TRY_PATTERN_ALL_NOFF(divide_conquer, std::forward<Input>(input),
+  GRPPI_TRY_PATTERN_ALL(divide_conquer, std::forward<Input>(input),
       std::forward<Divider>(divide_op),
       std::forward<Solver>(solve_op),
       std::forward<Combiner>(combine_op));
@@ -442,7 +423,7 @@ void dynamic_execution::stream_pool(Population & population,
                 Evaluation && eval_op,
                 Predicate && termination_op) const
 {
- GRPPI_TRY_PATTERN_ALL_NOFF(stream_pool, population, std::forward<Selection>
+ GRPPI_TRY_PATTERN_ALL(stream_pool, population, std::forward<Selection>
      (selection_op),
       std::forward<Evolution>(evolve_op),
       std::forward<Evaluation>(eval_op),

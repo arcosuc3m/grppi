@@ -257,16 +257,3 @@ TEST(configuration_synthetic, get_tbb_backend) {
   configuration<getter> config;
   EXPECT_EQ(execution_backend::tbb, config.dynamic_backend());
 }
-
-TEST(configuration_synthetic, get_ff_backend) {
-  struct getter {
-    const char * operator()(char const * var_name) {
-      if (strcmp(var_name,"GRPPI_DYN_BACKEND") == 0) return "ff";
-      return nullptr;
-    }
-  };
-
-  configuration<getter> config;
-  EXPECT_EQ(execution_backend::ff, config.dynamic_backend());
-}
-

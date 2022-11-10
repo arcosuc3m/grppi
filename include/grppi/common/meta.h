@@ -135,6 +135,9 @@ there is no type defined.
   decltype(input_type_t(std::declval<F>())) input_type_l(F);
 
   template <typename F>
+  decltype(input_type_t(std::declval<F>())) input_type_l(F);
+
+  template <typename F>
   using input_type = decltype(input_type_l(std::declval<F>()));
 
   template <typename F>

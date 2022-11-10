@@ -22,7 +22,6 @@
 #include "grppi/native/parallel_execution_native.h"
 #include "grppi/omp/parallel_execution_omp.h"
 #include "grppi/tbb/parallel_execution_tbb.h"
-#include "grppi/ff/parallel_execution_ff.h"
 
 using executions = ::testing::Types<
   grppi::sequential_execution,
@@ -39,10 +38,6 @@ using executions = ::testing::Types<
   grppi::parallel_execution_tbb
 #endif
 
-#ifdef GRPPI_FF
-  ,
-  grppi::parallel_execution_ff
-#endif
 >;
 
 using executions_notbb = ::testing::Types<
@@ -57,28 +52,10 @@ using executions_notbb = ::testing::Types<
 
 >;
 
-using executions_noff = ::testing::Types<
-
-  grppi::sequential_execution,
-
-  grppi::parallel_execution_native
-
-#ifdef GRPPI_OMP
-  ,
-  grppi::parallel_execution_omp
-#endif
-
-#ifdef GRPPI_TBB
-  ,
-  grppi::parallel_execution_tbb
-#endif
-
->;
-
 using executions_minimal = ::testing::Types<
     grppi::sequential_execution,
     grppi::parallel_execution_native
-    >;
+>;
 
 
 #endif
