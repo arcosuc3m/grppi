@@ -652,10 +652,17 @@ namespace grppi {
 
 /**
 \brief Determines if an execution policy supports the stream pool pattern.
-\note Specialization for parallel_execution_native.
+\note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
 */
   template<>
   constexpr bool supports_stream_pool<parallel_execution_omp>() { return true; }
+
+/**
+\brief Determines if an execution policy supports the context pattern.
+\note Specialization for parallel_execution_omp when GRPPI_OMP is enabled.
+*/
+  template<>
+  constexpr bool supports_context<parallel_execution_omp>() { return true; }
 
   template<typename ... InputIterators, typename OutputIterator,
       typename Transformer>

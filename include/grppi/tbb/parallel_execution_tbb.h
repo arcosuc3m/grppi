@@ -592,7 +592,7 @@ namespace grppi {
 
 /**
 \brief Determines if an execution policy supports the stream pool pattern.
-\note Specialization for parallel_execution_native.
+\note Specialization for parallel_execution_omp when GRPPI_TBB is enabled.
 */
   template<>
   constexpr bool supports_stream_pool<parallel_execution_tbb>() { return true; }
@@ -824,15 +824,6 @@ namespace grppi {
       return pipe;
     }
 
-    template<typename F,
-        requires_farm<F> = 0>
-    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
-        [[maybe_unused]] int cardinality,
-        F && f)
-    {
-      return make_node(g, f.cardinality(), std::forward<F>(f).transformer());
-    }
-
     template<typename P,
         requires_filter<P> = 0>
     decltype(auto) make_node(oneapi::tbb::flow::graph & g,
@@ -903,6 +894,23 @@ namespace grppi {
           });
       return node;
 
+    }
+
+    template<typename F,
+        requires_farm<F> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        [[maybe_unused]] int cardinality,
+        F && f)
+    {
+      return make_node(g, f.cardinality(), std::forward<F>(f).transformer());
+    }
+
+    template<typename C,
+        requires_context<C> = 0>
+    decltype(auto) make_node(oneapi::tbb::flow::graph & g,
+        int cardinality, C&& c)
+    {
+      return make_node(g, cardinality, std::forward<C>(c).transformer());
     }
 
     template<typename I, typename T, std::size_t ... N>

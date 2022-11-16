@@ -43,14 +43,14 @@ void capitalize(grppi::dynamic_execution & e,
       else return {};
     },
     grppi::farm(4,
-      [](auto word) { 
+      [](std::string word) { 
         grppi::sequential_execution seq{};
         grppi::map(seq, begin(word), end(word), begin(word), [](char c) {
           return std::toupper(c);
         }); 
         return word;
       }),
-    [&](auto word) {
+    [&](std::string word) {
       out << word << std::endl;
     }
   );

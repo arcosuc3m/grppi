@@ -27,6 +27,7 @@
 #include "grppi/pipeline.h"
 #include "grppi/farm.h"
 #include "grppi/context.h"
+#include "grppi/common/execution_traits.h"
 
 // Samples shared utilities
 #include "../../util/util.h"
@@ -36,6 +37,7 @@ void capitalize(grppi::dynamic_execution & ex,
 {
   using namespace std;
 
+  if constexpr (grppi::supports_context<decltype(ex)>()) {
   grppi::parallel_execution_native inner_ex{2};
 
   grppi::pipeline(ex,
@@ -59,6 +61,7 @@ void capitalize(grppi::dynamic_execution & ex,
       ofile << line << "\n";
     }
   );
+  }
 
 }
 

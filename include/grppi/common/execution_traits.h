@@ -84,5 +84,12 @@ constexpr bool supports_pipeline() { return false; }
 template <typename E>
 constexpr bool supports_stream_pool() { return false; }
 
+/**
+\brief Determines if an execution policy supports the context pattern.
+\note This must be specialized by every execution policy supporting the pattern.
+*/
+template <typename E>
+constexpr bool supports_context() { return false; }
+
 } // end namespace grppi
 #endif
