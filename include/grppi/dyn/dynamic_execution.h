@@ -292,6 +292,15 @@ constexpr bool supports_pipeline<dynamic_execution>() { return true; }
 template <>
 constexpr bool supports_stream_pool<dynamic_execution>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the context pattern.
+\note Specialization for dynamic_execution.
+*/
+template <>
+constexpr bool supports_context<dynamic_execution>() {
+  return true;
+}
+
 
 #define GRPPI_TRY_PATTERN(E,PATTERN,...)\
 {\

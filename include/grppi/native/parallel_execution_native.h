@@ -712,6 +712,13 @@ constexpr bool supports_pipeline<parallel_execution_native>() { return true; }
 template <>
 constexpr bool supports_stream_pool<parallel_execution_native>() { return true; }
 
+/**
+\brief Determines if an execution policy supports the context pattern.
+\note Specialization for parallel_execution_native.
+*/
+  template<>
+  constexpr bool supports_context<parallel_execution_native>() { return true; }
+
 template <typename ... InputIterators, typename OutputIterator, 
           typename Transformer>
 void parallel_execution_native::map(

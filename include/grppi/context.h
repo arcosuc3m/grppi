@@ -16,6 +16,10 @@
 #ifndef GRPPI_CONTEXT_H
 #define GRPPI_CONTEXT_H
 
+#include <utility>
+
+#include "grppi/common/execution_traits.h"
+
 #include "grppi/common/context.h"
 
 namespace grppi {
@@ -39,6 +43,8 @@ that can be composed in other streaming patterns.
 template <typename ExecutionPolicy, typename Transformer>
 auto run_with(ExecutionPolicy & ex, Transformer && transform_op)
 {
+    static_assert(supports_context<ExecutionPolicy>(),
+        "context not supported on execution type");
    return context_t<ExecutionPolicy,Transformer>{ex,
        std::forward<Transformer>(transform_op)};
 }
