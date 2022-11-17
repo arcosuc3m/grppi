@@ -5,7 +5,14 @@ project(${PROJECT_NAME_STR})
 # Path for additional CMake modules
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake.modules)
 
-# Print processor and compiler 
+# Find packages
+include(FetchContent)
+# Handle new timestamp behaviour (see https://cmake.org/cmake/help/latest/policy/CMP0135.html)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+	cmake_policy(SET CMP0135 NEW)
+endif()
+
+# Print processor and compiler
 message(STATUS "Detected processor is " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
 message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})

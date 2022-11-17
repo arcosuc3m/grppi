@@ -22,16 +22,26 @@ if(GRPPI_UNIT_TEST_ENABLE)
   if(POLICY CMP0057)
     cmake_policy(SET CMP0057 NEW)
   endif()
+
+  # Try to find GTest, otherwise fetch it from its repository and retry to find
   find_package(GTest)
   if(GTEST_FOUND)
     message(STATUS "GTest found")
   else()
-    set(GRPPI_UNIT_TEST_ENABLE OFF CACHE BOOL "Activate unit tests" FORCE)
-    message(STATUS "GTest not found")
-    message(STATUS "  GRPPI_UNIT_TEST_ENABLE has been set to OFF")
-    message(STATUS "  To enable unit tests, please, download and instal Google Test")
-    message(STATUS "  https://github.com/google/googletest")
+    message(STATUS "GTest not found, fetching GTest from it's repository")
+    FetchContent_Declare(
+      GTest
+      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_TAG 58d77fa8070e8cec2dc1ed015d66b454c8d78850 # hash for commit of tag v1.12.1
+      OVERRIDE_FIND_PACKAGE # This option ensures find_package() will use the directories made
+                            # available by FetchContent_MakeAvailable()
+    )
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(GTest)
+    find_package(GTest)
   endif()
+
 endif()
 
 if(GRPPI_UNIT_TEST_ENABLE)
@@ -46,23 +56,23 @@ if(GRPPI_UNIT_TEST_ENABLE)
   file(GLOB TEST_SRC_FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/*cpp)
   add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
-  
+
   # Unit testing should be made in debug mode
   set(CMAKE_BUILD_TYPE "Debug")
 
   # Do not emit deprecated warnings for _legacy unit tests
   file(GLOB TEST_SRC_FILES_LEGACY
       ${CMAKE_CURRENT_SOURCE_DIR}/*_legacy.cpp)
-  set_source_files_properties(${TEST_SRC_FILES_LEGACY} 
+  set_source_files_properties(${TEST_SRC_FILES_LEGACY}
       PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
 
-  target_link_libraries(${PROJECT_TEST_NAME} 
-      ${GTEST_BOTH_LIBRARIES}
+  target_link_libraries(${PROJECT_TEST_NAME}
+      GTest::gtest_main
       gcov
       ${TBB_LIBRARIES}
       ${CMAKE_THREAD_LIBS_INIT}
   )
-  
+
   GTEST_ADD_TESTS(${PROJECT_TEST_NAME} "" ${TEST_SRC_FILES})
 
   # Coverage options
